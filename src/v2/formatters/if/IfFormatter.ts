@@ -145,6 +145,14 @@ export class IfFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
+            case SyntaxNodeType.ThenKeyword:
+                newString = this.settings.newLineBeforeThen()
+                    ? fullText.eolDelimiter +
+                      " ".repeat(this.startColumn) +
+                      FormatterHelper.getCurrentText(node, fullText).trim()
+                    : " " +
+                      FormatterHelper.getCurrentText(node, fullText).trim();
+                break;
             case SyntaxNodeType.ElseKeyword:
                 newString =
                     fullText.eolDelimiter +

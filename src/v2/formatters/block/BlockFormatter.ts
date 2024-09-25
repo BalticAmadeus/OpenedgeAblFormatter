@@ -102,14 +102,21 @@ export class BlockFormater extends AFormatter implements IFormatter {
         if (indexOfColon !== -1) {
             // indexOfColon += parentIndentation;
             indexOfColon -= parent.startPosition.column;
+            for (let i = indexOfColon + 1; i >= indexOfColon - 1; i--) {
+                if (firstLine[i] === ":") {
+                    indexOfColon = i;
+                    break;
+                }
+            }
             const partAfterColon = firstLine
                 .slice(indexOfColon + 1)
                 .trimStart();
+            const statementWithColon =
+                firstLine.slice(0, indexOfColon).trimEnd() + ":";
             // If the part after the colon is not only whitespace, put it on the next line
-            if (partAfterColon.trim().length !== 0) {
-                const firstPart = firstLine.slice(0, indexOfColon + 1);
+            if (partAfterColon.trim().length !== 0 && partAfterColon !== ":") {
                 codeLines.shift(); // pop from the start of the list
-                codeLines.unshift(firstPart, partAfterColon);
+                codeLines.unshift(statementWithColon, partAfterColon);
                 const firstBlockStatementRow = blockStatementsStartRows[0];
                 blockStatementsStartRows.shift();
                 blockStatementsStartRows.unshift(
