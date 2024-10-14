@@ -52,13 +52,15 @@ suite("Extension Test Suite", () => {
         );
     });
 
+    let fileId = 0;
+
     stabilityTestCases.forEach((cases) => {
         test(`Symbol test: ${cases}`, () => {
             stabilityTest(cases);
         });
 
         test(`Parser error test: ${cases}`, () => {
-            stabilityTest(cases);
+            treeSitterTest(cases, fileId.toString);
         });
     });
 });
@@ -153,4 +155,65 @@ function countActualSymbols(text: string): number {
     }
 
     return count;
+}
+
+function parseAndCheckForErrors(
+    text: string,
+    name: string
+): Parser.SyntaxNode[] {
+    const parseResult = parserHelper.parse(new FileIdentifier(name, 1), text);
+
+    const rootNode = parseResult.tree.rootNode;
+    const errors = getNodesWithErrors(rootNode);
+
+    return errors;
+}
+
+function treeSitterTest(text: string, name: string): void {
+    ConfigurationManager2.getInstance();
+    enableFormatterDecorators();
+
+    const errors = parseAndCheckForErrors(text, name);
+
+    const errorMessage = formatErrorMessage(errors, name);
+
+    assert.strictEqual(errors.length, 0, errorMessage);
+}
+
+function getNodesWithErrors(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
+    let errorNodes: Parser.SyntaxNode[] = [];
+
+    if (node.hasError()) {
+        errorNodes.push(node);
+    }
+
+    node.children.forEach((child) => {
+        errorNodes = errorNodes.concat(getNodesWithErrors(child));
+    });
+
+    return errorNodes;
+}
+
+function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
+    if (errors.length === 0) {
+        return "";
+    }
+
+    let errorMessage = `\n\nAssertionError [ERR_ASSERTION]: Expected no errors, but found ${errors.length} in ${name}.\n`;
+    errorMessage += `--------------------------------------------------------------------------------\n`;
+
+    errors.forEach((errorNode, index) => {
+        errorMessage += `Error ${index + 1}:\n`;
+        errorMessage += `- Type           : ${errorNode.type}\n`;
+        errorMessage += `- Start Position : Line ${
+            errorNode.startPosition.row + 1
+        }, Column ${errorNode.startPosition.column + 1}\n`;
+        errorMessage += `- End Position   : Line ${
+            errorNode.endPosition.row + 1
+        }, Column ${errorNode.endPosition.column + 1}\n`;
+        errorMessage += `- Code Snippet   :\n\n${errorNode.text}\n`;
+        errorMessage += `--------------------------------------------------------------------------------\n`;
+    });
+
+    return errorMessage;
 }
