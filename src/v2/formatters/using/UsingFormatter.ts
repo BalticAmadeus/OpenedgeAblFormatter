@@ -8,7 +8,6 @@ import { IConfigurationManager } from "../../../utils/IConfigurationManager";
 import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
 import { UsingSettings } from "./UsingSettings";
 import { SyntaxNodeType } from "../../../model/SyntaxNodeType";
-import { Options } from "vscode-extension-tester";
 
 @RegisterFormatter
 export class UsingFormatter extends AFormatter implements IFormatter {
@@ -83,7 +82,11 @@ export class UsingFormatter extends AFormatter implements IFormatter {
             let optionalDefinitions = "";
             this.alignOptionalStatements = Math.max(
                 this.alignOptionalStatements,
-                keyword.length + identifier.length
+                /*  The format is this:
+                    USING IDENTIFIER OPTIONAL_DEFINITIONS.
+                    therefore we add +1 for the spaces between different parts.
+                */
+                keyword.length + 1 + identifier.length + 1
             );
             if (node.childCount > 2) {
                 for (let i = 2; i < node.childCount; ++i) {
@@ -116,9 +119,7 @@ export class UsingFormatter extends AFormatter implements IFormatter {
             return (
                 statement.identifier +
                 " ".repeat(
-                    this.alignOptionalStatements -
-                        statement.identifier.length +
-                        1
+                    this.alignOptionalStatements - statement.identifier.length
                 ) +
                 statement.optionalDefinitions +
                 "."
