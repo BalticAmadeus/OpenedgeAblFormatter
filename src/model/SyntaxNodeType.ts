@@ -64,6 +64,7 @@ export enum SyntaxNodeType {
     Setter = "setter",
     LeftParenthesis = "(",
     RightParenthesis = ")",
+    Label = "label",
 
     // keywords
     WhenKeyword = "WHEN",
