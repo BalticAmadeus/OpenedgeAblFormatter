@@ -15,12 +15,16 @@ export class ConfigurationManager2 implements IConfigurationManager {
         workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration("AblFormatter")) {
                 this.reloadConfig = true;
-                window.showInformationMessage("ABL Formatter was changed2!");
+                window.showInformationMessage(
+                    "ABL Formatter settings were changed!"
+                );
             }
 
             if (e.affectsConfiguration("abl.completion")) {
                 this.reloadExternalConfig = true;
-                window.showInformationMessage("ABL cassing was changed2!");
+                window.showInformationMessage(
+                    "ABL completion settings were changed!"
+                );
             }
         });
     }

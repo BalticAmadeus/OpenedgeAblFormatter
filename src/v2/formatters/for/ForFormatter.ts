@@ -83,9 +83,16 @@ export class ForFormatter extends AFormatter implements IFormatter {
 
         switch (node.type) {
             case SyntaxNodeType.ForKeyword:
+                newString = FormatterHelper.getCurrentText(
+                    node,
+                    fullText
+                ).trimEnd();
+                break;
             case SyntaxNodeType.DotKeyword:
             case SyntaxNodeType.ColonKeyword:
             case SyntaxNodeType.CommaKeyword:
+            case SyntaxNodeType.Body:
+            case SyntaxNodeType.Label:
                 newString = FormatterHelper.getCurrentText(
                     node,
                     fullText
@@ -117,11 +124,8 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     alignColumn
                 );
                 break;
-            case SyntaxNodeType.Body:
-                newString = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+            case SyntaxNodeType.Error:
+                newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
             default:
                 const text = FormatterHelper.getCurrentText(

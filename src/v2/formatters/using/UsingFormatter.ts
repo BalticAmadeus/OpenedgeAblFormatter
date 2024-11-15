@@ -15,13 +15,15 @@ export class UsingFormatter extends AFormatter implements IFormatter {
     private readonly settings: UsingSettings;
 
     private usingStatementsFound: number = 0;
+    private alignOptionalStatements: number = 0;
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new UsingSettings(configurationManager);
     }
 
-    private usingStatements: string[] = [];
+    private usingStatements: UsingStatement[] = [];
+    private textUsingStatements: string[] = [];
 
     match(node: Readonly<SyntaxNode>): boolean {
         if (node.type === SyntaxNodeType.UsingStatement) {
@@ -36,13 +38,16 @@ export class UsingFormatter extends AFormatter implements IFormatter {
         this.usingStatementsFound++;
         if (this.usingStatementsFound === 1) {
             this.collectAllUsingStatements(node, fullText);
-            this.usingStatements.sort();
+            this.textUsingStatements = this.usingStatements.map(
+                (usingStatement) => this.usingStatementToString(usingStatement)
+            );
+            this.textUsingStatements.sort();
         }
         const text = FormatterHelper.getCurrentText(node, fullText);
         if (this.usingStatementsFound > this.usingStatements.length) {
             return undefined;
         }
-        const newText = this.usingStatements[this.usingStatementsFound - 1];
+        const newText = this.textUsingStatements[this.usingStatementsFound - 1];
         return this.getCodeEdit(node, text, newText, fullText);
     }
 
@@ -67,36 +72,63 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                 fullText
             );
             keyword = this.settings.casing()
-                ? keyword.toUpperCase()
-                : keyword.toLowerCase();
+                ? keyword.trim().toUpperCase()
+                : keyword.trim().toLowerCase();
             const identifier = FormatterHelper.getCurrentText(
                 identifierChild,
                 fullText
-            );
+            ).trim();
 
             let optionalDefinitions = "";
+            this.alignOptionalStatements = Math.max(
+                this.alignOptionalStatements,
+                /*  The format is this:
+                    USING IDENTIFIER OPTIONAL_DEFINITIONS.
+                    therefore we add +1 for the spaces between different parts.
+                */
+                keyword.length + 1 + identifier.length + 1
+            );
             if (node.childCount > 2) {
                 for (let i = 2; i < node.childCount; ++i) {
                     const currentChild = node.child(i);
                     if (currentChild === null) {
                         continue;
                     }
-                    optionalDefinitions += FormatterHelper.getCurrentText(
-                        currentChild,
-                        fullText
-                    );
+                    optionalDefinitions +=
+                        FormatterHelper.getCurrentText(
+                            currentChild,
+                            fullText
+                        ).trim() + " ";
                 }
                 optionalDefinitions = this.settings.casing()
-                    ? optionalDefinitions.toUpperCase()
-                    : optionalDefinitions.toLowerCase();
+                    ? optionalDefinitions.trim().toUpperCase()
+                    : optionalDefinitions.trim().toLowerCase();
             }
 
-            this.usingStatements.push(
-                keyword
-                    .concat(identifier)
-                    .concat(optionalDefinitions)
-                    .concat(".")
+            this.usingStatements.push({
+                identifier: keyword + " " + identifier,
+                optionalDefinitions,
+            });
+        }
+    }
+
+    private usingStatementToString(statement: UsingStatement): string {
+        if (statement.optionalDefinitions === "") {
+            return statement.identifier + ".";
+        } else {
+            return (
+                statement.identifier +
+                " ".repeat(
+                    this.alignOptionalStatements - statement.identifier.length
+                ) +
+                statement.optionalDefinitions +
+                "."
             );
         }
     }
 }
+
+type UsingStatement = {
+    identifier: string;
+    optionalDefinitions: string;
+};

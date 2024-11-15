@@ -22,6 +22,7 @@ export enum SyntaxNodeType {
     FieldDefinition = "field_definition",
     IndexDefinition = "index_definition",
     VariableDefinition = "variable_definition",
+    ProcedureParameterDefinition = "procedure_parameter_definition",
     VariableAssignment = "variable_assignment",
     ConstructorDefinition = "constructor_definition",
     DestructorDefinition = "destructor_definition",
@@ -56,10 +57,14 @@ export enum SyntaxNodeType {
     EnumStatement = "enum_statement",
     EnumMember = "enum_member",
     EnumDefinition = "enum_definition",
+    TypeTuning = "type_tuning",
+    AccessTuning = "access_tuning",
+    Comment = "comment",
     Getter = "getter",
     Setter = "setter",
     LeftParenthesis = "(",
     RightParenthesis = ")",
+    Label = "label",
 
     // keywords
     WhenKeyword = "WHEN",
@@ -87,6 +92,7 @@ export enum SyntaxNodeType {
     EachKeyword = "EACH",
     EndKeyword = "END",
     IfKeyword = "IF",
+    FindKeyword = "FIND",
     ForKeyword = "FOR",
     DotKeyword = ".",
     ColonKeyword = ":",
@@ -94,6 +100,13 @@ export enum SyntaxNodeType {
     DefineKeyword = "DEFINE",
     DefiKeyword = "DEFI",
     DefKeyword = "DEF",
+    NoUndoKeyword = "NO-UNDO",
+    InputKeyword = "INPUT",
+    OutputKeyword = "OUTPUT",
+    InputOutputKeyword = "INPUT-OUTPUT",
+    ReturnKeyword = "RETURN",
+    ParameterKeyword = "PARAMETER",
+    VariableKeyword = "VARIABLE",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
@@ -116,4 +129,11 @@ export const bodyBlockKeywords = new MyFancySet<string>([
     SyntaxNodeType.CaseBody,
     SyntaxNodeType.ClassBody,
     SyntaxNodeType.InterfaceBody,
+]);
+
+export const parameterTypes = new MyFancySet<string>([
+    SyntaxNodeType.InputKeyword,
+    SyntaxNodeType.OutputKeyword,
+    SyntaxNodeType.InputOutputKeyword,
+    SyntaxNodeType.ReturnKeyword,
 ]);

@@ -2,7 +2,7 @@
   "name": "abl-formatter",
   "displayName": "Abl Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/AblFormatter"
@@ -235,6 +235,18 @@
             "New",
             "Same"
           ]
+        },
+        "AblFormatter.variableDefinitionFormatting": {
+          "order": 1400,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable DEFINE VARIABLE formatting"
+        },
+        "AblFormatter.procedureParameterFormatting": {
+          "order": 1500,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable PROCEDURE PARAMETER formatting"
         },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,
