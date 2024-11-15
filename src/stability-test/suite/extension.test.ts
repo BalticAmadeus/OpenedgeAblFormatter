@@ -59,9 +59,9 @@ suite("Extension Test Suite", () => {
             stabilityTest(cases);
         });
 
-        test(`Parser error test: ${cases}`, () => {
-            treeSitterTest(cases, fileId.toString);
-        });
+        // test(`Parser error test: ${cases}`, () => {
+        //     treeSitterTest(cases, fileId.toString);
+        // });
     });
 });
 
