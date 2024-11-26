@@ -114,7 +114,7 @@ export class FormatterHelper {
             return index === 0
                 ? line
                 : " ".repeat(
-                      FormatterHelper.countLeadingSpaces(line) + moveDelta
+                      Math.max(0, FormatterHelper.countLeadingSpaces(line) + moveDelta)
                   ) + line.trim();
         });
 
