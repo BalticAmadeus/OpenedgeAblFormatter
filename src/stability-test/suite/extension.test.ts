@@ -74,7 +74,11 @@ function stabilityTest(name: string): void {
     const afterText = format(beforeText, name);
     const afterCount = countActualSymbols(afterText);
 
-    assert.strictEqual(beforeCount, afterCount);
+    if (beforeCount !== afterCount) {
+        // assert.strictEqual(beforeText, afterText);
+        assert.fail(beforeText + "**************************************************************\n" + afterText);
+    }
+        // assert.strictEqual(beforeCount, afterCount);
 }
 
 function getInput(fileName: string): string {
