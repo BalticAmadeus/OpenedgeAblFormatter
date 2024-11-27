@@ -67,6 +67,7 @@ export enum SyntaxNodeType {
     Label = "label",
     Parameters = "parameters",
     FunctionParameter = "function_parameter",
+    FunctionParameterMode = "function_parameter_mode",
 
     // keywords
     WhenKeyword = "WHEN",

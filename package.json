@@ -254,6 +254,16 @@
           "default": "true",
           "description": "Enable FUNCTION PARAMETER formatting"
         },
+        "AblFormatter.functionParameterFormattingAlignParameterTypes": {
+          "order": 1601,
+          "type": "string",
+          "default": "Yes",
+          "enum": [
+            "Yes",
+            "No"
+          ],
+          "description": "Align parameter types?"
+        },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,
           "type": "boolean",

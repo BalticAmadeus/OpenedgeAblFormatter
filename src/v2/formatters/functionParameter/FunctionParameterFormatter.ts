@@ -19,11 +19,12 @@ export class FunctionParameterFormatter
     extends AFormatter
     implements IFormatter
 {
-    public static readonly formatterLabel = "functionParamaterFormatting";
+    public static readonly formatterLabel = "functionParameterFormatting";
     private readonly settings: FunctionParameterSettings;
     private alignType = 0;
     private alignParameterType = 0;
     private alignParameters = 0;
+    private typeTuningInCurrentParameter = false;
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
@@ -45,16 +46,27 @@ export class FunctionParameterFormatter
             (child) => child.type === SyntaxNodeType.FunctionParameter
         ).length;
 
-        console.log("Parameters: " + numberOfFunctionParameters);
-        console.log("nodeParent: " + node.type);
+        // console.log("Parameters: " + numberOfFunctionParameters);
+        // console.log("nodeParent: " + node.type);
+        if (
+            node.parent !== null &&
+            node.parent.type === SyntaxNodeType.FunctionStatement &&
+            numberOfFunctionParameters <= 1
+        ) {
+            // In this case, if we try to format something, the code gets messed up. I'm not sure why, so for now we just don't format.
+            return undefined;
+            return this.getCodeEdit(node, oldText, oldText, fullText);
+        }
         node.children.forEach((child) => {
-            console.log("childType: " + child.type);
+            // console.log("childType: " + child.type);
         });
 
         this.collectStructure(node, fullText);
-        console.log("alignType: " + this.alignType);
-        console.log("alignParameterType: " + this.alignParameterType);
+        // console.log("alignType: " + this.alignType);
+        // console.log("alignParameterType: " + this.alignParameterType);
         const newText = this.collectString(node, fullText);
+        // console.log("oldText: " + oldText);
+        // console.log("newText: " + newText);
         return this.getCodeEdit(node, oldText, newText, fullText);
     }
 
@@ -147,6 +159,10 @@ export class FunctionParameterFormatter
         node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
+        this.typeTuningInCurrentParameter = node.children.some(
+            (child) => child.type === SyntaxNodeType.TypeTuning
+        );
+
         let resultString = "";
         node.children.forEach((child) => {
             resultString = resultString.concat(
@@ -162,20 +178,33 @@ export class FunctionParameterFormatter
     ): string {
         let newString = "";
         switch (node.type) {
-            case SyntaxNodeType.DotKeyword:
-                break;
-            case definitionKeywords.hasFancy(node.type, ""):
+            case SyntaxNodeType.FunctionParameterMode:
                 newString = FormatterHelper.getCurrentText(
                     node,
                     fullText
-                ).trimEnd();
+                ).trim();
+
+                // Add a space because the structure is, for example, "INPUT identifier AS TypeTuning", so we need a space before the identifier.
+                if (this.typeTuningInCurrentParameter) {
+                    newString += " ";
+                }
                 break;
             case SyntaxNodeType.Identifier:
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
                 ).trim();
-                newString = text + " ".repeat(this.alignType - text.length);
+                // No type-tuning implies that the type is DATASET, DATASET-HANDLE, TABLE or TABLE-HANDLE, and the identifier itself is not at the start of the parameter.
+                if (!this.typeTuningInCurrentParameter) {
+                    newString = " " + text;
+                } else {
+                    newString = this.settings.alignTypes()
+                        ? text + " ".repeat(this.alignType - text.length)
+                        : text;
+                }
+                break;
+            case SyntaxNodeType.TypeTuning:
+                newString = this.collectTypeTuningString(node, fullText);
                 break;
             case parameterTypes.hasFancy(node.type, ""): {
                 const text = FormatterHelper.getCurrentText(
@@ -199,6 +228,36 @@ export class FunctionParameterFormatter
                 newString = text.length === 0 ? "" : " " + text;
                 break;
             }
+        }
+        return newString;
+    }
+
+    private collectTypeTuningString(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): string {
+        let resultString = "";
+        node.children.forEach((child) => {
+            resultString = resultString.concat(
+                this.getTypeTuningString(child, fullText)
+            );
+        });
+        return resultString;
+    }
+
+    private getTypeTuningString(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): string {
+        let newString = "";
+        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+        switch (node.type) {
+            case SyntaxNodeType.Error:
+                newString = FormatterHelper.getCurrentText(node, fullText);
+                break;
+            default:
+                newString = text.length === 0 ? "" : " " + text;
+                break;
         }
         return newString;
     }
