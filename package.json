@@ -248,6 +248,12 @@
           "default": "true",
           "description": "Enable PROCEDURE PARAMETER formatting"
         },
+        "AblFormatter.functionParameterFormatting": {
+          "order": 1600,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable FUNCTION PARAMETER formatting"
+        },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,
           "type": "boolean",

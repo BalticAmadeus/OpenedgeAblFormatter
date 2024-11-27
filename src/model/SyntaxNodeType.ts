@@ -65,6 +65,8 @@ export enum SyntaxNodeType {
     LeftParenthesis = "(",
     RightParenthesis = ")",
     Label = "label",
+    Parameters = "parameters",
+    FunctionParameter = "function_parameter",
 
     // keywords
     WhenKeyword = "WHEN",
@@ -136,4 +138,9 @@ export const parameterTypes = new MyFancySet<string>([
     SyntaxNodeType.OutputKeyword,
     SyntaxNodeType.InputOutputKeyword,
     SyntaxNodeType.ReturnKeyword,
+]);
+
+export const parentheses = new MyFancySet<string>([
+    SyntaxNodeType.LeftParenthesis,
+    SyntaxNodeType.RightParenthesis,
 ]);
