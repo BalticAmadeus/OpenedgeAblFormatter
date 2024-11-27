@@ -23,6 +23,7 @@ export class FunctionParameterFormatter
     private readonly settings: FunctionParameterSettings;
     private alignType = 0;
     private alignParameterType = 0;
+    private alignParameterMode = 0;
     private alignParameters = 0;
     private typeTuningInCurrentParameter = false;
 
@@ -46,12 +47,16 @@ export class FunctionParameterFormatter
             (child) => child.type === SyntaxNodeType.FunctionParameter
         ).length;
 
+        if (numberOfFunctionParameters === 0) {
+            return undefined;
+        }
+
         // console.log("Parameters: " + numberOfFunctionParameters);
         // console.log("nodeParent: " + node.type);
         if (
             node.parent !== null &&
             node.parent.type === SyntaxNodeType.FunctionStatement &&
-            numberOfFunctionParameters <= 1
+            numberOfFunctionParameters === 1
         ) {
             // In this case, if we try to format something, the code gets messed up. I'm not sure why, so for now we just don't format.
             return undefined;
@@ -108,6 +113,12 @@ export class FunctionParameterFormatter
         fullText: Readonly<FullText>
     ): void {
         switch (node.type) {
+            case SyntaxNodeType.FunctionParameterMode:
+                this.alignParameterMode = Math.max(
+                    this.alignParameterMode,
+                    FormatterHelper.getCurrentText(node, fullText).trim().length
+                );
+                break;
             case SyntaxNodeType.Identifier:
                 this.alignType = Math.max(
                     this.alignType,
@@ -179,17 +190,22 @@ export class FunctionParameterFormatter
         let newString = "";
         switch (node.type) {
             case SyntaxNodeType.FunctionParameterMode:
-                newString = FormatterHelper.getCurrentText(
+                const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
                 ).trim();
+                newString = text;
 
                 // Add a space because the structure is, for example, "INPUT identifier AS TypeTuning", so we need a space before the identifier.
                 if (this.typeTuningInCurrentParameter) {
-                    newString += " ";
+                    newString += " ".repeat(
+                        this.settings.alignTypes()
+                            ? this.alignParameterMode - text.length + 1
+                            : 1
+                    );
                 }
                 break;
-            case SyntaxNodeType.Identifier:
+            case SyntaxNodeType.Identifier: {
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
@@ -203,6 +219,7 @@ export class FunctionParameterFormatter
                         : text;
                 }
                 break;
+            }
             case SyntaxNodeType.TypeTuning:
                 newString = this.collectTypeTuningString(node, fullText);
                 break;
