@@ -5,6 +5,7 @@ import { CodeEdit } from "../../model/CodeEdit";
 import { FullText } from "../../model/FullText";
 import { AFormatter } from "../AFormatter";
 import {
+    dataStructureKeywords,
     definitionKeywords,
     parameterTypes,
     parentheses,
@@ -26,6 +27,7 @@ export class FunctionParameterFormatter
     private alignParameterMode = 0;
     private alignParameters = 0;
     private typeTuningInCurrentParameter = false;
+    private parameterModeInCurrentParameter = false;
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
@@ -173,6 +175,9 @@ export class FunctionParameterFormatter
         this.typeTuningInCurrentParameter = node.children.some(
             (child) => child.type === SyntaxNodeType.TypeTuning
         );
+        this.parameterModeInCurrentParameter = node.children.some(
+            (child) => child.type === SyntaxNodeType.FunctionParameterMode
+        );
 
         let resultString = "";
         node.children.forEach((child) => {
@@ -189,6 +194,15 @@ export class FunctionParameterFormatter
     ): string {
         let newString = "";
         switch (node.type) {
+            case dataStructureKeywords.hasFancy(node.type, ""):
+                newString = FormatterHelper.getCurrentText(
+                    node,
+                    fullText
+                ).trim();
+                if (this.parameterModeInCurrentParameter) {
+                    newString = " " + newString;
+                }
+                break;
             case SyntaxNodeType.FunctionParameterMode:
                 const text = FormatterHelper.getCurrentText(
                     node,

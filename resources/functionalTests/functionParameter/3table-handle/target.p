@@ -14,4 +14,3 @@ class Olympus.Util.HermesHelper:
     end method.
     
 end class.
-    

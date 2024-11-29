@@ -7,5 +7,3 @@ class FunkyWorld.Util.KittyLogHelper:
         /* PURR */
     end method.
 end class.
-     
-    
