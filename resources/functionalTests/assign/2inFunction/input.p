@@ -1,6 +1,7 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.assignFormatting": true,
 "abl.completion.upperCase": true,
+"AblFormatter.functionParameterFormatting": false,
 "AblFormatter.assignFormattingAssignLocation": "New",
 "AblFormatter.assignFormattingAlignRightExpression": "Yes",
 "AblFormatter.assignFormattingEndDotLocation": "New aligned"}*/
