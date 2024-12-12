@@ -37,13 +37,27 @@ At the moment we implemented formatting logic for these language features:
 
 We implemented extensive settings configuration to allow users to easly tailor the experience to their needs. This might not be the case in the future.
 
-### Settings 
+### Extension Settings 
 
-### Formatting on save
+TODO: list of extension settings
+TODO: link to a separate settings documentation
 
-TODO: link a separate file with settings
+### VSCode Settings
 
+TODO
 
+### Formatting On Save
+
+TODO: how to enable
+
+### Formatting On Save With Alternate Settings
+
+TODO: describe how to enable, whats the diff
+TODO: add settings hierarchy description
+
+### Diferent Settings For File
+
+TODO: describe how settings inside file work
 
 ## Installation
 
@@ -60,7 +74,7 @@ Alowed file extensions:
 - **.i**
 - **.w**
 
-Commands:
+Standard VSCode Commands:
 
 - **Format Document**: Formats the entire ABL document.
 - **Format Selection**: Formats only the selected lines of code.
