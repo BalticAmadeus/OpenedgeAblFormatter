@@ -7,13 +7,14 @@ import { AblDebugHoverProvider } from "./providers/AblDebugHoverProvider";
 import { ConfigurationManager2 } from "./utils/ConfigurationManager";
 import { enableFormatterDecorators } from "./v2/formatterFramework/enableFormatterDecorators";
 import { DebugManager } from "./providers/DebugManager";
+import { GlobalSettings } from "./utils/GlobalSettings";
 
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
 
     await Parser.init().then(() => {});
 
-    ConfigurationManager2.getInstance();
+    const configurationManager = ConfigurationManager2.getInstance();
     enableFormatterDecorators();
 
     const parserHelper = new AblParserHelper(
@@ -21,6 +22,16 @@ export async function activate(context: vscode.ExtensionContext) {
         debugManager
     );
     const formatter = new AblFormatterProvider(parserHelper);
+    const globalSettings = new GlobalSettings(configurationManager);
+
+    vscode.workspace.onWillSaveTextDocument((e) => {
+        if (
+            globalSettings.formatOnSave() &&
+            e.document.languageId === Constants.ablId
+        ) {
+            formatter.formatDocumentOnSave(e.document);
+        }
+    });
 
     vscode.languages.registerDocumentRangeFormattingEditProvider(
         Constants.ablId,

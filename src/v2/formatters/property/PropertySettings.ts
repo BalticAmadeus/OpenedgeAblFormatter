@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class PropertySettings extends ASettings {
+export class PropertySettings extends AFormatterSettings {
     // property settings
     public propertyFormatting() {
         return !!this.configurationManager.get("propertyFormatting");

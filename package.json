@@ -38,6 +38,12 @@
     "configuration": {
       "title": "AblFormatter",
       "properties": {
+        "AblFormatter.formatOnSave": {
+          "order": 10,
+          "type": "boolean",
+          "default": "false",
+          "markdownDescription": "Enable/disable Formatting on save."
+        },
         "AblFormatter.assignFormatting": {
           "order": 100,
           "type": "boolean",

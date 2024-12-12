@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class DefineSettings extends ASettings {
+export class DefineSettings extends AFormatterSettings {
     // token settings
     public defineFormatting() {
         return this.configurationManager.get("defineFormatting") ? true : false;

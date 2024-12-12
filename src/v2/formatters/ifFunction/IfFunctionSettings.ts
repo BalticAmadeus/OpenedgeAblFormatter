@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class IfFunctionSettings extends ASettings {
+export class IfFunctionSettings extends AFormatterSettings {
     // if function settings
     public ifFunctionFormatting() {
         return !!this.configurationManager.get("ifFunctionFormatting");

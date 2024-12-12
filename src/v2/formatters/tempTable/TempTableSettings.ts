@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class TempTableSettings extends ASettings {
+export class TempTableSettings extends AFormatterSettings {
     // temptable settings
     public temptableFormatting() {
         return !!this.configurationManager.get("temptableFormatting");

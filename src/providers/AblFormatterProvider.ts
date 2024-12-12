@@ -11,69 +11,61 @@ export class AblFormatterProvider
         vscode.DocumentRangeFormattingEditProvider,
         vscode.DocumentFormattingEditProvider
 {
-    private parserHelper: IParserHelper;
+    private readonly parserHelper: IParserHelper;
+    private readonly configurationManager: ConfigurationManager2 =
+        ConfigurationManager2.getInstance();
 
     public constructor(parserHelper: IParserHelper) {
         this.parserHelper = parserHelper;
+    }
+
+    public formatDocumentOnSave(document: vscode.TextDocument): void {
+        const options: vscode.FormattingOptions = {
+            insertSpaces: true,
+            tabSize: 4, //TODO fix
+        };
+
+        this.configurationManager.setTabSize(options.tabSize);
+
+        this.configurationManager.useOnSaveSettings(true);
+
+        try {
+            this.provideDocumentFormattingEdits(document, options);
+        } catch (e) {
+            console.log(e);
+        } finally {
+            this.configurationManager.useOnSaveSettings(false);
+        }
     }
 
     public provideDocumentFormattingEdits(
         document: vscode.TextDocument,
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log("AblFormatterProvider.provideDocumentFormattingEdits");
+        const fullRange = new vscode.Range(
+            new vscode.Position(0, 0),
+            new vscode.Position(10000000, 10000000)
+        );
 
-        const configurationManager = ConfigurationManager2.getInstance();
-        const debugManager = DebugManager.getInstance();
+        this.provideDocumentRangeFormattingEdits(document, fullRange, options);
 
-        configurationManager.setTabSize(options.tabSize);
-
-        try {
-            const codeFormatter = new FormattingEngine(
-                this.parserHelper,
-                new FileIdentifier(document.fileName, document.version),
-                configurationManager,
-                debugManager
-            );
-
-            const str = codeFormatter.formatText(
-                document.getText(),
-                new EOL(document.eol)
-            );
-
-            const editor = vscode.window.activeTextEditor;
-            editor!.edit(
-                (edit: vscode.TextEditorEdit) => {
-                    edit.replace(
-                        new vscode.Range(
-                            new vscode.Position(0, 0),
-                            new vscode.Position(10000000, 10000000)
-                        ),
-                        str
-                    );
-                },
-                { undoStopBefore: false, undoStopAfter: false }
-            );
-        } catch (e) {
-            console.log(e);
-            return;
-        }
+        return [];
     }
 
     public provideDocumentRangeFormattingEdits(
         document: vscode.TextDocument,
-        range: vscode.Range
+        range: vscode.Range,
+        options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log("AblFormatterProvider.provideDocumentFormattingEdits");
-
-        const configurationManager = ConfigurationManager2.getInstance();
         const debugManager = DebugManager.getInstance();
+
+        this.configurationManager.setTabSize(options.tabSize);
 
         try {
             const codeFormatter = new FormattingEngine(
                 this.parserHelper,
                 new FileIdentifier(document.fileName, document.version),
-                configurationManager,
+                this.configurationManager,
                 debugManager
             );
 
@@ -100,18 +92,14 @@ export class AblFormatterProvider
         ranges: vscode.Range[],
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log(
-            "AblFormatterProvider.provideDocumentFormattingEdits2",
-            ranges
-        );
-
         switch (ranges.length) {
             case 0:
                 return [];
             case 1:
                 return this.provideDocumentRangeFormattingEdits(
                     document,
-                    ranges[0]
+                    ranges[0],
+                    options
                 );
             default:
                 // for now, just format whole document, if there is more than one range
