@@ -37,7 +37,7 @@ At the moment we implemented formatting logic for these language features:
 
 We implemented extensive settings configuration to allow users to easly tailor the experience to their needs. This might not be the case in the future.
 
-### Extension Settings 
+### Extension Settings
 
 TODO: list of extension settings
 TODO: link to a separate settings documentation
@@ -58,20 +58,22 @@ VSCode provides default `editor.formatOnSaveMode` which enables file formatting 
 
 If `AblFormatter.formatOnSave` is set, then durring save current file is formatted using `./ablformatter/settings.json` file which structure folows the same logic as VSCode settings file. The only difference is that these settings are explicit e.g. if setting is not writen, the formatter presumes that the value is false. File example:
 
-```
+```json
 {
     "AblFormatter.usingFormatting": true,
     "AblFormatter.variableDefinitionFormatting": true
 }
 ```
+
 In this case only two explicitly enabled formatters will be enabled.
 
-### Diferent Settings For File
+### Diferent Settings For A File
+
 > In case you need specific settings for 1 file
 
 There is a possiblity to have specific formatter settings for a given file. This was implemented for simplier functional testing, but can be used by end users too. It works by writing OpenEdge comments on the top of the file. The first comment should be `/* formatterSettingsOverride */`. The second should contain settings json content. Example:
 
-```
+```prolog
 /* formatterSettingsOverride */
 /*  { "AblFormatter.blockFormatting": true,
 "AblFormatter.forFormatting": true
