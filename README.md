@@ -2,11 +2,12 @@
 
 VSCode extension for Progress OpenEdge code formatting.
 
-This extension uses tree-sitter-abl implementation by Kamil Jakubus. TODO: add links
+This extension uses [**tree-sitter-abl**](https://github.com/usagi-coffee/tree-sitter-abl) implementation by Kamil Jakubus.
 
 ## Current status
 
 This is an early preview. Currently, the formatter is not ready for the public release. You can only download it here and install from **vsix** file.
+
 **Planned release date: 2025-01**
 
 TODO: Add gif here
