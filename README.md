@@ -48,16 +48,46 @@ TODO
 
 ### Formatting On Save
 
-TODO: how to enable
+> In case you want to use formatting on save
+
+VSCode provides default `editor.formatOnSaveMode` which enables file formatting on save using configured formatter.
 
 ### Formatting On Save With Alternate Settings
 
-TODO: describe how to enable, whats the diff
-TODO: add settings hierarchy description
+> In case you want to use formatting on save, but with less features enabled, you can use `AblFormatter.formatOnSave` setting
+
+If `AblFormatter.formatOnSave` is set, then durring save current file is formatted using `./ablformatter/settings.json` file which structure folows the same logic as VSCode settings file. The only difference is that these settings are explicit e.g. if setting is not writen, the formatter presumes that the value is false. File example:
+
+```
+{
+    "AblFormatter.usingFormatting": true,
+    "AblFormatter.variableDefinitionFormatting": true
+}
+```
+In this case only two explicitly enabled formatters will be enabled.
 
 ### Diferent Settings For File
+> In case you need specific settings for 1 file
 
-TODO: describe how settings inside file work
+There is a possiblity to have specific formatter settings for a given file. This was implemented for simplier functional testing, but can be used by end users too. It works by writing OpenEdge comments on the top of the file. The first comment should be `/* formatterSettingsOverride */`. The second should contain settings json content. Example:
+
+```
+/* formatterSettingsOverride */
+/*  { "AblFormatter.blockFormatting": true,
+"AblFormatter.forFormatting": true
+}*/
+
+for each Customer:
+    Customer.var += 1.
+end.
+```
+
+Contrary to [On save](#formatting-on-save-with-alternate-settings) settings, File settings are implicit and just overrides VSCode settings.
+
+Priority:
+
+1. File Settings
+2. VSCode Settings
 
 ## Installation
 
