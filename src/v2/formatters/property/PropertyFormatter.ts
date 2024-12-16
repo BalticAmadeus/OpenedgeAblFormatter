@@ -4,7 +4,10 @@ import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
 import { FullText } from "../../model/FullText";
 import { AFormatter } from "../AFormatter";
-import { SyntaxNodeType } from "../../../model/SyntaxNodeType";
+import {
+    definitionKeywords,
+    SyntaxNodeType,
+} from "../../../model/SyntaxNodeType";
 import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
 import { PropertySettings } from "./PropertySettings";
 import { IConfigurationManager } from "../../../utils/IConfigurationManager";
@@ -72,15 +75,25 @@ export class PropertyFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
-            case SyntaxNodeType.DefineKeyword:
+            case definitionKeywords.hasFancy(node.type, ""):
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
             case SyntaxNodeType.Getter:
             case SyntaxNodeType.Setter:
+                const firstLineWhitespace =
+                    FormatterHelper.getActualStatementIndentation(
+                        node,
+                        fullText
+                    );
+                const statement = FormatterHelper.addIndentation(
+                    FormatterHelper.getCurrentText(node, fullText).trim(),
+                    -firstLineWhitespace + this.settings.tabSize(),
+                    fullText.eolDelimiter
+                );
                 newString =
                     fullText.eolDelimiter +
                     " ".repeat(this.startColumn + this.settings.tabSize()) +
-                    FormatterHelper.getCurrentText(node, fullText).trim();
+                    statement;
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);

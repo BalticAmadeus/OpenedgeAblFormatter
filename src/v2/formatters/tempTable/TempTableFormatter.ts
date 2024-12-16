@@ -16,7 +16,7 @@ import {
 export class TempTableFormatter extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "temptableFormatting";
     private readonly settings: TempTableSettings;
-
+    private alignType = 0;
     private startColumn = 0;
     private temptableValueColumn = 0;
     private temptableBodyValue = "";
@@ -36,13 +36,13 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
-        const text = FormatterHelper.getCurrentText(node, fullText);
-
         this.collectTemptableStructure(node, fullText);
+        const text = FormatterHelper.getCurrentText(node, fullText);
+        this.collectTemptableString(node, fullText);
         return this.getCodeEdit(node, text, this.temptableBodyValue, fullText);
     }
 
-    private collectTemptableStructure(node: SyntaxNode, fullText: FullText) {
+    private collectTemptableString(node: SyntaxNode, fullText: FullText) {
         this.startColumn = FormatterHelper.getActualStatementIndentation(
             node,
             fullText
@@ -71,6 +71,107 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         return resultString;
     }
 
+    private collectTemptableStructure(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): void {
+        node.children.forEach((child) => {
+            this.getTemptableStructure(child, fullText);
+        });
+    }
+
+    private getTemptableStructure(node: SyntaxNode, fullText: FullText): void {
+        switch (node.type) {
+            case SyntaxNodeType.FieldDefinition:
+                node.children.forEach((child) => {
+                    this.getFieldStructure(child, fullText);
+                });
+                break;
+        }
+    }
+
+    private getFieldStructure(node: SyntaxNode, fullText: FullText): void {
+        switch (node.type) {
+            case SyntaxNodeType.Identifier:
+                this.alignType = Math.max(
+                    this.alignType,
+                    FormatterHelper.getCurrentText(node, fullText).trim().length
+                );
+                break;
+        }
+    }
+
+    private collectFieldString(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): string {
+        let newString = "";
+        node.children.forEach((child) => {
+            newString = newString.concat(this.getFieldString(child, fullText));
+        });
+        return newString;
+    }
+
+    private getFieldString(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): string {
+        let newString = "";
+        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+        switch (node.type) {
+            case SyntaxNodeType.FieldKeyword:
+                newString = FormatterHelper.getCurrentText(
+                    node,
+                    fullText
+                ).trim();
+                break;
+            case SyntaxNodeType.TypeTuning:
+                newString = this.collectTypeTuningString(node, fullText);
+                break;
+            case SyntaxNodeType.Identifier:
+                newString =
+                    " " + text + " ".repeat(this.alignType - text.length);
+                break;
+            case SyntaxNodeType.Error:
+                newString = FormatterHelper.getCurrentText(node, fullText);
+                break;
+            default:
+                newString = text.length === 0 ? "" : " " + text;
+                break;
+        }
+        return newString;
+    }
+
+    private collectTypeTuningString(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): string {
+        let resultString = "";
+        node.children.forEach((child) => {
+            resultString = resultString.concat(
+                this.getTypeTuningString(child, fullText)
+            );
+        });
+        return resultString;
+    }
+
+    private getTypeTuningString(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): string {
+        let newString = "";
+        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+        switch (node.type) {
+            case SyntaxNodeType.Error:
+                newString = FormatterHelper.getCurrentText(node, fullText);
+                break;
+            default:
+                newString = text.length === 0 ? "" : " " + text;
+                break;
+        }
+        return newString;
+    }
+
     private getTemptableExpressionString(
         node: SyntaxNode,
         separator: string,
@@ -83,6 +184,8 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
             case SyntaxNodeType.FieldDefinition:
+                newString = separator + this.collectFieldString(node, fullText);
+                break;
             case SyntaxNodeType.IndexDefinition:
                 node.children.forEach((child) => {
                     newString = newString.concat(

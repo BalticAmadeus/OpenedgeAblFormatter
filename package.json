@@ -2,7 +2,7 @@
   "name": "abl-formatter",
   "displayName": "Abl Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/AblFormatter"
@@ -221,21 +221,48 @@
           ],
           "description": "Add a new line before the ELSE?"
         },
-        "AblFormatter.expressionFormatting": {
+        "AblFormatter.enumFormatting": {
           "order": 1300,
           "type": "boolean",
           "default": "true",
-          "description": "Enable EXPRESSION formatting"
+          "description": "Enable ENUM formatting"
         },
-        "AblFormatter.expressionFormattingLogicalLocation": {
+        "AblFormatter.enumFormattingEndDotLocation": {
           "order": 1301,
           "type": "string",
           "default": "Same",
           "enum": [
             "New",
             "Same"
+          ]
+        },
+        "AblFormatter.variableDefinitionFormatting": {
+          "order": 1400,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable DEFINE VARIABLE formatting"
+        },
+        "AblFormatter.procedureParameterFormatting": {
+          "order": 1500,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable PROCEDURE PARAMETER formatting"
+        },
+        "AblFormatter.functionParameterFormatting": {
+          "order": 1600,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable FUNCTION PARAMETER formatting"
+        },
+        "AblFormatter.functionParameterFormattingAlignParameterTypes": {
+          "order": 1601,
+          "type": "string",
+          "default": "Yes",
+          "enum": [
+            "Yes",
+            "No"
           ],
-          "description": "Should expressions with logical AND, OR values be on multiple lines?"
+          "description": "Align parameter types?"
         },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,

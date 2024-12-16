@@ -65,10 +65,13 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         const indentationStep = this.settings.tabSize();
         let indexOfColon = -1;
+        let deltaBetweenStartAndColon = 0;
         let blockStatementsStartRows = node.children
             .filter((child) => {
                 if (child.type === SyntaxNodeType.ColonKeyword) {
                     indexOfColon = child.startPosition.column;
+                    deltaBetweenStartAndColon =
+                        child.startPosition.row - parent.startPosition.row;
                     return false;
                 }
                 return true;
@@ -82,9 +85,19 @@ export class BlockFormater extends AFormatter implements IFormatter {
                     )
             );
 
+        let linesBeforeColumn = FormatterHelper.getCurrentText(parent, fullText)
+            .split(fullText.eolDelimiter)
+            .slice(0, deltaBetweenStartAndColon);
+        const onlyWhiteSpacesBeforeColumnLine = linesBeforeColumn.every(
+            (line) => line.trim() === ""
+        );
+
         let codeLines = FormatterHelper.getCurrentText(parent, fullText).split(
             fullText.eolDelimiter
         );
+        if (!onlyWhiteSpacesBeforeColumnLine) {
+            codeLines = codeLines.slice(deltaBetweenStartAndColon);
+        }
 
         // Do not do any changes for one-liner blocks
         if (codeLines.length <= 1) {
@@ -99,7 +112,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
             codeLines.pop();
         }
 
-        if (indexOfColon !== -1) {
+        if (indexOfColon !== -1 && deltaBetweenStartAndColon === 0) {
             // indexOfColon += parentIndentation;
             indexOfColon -= parent.startPosition.column;
             for (let i = indexOfColon + 1; i >= indexOfColon - 1; i--) {
@@ -127,6 +140,11 @@ export class BlockFormater extends AFormatter implements IFormatter {
                     (currentRow) => currentRow + 1
                 );
             }
+        }
+
+        // Add back the first lines before column of the block statement
+        if (!onlyWhiteSpacesBeforeColumnLine) {
+            codeLines = linesBeforeColumn.concat(codeLines);
         }
 
         let n = 0;

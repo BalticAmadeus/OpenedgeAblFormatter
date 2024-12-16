@@ -6,6 +6,6 @@
 
 DEFINE TEMP-TABLE ttCustomer NO-UNDO
     FIELD CustNum AS INTEGER
-    FIELD Name AS CHARACTER.
+    FIELD Name    AS CHARACTER.
 
 DEFINE DATASET dsCustomer FOR ttCustomer.
