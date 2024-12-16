@@ -16,6 +16,12 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
     private lastComparisonExpressionColumn = 0;
     private currentlyInsideParentheses = false;
 
+    /**
+     * Creates a new instance of ExpressionFormatter, which is a formatter for expressions, i.e.,
+     * logical, comparison, additive, multiplicative, assignment, unary, new, and var expressions.
+     *
+     * @param configurationManager The configuration manager holding the configuration of the formatter.
+     */
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new ExpressionSettings(configurationManager);

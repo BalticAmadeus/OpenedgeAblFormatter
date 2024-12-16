@@ -23,7 +23,6 @@ export enum SyntaxNodeType {
     IndexDefinition = "index_definition",
     VariableDefinition = "variable_definition",
     ProcedureParameterDefinition = "procedure_parameter_definition",
-    VariableAssignment = "variable_assignment",
     ConstructorDefinition = "constructor_definition",
     DestructorDefinition = "destructor_definition",
     MethodDefinition = "method_definition",
@@ -51,6 +50,7 @@ export enum SyntaxNodeType {
     ElseIfStatement = "else_if_statement",
     ReturnStatement = "return_statement",
     FunctionCallStatement = "function_call_statement",
+    FunctionalCallArgument = "functional_call_argument",
     UsingStatement = "using_statement",
     ClassStatement = "class_statement",
     FinallyStatement = "finally_statement",
@@ -73,6 +73,13 @@ export enum SyntaxNodeType {
     Parameters = "parameters",
     FunctionParameter = "function_parameter",
     FunctionParameterMode = "function_parameter_mode",
+    // arithmetic operators
+    Add = "+",
+    Subtract = "-",
+    Multiply = "*",
+    Divide = "/",
+    Modulus = "%",
+    EqualsSign = "=",
 
     // keywords
     WhenKeyword = "WHEN",
@@ -160,4 +167,9 @@ export const parameterTypes = new MyFancySet<string>([
 export const parentheses = new MyFancySet<string>([
     SyntaxNodeType.LeftParenthesis,
     SyntaxNodeType.RightParenthesis,
+]);
+
+export const logicalKeywords = new MyFancySet<string>([
+    SyntaxNodeType.AndKeyword,
+    SyntaxNodeType.OrKeyword,
 ]);
