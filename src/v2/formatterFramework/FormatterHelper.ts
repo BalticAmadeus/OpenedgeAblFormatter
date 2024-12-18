@@ -1,9 +1,6 @@
 import { SyntaxNode } from "web-tree-sitter";
 import { FullText } from "../model/FullText";
-import {
-    arithmeticOperators,
-    SyntaxNodeType,
-} from "../../model/SyntaxNodeType";
+import { SyntaxNodeType } from "../../model/SyntaxNodeType";
 
 export class FormatterHelper {
     public static getActualTextIndentation(
@@ -126,6 +123,23 @@ export class FormatterHelper {
         return indentedLines.join(eolDelimiter);
     }
 
+    public static alignIndentation(
+        text: string,
+        leadingSpaces: number,
+        eolDelimiter: string
+    ): string {
+        // Split the text into lines
+        const lines = text.split(eolDelimiter);
+
+        // Change indentation to each line except the first one
+        const indentedLines = lines.map((line, index) => {
+            return index === 0 ? line : " ".repeat(leadingSpaces) + line.trim();
+        });
+
+        // Join the lines back into a single string
+        return indentedLines.join(eolDelimiter);
+    }
+
     private static countLeadingSpaces(text: string): number {
         // Use a regular expression to match leading spaces
         const match = text.match(/^(\s*)/);
@@ -164,7 +178,17 @@ export class FormatterHelper {
                 resultString = resultString.trimStart() + ".";
             }
 
-            return resultString;
+            const parent = node.parent;
+            if (
+                parent !== null &&
+                (parent.type === SyntaxNodeType.AblStatement ||
+                    parent.type === SyntaxNodeType.Assignment ||
+                    parent.type === SyntaxNodeType.WhereClause)
+            ) {
+                return resultString.trimEnd();
+            }
+
+            return resultString.trim();
         }
     }
 
@@ -173,8 +197,6 @@ export class FormatterHelper {
         fullText: Readonly<FullText>,
         currentlyInsideParentheses: Boolean
     ): string {
-        console.log("nodeType: " + node.type);
-        console.log("par? " + currentlyInsideParentheses);
         if (currentlyInsideParentheses === true) {
             return this.getParenthesizedExpressionString(node, fullText);
         }
@@ -202,23 +224,12 @@ export class FormatterHelper {
                     fullText
                 );
                 break;
-            // Recheck the code below after ticket #116 is closed!
-            case SyntaxNodeType.EqualsSign:
-                const previousSibling = node.previousSibling;
-                newString =
-                    previousSibling !== null &&
-                    (arithmeticOperators.hasFancy(previousSibling.type, "") ||
-                        previousSibling.hasError())
-                        ? FormatterHelper.getCurrentText(node, fullText).trim()
-                        : " " +
-                          FormatterHelper.getCurrentText(node, fullText).trim();
-                break;
-            case SyntaxNodeType.ArrayLiteral:
-                newString = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
-                break;
+            // case SyntaxNodeType.ArrayLiteral:
+            //     newString = FormatterHelper.getCurrentText(
+            //         node,
+            //         fullText
+            //     ).trim();
+            //     break;
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
@@ -250,7 +261,6 @@ export class FormatterHelper {
         } else {
             newString = FormatterHelper.getCurrentText(node, fullText);
         }
-        console.log("newString:\n" + newString);
         return newString;
     }
 }

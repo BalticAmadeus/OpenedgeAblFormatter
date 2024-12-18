@@ -1,4 +1,4 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.expressionFormatting": true}*/
 
-a[i] = b[j].
+a[i] = c + b[x * 3].

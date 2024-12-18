@@ -33,11 +33,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
             node.type === SyntaxNodeType.ParenthesizedExpression ||
             node.type === SyntaxNodeType.AdditiveExpression ||
             node.type === SyntaxNodeType.MultiplicativeExpression ||
-            node.type === SyntaxNodeType.Assignment ||
-            node.type === SyntaxNodeType.UnaryExpression ||
-            node.type === SyntaxNodeType.NewExpression ||
-            node.type === SyntaxNodeType.VariableAssignment ||
-            node.type === SyntaxNodeType.FunctionalCallArgument
+            node.type === SyntaxNodeType.UnaryExpression
         ) {
             return true;
         }

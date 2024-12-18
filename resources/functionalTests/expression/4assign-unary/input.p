@@ -1,4 +1,4 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.expressionFormatting": true}*/
 
-a   =   not   c.
+a =   not   c.

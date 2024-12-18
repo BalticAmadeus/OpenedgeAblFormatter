@@ -34,4 +34,5 @@ export function enableFormatterDecorators(): void {
     EnumFormatter;
     ProcedureParameterFormatter;
     FunctionParameterFormatter;
+    ExpressionFormatter;
 }

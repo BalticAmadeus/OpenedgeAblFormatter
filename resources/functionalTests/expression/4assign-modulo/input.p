@@ -1,4 +1,4 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.expressionFormatting": true}*/
 
-a   =   b modulo   c.
+a = b modulo     c.

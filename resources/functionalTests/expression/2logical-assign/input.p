@@ -1,4 +1,4 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.expressionFormatting": true}*/
 
-a =   b   >=  c.
+a =   b   >=     c.

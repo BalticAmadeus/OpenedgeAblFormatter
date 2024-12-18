@@ -104,6 +104,11 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     fullText,
                     alignColumn
                 );
+                newString = FormatterHelper.alignIndentation(
+                    newString,
+                    alignColumn + 1,
+                    fullText.eolDelimiter
+                );
                 break;
             case SyntaxNodeType.EndKeyword:
                 newString =
