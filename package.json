@@ -264,6 +264,22 @@
           ],
           "description": "Align parameter types?"
         },
+        "AblFormatter.arrayAccessFormatting": {
+          "order": 1700,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable ARRAY ACCESS formatting"
+        },
+        "AblFormatter.arrayAccessFormattingAddSpaceAfterComma": {
+          "order": 1701,
+          "type": "string",
+          "default": "No",
+          "enum": [
+            "Yes",
+            "No"
+          ],
+          "description": "Add space after comma?"
+        },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,
           "type": "boolean",

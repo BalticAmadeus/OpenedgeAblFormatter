@@ -60,6 +60,7 @@ export enum SyntaxNodeType {
     TypeTuning = "type_tuning",
     AccessTuning = "access_tuning",
     ArrayAccess = "array_access",
+    ArrayLiteral = "array_literal",
     Comment = "comment",
     Getter = "getter",
     Setter = "setter",
