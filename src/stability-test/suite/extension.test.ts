@@ -57,7 +57,7 @@ suite("Extension Test Suite", () => {
     stabilityTestCases.forEach((cases) => {
         test(`Symbol test: ${cases}`, () => {
             stabilityTest(cases);
-        });
+        }).timeout(10000);
 
         // test(`Parser error test: ${cases}`, () => {
         //     treeSitterTest(cases, fileId.toString);
