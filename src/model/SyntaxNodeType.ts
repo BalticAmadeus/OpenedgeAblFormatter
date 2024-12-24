@@ -65,6 +65,9 @@ export enum SyntaxNodeType {
     LeftParenthesis = "(",
     RightParenthesis = ")",
     Label = "label",
+    Parameters = "parameters",
+    FunctionParameter = "function_parameter",
+    FunctionParameterMode = "function_parameter_mode",
 
     // keywords
     WhenKeyword = "WHEN",
@@ -107,6 +110,10 @@ export enum SyntaxNodeType {
     ReturnKeyword = "RETURN",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
+    TableKeyword = "TABLE",
+    TableHandleKeyword = "TABLE-HANDLE",
+    DatasetKeyword = "DATASET",
+    DatasetHandleKeyword = "DATASET-HANDLE",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
@@ -124,6 +131,13 @@ export const definitionKeywords = new MyFancySet<string>([
     SyntaxNodeType.DefKeyword,
 ]);
 
+export const dataStructureKeywords = new MyFancySet<string>([
+    SyntaxNodeType.TableKeyword,
+    SyntaxNodeType.TableHandleKeyword,
+    SyntaxNodeType.DatasetKeyword,
+    SyntaxNodeType.DatasetHandleKeyword,
+]);
+
 export const bodyBlockKeywords = new MyFancySet<string>([
     SyntaxNodeType.Body,
     SyntaxNodeType.CaseBody,
@@ -136,4 +150,9 @@ export const parameterTypes = new MyFancySet<string>([
     SyntaxNodeType.OutputKeyword,
     SyntaxNodeType.InputOutputKeyword,
     SyntaxNodeType.ReturnKeyword,
+]);
+
+export const parentheses = new MyFancySet<string>([
+    SyntaxNodeType.LeftParenthesis,
+    SyntaxNodeType.RightParenthesis,
 ]);

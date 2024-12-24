@@ -16,14 +16,13 @@ export class UsingFormatter extends AFormatter implements IFormatter {
 
     private usingStatementsFound: number = 0;
     private alignOptionalStatements: number = 0;
+    private usingStatements: UsingStatement[] = [];
+    private textUsingStatements: string[] = [];
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new UsingSettings(configurationManager);
     }
-
-    private usingStatements: UsingStatement[] = [];
-    private textUsingStatements: string[] = [];
 
     match(node: Readonly<SyntaxNode>): boolean {
         if (node.type === SyntaxNodeType.UsingStatement) {
@@ -44,10 +43,13 @@ export class UsingFormatter extends AFormatter implements IFormatter {
             this.textUsingStatements.sort();
         }
         const text = FormatterHelper.getCurrentText(node, fullText);
-        if (this.usingStatementsFound > this.usingStatements.length) {
+        if (this.usingStatementsFound > this.textUsingStatements.length) {
             return undefined;
         }
         const newText = this.textUsingStatements[this.usingStatementsFound - 1];
+        if (this.usingStatementsFound === this.textUsingStatements.length) {
+            this.reset();
+        }
         return this.getCodeEdit(node, text, newText, fullText);
     }
 
@@ -56,8 +58,11 @@ export class UsingFormatter extends AFormatter implements IFormatter {
         fullText: FullText
     ): void {
         for (node; node !== null; node = node.nextSibling) {
-            if (!this.match(node)) {
+            if (node.type === SyntaxNodeType.Comment) {
                 continue;
+            }
+            if (!this.match(node)) {
+                break;
             }
 
             const keywordChild = node.child(0);
@@ -125,6 +130,13 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                 "."
             );
         }
+    }
+
+    private reset(): void {
+        this.usingStatementsFound = 0;
+        this.alignOptionalStatements = 0;
+        this.usingStatements = [];
+        this.textUsingStatements = [];
     }
 }
 
