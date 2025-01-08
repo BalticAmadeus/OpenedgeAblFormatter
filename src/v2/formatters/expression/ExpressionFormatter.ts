@@ -35,6 +35,10 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
             node.type === SyntaxNodeType.MultiplicativeExpression ||
             node.type === SyntaxNodeType.UnaryExpression
         ) {
+            const parent = node.parent;
+            if (parent !== null && parent.type === SyntaxNodeType.WhilePhrase) {
+                return false;
+            }
             return true;
         }
         return false;
