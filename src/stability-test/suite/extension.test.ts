@@ -17,6 +17,7 @@ import { DebugManagerMock } from "./DebugManagerMock";
 let parserHelper: AblParserHelper;
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
+const testResultsDir = join(extensionDevelopmentPath, "src/testResults");
 
 const stabilityTestDir = join(extensionDevelopmentPath, "resources/ade");
 const extensionsToFind = [".p", ".w", ".cls", ".i"];
@@ -38,6 +39,15 @@ suite("Extension Test Suite", () => {
         await Parser.init().then(() => {
             console.log("Parser initialized");
         });
+
+        if (fs.existsSync(testResultsDir)) {
+            fs.readdirSync(testResultsDir).forEach((file) => {
+                const filePath = path.join(testResultsDir, file);
+                fs.rmSync(filePath, { recursive: true, force: true });
+            });
+        } else {
+            fs.mkdirSync(testResultsDir);
+        }        
 
         parserHelper = new AblParserHelper(
             extensionDevelopmentPath,
@@ -75,8 +85,18 @@ function stabilityTest(name: string): void {
     const afterCount = countActualSymbols(afterText);
 
     if (beforeCount !== afterCount) {
-        // assert.strictEqual(beforeText, afterText);
-        assert.fail(beforeText + "**************************************************************\n" + afterText);
+
+        const fileName = path.basename(name, path.extname(name));
+        const beforeFilePath = join(testResultsDir, `${fileName}_before${path.extname(name)}`);
+        const afterFilePath = join(testResultsDir, `${fileName}_after${path.extname(name)}`);
+
+        fs.writeFileSync(beforeFilePath, beforeText);
+        fs.writeFileSync(afterFilePath, afterText);
+
+        assert.fail(`Symbol count mismatch in ${name}.
+            Before: ${beforeFilePath}
+            After: ${afterFilePath}
+            `);
     }
         // assert.strictEqual(beforeCount, afterCount);
 }
