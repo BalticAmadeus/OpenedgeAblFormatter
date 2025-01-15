@@ -29,7 +29,7 @@ const stabilityTestCases = getFilesWithExtensions(
 console.log("Parser initialized", stabilityTestCases);
 
 
-const testRunTimestamp = new Date().toISOString().split(".")[0].replace(/[:\-]/g, "_");
+const testRunTimestamp = new Date().toISOString().replace(/[:.T-]/g, "_").substr(0, 19);
 const testRunDir = join(testResultsDir, testRunTimestamp);
 
 suite("Extension Test Suite", () => {
