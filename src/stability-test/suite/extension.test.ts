@@ -28,6 +28,10 @@ const stabilityTestCases = getFilesWithExtensions(
 
 console.log("Parser initialized", stabilityTestCases);
 
+
+const testRunTimestamp = new Date().toISOString().split(".")[0].replace(/[:\-]/g, "_");
+const testRunDir = join(testResultsDir, testRunTimestamp);
+
 suite("Extension Test Suite", () => {
     console.log("Parser initialized", stabilityTestCases);
 
@@ -40,14 +44,7 @@ suite("Extension Test Suite", () => {
             console.log("Parser initialized");
         });
 
-        if (fs.existsSync(testResultsDir)) {
-            fs.readdirSync(testResultsDir).forEach((file) => {
-                const filePath = path.join(testResultsDir, file);
-                fs.rmSync(filePath, { recursive: true, force: true });
-            });
-        } else {
-            fs.mkdirSync(testResultsDir);
-        }        
+        fs.mkdirSync(testRunDir, { recursive: true });
 
         parserHelper = new AblParserHelper(
             extensionDevelopmentPath,
@@ -87,18 +84,19 @@ function stabilityTest(name: string): void {
     if (beforeCount !== afterCount) {
 
         const fileName = path.basename(name, path.extname(name));
-        const beforeFilePath = join(testResultsDir, `${fileName}_before${path.extname(name)}`);
-        const afterFilePath = join(testResultsDir, `${fileName}_after${path.extname(name)}`);
+        const beforeFilePath = join(testRunDir, `${fileName}_before${path.extname(name)}`);
+        const afterFilePath = join(testRunDir, `${fileName}_after${path.extname(name)}`);
 
         fs.writeFileSync(beforeFilePath, beforeText);
         fs.writeFileSync(afterFilePath, afterText);
 
-        assert.fail(`Symbol count mismatch in ${name}.
-            Before: ${beforeFilePath}
-            After: ${afterFilePath}
-            `);
+        assert.fail(`Symbol count mismatch
+        Before: ${beforeFilePath}
+        After: ${afterFilePath}
+        `);
+
     }
-        // assert.strictEqual(beforeCount, afterCount);
+    // assert.strictEqual(beforeCount, afterCount);
 }
 
 function getInput(fileName: string): string {
@@ -229,12 +227,10 @@ function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
     errors.forEach((errorNode, index) => {
         errorMessage += `Error ${index + 1}:\n`;
         errorMessage += `- Type           : ${errorNode.type}\n`;
-        errorMessage += `- Start Position : Line ${
-            errorNode.startPosition.row + 1
-        }, Column ${errorNode.startPosition.column + 1}\n`;
-        errorMessage += `- End Position   : Line ${
-            errorNode.endPosition.row + 1
-        }, Column ${errorNode.endPosition.column + 1}\n`;
+        errorMessage += `- Start Position : Line ${errorNode.startPosition.row + 1
+            }, Column ${errorNode.startPosition.column + 1}\n`;
+        errorMessage += `- End Position   : Line ${errorNode.endPosition.row + 1
+            }, Column ${errorNode.endPosition.column + 1}\n`;
         errorMessage += `- Code Snippet   :\n\n${errorNode.text}\n`;
         errorMessage += `--------------------------------------------------------------------------------\n`;
     });
