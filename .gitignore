@@ -6,4 +6,4 @@ node_modules
 .vscode-test/
 *.vsix
 resources/ade
-src/testResults
+resources/testResults

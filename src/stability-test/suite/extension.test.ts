@@ -17,7 +17,7 @@ import { DebugManagerMock } from "./DebugManagerMock";
 let parserHelper: AblParserHelper;
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
-const testResultsDir = join(extensionDevelopmentPath, "src/testResults");
+const testResultsDir = join(extensionDevelopmentPath, "resources/testResults");
 
 const stabilityTestDir = join(extensionDevelopmentPath, "resources/ade");
 const extensionsToFind = [".p", ".w", ".cls", ".i"];
@@ -28,8 +28,10 @@ const stabilityTestCases = getFilesWithExtensions(
 
 console.log("Parser initialized", stabilityTestCases);
 
-
-const testRunTimestamp = new Date().toISOString().replace(/[:.T-]/g, "_").substr(0, 19);
+const testRunTimestamp = new Date()
+    .toISOString()
+    .replace(/[:.T-]/g, "_")
+    .substring(0, 19);
 const testRunDir = join(testResultsDir, testRunTimestamp);
 
 suite("Extension Test Suite", () => {
@@ -65,10 +67,6 @@ suite("Extension Test Suite", () => {
         test(`Symbol test: ${cases}`, () => {
             stabilityTest(cases);
         }).timeout(10000);
-
-        // test(`Parser error test: ${cases}`, () => {
-        //     treeSitterTest(cases, fileId.toString);
-        // });
     });
 });
 
@@ -82,10 +80,15 @@ function stabilityTest(name: string): void {
     const afterCount = countActualSymbols(afterText);
 
     if (beforeCount !== afterCount) {
-
         const fileName = path.basename(name, path.extname(name));
-        const beforeFilePath = join(testRunDir, `${fileName}_before${path.extname(name)}`);
-        const afterFilePath = join(testRunDir, `${fileName}_after${path.extname(name)}`);
+        const beforeFilePath = join(
+            testRunDir,
+            `${fileName}_before${path.extname(name)}`
+        );
+        const afterFilePath = join(
+            testRunDir,
+            `${fileName}_after${path.extname(name)}`
+        );
 
         fs.writeFileSync(beforeFilePath, beforeText);
         fs.writeFileSync(afterFilePath, afterText);
@@ -94,7 +97,6 @@ function stabilityTest(name: string): void {
         Before: ${beforeFilePath}
         After: ${afterFilePath}
         `);
-
     }
     // assert.strictEqual(beforeCount, afterCount);
 }
@@ -171,7 +173,7 @@ function countActualSymbols(text: string): number {
     for (const element of text) {
         const char = element;
         // Exclude spaces, newlines, carriage returns, and tabs
-        if (char !== ' ' && char !== '\n' && char !== '\r' && char !== '\t') {
+        if (char !== " " && char !== "\n" && char !== "\r" && char !== "\t") {
             count++;
         }
     }
@@ -227,10 +229,12 @@ function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
     errors.forEach((errorNode, index) => {
         errorMessage += `Error ${index + 1}:\n`;
         errorMessage += `- Type           : ${errorNode.type}\n`;
-        errorMessage += `- Start Position : Line ${errorNode.startPosition.row + 1
-            }, Column ${errorNode.startPosition.column + 1}\n`;
-        errorMessage += `- End Position   : Line ${errorNode.endPosition.row + 1
-            }, Column ${errorNode.endPosition.column + 1}\n`;
+        errorMessage += `- Start Position : Line ${
+            errorNode.startPosition.row + 1
+        }, Column ${errorNode.startPosition.column + 1}\n`;
+        errorMessage += `- End Position   : Line ${
+            errorNode.endPosition.row + 1
+        }, Column ${errorNode.endPosition.column + 1}\n`;
         errorMessage += `- Code Snippet   :\n\n${errorNode.text}\n`;
         errorMessage += `--------------------------------------------------------------------------------\n`;
     });
