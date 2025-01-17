@@ -1,7 +1,6 @@
 import { AssignFormatter } from "../formatters/assign/AssignFormatter";
 import { BlockFormater } from "../formatters/block/BlockFormatter";
 import { IfFormatter } from "../formatters/if/IfFormatter";
-import { DefineFormatter } from "../formatters/define/DefineFormatter";
 import { UsingFormatter } from "../formatters/using/UsingFormatter";
 import { CaseFormatter } from "../formatters/case/CaseFormatter";
 import { FindFormatter } from "../formatters/find/FindFormatter";
@@ -21,7 +20,6 @@ export function enableFormatterDecorators(): void {
     BlockFormater;
     BodyFormatter;
     IfFormatter;
-    DefineFormatter;
     UsingFormatter;
     CaseFormatter;
     FindFormatter;

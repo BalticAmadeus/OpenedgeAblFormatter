@@ -75,12 +75,6 @@
           ],
           "description": "Should end dot be located on same or new line after ASSIGN statement?"
         },
-        "AblFormatter.defineFormatting": {
-          "order": 200,
-          "type": "boolean",
-          "default": "true",
-          "description": "Enable DEFINE formatting"
-        },
         "AblFormatter.findFormatting": {
           "order": 300,
           "type": "boolean",
