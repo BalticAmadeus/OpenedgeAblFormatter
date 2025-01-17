@@ -27,7 +27,7 @@ jobs:
               if: runner.os == 'Linux'
             - run: npm test
               if: runner.os != 'Linux'
-            - run: xvfb-run -a npm stability-test
+            - run: xvfb-run -a npm run stability-test
               if: runner.os == 'Linux'
-            - run: npm stability-test
+            - run: npm run stability-test
               if: runner.os != 'Linux'
