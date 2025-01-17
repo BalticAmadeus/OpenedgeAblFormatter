@@ -37,3 +37,4 @@ jobs:
               if: runner.os == 'Linux'
             - run: npm run stability-test
               if: runner.os != 'Linux'
+              working-directory: ${{ github.workspace }}\AblFormatter\AblFormatter\resources\stabilityTests
