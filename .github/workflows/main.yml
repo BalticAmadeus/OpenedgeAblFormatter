@@ -15,6 +15,11 @@ jobs:
             matrix:
                 os: [windows-latest]
         runs-on: ${{ matrix.os }}
+
+        defaults:
+            run:
+                working-directory: ${{ github.workspace }}\resources\stabilityTests
+
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -37,4 +42,3 @@ jobs:
               if: runner.os == 'Linux'
             - run: npm run stability-test
               if: runner.os != 'Linux'
-              working-directory: ${{ github.workspace }}\resources\stabilityTests
