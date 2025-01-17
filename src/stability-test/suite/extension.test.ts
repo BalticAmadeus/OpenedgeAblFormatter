@@ -68,13 +68,13 @@ suite("Extension Test Suite", () => {
     });
 
     stabilityTestCases.forEach((cases) => {
-        // test(`Empty space test: ${cases}`, () => {
-        //     stabilityTest(cases);
-        // }).timeout(10000);
-
-        test(`Idempotence test: ${cases}`, () => {
-            idempotenceTest(cases);
+        test(`Empty space test: ${cases}`, () => {
+            stabilityTest(cases);
         }).timeout(10000);
+
+        // test(`Idempotence test: ${cases}`, () => {
+        //     idempotenceTest(cases);
+        // }).timeout(10000);
     });
 });
 
