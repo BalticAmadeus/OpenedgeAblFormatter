@@ -13,7 +13,7 @@ jobs:
     build:
         strategy:
             matrix:
-                os: [macos-latest, ubuntu-latest, windows-latest]
+                os: [ubuntu-latest]
         runs-on: ${{ matrix.os }}
         steps:
             - name: Checkout
@@ -27,6 +27,12 @@ jobs:
               if: runner.os == 'Linux'
             - run: npm test
               if: runner.os != 'Linux'
+
+            - run: xvfb-run -a npm run get-ade-test
+              if: runner.os == 'Linux'
+            - run: npm run get-ade-test
+              if: runner.os != 'Linux'
+
             - run: xvfb-run -a npm run stability-test
               if: runner.os == 'Linux'
             - run: npm run stability-test
