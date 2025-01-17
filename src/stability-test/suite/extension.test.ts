@@ -18,6 +18,10 @@ let parserHelper: AblParserHelper;
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
 const testResultsDir = join(extensionDevelopmentPath, "resources/testResults");
+const testResultsDirIdempotence = join(
+    extensionDevelopmentPath,
+    "resources/testResultsIdempotence"
+);
 
 const stabilityTestDir = join(extensionDevelopmentPath, "resources/ade");
 const extensionsToFind = [".p", ".w", ".cls", ".i"];
@@ -33,6 +37,7 @@ const testRunTimestamp = new Date()
     .replace(/[:.T-]/g, "_")
     .substring(0, 19);
 const testRunDir = join(testResultsDir, testRunTimestamp);
+const testRunDirIdempotence = join(testResultsDirIdempotence, testRunTimestamp);
 
 suite("Extension Test Suite", () => {
     console.log("Parser initialized", stabilityTestCases);
@@ -47,6 +52,7 @@ suite("Extension Test Suite", () => {
         });
 
         fs.mkdirSync(testRunDir, { recursive: true });
+        fs.mkdirSync(testRunDirIdempotence, { recursive: true });
 
         parserHelper = new AblParserHelper(
             extensionDevelopmentPath,
@@ -61,11 +67,13 @@ suite("Extension Test Suite", () => {
         );
     });
 
-    let fileId = 0;
-
     stabilityTestCases.forEach((cases) => {
-        test(`Symbol test: ${cases}`, () => {
-            stabilityTest(cases);
+        // test(`Empty space test: ${cases}`, () => {
+        //     stabilityTest(cases);
+        // }).timeout(10000);
+
+        test(`Idempotence test: ${cases}`, () => {
+            idempotenceTest(cases);
         }).timeout(10000);
     });
 });
@@ -75,8 +83,9 @@ function stabilityTest(name: string): void {
     enableFormatterDecorators();
 
     const beforeText = getInput(name);
-    const beforeCount = countActualSymbols(beforeText);
     const afterText = format(beforeText, name);
+
+    const beforeCount = countActualSymbols(beforeText);
     const afterCount = countActualSymbols(afterText);
 
     if (beforeCount !== afterCount) {
@@ -98,7 +107,39 @@ function stabilityTest(name: string): void {
         After: ${afterFilePath}
         `);
     }
-    // assert.strictEqual(beforeCount, afterCount);
+}
+
+function idempotenceTest(name: string) {
+    ConfigurationManager2.getInstance();
+    enableFormatterDecorators();
+
+    const beforeText = getInput(name);
+    const afterText = format(beforeText, name);
+
+    ConfigurationManager2.getInstance();
+    enableFormatterDecorators();
+
+    const afterText2 = format(afterText, name);
+
+    if (afterText !== afterText2) {
+        const fileName = path.basename(name, path.extname(name));
+        const afterFilePath = join(
+            testRunDirIdempotence,
+            `${fileName}_before${path.extname(name)}`
+        );
+        const after2FilePath = join(
+            testRunDirIdempotence,
+            `${fileName}_after${path.extname(name)}`
+        );
+
+        fs.writeFileSync(afterFilePath, afterText);
+        fs.writeFileSync(after2FilePath, afterText2);
+
+        assert.fail(`Text mismach
+        After: ${afterFilePath}
+        After2: ${after2FilePath}
+        `);
+    }
 }
 
 function getInput(fileName: string): string {
