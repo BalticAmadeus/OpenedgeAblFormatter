@@ -264,6 +264,22 @@
           ],
           "description": "Align parameter types?"
         },
+        "AblFormatter.arrayAccessFormatting": {
+          "order": 1700,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable ARRAY ACCESS formatting"
+        },
+        "AblFormatter.arrayAccessFormattingAddSpaceAfterComma": {
+          "order": 1701,
+          "type": "string",
+          "default": "No",
+          "enum": [
+            "Yes",
+            "No"
+          ],
+          "description": "Add space after comma?"
+        },
         "AblFormatter.expressionFormatting": {
           "order": 1700,
           "type": "boolean",
@@ -304,7 +320,8 @@
     "run-ui-test": "npm run copy-test-settings && npm run copy-test-cases && npm run compile && extest run-tests './out/ui-test/testRunner.js' -s ./.test_dir -e ./.ext_dir -c 1.85.1 -t stable",
     "copy-test-cases": "copyfiles -u 2 ./resources/samples/* .test_dir/samples",
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
