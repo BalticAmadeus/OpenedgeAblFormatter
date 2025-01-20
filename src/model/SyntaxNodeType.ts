@@ -84,6 +84,13 @@ export enum SyntaxNodeType {
     Divide = "/",
     Modulus = "%",
     EqualsSign = "=",
+    // comparison operators
+    EqualTo = "EQ",
+    NotEqualTo = "NE",
+    GreaterThan = "GT",
+    LessThan = "LT",
+    GreaterThanOrEqualTo = "GE",
+    LessThanOrEqualTo = "LE",
 
     // keywords
     WhenKeyword = "WHEN",

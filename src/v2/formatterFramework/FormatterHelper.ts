@@ -225,12 +225,6 @@ export class FormatterHelper {
                     fullText
                 );
                 break;
-            // case SyntaxNodeType.ArrayLiteral:
-            //     newString = FormatterHelper.getCurrentText(
-            //         node,
-            //         fullText
-            //     ).trim();
-            //     break;
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
