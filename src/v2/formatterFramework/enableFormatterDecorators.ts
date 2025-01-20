@@ -14,6 +14,7 @@ import { EnumFormatter } from "../formatters/enum/EnumFormatter";
 import { VariableDefinitionFormatter } from "../formatters/variableDefinition/VariableDefinitionFormatter";
 import { ProcedureParameterFormatter } from "../formatters/procedureParameter/ProcedureParameterFormatter";
 import { FunctionParameterFormatter } from "../formatters/functionParameter/FunctionParameterFormatter";
+import { ArrayAccessFormatter } from "../formatters/arrayAccess/ArrayAccessFormatter";
 
 // needed just for enabling decorators. Decorators does not work if there is no usage of a class in the reachable code
 export function enableFormatterDecorators(): void {
@@ -33,4 +34,5 @@ export function enableFormatterDecorators(): void {
     EnumFormatter;
     ProcedureParameterFormatter;
     FunctionParameterFormatter;
+    ArrayAccessFormatter;
 }
