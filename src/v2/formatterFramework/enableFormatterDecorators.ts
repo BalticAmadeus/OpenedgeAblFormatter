@@ -36,4 +36,5 @@ export function enableFormatterDecorators(): void {
     ProcedureParameterFormatter;
     FunctionParameterFormatter;
     ArrayAccessFormatter;
+    ExpressionFormatter;
 }
