@@ -281,13 +281,13 @@
           "description": "Add space after comma?"
         },
         "AblFormatter.expressionFormatting": {
-          "order": 1700,
+          "order": 1800,
           "type": "boolean",
           "default": "true",
           "description": "Enable EXPRESSION formatting"
         },
         "AblFormatter.expressionFormattingLogicalLocation": {
-          "order": 1701,
+          "order": 1801,
           "type": "string",
           "default": "Same",
           "enum": [
