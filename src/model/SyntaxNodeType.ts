@@ -34,7 +34,6 @@ export enum SyntaxNodeType {
     VariableAssignment = "variable_assignment",
     Identifier = "identifier",
     SourceCode = "source_code",
-    ArrayAccess = "array_access",
     Argument = "argument",
     Arguments = "arguments",
     ForPhrase = "for_phrase",
@@ -95,6 +94,8 @@ export enum SyntaxNodeType {
     LessThan = "LT",
     GreaterThanOrEqualTo = "GE",
     LessThanOrEqualTo = "LE",
+    // assignment operators
+    AssignmentOperator = "assignment_operator",
 
     // keywords
     WhenKeyword = "WHEN",
