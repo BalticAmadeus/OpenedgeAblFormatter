@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class AssignSettings extends ASettings {
+export class AssignSettings extends AFormatterSettings {
     // assign settings
     public assignFormatting() {
         return !!this.configurationManager.get("assignFormatting");

@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class BodySettings extends ASettings {
+export class BodySettings extends AFormatterSettings {
     //empty block settings
     public BodyFormatting() {
         return !!this.configurationManager.get("bodyFormatting");

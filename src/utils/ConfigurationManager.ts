@@ -1,5 +1,6 @@
 import { commands, window, workspace, WorkspaceConfiguration } from "vscode";
 import { IConfigurationManager } from "./IConfigurationManager";
+import * as fs from "fs";
 
 export class ConfigurationManager2 implements IConfigurationManager {
     private static instance: ConfigurationManager2;
@@ -8,8 +9,11 @@ export class ConfigurationManager2 implements IConfigurationManager {
     private configuration: WorkspaceConfiguration | undefined = undefined;
     private externalConfiguration: WorkspaceConfiguration | undefined =
         undefined;
-    private overridingSettings: any | undefined;
+    private overridingSettings: any;
     private tabSize: number | undefined;
+
+    private shouldUseOnSaveSettings: boolean = false;
+    private onSaveConfig: any;
 
     private constructor() {
         workspace.onDidChangeConfiguration((e) => {
@@ -24,6 +28,31 @@ export class ConfigurationManager2 implements IConfigurationManager {
                 this.reloadExternalConfig = true;
                 window.showInformationMessage(
                     "ABL completion settings were changed!"
+                );
+            }
+        });
+
+        this.readOnSaveSettingsFile();
+        this.createOnSaveListener();
+    }
+
+    private createOnSaveListener() {
+        workspace
+            .createFileSystemWatcher("**/.ablformatter/settings.json")
+            .onDidChange((e) => {
+                window.showInformationMessage(
+                    "ABL On Save settings were changed!"
+                );
+
+                this.readOnSaveSettingsFile();
+            });
+    }
+
+    private readOnSaveSettingsFile(): void {
+        workspace.findFiles("**/.ablformatter/settings.json").then((files) => {
+            if (files.length > 0) {
+                this.onSaveConfig = JSON.parse(
+                    fs.readFileSync(files[0].fsPath, "utf-8")
                 );
             }
         });
@@ -49,7 +78,7 @@ export class ConfigurationManager2 implements IConfigurationManager {
     }
 
     public getTabSize(): number {
-        return this.tabSize || 4; // Default to 4 if not set
+        return this.tabSize ?? 4; // Default to 4 if not set
     }
 
     public getCasing() {
@@ -75,14 +104,10 @@ export class ConfigurationManager2 implements IConfigurationManager {
                     "Settings"
                 )
                 .then((selection) => {
-                    switch (selection) {
-                        case "Settings":
-                            commands.executeCommand(
-                                "workbench.action.openWorkspaceSettingsFile"
-                            );
-                            return;
-                        default:
-                            return;
+                    if (selection === "Settings") {
+                        commands.executeCommand(
+                            "workbench.action.openWorkspaceSettingsFile"
+                        );
                     }
                 });
         }
@@ -102,6 +127,18 @@ export class ConfigurationManager2 implements IConfigurationManager {
     private getConfig(name: string): any {
         const config = this.configuration?.get(name);
 
+        if (this.shouldUseOnSaveSettings) {
+            if (this.onSaveConfig === undefined) {
+                window.showWarningMessage("On save config was not found!");
+            } else {
+                const config = this.onSaveConfig["AblFormatter." + name];
+                if (config === undefined) {
+                    return false;
+                }
+                return config;
+            }
+        }
+
         if (this.overridingSettings !== undefined) {
             const overridingConfig =
                 this.overridingSettings["AblFormatter." + name];
@@ -112,5 +149,9 @@ export class ConfigurationManager2 implements IConfigurationManager {
             }
         }
         return config;
+    }
+
+    public useOnSaveSettings(shouldUseOnSaveSettings: boolean): void {
+        this.shouldUseOnSaveSettings = shouldUseOnSaveSettings;
     }
 }

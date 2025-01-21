@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class CaseSettings extends ASettings {
+export class CaseSettings extends AFormatterSettings {
     // case settings
     public caseFormatting() {
         return !!this.configurationManager.get("caseFormatting");

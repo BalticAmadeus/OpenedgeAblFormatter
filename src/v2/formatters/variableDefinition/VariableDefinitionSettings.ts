@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class VariableDefinitionSettings extends ASettings {
+export class VariableDefinitionSettings extends AFormatterSettings {
     // variable definition settings
     public variableDefinitionFormatting() {
         return !!this.configurationManager.get("variableDefinitionFormatting");

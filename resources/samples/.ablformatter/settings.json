@@ -1,0 +1,7 @@
+{ 
+"AblFormatter.blockFormatting": true,
+"AblFormatter.caseFormatting": true,
+"abl.completion.upperCase": false,
+"AblFormatter.ifFormatting": true,
+"AblFormatter.ifFormattingThenLocation": "New"
+}

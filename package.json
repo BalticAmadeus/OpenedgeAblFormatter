@@ -2,7 +2,7 @@
   "name": "abl-formatter",
   "displayName": "Abl Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/AblFormatter"
@@ -38,6 +38,12 @@
     "configuration": {
       "title": "AblFormatter",
       "properties": {
+        "AblFormatter.formatOnSave": {
+          "order": 10,
+          "type": "boolean",
+          "default": "false",
+          "markdownDescription": "Enable/disable Formatting on save."
+        },
         "AblFormatter.assignFormatting": {
           "order": 100,
           "type": "boolean",

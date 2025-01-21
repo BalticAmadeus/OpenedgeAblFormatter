@@ -1,6 +1,6 @@
-import { ASettings } from "../ASettings";
+import { AFormatterSettings } from "../AFormatterSettings";
 
-export class FunctionParameterSettings extends ASettings {
+export class FunctionParameterSettings extends AFormatterSettings {
     // procedure parameter settings
     public procedureParameterFormatting() {
         return !!this.configurationManager.get("functionParameterFormatting");

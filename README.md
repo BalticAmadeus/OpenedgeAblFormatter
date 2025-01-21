@@ -37,13 +37,59 @@ At the moment we implemented formatting logic for these language features:
 
 We implemented extensive settings configuration to allow users to easly tailor the experience to their needs. This might not be the case in the future.
 
-### Settings 
+### Extension Settings
 
-### Formatting on save
+TODO: list of extension settings
+TODO: link to a separate settings documentation
 
-TODO: link a separate file with settings
+### VSCode Settings
 
+TODO
 
+### Formatting On Save
+
+> In case you want to use formatting on save
+
+VSCode provides default `editor.formatOnSaveMode` which enables file formatting on save using configured formatter.
+
+### Formatting On Save With Alternate Settings
+
+> In case you want to use formatting on save, but with less features enabled, you can use `AblFormatter.formatOnSave` setting
+
+If `AblFormatter.formatOnSave` is set, then durring save current file is formatted using `./ablformatter/settings.json` file which structure folows the same logic as VSCode settings file. The only difference is that these settings are explicit e.g. if setting is not writen, the formatter presumes that the value is false. File example:
+
+```json
+{
+    "AblFormatter.usingFormatting": true,
+    "AblFormatter.variableDefinitionFormatting": true
+}
+```
+
+In this case only two explicitly enabled formatters will be enabled.
+
+### Diferent Settings For A File
+
+> In case you need specific settings for 1 file
+
+There is a possiblity to have specific formatter settings for a given file. This was implemented for simplier functional testing, but can be used by end users too. It works by writing OpenEdge comments on the top of the file. The first comment should be `/* formatterSettingsOverride */`. The second should contain settings json content. Example:
+
+```prolog
+/* formatterSettingsOverride */
+/*  { "AblFormatter.blockFormatting": true,
+"AblFormatter.forFormatting": true
+}*/
+
+for each Customer:
+    Customer.var += 1.
+end.
+```
+
+Contrary to [On save](#formatting-on-save-with-alternate-settings) settings, File settings are implicit and just overrides VSCode settings.
+
+Priority:
+
+1. File Settings
+2. VSCode Settings
 
 ## Installation
 
@@ -60,7 +106,7 @@ Alowed file extensions:
 - **.i**
 - **.w**
 
-Commands:
+Standard VSCode Commands:
 
 - **Format Document**: Formats the entire ABL document.
 - **Format Selection**: Formats only the selected lines of code.
