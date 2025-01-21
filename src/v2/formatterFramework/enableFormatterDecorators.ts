@@ -9,6 +9,7 @@ import { ForFormatter } from "../formatters/for/ForFormatter";
 import { IfFunctionFormatter } from "../formatters/ifFunction/IfFunctionFormatter";
 import { TempTableFormatter } from "../formatters/tempTable/TempTableFormatter";
 import { PropertyFormatter } from "../formatters/property/PropertyFormatter";
+import { ExpressionFormatter } from "../formatters/expression/ExpressionFormatter";
 import { BodyFormatter } from "../formatters/body/BodyFormatter";
 import { EnumFormatter } from "../formatters/enum/EnumFormatter";
 import { VariableDefinitionFormatter } from "../formatters/variableDefinition/VariableDefinitionFormatter";
@@ -35,4 +36,5 @@ export function enableFormatterDecorators(): void {
     ProcedureParameterFormatter;
     FunctionParameterFormatter;
     ArrayAccessFormatter;
+    ExpressionFormatter;
 }

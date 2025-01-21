@@ -23,7 +23,6 @@ export enum SyntaxNodeType {
     IndexDefinition = "index_definition",
     VariableDefinition = "variable_definition",
     ProcedureParameterDefinition = "procedure_parameter_definition",
-    VariableAssignment = "variable_assignment",
     ConstructorDefinition = "constructor_definition",
     DestructorDefinition = "destructor_definition",
     MethodDefinition = "method_definition",
@@ -32,20 +31,29 @@ export enum SyntaxNodeType {
     UndoStatement = "undo_statement",
     AssignStatement = "assign_statement",
     Assignment = "assignment",
+    VariableAssignment = "variable_assignment",
     Identifier = "identifier",
     SourceCode = "source_code",
+    Argument = "argument",
+    Arguments = "arguments",
     ForPhrase = "for_phrase",
     ForStatement = "for_statement",
     QueryTuning = "query_tuning",
     SortClause = "sort_clause",
     SortColumn = "sort_column",
+    WhilePhrase = "while_phrase",
     ComparisonExpression = "comparison_expression",
     TernaryExpression = "ternary_expression",
     ParenthesizedExpression = "parenthesized_expression",
+    AdditiveExpression = "additive_expression",
+    MultiplicativeExpression = "multiplicative_expression",
+    UnaryExpression = "unary_expression",
+    NewExpression = "new_expression",
     BooleanLiteral = "boolean_literal",
     ElseIfStatement = "else_if_statement",
     ReturnStatement = "return_statement",
     FunctionCallStatement = "function_call_statement",
+    FunctionalCallArgument = "functional_call_argument",
     UsingStatement = "using_statement",
     ClassStatement = "class_statement",
     FinallyStatement = "finally_statement",
@@ -72,6 +80,22 @@ export enum SyntaxNodeType {
     Parameters = "parameters",
     FunctionParameter = "function_parameter",
     FunctionParameterMode = "function_parameter_mode",
+    // arithmetic operators
+    Add = "+",
+    Subtract = "-",
+    Multiply = "*",
+    Divide = "/",
+    Modulus = "%",
+    EqualsSign = "=",
+    // comparison operators
+    EqualTo = "EQ",
+    NotEqualTo = "NE",
+    GreaterThan = "GT",
+    LessThan = "LT",
+    GreaterThanOrEqualTo = "GE",
+    LessThanOrEqualTo = "LE",
+    // assignment operators
+    AssignmentOperator = "assignment_operator",
 
     // keywords
     WhenKeyword = "WHEN",
@@ -159,4 +183,9 @@ export const parameterTypes = new MyFancySet<string>([
 export const parentheses = new MyFancySet<string>([
     SyntaxNodeType.LeftParenthesis,
     SyntaxNodeType.RightParenthesis,
+]);
+
+export const logicalKeywords = new MyFancySet<string>([
+    SyntaxNodeType.AndKeyword,
+    SyntaxNodeType.OrKeyword,
 ]);
