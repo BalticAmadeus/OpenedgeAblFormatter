@@ -16,6 +16,7 @@ import { VariableDefinitionFormatter } from "../formatters/variableDefinition/Va
 import { ProcedureParameterFormatter } from "../formatters/procedureParameter/ProcedureParameterFormatter";
 import { FunctionParameterFormatter } from "../formatters/functionParameter/FunctionParameterFormatter";
 import { ArrayAccessFormatter } from "../formatters/arrayAccess/ArrayAccessFormatter";
+import { StatementFormatter } from "../formatters/statement/StatementFormatter";
 
 // needed just for enabling decorators. Decorators does not work if there is no usage of a class in the reachable code
 export function enableFormatterDecorators(): void {
@@ -37,4 +38,5 @@ export function enableFormatterDecorators(): void {
     FunctionParameterFormatter;
     ArrayAccessFormatter;
     ExpressionFormatter;
+    StatementFormatter;
 }
