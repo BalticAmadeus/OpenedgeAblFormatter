@@ -258,6 +258,38 @@
           ],
           "description": "Align parameter types?"
         },
+        "AblFormatter.arrayAccessFormatting": {
+          "order": 1700,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable ARRAY ACCESS formatting"
+        },
+        "AblFormatter.arrayAccessFormattingAddSpaceAfterComma": {
+          "order": 1701,
+          "type": "string",
+          "default": "No",
+          "enum": [
+            "Yes",
+            "No"
+          ],
+          "description": "Add space after comma?"
+        },
+        "AblFormatter.expressionFormatting": {
+          "order": 1800,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable EXPRESSION formatting"
+        },
+        "AblFormatter.expressionFormattingLogicalLocation": {
+          "order": 1801,
+          "type": "string",
+          "default": "Same",
+          "enum": [
+            "New",
+            "Same"
+          ],
+          "description": "Should logical operators be on a new line or the same line as the expression?"
+        },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,
           "type": "boolean",

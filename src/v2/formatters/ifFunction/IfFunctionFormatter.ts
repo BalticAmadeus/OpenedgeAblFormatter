@@ -89,7 +89,10 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.ParenthesizedExpression:
                 node.children.forEach((child) => {
                     newString = newString.concat(
-                        this.getParenthesizedExpressionString(child, fullText)
+                        FormatterHelper.getParenthesizedExpressionString(
+                            child,
+                            fullText
+                        )
                     );
                 });
                 break;
