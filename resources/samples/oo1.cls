@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.defineFormatting": true,
-    "abl.completion.upperCase": true}*/
+/*  { "abl.completion.upperCase": true}*/
 
 CLASS A:
   DEFINE PROTECTED VARIABLE oRepo AS ILanguageRepository NO-UNDO.

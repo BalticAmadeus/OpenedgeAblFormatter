@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.blockFormatting": true,
-"AblFormatter.defineFormatting": true,
 "AblFormatter.propertyFormatting": true}*/
 
 class Class final:

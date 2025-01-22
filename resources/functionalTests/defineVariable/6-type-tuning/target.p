@@ -1,10 +1,10 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.variableDefinitionFormatting": true} */
 
-define VARIABLE hColumn        AS HANDLE    NO-UNDO EXTENT 2.
+DEFINE VARIABLE hColumn        AS HANDLE    NO-UNDO EXTENT 2.
 
-define VARIABLE gcSort         AS CHARACTER NO-UNDO INITIAL "dType".
-define VARIABLE gcMods         AS CHARACTER NO-UNDO.
-define VARIABLE DigestChecksum AS CHARACTER NO-UNDO.
-define VARIABLE inbuild        AS LOGICAL   NO-UNDO.
-define VARIABLE derr           AS LOGICAL   NO-UNDO.
+DEFINE VARIABLE gcSort         AS CHARACTER NO-UNDO INITIAL "dType".
+DEFINE VARIABLE gcMods         AS CHARACTER NO-UNDO.
+DEFINE VARIABLE DigestChecksum AS CHARACTER NO-UNDO.
+DEFINE VARIABLE inbuild        AS LOGICAL   NO-UNDO.
+DEFINE VARIABLE derr           AS LOGICAL   NO-UNDO.
