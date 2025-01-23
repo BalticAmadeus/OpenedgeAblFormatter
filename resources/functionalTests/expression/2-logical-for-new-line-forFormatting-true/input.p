@@ -6,6 +6,6 @@
 FOR EACH 
       enchantedAttribute WHERE   enchantedAttribute.MagicValueGuid = sourceBuffer::MagicValueGuid
          OR (enchantedAttribute.MagicInstanceGuid = sourceBuffer::MagicInstanceGuid                           AND enchantedAttribute.MagicLabel = sourceBuffer::MagicLabel):
-      delete enchantedAttribute .
+      delete enchantedAttribute.
       end.
       
