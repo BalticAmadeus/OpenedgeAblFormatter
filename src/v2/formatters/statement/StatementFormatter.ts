@@ -35,6 +35,11 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
+        const numberOfLines = oldText.split("\n").length;
+        // Leave multi line statements unformatted
+        if (numberOfLines > 1) {
+            return this.getCodeEdit(node, oldText, oldText, fullText);
+        }
         const newText = this.collectStatement(node, fullText);
 
         return this.getCodeEdit(node, oldText, newText, fullText);

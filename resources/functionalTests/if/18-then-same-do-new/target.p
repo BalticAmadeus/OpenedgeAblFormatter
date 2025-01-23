@@ -12,4 +12,4 @@ do:
     oObject:method(something).       
 end.
 else
-    message "a"
+    message "a".
