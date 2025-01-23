@@ -4,8 +4,8 @@
 
 class Class final:
 
-define private static property m_Total as integer no-undo
-    private get.
-    private set.
+                define private static property m_Total as integer no-undo
+                    private get.
+                    private set.
 
 end class.
