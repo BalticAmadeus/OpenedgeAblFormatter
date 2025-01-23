@@ -290,6 +290,12 @@
           ],
           "description": "Should logical operators be on a new line or the same line as the expression?"
         },
+        "AblFormatter.statementFormatting": {
+          "order": 1900,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable STATEMENT formatting"
+        },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,
           "type": "boolean",
