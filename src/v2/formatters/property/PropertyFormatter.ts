@@ -53,6 +53,7 @@ export class PropertyFormatter extends AFormatter implements IFormatter {
             node,
             fullText
         );
+
         this.propertyBodyValue = this.getPropertyBlock(node, fullText);
     }
 
@@ -87,7 +88,9 @@ export class PropertyFormatter extends AFormatter implements IFormatter {
                     );
                 const statement = FormatterHelper.addIndentation(
                     FormatterHelper.getCurrentText(node, fullText).trim(),
-                    -firstLineWhitespace + this.settings.tabSize(),
+                    -firstLineWhitespace +
+                        this.settings.tabSize() +
+                        this.startColumn,
                     fullText.eolDelimiter
                 );
                 newString =
