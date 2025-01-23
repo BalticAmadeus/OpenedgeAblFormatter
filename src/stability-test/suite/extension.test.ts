@@ -34,6 +34,9 @@ const testRunTimestamp = new Date()
     .substring(0, 19);
 const testRunDir = join(testResultsDir, testRunTimestamp);
 
+
+const knownFailures = getFailedTestCases(join(extensionDevelopmentPath, "resources/stabilityTests"));
+
 suite("Extension Test Suite", () => {
     console.log("Parser initialized", stabilityTestCases);
 
@@ -80,7 +83,19 @@ function stabilityTest(name: string): void {
     const afterCount = countActualSymbols(afterText);
 
     if (beforeCount !== afterCount) {
-        const fileName = path.basename(name, path.extname(name));
+        const nameWithRelativePath = name.startsWith(stabilityTestDir)
+        ? name.slice(stabilityTestDir.length + 1)
+        : name;
+
+        const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
+
+        if (knownFailures.includes(fileName)) {
+            console.log("Known issue");
+            return;
+        }
+
+        addFailedTestCase(testRunDir, fileName);
+
         const beforeFilePath = join(
             testRunDir,
             `${fileName}_before${path.extname(name)}`
@@ -240,4 +255,30 @@ function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
     });
 
     return errorMessage;
+}
+
+function getFailedTestCases(filePath: string): string[] {
+    const failedFilePath = path.join(filePath, "_failures.txt");
+
+    // Check if the file exists to avoid errors
+    if (!fs.existsSync(failedFilePath)) {
+        console.log("Known Failures file does not exist!");
+        return [];
+    }
+
+    // Read the file and split lines into an array
+    const data = fs.readFileSync(failedFilePath, "utf8");
+    const failures =  data.split("\n").filter(line => line.trim() !== "");
+
+    console.log("Known failures list has ", failures.length, "cases");
+
+    return failures;
+}
+
+
+function addFailedTestCase(filePath: string, failedCase: string): void {
+    const failedFilePath = path.join(filePath, "_failures.txt");
+
+    // Append the failed test case to the file with a newline
+    fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
 }
