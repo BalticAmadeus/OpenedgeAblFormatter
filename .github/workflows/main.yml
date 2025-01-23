@@ -48,6 +48,10 @@ jobs:
 
             - run: npm install
 
+            - name: Compile
+              run: xvfb-run -a npm run compile
+              if: runner.os == 'Linux'
+
             - name: Get ADE Repo
               run: xvfb-run -a npm run get-ade-test
               if: runner.os == 'Linux'
