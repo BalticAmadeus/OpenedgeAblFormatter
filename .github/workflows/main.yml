@@ -59,3 +59,10 @@ jobs:
             - name: Run Stability Test
               run: xvfb-run -a npm run stability-test
               if: runner.os == 'Linux'
+
+            - name: Save Stability Test Results as Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: results
+                  path: /home/runner/work/AblFormatter/AblFormatter/resources/testResults
+                  retention-days: 7
