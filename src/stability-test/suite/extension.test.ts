@@ -94,19 +94,19 @@ function stabilityTest(name: string): void {
     const afterText = format(beforeText, name);
     const afterCount = countActualSymbols(afterText);
 
+    const nameWithRelativePath = name.startsWith(stabilityTestDir)
+        ? name.slice(stabilityTestDir.length + 1)
+        : name;
+
+    const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
+
     if (beforeCount !== afterCount) {
-        const nameWithRelativePath = name.startsWith(stabilityTestDir)
-            ? name.slice(stabilityTestDir.length + 1)
-            : name;
-
-        const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
-
         if (knownFailures.includes(fileName)) {
             console.log("Known issue");
             return;
         }
 
-        addFailedTestCase(testRunDir, fileName);
+        addFailedTestCase(testRunDir, "_failures.txt", fileName);
 
         const beforeFilePath = join(
             testRunDir,
@@ -125,7 +125,13 @@ function stabilityTest(name: string): void {
         After: ${afterFilePath}
         `);
     }
-    // assert.strictEqual(beforeCount, afterCount);
+
+    // if test passes but file is in error list
+    if (knownFailures.includes(fileName)) {
+        addFailedTestCase(testRunDir, "_new_passes.txt", fileName);
+
+        assert.fail(`File should fail ${fileName}`);
+    }
 }
 
 function getInput(fileName: string): string {
@@ -287,8 +293,12 @@ function getFailedTestCases(filePath: string): string[] {
     return failures;
 }
 
-function addFailedTestCase(filePath: string, failedCase: string): void {
-    const failedFilePath = path.join(filePath, "_failures.txt");
+function addFailedTestCase(
+    filePath: string,
+    fileName: string,
+    failedCase: string
+): void {
+    const failedFilePath = path.join(filePath, fileName);
 
     // Append the failed test case to the file with a newline
     fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
