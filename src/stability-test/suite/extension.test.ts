@@ -34,8 +34,20 @@ const testRunTimestamp = new Date()
     .substring(0, 19);
 const testRunDir = join(testResultsDir, testRunTimestamp);
 
+const knownFailures = getFailedTestCases(
+    join(extensionDevelopmentPath, "resources/stabilityTests")
+);
+const settingsOverride =
+    "/* formatterSettingsOverride */\n/*" +
+    readFile(
+        join(
+            extensionDevelopmentPath,
+            "resources/stabilityTests/.vscode/settings.json"
+        )
+    ) +
+    "*/\n";
 
-const knownFailures = getFailedTestCases(join(extensionDevelopmentPath, "resources/stabilityTests"));
+console.log(settingsOverride);
 
 suite("Extension Test Suite", () => {
     console.log("Parser initialized", stabilityTestCases);
@@ -77,15 +89,15 @@ function stabilityTest(name: string): void {
     ConfigurationManager2.getInstance();
     enableFormatterDecorators();
 
-    const beforeText = getInput(name);
+    const beforeText = settingsOverride + getInput(name);
     const beforeCount = countActualSymbols(beforeText);
     const afterText = format(beforeText, name);
     const afterCount = countActualSymbols(afterText);
 
     if (beforeCount !== afterCount) {
         const nameWithRelativePath = name.startsWith(stabilityTestDir)
-        ? name.slice(stabilityTestDir.length + 1)
-        : name;
+            ? name.slice(stabilityTestDir.length + 1)
+            : name;
 
         const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
 
@@ -268,13 +280,12 @@ function getFailedTestCases(filePath: string): string[] {
 
     // Read the file and split lines into an array
     const data = fs.readFileSync(failedFilePath, "utf8");
-    const failures =  data.split("\n").filter(line => line.trim() !== "");
+    const failures = data.split("\n").filter((line) => line.trim() !== "");
 
     console.log("Known failures list has ", failures.length, "cases");
 
     return failures;
 }
-
 
 function addFailedTestCase(filePath: string, failedCase: string): void {
     const failedFilePath = path.join(filePath, "_failures.txt");
