@@ -61,6 +61,7 @@ jobs:
               if: runner.os == 'Linux'
 
             - name: Save Stability Test Results as Artifact
+              if: always()
               uses: actions/upload-artifact@v4
               with:
                   name: results
