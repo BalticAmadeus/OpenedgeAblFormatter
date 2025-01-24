@@ -13,7 +13,6 @@ import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
 export class EnumFormatter extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "enumFormatting";
     private readonly settings: EnumSettings;
-    private startColumn = 0;
     private alignColumn = 0;
 
     public constructor(configurationManager: IConfigurationManager) {
@@ -38,10 +37,6 @@ export class EnumFormatter extends AFormatter implements IFormatter {
         node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
-        this.startColumn = FormatterHelper.getActualStatementIndentation(
-            node,
-            fullText
-        );
         let foundFirstMember = false;
         let resultString = "";
         node.children.forEach((child) => {
@@ -52,8 +47,7 @@ export class EnumFormatter extends AFormatter implements IFormatter {
             );
             if (!foundFirstMember && child.type === SyntaxNodeType.EnumMember) {
                 foundFirstMember = true;
-                this.alignColumn =
-                    this.startColumn + resultString.trim().length + 1; // +1 for space between member and DEFINE ENUM
+                this.alignColumn = resultString.trim().length + 1; // +1 for space between member and DEFINE ENUM
             }
             resultString = resultString.concat(childString);
         });

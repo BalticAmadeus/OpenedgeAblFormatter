@@ -34,6 +34,21 @@ const testRunTimestamp = new Date()
     .substring(0, 19);
 const testRunDir = join(testResultsDir, testRunTimestamp);
 
+const knownFailures = getFailedTestCases(
+    join(extensionDevelopmentPath, "resources/stabilityTests")
+);
+const settingsOverride =
+    "/* formatterSettingsOverride */\n/*" +
+    readFile(
+        join(
+            extensionDevelopmentPath,
+            "resources/stabilityTests/.vscode/settings.json"
+        )
+    ) +
+    "*/\n";
+
+console.log(settingsOverride);
+
 suite("Extension Test Suite", () => {
     console.log("Parser initialized", stabilityTestCases);
 
@@ -74,13 +89,25 @@ function stabilityTest(name: string): void {
     ConfigurationManager2.getInstance();
     enableFormatterDecorators();
 
-    const beforeText = getInput(name);
+    const beforeText = settingsOverride + getInput(name);
     const beforeCount = countActualSymbols(beforeText);
     const afterText = format(beforeText, name);
     const afterCount = countActualSymbols(afterText);
 
+    const nameWithRelativePath = name.startsWith(stabilityTestDir)
+        ? name.slice(stabilityTestDir.length + 1)
+        : name;
+
+    const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
+
     if (beforeCount !== afterCount) {
-        const fileName = path.basename(name, path.extname(name));
+        if (knownFailures.includes(fileName)) {
+            console.log("Known issue");
+            return;
+        }
+
+        addFailedTestCase(testRunDir, "_failures.txt", fileName);
+
         const beforeFilePath = join(
             testRunDir,
             `${fileName}_before${path.extname(name)}`
@@ -98,7 +125,13 @@ function stabilityTest(name: string): void {
         After: ${afterFilePath}
         `);
     }
-    // assert.strictEqual(beforeCount, afterCount);
+
+    // if test passes but file is in error list
+    if (knownFailures.includes(fileName)) {
+        addFailedTestCase(testRunDir, "_new_passes.txt", fileName);
+
+        assert.fail(`File should fail ${fileName}`);
+    }
 }
 
 function getInput(fileName: string): string {
@@ -240,4 +273,33 @@ function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
     });
 
     return errorMessage;
+}
+
+function getFailedTestCases(filePath: string): string[] {
+    const failedFilePath = path.join(filePath, "_failures.txt");
+
+    // Check if the file exists to avoid errors
+    if (!fs.existsSync(failedFilePath)) {
+        console.log("Known Failures file does not exist!");
+        return [];
+    }
+
+    // Read the file and split lines into an array
+    const data = fs.readFileSync(failedFilePath, "utf8");
+    const failures = data.split("\n").filter((line) => line.trim() !== "");
+
+    console.log("Known failures list has ", failures.length, "cases");
+
+    return failures;
+}
+
+function addFailedTestCase(
+    filePath: string,
+    fileName: string,
+    failedCase: string
+): void {
+    const failedFilePath = path.join(filePath, fileName);
+
+    // Append the failed test case to the file with a newline
+    fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
 }
