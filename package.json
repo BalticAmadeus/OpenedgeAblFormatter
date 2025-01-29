@@ -321,7 +321,8 @@
     "copy-test-cases": "copyfiles -u 2 ./resources/samples/* .test_dir/samples",
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
     "test": "node ./out/test/runTest.js",
-    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade"
+    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
+    "stability-test": "node ./out/stability-test/runTest.js"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
