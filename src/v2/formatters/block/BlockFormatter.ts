@@ -66,10 +66,13 @@ export class BlockFormater extends AFormatter implements IFormatter {
         const indentationStep = this.settings.tabSize();
         let indexOfColon = -1;
         let deltaBetweenStartAndColon = 0;
+        let colonDelta = 0;
         let blockStatementsStartRows = node.children
             .filter((child) => {
                 if (child.type === SyntaxNodeType.ColonKeyword) {
                     indexOfColon = child.startPosition.column;
+                    colonDelta =
+                        child.endPosition.column - child.startPosition.column;
                     deltaBetweenStartAndColon =
                         child.startPosition.row - parent.startPosition.row;
                     return false;
@@ -113,14 +116,22 @@ export class BlockFormater extends AFormatter implements IFormatter {
         }
 
         if (indexOfColon !== -1 && deltaBetweenStartAndColon === 0) {
-            // indexOfColon += parentIndentation;
-            indexOfColon -= parent.startPosition.column;
-            for (let i = indexOfColon + 1; i >= indexOfColon - 1; i--) {
+            const columnIntervalStart = Math.max(
+                0,
+                indexOfColon - parent.startPosition.column
+            );
+            const columnIntervalEnd = Math.min(
+                firstLine.length - 1,
+                indexOfColon + parent.startPosition.column + colonDelta
+            );
+
+            for (let i = columnIntervalStart; i <= columnIntervalEnd; i++) {
                 if (firstLine[i] === ":") {
                     indexOfColon = i;
                     break;
                 }
             }
+
             const partAfterColon = firstLine
                 .slice(indexOfColon + 1)
                 .trimStart();
