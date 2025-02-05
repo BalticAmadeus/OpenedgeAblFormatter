@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.variableDefinitionFormatting": true} */
-
 define VARIABLE cerror AS CHARACTER NO-UNDO.
 define VARIABLE i AS INTEGER Extent 100 no-undo.
 define VARIABLE codepage AS CHARACTER extent 1000 NO-UNDO init "UNDEFINED".
