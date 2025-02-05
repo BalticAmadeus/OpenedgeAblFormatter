@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { FormattingEngine } from "../formatterFramework/FormattingEngine";
-import { ConfigurationManager2 } from "../utils/ConfigurationManager";
+import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
 
@@ -23,7 +23,7 @@ export class AblFormatterProvider
     ): vscode.ProviderResult<vscode.TextEdit[]> {
         console.log("AblFormatterProvider.provideDocumentFormattingEdits");
 
-        const configurationManager = ConfigurationManager2.getInstance();
+        const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
 
         configurationManager.setTabSize(options.tabSize);
@@ -66,7 +66,7 @@ export class AblFormatterProvider
     ): vscode.ProviderResult<vscode.TextEdit[]> {
         console.log("AblFormatterProvider.provideDocumentFormattingEdits");
 
-        const configurationManager = ConfigurationManager2.getInstance();
+        const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
 
         try {
