@@ -21,7 +21,8 @@ export class VariableDefinitionFormatter
     private readonly settings: VariableDefinitionSettings;
     private static visitedNodes: Set<number> = new Set();
     private static alignType = 0;
-    private static alignNoUndo = 0;
+    private static alignVariableTuning = 0;
+    private static alignExtent = 0;
     private static alignVariableKeyword = 0;
     private hasAccessTuning = false;
 
@@ -97,8 +98,8 @@ export class VariableDefinitionFormatter
     ): void {
         switch (node.type) {
             case SyntaxNodeType.TypeTuning:
-                VariableDefinitionFormatter.alignNoUndo = Math.max(
-                    VariableDefinitionFormatter.alignNoUndo,
+                VariableDefinitionFormatter.alignVariableTuning = Math.max(
+                    VariableDefinitionFormatter.alignVariableTuning,
                     this.collectTypeTuningString(node, fullText).length
                 );
                 break;
@@ -113,6 +114,20 @@ export class VariableDefinitionFormatter
                     VariableDefinitionFormatter.alignVariableKeyword,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
                 );
+                break;
+            case SyntaxNodeType.VariableTuning:
+                const hasExtentKeyword = node.children.find(
+                    (child) => child.type === SyntaxNodeType.ExtentKeyword
+                );
+                const IsPreviousTypeTunning =
+                    node.previousSibling?.type === SyntaxNodeType.TypeTuning;
+
+                if (hasExtentKeyword && IsPreviousTypeTunning) {
+                    VariableDefinitionFormatter.alignExtent = Math.max(
+                        VariableDefinitionFormatter.alignExtent,
+                        this.collectTypeTuningString(node, fullText).length
+                    );
+                }
                 break;
         }
     }
@@ -139,7 +154,7 @@ export class VariableDefinitionFormatter
                 newString =
                     typeTuningText +
                     " ".repeat(
-                        VariableDefinitionFormatter.alignNoUndo -
+                        VariableDefinitionFormatter.alignVariableTuning -
                             typeTuningText.length
                     );
                 break;
@@ -192,6 +207,31 @@ export class VariableDefinitionFormatter
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
+            case SyntaxNodeType.VariableTuning:
+                let variableTuningText = "";
+                let spacesCount = 0;
+                const noUndoKeyword = node.children.find(
+                    (child) => child.type === SyntaxNodeType.NoUndoKeyword
+                );
+                const previousExtent = node.previousSibling?.children.find(
+                    (child) => child.type === SyntaxNodeType.ExtentKeyword
+                );
+
+                if (noUndoKeyword) {
+                    variableTuningText = this.collectTypeTuningString(
+                        node,
+                        fullText
+                    );
+                    if (previousExtent && node.previousSibling) {
+                        spacesCount =
+                            VariableDefinitionFormatter.alignExtent -
+                            node.previousSibling.text.length;
+                    } else {
+                        spacesCount = VariableDefinitionFormatter.alignExtent;
+                    }
+                    newString = " ".repeat(spacesCount) + variableTuningText;
+                    break;
+                }
             default: {
                 const text = FormatterHelper.getCurrentText(
                     node,
@@ -240,7 +280,8 @@ export class VariableDefinitionFormatter
 
     private resetStaticVariables() {
         VariableDefinitionFormatter.alignType = 0;
-        VariableDefinitionFormatter.alignNoUndo = 0;
+        VariableDefinitionFormatter.alignVariableTuning = 0;
+        VariableDefinitionFormatter.alignExtent = 0;
         VariableDefinitionFormatter.alignVariableKeyword = 0;
     }
 }
