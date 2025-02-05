@@ -5,7 +5,7 @@ import { Constants } from "./model/Constants";
 import { AblParserHelper } from "./parser/AblParserHelper";
 import { AblDebugHoverProvider } from "./providers/AblDebugHoverProvider";
 import { ConfigurationManager2 } from "./utils/ConfigurationManager";
-import { enableFormatterDecorators } from "./v2/formatterFramework/enableFormatterDecorators";
+import { enableFormatterDecorators } from "./formatterFramework/enableFormatterDecorators";
 import { DebugManager } from "./providers/DebugManager";
 
 export async function activate(context: vscode.ExtensionContext) {

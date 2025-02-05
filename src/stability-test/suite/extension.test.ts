@@ -6,12 +6,12 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
-import { FormattingEngine } from "../../v2/formatterFramework/FormattingEngine";
+import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
 import { ConfigurationManager2 } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
-import { enableFormatterDecorators } from "../../v2/formatterFramework/enableFormatterDecorators";
+import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import path, { join } from "path";
-import { EOL } from "../../v2/model/EOL";
+import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
 
 let parserHelper: AblParserHelper;
