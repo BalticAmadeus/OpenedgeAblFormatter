@@ -1,8 +1,8 @@
 import { commands, window, workspace, WorkspaceConfiguration } from "vscode";
 import { IConfigurationManager } from "./IConfigurationManager";
 
-export class ConfigurationManager2 implements IConfigurationManager {
-    private static instance: ConfigurationManager2;
+export class ConfigurationManager implements IConfigurationManager {
+    private static instance: ConfigurationManager;
     private reloadConfig = true;
     private reloadExternalConfig = true;
     private configuration: WorkspaceConfiguration | undefined = undefined;
@@ -29,11 +29,11 @@ export class ConfigurationManager2 implements IConfigurationManager {
         });
     }
 
-    public static getInstance(): ConfigurationManager2 {
-        if (!ConfigurationManager2.instance) {
-            ConfigurationManager2.instance = new ConfigurationManager2();
+    public static getInstance(): ConfigurationManager {
+        if (!ConfigurationManager.instance) {
+            ConfigurationManager.instance = new ConfigurationManager();
         }
-        return ConfigurationManager2.instance;
+        return ConfigurationManager.instance;
     }
 
     public get(name: string) {
