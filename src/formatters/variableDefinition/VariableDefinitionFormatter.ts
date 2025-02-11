@@ -222,7 +222,10 @@ export class VariableDefinitionFormatter
                     if (previousExtent && node.previousSibling) {
                         spacesCount =
                             VariableDefinitionFormatter.alignExtent -
-                            node.previousSibling.text.length;
+                            FormatterHelper.getCurrentText(
+                                node.previousSibling,
+                                fullText
+                            ).trim().length - 1;
                     } else {
                         spacesCount = VariableDefinitionFormatter.alignExtent;
                     }
