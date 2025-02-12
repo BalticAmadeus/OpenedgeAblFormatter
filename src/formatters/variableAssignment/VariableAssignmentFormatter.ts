@@ -26,11 +26,9 @@ export class VariableAssignmentFormatter
     match(node: Readonly<SyntaxNode>): boolean {
         if (node.type === SyntaxNodeType.Assignment) {
             const parent = node.parent;
-            console.log("parent: ", parent?.type);
             if (
-                parent !== null &&
-                parent.type !== SyntaxNodeType.AssignStatement &&
-                parent.type !== SyntaxNodeType.ToPhrase
+                parent === null ||
+                parent.type === SyntaxNodeType.VariableAssignment
             ) {
                 return true;
             }
@@ -72,8 +70,6 @@ export class VariableAssignmentFormatter
                 }
                 break;
         }
-        console.log("node: ", node.type);
-        console.log("string:\n", newString);
         return newString;
     }
 }
