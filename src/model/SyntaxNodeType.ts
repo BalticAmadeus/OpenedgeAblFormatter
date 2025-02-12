@@ -72,6 +72,7 @@ export enum SyntaxNodeType {
     AccessTuning = "access_tuning",
     ArrayAccess = "array_access",
     ArrayLiteral = "array_literal",
+    ToPhrase = "to_phrase",
     Comment = "comment",
     Getter = "getter",
     Setter = "setter",

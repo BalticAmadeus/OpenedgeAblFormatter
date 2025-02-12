@@ -296,6 +296,12 @@
           "default": "true",
           "description": "Enable STATEMENT formatting"
         },
+        "AblFormatter.variableAssignmentFormatting": {
+          "order": 2000,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable STATEMENT formatting"
+        },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,
           "type": "boolean",
