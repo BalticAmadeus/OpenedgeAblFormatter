@@ -27,7 +27,7 @@ export class VariableAssignmentFormatter
         if (node.type === SyntaxNodeType.Assignment) {
             const parent = node.parent;
             if (
-                parent === null ||
+                parent !== null &&
                 parent.type === SyntaxNodeType.VariableAssignment
             ) {
                 return true;
