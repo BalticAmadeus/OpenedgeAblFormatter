@@ -16,11 +16,11 @@ export class VariableDefinitionFormatter
 {
     public static readonly formatterLabel = "variableDefinitionFormatting";
     private readonly settings: VariableDefinitionSettings;
-    private static visitedNodes: Set<number> = new Set();
-    private static alignType = 0;
-    private static alignVariableTuning = 0;
-    private static alignExtent = 0;
-    private static alignVariableKeyword = 0;
+    private visitedNodes: Set<number> = new Set();
+    private alignType: number = 0;
+    private alignVariableTuning: number = 0;
+    private alignExtent: number = 0;
+    private alignVariableKeyword: number = 0;
     private hasAccessTuning = false;
 
     public constructor(configurationManager: IConfigurationManager) {
@@ -41,12 +41,12 @@ export class VariableDefinitionFormatter
         const oldText = FormatterHelper.getCurrentText(node, fullText);
         this.resetNodeVariables();
 
-        if (VariableDefinitionFormatter.visitedNodes.has(node.id)) {
+        if (this.visitedNodes.has(node.id)) {
             const newText = this.collectDefineString(node, fullText);
             return this.getCodeEdit(node, oldText, newText, fullText);
         }
 
-        this.resetStaticVariables();
+        this.resetVariables();
         let currentNode: SyntaxNode | null = node;
         for (
             currentNode;
@@ -60,7 +60,7 @@ export class VariableDefinitionFormatter
                 break;
             }
             this.collectDefineStructure(currentNode, fullText);
-            VariableDefinitionFormatter.visitedNodes.add(currentNode.id);
+            this.visitedNodes.add(currentNode.id);
         }
         const newText = this.collectDefineString(node, fullText);
         return this.getCodeEdit(node, oldText, newText, fullText);
@@ -95,20 +95,20 @@ export class VariableDefinitionFormatter
     ): void {
         switch (node.type) {
             case SyntaxNodeType.TypeTuning:
-                VariableDefinitionFormatter.alignVariableTuning = Math.max(
-                    VariableDefinitionFormatter.alignVariableTuning,
+                this.alignVariableTuning = Math.max(
+                    this.alignVariableTuning,
                     this.collectTypeTuningString(node, fullText).length
                 );
                 break;
             case SyntaxNodeType.Identifier:
-                VariableDefinitionFormatter.alignType = Math.max(
-                    VariableDefinitionFormatter.alignType,
+                this.alignType = Math.max(
+                    this.alignType,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
                 );
                 break;
             case SyntaxNodeType.AccessTuning:
-                VariableDefinitionFormatter.alignVariableKeyword = Math.max(
-                    VariableDefinitionFormatter.alignVariableKeyword,
+                this.alignVariableKeyword = Math.max(
+                    this.alignVariableKeyword,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
                 );
                 break;
@@ -120,8 +120,8 @@ export class VariableDefinitionFormatter
                     node.previousSibling?.type === SyntaxNodeType.TypeTuning;
 
                 if (hasExtentKeyword && IsPreviousTypeTunning) {
-                    VariableDefinitionFormatter.alignExtent = Math.max(
-                        VariableDefinitionFormatter.alignExtent,
+                    this.alignExtent = Math.max(
+                        this.alignExtent,
                         this.collectTypeTuningString(node, fullText).length
                     );
                 }
@@ -151,8 +151,7 @@ export class VariableDefinitionFormatter
                 newString =
                     typeTuningText +
                     " ".repeat(
-                        VariableDefinitionFormatter.alignVariableTuning -
-                            typeTuningText.length
+                        this.alignVariableTuning - typeTuningText.length
                     );
                 break;
             case SyntaxNodeType.AccessTuning: {
@@ -163,10 +162,7 @@ export class VariableDefinitionFormatter
                 newString =
                     " " +
                     text +
-                    " ".repeat(
-                        VariableDefinitionFormatter.alignVariableKeyword -
-                            text.length
-                    );
+                    " ".repeat(this.alignVariableKeyword - text.length);
                 this.hasAccessTuning = true;
                 break;
             }
@@ -175,14 +171,9 @@ export class VariableDefinitionFormatter
                     node,
                     fullText
                 ).trim();
-                if (
-                    !this.hasAccessTuning &&
-                    VariableDefinitionFormatter.alignVariableKeyword !== 0
-                ) {
+                if (!this.hasAccessTuning && this.alignVariableKeyword !== 0) {
                     newString =
-                        " ".repeat(
-                            2 + VariableDefinitionFormatter.alignVariableKeyword
-                        ) + text;
+                        " ".repeat(2 + this.alignVariableKeyword) + text;
                     this.hasAccessTuning = true;
                 } else {
                     newString = " " + text;
@@ -195,11 +186,7 @@ export class VariableDefinitionFormatter
                     fullText
                 ).trim();
                 newString =
-                    " " +
-                    text +
-                    " ".repeat(
-                        VariableDefinitionFormatter.alignType - text.length
-                    );
+                    " " + text + " ".repeat(this.alignType - text.length);
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -221,13 +208,14 @@ export class VariableDefinitionFormatter
                     );
                     if (previousExtent && node.previousSibling) {
                         spacesCount =
-                            VariableDefinitionFormatter.alignExtent -
+                            this.alignExtent -
                             FormatterHelper.getCurrentText(
                                 node.previousSibling,
                                 fullText
-                            ).trim().length - 1;
+                            ).trim().length -
+                            1;
                     } else {
-                        spacesCount = VariableDefinitionFormatter.alignExtent;
+                        spacesCount = this.alignExtent;
                     }
                     newString = " ".repeat(spacesCount) + variableTuningText;
                     break;
@@ -278,10 +266,10 @@ export class VariableDefinitionFormatter
         this.hasAccessTuning = false;
     }
 
-    private resetStaticVariables() {
-        VariableDefinitionFormatter.alignType = 0;
-        VariableDefinitionFormatter.alignVariableTuning = 0;
-        VariableDefinitionFormatter.alignExtent = 0;
-        VariableDefinitionFormatter.alignVariableKeyword = 0;
+    private resetVariables() {
+        this.alignType = 0;
+        this.alignVariableTuning = 0;
+        this.alignExtent = 0;
+        this.alignVariableKeyword = 0;
     }
 }
