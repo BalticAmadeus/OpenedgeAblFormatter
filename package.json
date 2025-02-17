@@ -52,7 +52,7 @@
             "New",
             "Same"
           ],
-          "description": "Should assigns be located on same or new line after ASSIGN keyword?"
+          "description": "Should assigns be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.assignFormattingAlignRightExpression": {
           "order": 102,
@@ -73,7 +73,7 @@
             "New aligned",
             "Same"
           ],
-          "description": "Should end dot be located on same or new line after ASSIGN statement?"
+          "description": "Should end dot be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.findFormatting": {
           "order": 300,
@@ -101,12 +101,12 @@
             "New",
             "Same"
           ],
-          "description": "Should THEN clause be on a new line or the same line as the WHEN keyword?"
+          "description": "Should THEN clause be on a new line or the same line as the CASE keyword?"
         },
         "AblFormatter.caseFormattingDoLocation": {
           "order": 502,
           "type": "string",
-          "default": "New",
+          "default": "Same",
           "enum": [
             "New",
             "Same"
@@ -213,7 +213,7 @@
             "New",
             "Same"
           ],
-          "description": "Add a new line before the ELSE?"
+          "description": "Should ELSE clause be on a new line or the same line as the IF FUNCTION keyword?"
         },
         "AblFormatter.enumFormatting": {
           "order": 1300,
@@ -267,7 +267,7 @@
         "AblFormatter.arrayAccessFormattingAddSpaceAfterComma": {
           "order": 1701,
           "type": "string",
-          "default": "No",
+          "default": "Yes",
           "enum": [
             "Yes",
             "No"
@@ -283,7 +283,7 @@
         "AblFormatter.expressionFormattingLogicalLocation": {
           "order": 1801,
           "type": "string",
-          "default": "Same",
+          "default": "New",
           "enum": [
             "New",
             "Same"

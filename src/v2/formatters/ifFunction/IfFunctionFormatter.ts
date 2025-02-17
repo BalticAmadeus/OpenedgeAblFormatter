@@ -41,6 +41,18 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
                 parent.type !== SyntaxNodeType.ParenthesizedExpression
             ) {
                 newText = this.addParenthesesAroundExpression(newText);
+                if (!this.hasTernaryExpressionParent(node)) {
+                    /* 
+                        The expression gets pushed by 1 space since the '(' is added at the start
+                    */
+                    const delta =
+                        1 + (this.settings.newLineBeforeElse() ? 1 : 0);
+                    newText = FormatterHelper.addIndentation(
+                        newText,
+                        delta,
+                        fullText.eolDelimiter
+                    );
+                }
             }
         }
 
@@ -63,13 +75,17 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
             this.settings.newLineBeforeElse() &&
             !this.hasTernaryExpressionParent(node)
         ) {
+            const delta =
+                node.startPosition.column +
+                FormatterHelper.getActualTextIndentation(
+                    resultString,
+                    fullText
+                ) -
+                (this.settings.addParentheses() ? 1 : 0);
+
             resultString = FormatterHelper.addIndentation(
                 resultString,
-                node.startPosition.column +
-                    FormatterHelper.getActualTextIndentation(
-                        resultString,
-                        fullText
-                    ),
+                delta,
                 fullText.eolDelimiter
             );
         }

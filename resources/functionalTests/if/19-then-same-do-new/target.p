@@ -5,9 +5,11 @@
 "AblFormatter.ifFormattingStatementLocation": "New",
 "AblFormatter.ifFormattingDoLocation": "New"}*/
 
-if something <> ? and something <> 0 then
+if something <> ? and
+   something <> 0 then
     oObject:method(something).
-else if something <> ? or something <> ? then
+else if something <> ? or
+        something <> ? then
 do:    
     oObject:method(something).      
 end.
