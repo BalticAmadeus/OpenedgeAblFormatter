@@ -6,12 +6,12 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
-import { FormattingEngine } from "../../v2/formatterFramework/FormattingEngine";
-import { ConfigurationManager2 } from "../../utils/ConfigurationManager";
+import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
+import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
-import { enableFormatterDecorators } from "../../v2/formatterFramework/enableFormatterDecorators";
+import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import path, { join } from "path";
-import { EOL } from "../../v2/model/EOL";
+import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
 
 let parserHelper: AblParserHelper;
@@ -86,7 +86,7 @@ suite("Extension Test Suite", () => {
 });
 
 function stabilityTest(name: string): void {
-    ConfigurationManager2.getInstance();
+    ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const beforeText = settingsOverride + getInput(name);
@@ -139,7 +139,7 @@ function getInput(fileName: string): string {
 }
 
 function format(text: string, name: string): string {
-    const configurationManager = ConfigurationManager2.getInstance();
+    const configurationManager = ConfigurationManager.getInstance();
 
     const codeFormatter = new FormattingEngine(
         parserHelper,
@@ -227,7 +227,7 @@ function parseAndCheckForErrors(
 }
 
 function treeSitterTest(text: string, name: string): void {
-    ConfigurationManager2.getInstance();
+    ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const errors = parseAndCheckForErrors(text, name);
