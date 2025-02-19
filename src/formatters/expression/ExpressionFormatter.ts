@@ -52,6 +52,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         let newText = "";
         if (
             node.type === SyntaxNodeType.LogicalExpression &&
+            node.parent?.type !== SyntaxNodeType.CaseCondition &&
             this.settings.newLineAfterLogical()
         ) {
             newText = this.collectLogicalStructure(node, fullText);
@@ -76,11 +77,19 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
             this.settings.newLineAfterLogical() &&
             !this.hasLogicalExpressionParent(node)
         ) {
-            resultString = FormatterHelper.addIndentation(
-                resultString,
-                node.startPosition.column,
-                fullText.eolDelimiter
-            );
+            const parent = node.parent;
+            if (
+                parent !== null &&
+                parent.type === SyntaxNodeType.CaseCondition
+            ) {
+                resultString = resultString.trim();
+            } else {
+                resultString = FormatterHelper.addIndentation(
+                    resultString,
+                    node.startPosition.column,
+                    fullText.eolDelimiter
+                );
+            }
         }
 
         return resultString;

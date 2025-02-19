@@ -4,4 +4,4 @@
       "AblFormatter.ifFunctionFormattingElseLocation": "New"}*/
 
 a = (if Customer.Balance > 10000 then 1 
-    else 2).
+     else 2).

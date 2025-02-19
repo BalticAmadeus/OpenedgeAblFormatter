@@ -53,8 +53,6 @@ export class FunctionParameterFormatter
             return undefined;
         }
 
-        // console.log("Parameters: " + numberOfFunctionParameters);
-        // console.log("nodeParent: " + node.type);
         if (
             node.parent !== null &&
             node.parent.type === SyntaxNodeType.FunctionStatement &&
@@ -64,16 +62,9 @@ export class FunctionParameterFormatter
             return undefined;
             return this.getCodeEdit(node, oldText, oldText, fullText);
         }
-        node.children.forEach((child) => {
-            // console.log("childType: " + child.type);
-        });
 
         this.collectStructure(node, fullText);
-        // console.log("alignType: " + this.alignType);
-        // console.log("alignParameterType: " + this.alignParameterType);
         const newText = this.collectString(node, fullText);
-        // console.log("oldText: " + oldText);
-        // console.log("newText: " + newText);
         return this.getCodeEdit(node, oldText, newText, fullText);
     }
 

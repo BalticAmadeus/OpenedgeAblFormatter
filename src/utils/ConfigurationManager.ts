@@ -19,7 +19,6 @@ export class ConfigurationManager implements IConfigurationManager {
                     "ABL Formatter settings were changed!"
                 );
             }
-
             if (e.affectsConfiguration("abl.completion")) {
                 this.reloadExternalConfig = true;
                 window.showInformationMessage(
