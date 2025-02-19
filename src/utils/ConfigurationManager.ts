@@ -18,25 +18,7 @@ export class ConfigurationManager implements IConfigurationManager {
                 window.showInformationMessage(
                     "ABL Formatter settings were changed!"
                 );
-
-                const config = workspace.getConfiguration("AblFormatter");
-                const pairedSettings = [
-                    ["ifFormatting", "caseFormatting"],
-                    ["ifFormattingThenLocation", "caseFormattingThenLocation"],
-                    ["ifFormattingDoLocation", "caseFormattingDoLocation"],
-                ];
-
-                pairedSettings.forEach((pair) => {
-                    const settingA = `AblFormatter.${pair[0]}`;
-                    const settingB = `AblFormatter.${pair[1]}`;
-                    if (e.affectsConfiguration(settingA)) {
-                        config.update(settingB, config.get(settingA), true);
-                    } else if (e.affectsConfiguration(settingB)) {
-                        config.update(settingA, config.get(settingB), true);
-                    }
-                });
             }
-
             if (e.affectsConfiguration("abl.completion")) {
                 this.reloadExternalConfig = true;
                 window.showInformationMessage(
