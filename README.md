@@ -1,5 +1,5 @@
-# AblFormatter [![Node.js CI](https://github.com/BalticAmadeus/AblFormatter/actions/workflows/main.yml/badge.svg?branch=develop)](https://github.com/BalticAmadeus/AblFormatter/actions/workflows/main.yml)
-![OpenEdge ABL Formatter Logo](resources\Formatter_LOGO.png)
+# ![OpenEdge ABL Formatter Logo](./resources/Formatter_LOGO_48x48.png) OpenEdge ABL Formatter [![Node.js CI](https://github.com/BalticAmadeus/AblFormatter/actions/workflows/main.yml/badge.svg?branch=develop)](https://github.com/BalticAmadeus/AblFormatter/actions/workflows/main.yml)
+
 
 VSCode extension for Progress OpenEdge code formatting.
 
