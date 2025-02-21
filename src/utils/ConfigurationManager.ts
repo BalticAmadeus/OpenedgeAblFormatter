@@ -26,7 +26,6 @@ export class ConfigurationManager implements IConfigurationManager {
                     config.update("variableAssignmentFormatting", true);
                 }
             }
-
             if (e.affectsConfiguration("abl.completion")) {
                 this.reloadExternalConfig = true;
                 window.showInformationMessage(

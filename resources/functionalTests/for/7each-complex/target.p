@@ -2,7 +2,10 @@
 /*  { "AblFormatter.forFormatting": true}*/
 
 FOR EACH Customer NO-LOCK WHERE
-         (Customer.Balance > 10000 AND Customer.Region = "North") OR (Customer.Region = "South" AND Customer.Status = "Active")
+         (Customer.Balance > 10000 AND
+         Customer.Region = "North") OR
+         (Customer.Region = "South" AND
+         Customer.Status = "Active")
          BY Customer.LastName
          BY Customer.FirstName
          BREAK BY Customer.City

@@ -5,6 +5,7 @@ export enum SyntaxNodeType {
 
     AvailableExpression = "available_expression",
     CaseStatement = "case_statement",
+    CaseCondition = "case_conditon",
     CaseBody = "case_body",
     CaseWhenBranch = "case_when_branch",
     CaseOtherwiseBranch = "case_otherwise_branch",
@@ -35,6 +36,7 @@ export enum SyntaxNodeType {
     AssignStatement = "assign_statement",
     Assignment = "assignment",
     VariableAssignment = "variable_assignment",
+    VariableTuning = "variable_tuning",
     Identifier = "identifier",
     SourceCode = "source_code",
     Argument = "argument",
@@ -126,6 +128,7 @@ export enum SyntaxNodeType {
     AssignKeyword = "ASSIGN",
     EachKeyword = "EACH",
     EndKeyword = "END",
+    ExtentKeyword = "EXTENT",
     IfKeyword = "IF",
     FindKeyword = "FIND",
     ForKeyword = "FOR",

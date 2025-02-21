@@ -5,7 +5,8 @@
 "AblFormatter.ifFormattingStatementLocation": "New",
 "AblFormatter.ifFormattingDoLocation": "New"}*/
 
-if something <> ? and something <> 0 then
+if something <> ? and
+   something <> 0 then
     oObject:method(something).
 else if a = 3 then
 do:    
