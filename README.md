@@ -1,5 +1,8 @@
 # ![OpenEdge ABL Formatter Logo](./resources/Formatter_LOGO_32x32.png) OpenEdge ABL Formatter [![Node.js CI](https://github.com/BalticAmadeus/AblFormatter/actions/workflows/main.yml/badge.svg?branch=develop)](https://github.com/BalticAmadeus/AblFormatter/actions/workflows/main.yml)
 
+![Formatter in action](./resources/Formatter_in_action.gif)
+<img src="c./resources/Formatter_in_action.gif" alt="Formatter in action" width="200" height="100">
+
 VSCode extension for Progress OpenEdge code formatting.
 
 This extension uses [**tree-sitter-abl**](https://github.com/usagi-coffee/tree-sitter-abl) implementation by Kamil Jakubus.
