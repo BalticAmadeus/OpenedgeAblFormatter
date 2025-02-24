@@ -61,13 +61,13 @@ export class BlockFormater extends AFormatter implements IFormatter {
         );
 
         const indentationStep = this.settings.tabSize();
-        let indexOfColon = -1;
+        let indexOfColon = node.startPosition.column;
         let deltaBetweenStartAndColon = 0;
         let colonDelta = 0;
         let blockStatementsStartRows = node.children
             .filter((child) => {
                 if (child.type === SyntaxNodeType.ColonKeyword) {
-                    indexOfColon = child.startPosition.column;
+                    // indexOfColon = child.startPosition.column;
                     colonDelta =
                         child.endPosition.column - child.startPosition.column;
                     deltaBetweenStartAndColon =
@@ -112,7 +112,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
             codeLines.pop();
         }
 
-        if (indexOfColon !== -1 && deltaBetweenStartAndColon === 0) {
+        if (indexOfColon !== -1) {
             const columnIntervalStart = Math.max(
                 0,
                 indexOfColon - parent.startPosition.column
@@ -122,31 +122,39 @@ export class BlockFormater extends AFormatter implements IFormatter {
                 indexOfColon + parent.startPosition.column + colonDelta
             );
 
+            let colonFound = false;
+
             for (let i = columnIntervalStart; i <= columnIntervalEnd; i++) {
                 if (firstLine[i] === ":") {
                     indexOfColon = i;
+                    colonFound = true;
                     break;
                 }
             }
 
-            const partAfterColon = firstLine
-                .slice(indexOfColon + 1)
-                .trimStart();
-            const statementWithColon =
-                firstLine.slice(0, indexOfColon).trimEnd() + ":";
-            // If the part after the colon is not only whitespace, put it on the next line
-            if (partAfterColon.trim().length !== 0 && partAfterColon !== ":") {
-                codeLines.shift(); // pop from the start of the list
-                codeLines.unshift(statementWithColon, partAfterColon);
-                const firstBlockStatementRow = blockStatementsStartRows[0];
-                blockStatementsStartRows.shift();
-                blockStatementsStartRows.unshift(
-                    firstBlockStatementRow - 1,
-                    firstBlockStatementRow
-                );
-                blockStatementsStartRows = blockStatementsStartRows.map(
-                    (currentRow) => currentRow + 1
-                );
+            if (colonFound) {
+                const partAfterColon = firstLine
+                    .slice(indexOfColon + 1)
+                    .trimStart();
+                const statementWithColon =
+                    firstLine.slice(0, indexOfColon).trimEnd() + ":";
+                // If the part after the colon is not only whitespace, put it on the next line
+                if (
+                    partAfterColon.trim().length !== 0 &&
+                    partAfterColon !== ":"
+                ) {
+                    codeLines.shift(); // pop from the start of the list
+                    codeLines.unshift(statementWithColon, partAfterColon);
+                    const firstBlockStatementRow = blockStatementsStartRows[0];
+                    blockStatementsStartRows.shift();
+                    blockStatementsStartRows.unshift(
+                        firstBlockStatementRow - 1,
+                        firstBlockStatementRow
+                    );
+                    blockStatementsStartRows = blockStatementsStartRows.map(
+                        (currentRow) => currentRow + 1
+                    );
+                }
             }
         }
 
