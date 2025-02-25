@@ -116,7 +116,7 @@ Whenever we use formatter on our code and there are parsing errors we can use de
 
 ### Registering formatter issues
 
-- TODO: create issue template
+- Use [Formatter bug template](https://github.com/BalticAmadeus/AblFormatter/issues/new/choose)
 
 ### Fixing yourself
 
