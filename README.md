@@ -119,9 +119,9 @@ repeat while true:
 end.
 ```
 
-For more examples you can check yout our [test directory](resources/functionalTests)
+For more examples you can check out our [test directory](resources/functionalTests)
 
-### Debuging
+### Debugging
 
 We implemented debug mode for looking into tree-sitter issues. You can also enable it:
 
@@ -149,7 +149,6 @@ We implemented debug mode for looking into tree-sitter issues. You can also enab
 
 This project is licensed under the APACHE 2.0 License - see the LICENSE file for details.
 
-## Sponsored by
+## Sponsored by Baltic Amadeus [Baltic Amadeus](https://www.ba.lt/en).
 
-
-
+[![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.ba.lt/en)
