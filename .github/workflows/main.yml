@@ -65,5 +65,5 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: results
-                  path: /home/runner/work/OpenEdgeAblFormatter/OpenEdgeAblFormatter/resources/testResults
+                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults
                   retention-days: 7
