@@ -15,5 +15,5 @@ resources/functionalTests/**
 resources/samples/**
 resources/treeSitterErrorTests/**
 resources/ade
-resources/stabilityTests//**
-resources/testResults//**
+resources/stabilityTests/**
+resources/testResults/**
