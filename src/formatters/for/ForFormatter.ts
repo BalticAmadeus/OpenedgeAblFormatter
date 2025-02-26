@@ -82,6 +82,11 @@ export class ForFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
+            case SyntaxNodeType.Label:
+                newString =
+                    FormatterHelper.getCurrentText(node, fullText).trimStart() +
+                    fullText.eolDelimiter;
+                break;
             case SyntaxNodeType.ForKeyword:
                 newString = FormatterHelper.getCurrentText(
                     node,
