@@ -13,7 +13,8 @@ The OpenEdge ABL Formatter is now available in the VS Code Extension Marketplace
 > 1. We currently recommend **not** using the formatter with the __on save__ trigger.
 > 2. Use formatting cautiously, especially when working with existing code that is difficult to test.
 
-![Formatter in action](./resources/Formatter_in_action.gif)
+![Formatter in action](https://github.com/BalticAmadeus/OpenedgeAblFormatter/blob/develop/resources/Formatter_in_action.gif)
+![Formatter in action2](./resources/Formatter_action.gif)
 
 ## Features
 
@@ -132,3 +133,7 @@ Whenever we use formatter on our code and there are parsing errors we can use de
 ## License
 
 This project is licensed under the APACHE 2.0 License - see the LICENSE file for details.
+
+## Sponsored by [Baltic Amadeus](https://www.ba.lt/en).
+
+[![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.ba.lt/en)
