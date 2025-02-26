@@ -9,6 +9,10 @@ This extension uses [**tree-sitter-abl**](https://github.com/usagi-coffee/tree-s
 
 The OpenEdge ABL Formatter is now available in the VS Code Extension Marketplace.
 
+> Note:
+> 1. We currently recommend **not** using the formatter with the __on save__ trigger.
+> 2. Use formatting cautiously, especially when working with existing code that is difficult to test.
+
 ![Formatter in action](./resources/Formatter_in_action.gif)
 
 ## Features
