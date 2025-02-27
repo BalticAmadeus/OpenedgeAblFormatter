@@ -9,8 +9,11 @@ This extension uses [**tree-sitter-abl**](https://github.com/usagi-coffee/tree-s
 
 The OpenEdge ABL Formatter is now available in the VS Code Extension Marketplace.
 
-![Formatter in action](./resources/Formatter_in_action.gif)
+> Note:
+> 1. We currently recommend **not** using the formatter with the __on save__ trigger.
+> 2. Use formatting cautiously, especially when working with existing code that is difficult to test.
 
+![Formatter in action](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmZ4dHNldmFuaGJzdHZxNjN2MzY2NG5mbXo2a3YwOWo1eTFjd2Z4MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/J70Z7etV013g8jkgxj/giphy.gif)
 ## Features
 
 At the moment we implemented formatting logic for these language features:
@@ -149,6 +152,8 @@ We implemented debug mode for looking into tree-sitter issues. You can also enab
 
 This project is licensed under the APACHE 2.0 License - see the LICENSE file for details.
 
-## Sponsored by Baltic Amadeus [Baltic Amadeus](https://www.ba.lt/en).
+
+## Sponsored by [Baltic Amadeus](https://www.ba.lt/en).
+
 
 [![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.ba.lt/en)
