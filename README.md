@@ -1,7 +1,7 @@
 # ![OpenEdge ABL Formatter Logo](./resources/Formatter_LOGO_32x32.png) OpenEdge ABL Formatter [![Node.js CI](https://github.com/BalticAmadeus/AblFormatter/actions/workflows/main.yml/badge.svg?branch=develop)](https://github.com/BalticAmadeus/AblFormatter/actions/workflows/main.yml)
 
 
-VSCode extension for Progress OpenEdge code formatting.
+VSCode extension for Progress OpenEdge ABL code formatting.
 
 This extension uses [**tree-sitter-abl**](https://github.com/usagi-coffee/tree-sitter-abl) implementation by Kamil Jakubus.
 
@@ -34,7 +34,12 @@ At the moment we implemented formatting logic for these language features:
 - using
 - variableDefinition
 
-## Configuration
+## Installation
+
+Download the extension from VSCode Marketplace and install on your machine.
+There are no additional dependencies needed to launch this extension.
+
+## Configuration and Setup
 
 We implemented extensive settings configuration to allow users to easly tailor the experience to their needs. This might not be the case in the future.
 
@@ -77,21 +82,17 @@ We implemented extensive settings configuration to allow users to easly tailor t
 | statement formatting                      | boolean | true        | true,false                  | Enable STATEMENT formatting                                                                                   |
 | show tree info on hover                   | boolean | true        | true,false                  | Enable table view with tree info on hover                                                                     |
 
-
-### Formatting on save
-
-TODO: link a separate file with settings
-
-
-
-## Installation
-
-Download the extension **vsix** file from GitHub repository and install it on your machine.
-
-[How to install from **vsix**?](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix)
-
 ## Usage
 
+Use default VSCode formatting commands:
+
+ - **Format Document**: Formats the entire ABL document. `SHIFT+ALT+F`
+ - **Format Selection**: Formats only the selected lines of code. `CTRL+K CTRL+F`
+
+Also, you can enable or disable formatting on save:
+```
+"editor.formatOnSave": true
+```
 Alowed file extensions:
 
 - **.p**
@@ -99,17 +100,36 @@ Alowed file extensions:
 - **.i**
 - **.w**
 
-Commands:
+### Overriding Settings:
 
-- **Format Document**: Formats the entire ABL document.
-- **Format Selection**: Formats only the selected lines of code.
+For development reasons, we implemented a mechanism to override formatting settings for a specific file. You can also use this feature by adding a leading comment in your code file:
 
-## Debuging
+Example:
 
-Whenever we use formatter on our code and there are parsing errors we can use debug mode.
+```
+/* formatterSettingsOverride */
+/* { 
+"AblFormatter.blockFormatting": true,
+"AblFormatter.assignFormatting": true,
+"abl.completion.upperCase": false
+} */
+def var a as integer no-undo init 1.
 
-1. First we have to format the document.
-2. Then we can enable debug mode by pressing Abl Formater button in the middle bottom of the editor.
+repeat while true:
+    assign
+    a = 10.
+    message a.
+end.
+```
+
+For more examples you can check out our [test directory](resources/functionalTests)
+
+### Debugging
+
+We implemented debug mode for looking into tree-sitter issues. You can also enable it:
+
+1. First you have to format the document.
+2. Then you can enable debug mode by pressing Abl Formater button in the middle bottom of the editor.
 3. Hover on highlighted parts of code to get more information and see the tree view.
 
 ![Debug Mode](./resources/debug_mode.png)
@@ -119,7 +139,7 @@ Whenever we use formatter on our code and there are parsing errors we can use de
 
 ### Registering formatter issues
 
-- TODO: create issue template
+- Use [Formatter bug template](https://github.com/BalticAmadeus/AblFormatter/issues/new/choose)
 
 ### Fixing yourself
 
@@ -132,6 +152,8 @@ Whenever we use formatter on our code and there are parsing errors we can use de
 
 This project is licensed under the APACHE 2.0 License - see the LICENSE file for details.
 
+
 ## Sponsored by [Baltic Amadeus](https://www.ba.lt/en).
+
 
 [![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.ba.lt/en)
