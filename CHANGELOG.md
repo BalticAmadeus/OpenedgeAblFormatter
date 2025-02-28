@@ -4,6 +4,6 @@ All notable changes to the "AblFormatter" extension will be documented in this f
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## 0.1.0 (2025-02-28)
 
-- Initial release
+- Initial release (see readme)
