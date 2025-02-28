@@ -1,5 +1,5 @@
 {
-  "name": "abl-formatter",
+  "name": "openedge-abl-formatter",
   "displayName": "OpenEdge Abl Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
   "version": "0.1.0",
