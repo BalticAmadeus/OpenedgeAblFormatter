@@ -14,6 +14,7 @@ The OpenEdge ABL Formatter is now available in the VS Code Extension Marketplace
 > 2. Use formatting cautiously, especially when working with existing code that is difficult to test.
 
 ![Formatter in action](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmZ4dHNldmFuaGJzdHZxNjN2MzY2NG5mbXo2a3YwOWo1eTFjd2Z4MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/J70Z7etV013g8jkgxj/giphy.gif)
+
 ## Features
 
 At the moment we implemented formatting logic for these language features:
@@ -90,9 +91,11 @@ Use default VSCode formatting commands:
  - **Format Selection**: Formats only the selected lines of code. `CTRL+K CTRL+F`
 
 Also, you can enable or disable formatting on save:
+
 ```
 "editor.formatOnSave": true
 ```
+
 Alowed file extensions:
 
 - **.p**
@@ -134,7 +137,6 @@ We implemented debug mode for looking into tree-sitter issues. You can also enab
 
 ![Debug Mode](./resources/debug_mode.png)
 
-
 ## Contributing
 
 ### Registering formatter issues
@@ -153,7 +155,7 @@ We implemented debug mode for looking into tree-sitter issues. You can also enab
 This project is licensed under the APACHE 2.0 License - see the LICENSE file for details.
 
 
-## Sponsored by [Baltic Amadeus](https://www.ba.lt/en).
+## Sponsored by [Baltic Amadeus](https://www.ba.lt/en)
 
 
 [![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.ba.lt/en)
