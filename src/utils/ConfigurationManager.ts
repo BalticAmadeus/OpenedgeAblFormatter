@@ -18,6 +18,13 @@ export class ConfigurationManager implements IConfigurationManager {
                 window.showInformationMessage(
                     "ABL Formatter settings were changed!"
                 );
+
+                const config = workspace.getConfiguration("AblFormatter");
+                const expressionSetting = config.get("expressionFormatting");
+                const arrayAccessSetting = config.get("arrayAccessFormatting");
+                if (expressionSetting || arrayAccessSetting) {
+                    config.update("variableAssignmentFormatting", true);
+                }
             }
             if (e.affectsConfiguration("abl.completion")) {
                 this.reloadExternalConfig = true;

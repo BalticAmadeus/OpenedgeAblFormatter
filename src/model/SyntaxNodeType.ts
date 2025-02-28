@@ -5,7 +5,7 @@ export enum SyntaxNodeType {
 
     AvailableExpression = "available_expression",
     CaseStatement = "case_statement",
-    CaseCondition = "case_conditon",
+    CaseCondition = "case_condition",
     CaseBody = "case_body",
     CaseWhenBranch = "case_when_branch",
     CaseOtherwiseBranch = "case_otherwise_branch",
@@ -74,6 +74,7 @@ export enum SyntaxNodeType {
     AccessTuning = "access_tuning",
     ArrayAccess = "array_access",
     ArrayLiteral = "array_literal",
+    ToPhrase = "to_phrase",
     Comment = "comment",
     Getter = "getter",
     Setter = "setter",
