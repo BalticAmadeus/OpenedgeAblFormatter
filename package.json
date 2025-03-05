@@ -344,6 +344,7 @@
     "vscode-extension-tester": "^6.0.0"
   },
   "dependencies": {
+    "@vscode/extension-telemetry": "^0.9.8",
     "web-tree-sitter": "0.20.8"
   }
 }
