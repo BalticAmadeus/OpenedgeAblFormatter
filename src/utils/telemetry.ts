@@ -1,5 +1,6 @@
 import TelemetryReporter from "@vscode/extension-telemetry";
 import * as vscode from "vscode";
+
 export class Telemetry {
     private static instance: TelemetryReporter;
     private static treeSitterErrors: number = 0;
@@ -83,7 +84,7 @@ export class Telemetry {
     public static sendExtensionSettings(): void {
         const configuration = vscode.workspace.getConfiguration("AblFormatter");
         const settings = configuration.inspect("");
-        console.log("Sending Extension Settings", configuration);
+
         if (settings) {
             Telemetry.instance.sendTelemetryEvent(
                 "ExtensionSettings",
