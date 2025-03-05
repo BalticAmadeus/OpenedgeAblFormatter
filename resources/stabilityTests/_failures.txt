@@ -88,7 +88,6 @@ OpenEdge_DataAdmin_Binding_TableContext.cls
 prodict_aud__aud-pol.p
 prodict_dump__lodaudp.p
 prodict_gate__snd_sql.i
-prodict_gui__guiuchg.p
 prodict_misc__cdc-pol.p
 prodict_misc__db-id-hst.p
 prodict_misc__db-id-mnt.p
