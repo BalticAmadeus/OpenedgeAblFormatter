@@ -93,6 +93,7 @@ export enum SyntaxNodeType {
     Divide = "/",
     Modulus = "%",
     EqualsSign = "=",
+    Not = "NOT",
     // comparison operators
     EqualTo = "EQ",
     NotEqualTo = "NE",
