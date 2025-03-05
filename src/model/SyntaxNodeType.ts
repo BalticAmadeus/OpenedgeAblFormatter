@@ -5,6 +5,7 @@ export enum SyntaxNodeType {
 
     AvailableExpression = "available_expression",
     CaseStatement = "case_statement",
+    CaseCondition = "case_condition",
     CaseBody = "case_body",
     CaseWhenBranch = "case_when_branch",
     CaseOtherwiseBranch = "case_otherwise_branch",
@@ -21,9 +22,11 @@ export enum SyntaxNodeType {
     PropertyDefinition = "property_definition",
     FieldDefinition = "field_definition",
     IndexDefinition = "index_definition",
+    InputStreamStatement = "input_stream_statement",
+    OutputStreamStatement = "output_stream_statement",
+    OutputCloseStatement = "output_close_statement",
     VariableDefinition = "variable_definition",
     ProcedureParameterDefinition = "procedure_parameter_definition",
-    VariableAssignment = "variable_assignment",
     ConstructorDefinition = "constructor_definition",
     DestructorDefinition = "destructor_definition",
     MethodDefinition = "method_definition",
@@ -32,20 +35,30 @@ export enum SyntaxNodeType {
     UndoStatement = "undo_statement",
     AssignStatement = "assign_statement",
     Assignment = "assignment",
+    VariableAssignment = "variable_assignment",
+    VariableTuning = "variable_tuning",
     Identifier = "identifier",
     SourceCode = "source_code",
+    Argument = "argument",
+    Arguments = "arguments",
     ForPhrase = "for_phrase",
     ForStatement = "for_statement",
     QueryTuning = "query_tuning",
     SortClause = "sort_clause",
     SortColumn = "sort_column",
+    WhilePhrase = "while_phrase",
     ComparisonExpression = "comparison_expression",
     TernaryExpression = "ternary_expression",
     ParenthesizedExpression = "parenthesized_expression",
+    AdditiveExpression = "additive_expression",
+    MultiplicativeExpression = "multiplicative_expression",
+    UnaryExpression = "unary_expression",
+    NewExpression = "new_expression",
     BooleanLiteral = "boolean_literal",
     ElseIfStatement = "else_if_statement",
     ReturnStatement = "return_statement",
     FunctionCallStatement = "function_call_statement",
+    FunctionalCallArgument = "functional_call_argument",
     UsingStatement = "using_statement",
     ClassStatement = "class_statement",
     FinallyStatement = "finally_statement",
@@ -59,11 +72,36 @@ export enum SyntaxNodeType {
     EnumDefinition = "enum_definition",
     TypeTuning = "type_tuning",
     AccessTuning = "access_tuning",
+    ArrayAccess = "array_access",
+    ArrayLiteral = "array_literal",
+    ToPhrase = "to_phrase",
     Comment = "comment",
     Getter = "getter",
     Setter = "setter",
     LeftParenthesis = "(",
     RightParenthesis = ")",
+    LeftBracket = "[",
+    RightBracket = "]",
+    Label = "label",
+    Parameters = "parameters",
+    FunctionParameter = "function_parameter",
+    FunctionParameterMode = "function_parameter_mode",
+    // arithmetic operators
+    Add = "+",
+    Subtract = "-",
+    Multiply = "*",
+    Divide = "/",
+    Modulus = "%",
+    EqualsSign = "=",
+    // comparison operators
+    EqualTo = "EQ",
+    NotEqualTo = "NE",
+    GreaterThan = "GT",
+    LessThan = "LT",
+    GreaterThanOrEqualTo = "GE",
+    LessThanOrEqualTo = "LE",
+    // assignment operators
+    AssignmentOperator = "assignment_operator",
 
     // keywords
     WhenKeyword = "WHEN",
@@ -90,6 +128,7 @@ export enum SyntaxNodeType {
     AssignKeyword = "ASSIGN",
     EachKeyword = "EACH",
     EndKeyword = "END",
+    ExtentKeyword = "EXTENT",
     IfKeyword = "IF",
     FindKeyword = "FIND",
     ForKeyword = "FOR",
@@ -106,6 +145,10 @@ export enum SyntaxNodeType {
     ReturnKeyword = "RETURN",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
+    TableKeyword = "TABLE",
+    TableHandleKeyword = "TABLE-HANDLE",
+    DatasetKeyword = "DATASET",
+    DatasetHandleKeyword = "DATASET-HANDLE",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
@@ -123,6 +166,13 @@ export const definitionKeywords = new MyFancySet<string>([
     SyntaxNodeType.DefKeyword,
 ]);
 
+export const dataStructureKeywords = new MyFancySet<string>([
+    SyntaxNodeType.TableKeyword,
+    SyntaxNodeType.TableHandleKeyword,
+    SyntaxNodeType.DatasetKeyword,
+    SyntaxNodeType.DatasetHandleKeyword,
+]);
+
 export const bodyBlockKeywords = new MyFancySet<string>([
     SyntaxNodeType.Body,
     SyntaxNodeType.CaseBody,
@@ -135,4 +185,14 @@ export const parameterTypes = new MyFancySet<string>([
     SyntaxNodeType.OutputKeyword,
     SyntaxNodeType.InputOutputKeyword,
     SyntaxNodeType.ReturnKeyword,
+]);
+
+export const parentheses = new MyFancySet<string>([
+    SyntaxNodeType.LeftParenthesis,
+    SyntaxNodeType.RightParenthesis,
+]);
+
+export const logicalKeywords = new MyFancySet<string>([
+    SyntaxNodeType.AndKeyword,
+    SyntaxNodeType.OrKeyword,
 ]);

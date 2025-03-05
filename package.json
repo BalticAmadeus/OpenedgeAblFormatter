@@ -1,8 +1,8 @@
 {
-  "name": "abl-formatter",
-  "displayName": "Abl Formatter",
+  "name": "openedge-abl-formatter",
+  "displayName": "OpenEdge Abl Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/AblFormatter"
@@ -52,7 +52,7 @@
             "New",
             "Same"
           ],
-          "description": "Should assigns be located on same or new line after ASSIGN keyword?"
+          "description": "Should assigns be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.assignFormattingAlignRightExpression": {
           "order": 102,
@@ -73,13 +73,7 @@
             "New aligned",
             "Same"
           ],
-          "description": "Should end dot be located on same or new line after ASSIGN statement?"
-        },
-        "AblFormatter.defineFormatting": {
-          "order": 200,
-          "type": "boolean",
-          "default": "true",
-          "description": "Enable DEFINE formatting"
+          "description": "Should end dot be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.findFormatting": {
           "order": 300,
@@ -107,12 +101,12 @@
             "New",
             "Same"
           ],
-          "description": "Should THEN clause be on a new line or the same line as the WHEN keyword?"
+          "description": "Should THEN clause be on a new line or the same line as the CASE keyword?"
         },
         "AblFormatter.caseFormattingDoLocation": {
           "order": 502,
           "type": "string",
-          "default": "New",
+          "default": "Same",
           "enum": [
             "New",
             "Same"
@@ -219,7 +213,7 @@
             "New",
             "Same"
           ],
-          "description": "Add a new line before the ELSE?"
+          "description": "Should ELSE clause be on a new line or the same line as the IF FUNCTION keyword?"
         },
         "AblFormatter.enumFormatting": {
           "order": 1300,
@@ -248,6 +242,66 @@
           "default": "true",
           "description": "Enable PROCEDURE PARAMETER formatting"
         },
+        "AblFormatter.functionParameterFormatting": {
+          "order": 1600,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable FUNCTION PARAMETER formatting"
+        },
+        "AblFormatter.functionParameterFormattingAlignParameterTypes": {
+          "order": 1601,
+          "type": "string",
+          "default": "Yes",
+          "enum": [
+            "Yes",
+            "No"
+          ],
+          "description": "Align parameter types?"
+        },
+        "AblFormatter.arrayAccessFormatting": {
+          "order": 1700,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable ARRAY ACCESS formatting"
+        },
+        "AblFormatter.arrayAccessFormattingAddSpaceAfterComma": {
+          "order": 1701,
+          "type": "string",
+          "default": "Yes",
+          "enum": [
+            "Yes",
+            "No"
+          ],
+          "description": "Add space after comma?"
+        },
+        "AblFormatter.expressionFormatting": {
+          "order": 1800,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable EXPRESSION formatting"
+        },
+        "AblFormatter.expressionFormattingLogicalLocation": {
+          "order": 1801,
+          "type": "string",
+          "default": "New",
+          "enum": [
+            "New",
+            "Same"
+          ],
+          "description": "Should logical operators be on a new line or the same line as the expression?"
+        },
+        "AblFormatter.statementFormatting": {
+          "order": 1900,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable STATEMENT formatting"
+        },
+        "AblFormatter.variableAssignmentFormatting": {
+          "order": 2000,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable STATEMENT formatting"
+        },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 10100,
           "type": "boolean",
@@ -272,7 +326,9 @@
     "run-ui-test": "npm run copy-test-settings && npm run copy-test-cases && npm run compile && extest run-tests './out/ui-test/testRunner.js' -s ./.test_dir -e ./.ext_dir -c 1.85.1 -t stable",
     "copy-test-cases": "copyfiles -u 2 ./resources/samples/* .test_dir/samples",
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
+    "stability-test": "node ./out/stability-test/runTest.js"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",

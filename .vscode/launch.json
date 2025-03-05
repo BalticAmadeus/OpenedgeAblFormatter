@@ -43,6 +43,19 @@
 				"${workspaceFolder}/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
+		},		{
+			"name": "Stability Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/stability-test/suite/index",
+				"${workspaceFolder}/resources/stabilityTests"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/stability-test/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
 		}
 	],
 

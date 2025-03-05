@@ -11,4 +11,4 @@ else if a = 3 then
 do:       
  oObject:method(something).       end.
 else
-    message "a"
+    message "a".

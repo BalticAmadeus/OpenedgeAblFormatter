@@ -3,7 +3,8 @@
 "AblFormatter.assignFormatting": true,
 "AblFormatter.assignFormattingAssignLocation": "New",
 "AblFormatter.assignFormattingAlignRightExpression": "Yes",
-"AblFormatter.assignFormattingEndDotLocation": "New"}*/
+"AblFormatter.assignFormattingEndDotLocation": "New",
+"AblFormatter.expressionFormatting": false}*/
 
 ASSIGN
     number11 = 2

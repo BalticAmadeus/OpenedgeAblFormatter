@@ -9,7 +9,7 @@ import {
 } from "vscode";
 import { SyntaxNode, Tree } from "web-tree-sitter";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
-import { ConfigurationManager2 } from "../utils/ConfigurationManager";
+import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { IDebugManager } from "./IDebugManager";
 
 export class DebugManager implements IDebugManager {
@@ -183,7 +183,7 @@ export class DebugManager implements IDebugManager {
 
     public isInDebugMode(): boolean {
         return (
-            ConfigurationManager2.getInstance().get("showTreeInfoOnHover") ===
+            ConfigurationManager.getInstance().get("showTreeInfoOnHover") ===
                 true || this.debugModeOverride
         );
     }

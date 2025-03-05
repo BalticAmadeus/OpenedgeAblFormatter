@@ -4,26 +4,66 @@
 name: Node.js CI
 
 on:
-  push:
-    branches: [ "develop" ]
-  pull_request:
-    branches: [ "develop" ]
+    push:
+        branches: ["develop"]
+    pull_request:
+        branches: ["develop"]
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18.x
-    - run: npm install
-    - run: xvfb-run -a npm test
-      if: runner.os == 'Linux'
-    - run: npm test
-      if: runner.os != 'Linux'
+    test:
+        strategy:
+            matrix:
+                os: [ubuntu-latest, windows-latest, macos-latest]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20.x
+
+            - run: npm install
+
+            - name: Run Tests
+              run: xvfb-run -a npm test
+              if: runner.os == 'Linux'
+
+            - name: Run Tests (Non-Linux)
+              run: npm test
+              if: runner.os != 'Linux'
+
+    stability-test:
+        needs: test # Runs only if 'test' job is successful
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20.x
+
+            - run: npm install
+
+            - name: Compile
+              run: xvfb-run -a npm run compile
+              if: runner.os == 'Linux'
+
+            - name: Get ADE Repo
+              run: xvfb-run -a npm run get-ade-test
+              if: runner.os == 'Linux'
+
+            - name: Run Stability Test
+              run: xvfb-run -a npm run stability-test
+              if: runner.os == 'Linux'
+
+            - name: Save Stability Test Results as Artifact
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: results
+                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults
+                  retention-days: 7
