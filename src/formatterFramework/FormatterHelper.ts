@@ -26,24 +26,15 @@ export class FormatterHelper {
     }
 
     public static getActualTextRow(input: string, fullText: FullText): number {
-        // let newLineCount = 0;
-        // let encounteredNonWhitespace = false;
-        // const eolDelimiter = fullText.eolDelimiter;
+        if (!input) {
+            return 0;
+        } // Handle null or empty string safely
 
-        // for (let i = 0; i < input.length; i++) {
-        //     if (input.substr(i, eolDelimiter.length) === eolDelimiter) {
-        //         newLineCount++;
-        //         i += eolDelimiter.length - 1;
-        //     } else if (!/\s/.test(input[i])) {
-        //         encounteredNonWhitespace = true;
-        //         break;
-        //     }
-        // }
+        const leadingNewlines = input.match(/^\s*(\r?\n)*/);
 
-        // return encounteredNonWhitespace ? newLineCount : 0;
-
-        const match = input.match(/^(?:\s*\r?\n)*/);
-        return match ? (match[0].match(/\n/g) || []).length : 0;
+        return leadingNewlines
+            ? leadingNewlines[0].split(/\r?\n/).length - 1
+            : 0;
     }
 
     public static getActualStatementIndentation(
