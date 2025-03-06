@@ -26,14 +26,12 @@ export class FormatterHelper {
     }
 
     public static getActualTextRow(input: string, fullText: FullText): number {
-        if (!input) {
-            return 0;
-        } // Handle null or empty string safely
+        const regex = new RegExp(`^\\s*(${fullText.eolDelimiter})*`);
 
-        const leadingNewlines = input.match(/^\s*(\r?\n)*/);
+        const leadingNewlines = input.match(regex);
 
         return leadingNewlines
-            ? leadingNewlines[0].split(/\r?\n/).length - 1
+            ? leadingNewlines[0].split(fullText.eolDelimiter).length - 1
             : 0;
     }
 
