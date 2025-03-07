@@ -223,8 +223,6 @@ function parseAndCheckForErrors(
     const rootNode = parseResult.tree.rootNode;
     const errors = getNodesWithErrors(rootNode);
 
-    parseResult.tree.delete();
-
     return errors;
 }
 
