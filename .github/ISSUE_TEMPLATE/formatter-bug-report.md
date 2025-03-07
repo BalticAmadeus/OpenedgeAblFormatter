@@ -13,9 +13,21 @@ Provide 3 code snippets
 
 **Before code snippet**
 
+```
+Insert code here
+```
+
 **After code snippet**
 
+```
+Insert code here
+```
+
 **Expected code snippet**
+
+```
+Insert code here
+```
 
 **Additional info (optional)**
  - extension settings
