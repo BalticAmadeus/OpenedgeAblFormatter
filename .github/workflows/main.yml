@@ -56,11 +56,19 @@ jobs:
               run: xvfb-run -a npm run get-ade-test
               if: runner.os == 'Linux'
 
+            - name: Compile
+              run: npm run compile
+              if: runner.os != 'Linux'
+
+            - name: Get ADE Repo
+              run: npm run get-ade-test
+              if: runner.os != 'Linux'
+
             - name: Run Stability Test
               run: xvfb-run -a npm run stability-test
               if: runner.os == 'Linux'
 
-            - name: Run Tests (Non-Linux)
+            - name: Run Stability Tests (Non-Linux)
               run: npm run stability-test
               if: runner.os != 'Linux'
 
