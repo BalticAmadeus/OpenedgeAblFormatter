@@ -1,13 +1,10 @@
-adecomm_aud-tts.i
 adecomm_peditor.i
 adecomm__dswidfunc.p
 adecomm__pweditor.i
 adecomm__reg2ini.p
 adeshar__mchgi.i
 adeuib_sookver.i
-adeuib__edtmenu.p
 adeuib__ttyss.i
-adeuib__tview.w
 auditing_sdo__audfieldpolicysdo.w
 auditing_sdo__audfilepolicysdo.w
 OpenEdge_DataAdmin_DataSource_IndexDataSource.cls
@@ -49,7 +46,6 @@ adecomm__auddfilt.p
 adecomm__auddtl.p
 adecomm__cust-flt.p
 adecomm__disconn.p
-adecomm__getwidobjs.w
 adedesk_menus.i
 adedict_DB__getdbs.p
 adedict_FLD_fldvar.i
@@ -62,7 +58,6 @@ aderes_j-table2.p
 aderes_y-total.p
 aderes__aicdir.p
 adeshar__qenable.p
-adeuib_layout.i
 adeuib_uibmdefs.i
 adeuib__attr-ed.w
 adeuib__chkrlnk.i
@@ -94,7 +89,6 @@ prodict_misc__db-id-mnt.p
 prodict_mss__mssschg.p
 prodict_ora__ora_lkg.p
 prodict_ora__ora_lkz.p
-prodict_sec__sec-gen-key.p
 prodict_user__usrschg.p
 prodict__dctgues.p
 template_tty-dial.w
@@ -102,13 +96,11 @@ web_examples_w-cstinf.w
 web_examples_w-cststa.w
 //0046 issues <--
 //0047 issues -->
-aderes__rdraw.p
 aderes_e-type.p
 aderes_l-type.p
 aderes_p-type.p
 adeshar__gen4gl.p
 adeuib__adjcols.i
-adeuib__calcself.w
 adeuib__drwbutt.p
 adeuib__drwcomb.p
 adeuib__drwcont.p
@@ -118,7 +110,6 @@ adeuib__drwrect.p
 adeuib__drwslid.p
 adeuib__drwsmar.p
 adeuib__drwtext.p
-adeuib__newcalcv.w
 adeuib__rdbrow.p
 adeuib__rdbutt.p
 adeuib__rdcomb.p
@@ -149,11 +140,11 @@ adeuib_validbrw.i
 adm2_exportdata.p
 adm2_logic.i
 auditing_src_adm2_logic.i
-auditing_ui__audevpolicyviewv.w
-auditing_ui__audfieldpolicyviewv.w
-auditing_ui__audfilepolicyviewv.w
-auditing_ui__audpolicyviewv.w
 prodict_gate_cmp_tbl.i
 protools_widattrs.w
 web_examples_w-custdir.w
 //0047 issues <--
+//0048-pre issues -->
+adeuib_vabattrwidg.w
+prodict_misc__db-optn.p
+//0048-pre issues <--
