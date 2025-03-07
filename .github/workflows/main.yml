@@ -36,7 +36,7 @@ jobs:
 
     stability-test:
         needs: test # Runs only if 'test' job is successful
-        runs-on: windows-latest
+        runs-on: ubuntu-latest
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -56,21 +56,9 @@ jobs:
               run: xvfb-run -a npm run get-ade-test
               if: runner.os == 'Linux'
 
-            - name: Compile
-              run: npm run compile
-              if: runner.os != 'Linux'
-
-            - name: Get ADE Repo
-              run: npm run get-ade-test
-              if: runner.os != 'Linux'
-
             - name: Run Stability Test
               run: xvfb-run -a npm run stability-test
               if: runner.os == 'Linux'
-
-            - name: Run Stability Tests (Non-Linux)
-              run: npm run stability-test
-              if: runner.os != 'Linux'
 
             - name: Save Stability Test Results as Artifact
               if: always()
