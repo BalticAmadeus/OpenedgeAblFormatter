@@ -61,7 +61,7 @@ jobs:
               if: runner.os == 'Linux'
 
             - name: Run Tests (Non-Linux)
-              run: npm stability-test
+              run: npm run stability-test
               if: runner.os != 'Linux'
 
             - name: Save Stability Test Results as Artifact
