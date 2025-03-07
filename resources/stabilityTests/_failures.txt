@@ -145,6 +145,7 @@ protools_widattrs.w
 web_examples_w-custdir.w
 //0047 issues <--
 //0048pre issues -->
+adecomm__getwidobjs.w
 adeuib_vabattrwidg.w
 prodict_misc__db-optn.p
 //0048pre issues <--
