@@ -11,6 +11,7 @@ import { SyntaxNode, Tree } from "web-tree-sitter";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { IDebugManager } from "./IDebugManager";
+import { Telemetry } from "../utils/telemetry";
 
 export class DebugManager implements IDebugManager {
     private static instance: DebugManager;
@@ -60,6 +61,7 @@ export class DebugManager implements IDebugManager {
     public handleErrors(tree: Tree): void {
         const nodes = this.getNodesWithErrors(tree.rootNode, true);
 
+        Telemetry.addTreeSitterErrors(nodes.length);
         this.errorRanges = [];
 
         if (nodes.length > 0) {
