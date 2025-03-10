@@ -198,18 +198,13 @@ export class VariableDefinitionFormatter
                     node,
                     fullText
                 ).trim();
-                let spaces: string;
-                const hasAccessTuning =
-                    node.previousSibling?.type === SyntaxNodeType.AccessTuning;
 
-                if (hasAccessTuning) {
-                    spaces = " ";
-                } else if (this.countAccessTuning === 0 && !hasAccessTuning) {
-                    spaces = " ";
-                } else {
-                    spaces = " ".repeat(this.alignVariableKeyword + 2);
-                }
-                newString = spaces + text;
+                const spacesCount =
+                    this.hasAccessTuning || this.countAccessTuning === 0
+                        ? 1
+                        : this.alignVariableKeyword + 2; // Compensate 2 spaces when trimmed
+
+                newString = " ".repeat(spacesCount) + text;
                 break;
             }
             case SyntaxNodeType.VariableTuning:
