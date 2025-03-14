@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { SyntaxNode } from "tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -42,7 +42,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
             ) {
                 newText = this.addParenthesesAroundExpression(newText);
                 if (!this.hasTernaryExpressionParent(node)) {
-                    /* 
+                    /*
                         The expression gets pushed by 1 space since the '(' is added at the start
                     */
                     const delta =

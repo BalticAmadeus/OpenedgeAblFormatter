@@ -7,7 +7,7 @@ import {
     ThemeColor,
     window,
 } from "vscode";
-import { SyntaxNode, Tree } from "web-tree-sitter";
+import { SyntaxNode, Tree } from "tree-sitter";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { IDebugManager } from "./IDebugManager";

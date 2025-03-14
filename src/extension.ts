@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import Parser from "web-tree-sitter";
+import Parser from "tree-sitter";
 import { AblFormatterProvider } from "./providers/AblFormatterProvider";
 import { Constants } from "./model/Constants";
 import { AblParserHelper } from "./parser/AblParserHelper";
@@ -11,7 +11,7 @@ import { DebugManager } from "./providers/DebugManager";
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
 
-    await Parser.init().then(() => {});
+    // await Parser.init().then(() => {});
 
     ConfigurationManager.getInstance();
     enableFormatterDecorators();

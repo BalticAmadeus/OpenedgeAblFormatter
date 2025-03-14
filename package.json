@@ -2,7 +2,7 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge Abl Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.1.0",
+  "version": "0.0.3",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/AblFormatter"
@@ -341,7 +341,7 @@
     "@vscode/test-electron": "^2.3.6",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
-    "esbuild": "0.19.11",
+    "esbuild": "^0.25.1",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
@@ -350,6 +350,8 @@
     "vscode-extension-tester": "^6.0.0"
   },
   "dependencies": {
+    "@usagi-coffee/tree-sitter-abl": "file:usagi-coffee-tree-sitter-abl-0.0.46.tgz",
+    "tree-sitter": "^0.21.0",
     "web-tree-sitter": "0.20.8"
   }
 }

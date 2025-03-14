@@ -1,4 +1,4 @@
-import { Tree } from "web-tree-sitter";
+import { Tree } from "tree-sitter";
 
 export interface IDebugManager {
     handleErrors(tree: Tree): void;

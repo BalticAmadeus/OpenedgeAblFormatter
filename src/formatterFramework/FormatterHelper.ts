@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { SyntaxNode } from "tree-sitter";
 import { FullText } from "../model/FullText";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { log } from "console";

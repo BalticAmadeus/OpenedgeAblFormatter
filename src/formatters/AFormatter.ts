@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { SyntaxNode } from "tree-sitter";
 import { IConfigurationManager } from "../utils/IConfigurationManager";
 import { CodeEdit } from "../model/CodeEdit";
 import { FullText } from "../model/FullText";

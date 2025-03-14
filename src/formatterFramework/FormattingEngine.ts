@@ -1,4 +1,4 @@
-import { SyntaxNode, Tree } from "web-tree-sitter";
+import { SyntaxNode, Tree } from "tree-sitter";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { IFormatter } from "./IFormatter";
@@ -61,12 +61,12 @@ export class FormattingEngine {
 
             // Process the current node (this is a leaf node or a node with no unvisited children)
             while (true) {
-                const node = cursor.currentNode();
+                const node = cursor.currentNode;
 
                 // Skip the node if it was the last one visited
                 if (node === lastVisitedNode) {
                     if (!cursor.gotoParent()) {
-                        cursor.delete(); // Clean up the cursor
+                        // cursor.delete(); // Clean up the cursor
                         return; // Exit if there are no more nodes to visit
                     }
                     continue; // Continue with the parent node
@@ -91,7 +91,7 @@ export class FormattingEngine {
 
                 // If no more siblings, move up to the parent node
                 if (!cursor.gotoParent()) {
-                    cursor.delete(); // Clean up the cursor
+                    // cursor.delete(); // Clean up the cursor
                     return; // Exit if there are no more nodes to visit
                 }
             }

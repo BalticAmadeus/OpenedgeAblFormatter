@@ -8,7 +8,7 @@ import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
-import Parser from "web-tree-sitter";
+import Parser from "tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import path from "path";
 import { EOL } from "../../model/EOL";
@@ -54,9 +54,9 @@ suite("Extension Test Suite", () => {
     });
 
     suiteSetup(async () => {
-        await Parser.init().then(() => {
-            console.log("Parser initialized");
-        });
+        // await Parser.init().then(() => {
+        //     console.log("Parser initialized");
+        // });
 
         parserHelper = new AblParserHelper(
             extensionDevelopmentPath,
@@ -200,7 +200,7 @@ function parseAndCheckForErrors(
 function getNodesWithErrors(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
     let errorNodes: Parser.SyntaxNode[] = [];
 
-    if (node.hasError()) {
+    if (node.hasError) {
         errorNodes.push(node);
     }
 

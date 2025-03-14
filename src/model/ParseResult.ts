@@ -1,4 +1,4 @@
-import Parser from "web-tree-sitter";
+import Parser from "tree-sitter";
 
 export interface ParseResult {
     tree: Parser.Tree;

@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { SyntaxNode } from "tree-sitter";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { bodyBlockKeywords, SyntaxNodeType } from "../../model/SyntaxNodeType";
 import { CodeEdit } from "../../model/CodeEdit";

@@ -1,4 +1,4 @@
-import { Edit } from "web-tree-sitter";
+import { Edit } from "tree-sitter";
 
 export interface CodeEdit {
     edit: Edit;

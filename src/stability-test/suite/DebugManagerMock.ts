@@ -1,4 +1,4 @@
-import { Tree } from "web-tree-sitter";
+import { Tree } from "tree-sitter";
 import { IDebugManager } from "../../providers/IDebugManager";
 
 export class DebugManagerMock implements IDebugManager {

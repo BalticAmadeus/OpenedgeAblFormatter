@@ -1,31 +1,24 @@
-import Parser, { Tree } from "web-tree-sitter";
+import Parser, { Tree } from "tree-sitter";
+import AblLanguage from "@usagi-coffee/tree-sitter-abl/bindings/node";
 import { IParserHelper } from "./IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { ParseResult } from "../model/ParseResult";
-import path from "path";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { IDebugManager } from "../providers/IDebugManager";
 
 export class AblParserHelper implements IParserHelper {
     private parser = new Parser();
     private trees = new Map<string, Parser.Tree>();
-    private ablLanguagePromise: Promise<Parser.Language>;
     private debugManager: IDebugManager;
 
     public constructor(extensionPath: string, debugManager: IDebugManager) {
         this.debugManager = debugManager;
-        this.ablLanguagePromise = Parser.Language.load(
-            path.join(extensionPath, "resources/tree-sitter-abl.wasm")
-        );
-
-        this.ablLanguagePromise.then((abl) => {
-            this.parser.setLanguage(abl);
-            this.debugManager.parserReady();
-        });
+        this.parser.setLanguage(AblLanguage); // Directly set the imported language
+        this.debugManager.parserReady();
     }
 
     public async awaitLanguage(): Promise<void> {
-        await this.ablLanguagePromise;
+        return Promise.resolve(); // Language is already set, no need to load anything
     }
 
     public parse(

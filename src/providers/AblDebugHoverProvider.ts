@@ -6,7 +6,7 @@ import {
     ProviderResult,
     TextDocument,
 } from "vscode";
-import { Point, SyntaxNode } from "web-tree-sitter";
+import { Point, SyntaxNode } from "tree-sitter";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { ParseResult } from "../model/ParseResult";
