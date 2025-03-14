@@ -1,0 +1,2789 @@
+================================================================================
+COMMENT
+================================================================================
+
+/* comment */
+// comment
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (comment)
+  (comment))
+
+================================================================================
+COMMENT (long)
+================================================================================
+
+/********************
+ THIS
+ IS
+ MULTILINE
+ COMMENT
+********************/
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (comment))
+
+================================================================================
+INCLUDE
+================================================================================
+
+{include_file.i arg1 &arg2="test" arg3 "NEW" &ABC=variable}
+DISPLAY {&VAR1}.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (include
+    (file_name)
+    (include_argument
+      (identifier))
+    (include_argument
+      (identifier)
+      (string_literal))
+    (include_argument
+      (identifier))
+    (include_argument
+      (string_literal))
+    (include_argument
+      (identifier)
+      (identifier)))
+  (abl_statement
+    (identifier)
+    (constant
+      (identifier))))
+
+================================================================================
+VARIABLE DEFINITION statement
+================================================================================
+
+DEFINE VARIABLE full_variable AS INTEGER.
+DEFINE VAR  full_var AS INTEGER.
+
+DEF VARIABLE short_variable AS INTEGER.
+DEF VAR short_var AS INTEGER.
+
+DEFINE VARIABLE no_undo AS INTEGER NO-UNDO.
+DEFINE VARIABLE initial AS INTEGER INITIAL ?.
+
+DEFINE VARIABLE clone LIKE short_variable.
+
+DEFINE VARIABLE ojb AS Progress.Json.ObjectModel.JsonObject NO-UNDO.
+
+DEFINE VARIABLE cls AS CLASS CustomClass.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (primitive_type)))
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (primitive_type)))
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (primitive_type)))
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (primitive_type)))
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (primitive_type))
+    (variable_tuning))
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (primitive_type))
+    (variable_tuning
+      (null_expression)))
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (identifier)))
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (qualified_name
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)))
+    (variable_tuning))
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (class_type
+        (identifier)))))
+
+================================================================================
+VARIABLE ASSIGNMENT statement
+================================================================================
+
+DEFINE VARIABLE variable AS INTEGER.
+variable = 5.
+variable = 5.35.
+SESSION:NUMERIC-FORMAT = "european".
+
+variable += 8.
+variable -= 4.
+variable *= 2.
+variable /= 3.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_definition
+    (identifier)
+    (type_tuning
+      (primitive_type)))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (number_literal)))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (number_literal)))
+  (variable_assignment
+    (assignment
+      (object_access
+        (identifier)
+        (identifier))
+      (assignment_operator)
+      (string_literal)))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (number_literal)))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (number_literal)))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (number_literal)))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (number_literal))))
+
+================================================================================
+BINARY (simple) operators
+================================================================================
+
+x = 2 + 2.
+y = (4 * 3) / 2.
+z = 2 > 4.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (additive_expression
+        (number_literal)
+        (number_literal))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (multiplicative_expression
+        (parenthesized_expression
+          (multiplicative_expression
+            (number_literal)
+            (number_literal)))
+        (number_literal))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (comparison_expression
+        (number_literal)
+        (number_literal)))))
+
+================================================================================
+UNARY (simple) operators
+================================================================================
+
+w = -(0).
+x = -f().
+y = -table.field.
+z = -obj:method().
+
+z = NOT y.
+y = NOT -x < -10 OR x = 10.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (parenthesized_expression
+          (number_literal)))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (function_call
+          (identifier)
+          (arguments)))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (qualified_name
+          (identifier)
+          (identifier)))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (function_call
+          (object_access
+            (identifier)
+            (identifier))
+          (arguments)))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (identifier))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (logical_expression
+        (unary_expression
+          (comparison_expression
+            (unary_expression
+              (identifier))
+            (unary_expression
+              (number_literal))))
+        (comparison_expression
+          (identifier)
+          (number_literal))))))
+
+================================================================================
+UNARY/BINARY operators
+================================================================================
+
+z = NOT y > 5.
+y = NOT 2 + 2.
+z = NOT 2 + 2 = 5.
+zr = NOT 5 = 2 + 2.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (comparison_expression
+          (identifier)
+          (number_literal)))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (additive_expression
+          (number_literal)
+          (number_literal)))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (comparison_expression
+          (additive_expression
+            (number_literal)
+            (number_literal))
+          (number_literal)))))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (unary_expression
+        (comparison_expression
+          (number_literal)
+          (additive_expression
+            (number_literal)
+            (number_literal)))))))
+
+================================================================================
+Qualified name
+================================================================================
+
+DISPLAY table.field1.
+DISPLAY
+  database
+    .table
+    .field2.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (abl_statement
+    statement: (identifier)
+    (qualified_name
+      (identifier)
+      (identifier)))
+  (abl_statement
+    statement: (identifier)
+    (qualified_name
+      (identifier)
+      (identifier)
+      (identifier))))
+
+================================================================================
+BUFFER DEFINITION statement
+================================================================================
+
+DEFINE BUFFER x-table FOR table.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (buffer_definition
+    (identifier)
+    (identifier)))
+
+================================================================================
+IMAGE DEFINITION statement
+================================================================================
+
+DEFINE IMAGE myImage SIZE 5 BY 5 CONVERT-3D-COLORS.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (image_definition
+    name: (identifier)
+    (size_phrase
+      width: (number_literal)
+      height: (number_literal))
+    (image_tuning)))
+
+================================================================================
+QUERY DEFINITION statement
+================================================================================
+
+DEFINE QUERY q1 FOR tr_hist FIELDS (name balance) EXCEPT (something else lol) SCROLLING.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (query_definition
+    (identifier)
+    (identifier)
+    (query_fields
+      (identifier)
+      (identifier))
+    (query_fields
+      (identifier)
+      (identifier)
+      (identifier))
+    (query_definition_tuning)))
+
+================================================================================
+IF statement
+================================================================================
+
+IF x > 10 THEN DO:
+  x = 10.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (if_statement
+    condition: (comparison_expression
+      (identifier)
+      (number_literal))
+    (do_block
+      (body
+        (variable_assignment
+          (assignment
+            name: (identifier)
+            (assignment_operator)
+            (number_literal)))))))
+
+================================================================================
+IF ELSE DO statement
+================================================================================
+
+IF x > 10 THEN DO:
+  x = 10.
+END.
+ELSE DO:
+  x = x.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (if_statement
+    condition: (comparison_expression
+      (identifier)
+      (number_literal))
+    (do_block
+      (body
+        (variable_assignment
+          (assignment
+            name: (identifier)
+            (assignment_operator)
+            (number_literal)))))
+    (else_statement
+      (do_block
+        (body
+          (variable_assignment
+            (assignment
+              name: (identifier)
+              (assignment_operator)
+              (identifier))))))))
+
+================================================================================
+IF ELSE IF statement
+================================================================================
+
+IF x > 10 THEN DO:
+  x = 10.
+END.
+ELSE IF x < 10 THEN DO:
+  x = x.
+END.
+ELSE DO:
+  x = x.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (if_statement
+    condition: (comparison_expression
+      (identifier)
+      (number_literal))
+    (do_block
+      (body
+        (variable_assignment
+          (assignment
+            name: (identifier)
+            (assignment_operator)
+            (number_literal)))))
+    (else_statement
+      condition: (comparison_expression
+        (identifier)
+        (number_literal))
+      (do_block
+        (body
+          (variable_assignment
+            (assignment
+              name: (identifier)
+              (assignment_operator)
+              (identifier))))))
+    (else_statement
+      (do_block
+        (body
+          (variable_assignment
+            (assignment
+              name: (identifier)
+              (assignment_operator)
+              (identifier))))))))
+
+================================================================================
+IF ELSE IF statement with line break before DOs
+================================================================================
+
+If x > 10 Then
+Do:
+  x = 10.
+End.
+Else If x < 10 Then
+Do:
+  x = x.
+End.
+Else
+Do:
+  x = x.
+End.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (if_statement
+    condition: (comparison_expression
+      (identifier)
+      (number_literal))
+    (do_block
+      (body
+        (variable_assignment
+          (assignment
+            name: (identifier)
+            (assignment_operator)
+            (number_literal)))))
+    (else_statement
+      condition: (comparison_expression
+        (identifier)
+        (number_literal))
+      (do_block
+        (body
+          (variable_assignment
+            (assignment
+              name: (identifier)
+              (assignment_operator)
+              (identifier))))))
+    (else_statement
+      (do_block
+        (body
+          (variable_assignment
+            (assignment
+              name: (identifier)
+              (assignment_operator)
+              (identifier))))))))
+
+================================================================================
+IF THEN statement
+================================================================================
+
+IF x > 10 THEN x = 10.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (if_statement
+    condition: (comparison_expression
+      (identifier)
+      (number_literal))
+    (variable_assignment
+      (assignment
+        name: (identifier)
+        (assignment_operator)
+        (number_literal)))))
+
+================================================================================
+IF ELSE THEN statement
+================================================================================
+
+IF x > 10 THEN x = 10.
+ELSE IF x > 20 THEN x = 20.
+ELSE x = x.
+
+IF x > 10 THEN x = 10.
+ELSE DO:
+  x = 20.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (if_statement
+    condition: (comparison_expression
+      (identifier)
+      (number_literal))
+    (variable_assignment
+      (assignment
+        name: (identifier)
+        (assignment_operator)
+        (number_literal)))
+    (else_statement
+      condition: (comparison_expression
+        (identifier)
+        (number_literal))
+      (variable_assignment
+        (assignment
+          name: (identifier)
+          (assignment_operator)
+          (number_literal))))
+    (else_statement
+      (variable_assignment
+        (assignment
+          name: (identifier)
+          (assignment_operator)
+          (identifier)))))
+  (if_statement
+    condition: (comparison_expression
+      (identifier)
+      (number_literal))
+    (variable_assignment
+      (assignment
+        name: (identifier)
+        (assignment_operator)
+        (number_literal)))
+    (else_statement
+      (do_block
+        (body
+          (variable_assignment
+            (assignment
+              name: (identifier)
+              (assignment_operator)
+              (number_literal))))))))
+
+================================================================================
+LOGICAL expressions
+================================================================================
+
+w = YES.
+x = NO.
+y = TRUE.
+z = FALSE.
+IF YES AND TRUE THEN DISPLAY "yes".
+
+x = YES AND NO.
+x = YES OR NO.
+
+y = x < 10 OR x = 10.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (boolean_literal)))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (boolean_literal)))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (boolean_literal)))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (boolean_literal)))
+  (if_statement
+    condition: (logical_expression
+      (boolean_literal)
+      (boolean_literal))
+    (abl_statement
+      statement: (identifier)
+      (string_literal)))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (logical_expression
+        (boolean_literal)
+        (boolean_literal))))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (logical_expression
+        (boolean_literal)
+        (boolean_literal))))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (logical_expression
+        (comparison_expression
+          (identifier)
+          (number_literal))
+        (comparison_expression
+          (identifier)
+          (number_literal))))))
+
+================================================================================
+REPEAT statement
+================================================================================
+
+REPEAT WHILE TRUE:
+  x = 5.
+END.
+
+REPEAT PRESELECT EACH Order, Customer OF Order, EACH OrderLine OF Order:
+
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (repeat_statement
+    (while_phrase
+      (boolean_literal))
+    (body
+      (variable_assignment
+        (assignment
+          (identifier)
+          (assignment_operator)
+          (number_literal)))))
+  (repeat_statement
+    (preselect_phrase
+      (record_phrase
+        (identifier)
+        (identifier)
+        (of
+          (identifier)))
+      (record_phrase
+        (identifier)
+        (of
+          (identifier))))
+    (body)))
+
+================================================================================
+DO statement
+================================================================================
+
+DO x = 5 TO 20:
+  x = 5.
+END.
+
+DO x = 5 TO INTEGER("20"):
+  x = 5.
+END.
+
+DO WHILE x < 10:
+  x = 5.
+END.
+
+z:
+DO x = 5 TO 20:
+  LEAVE z.
+END.
+
+
+DO PRESELECT EACH Order NO-LOCK WHERE Order.OrderNum > 5:
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (do_block
+    (to_phrase
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (number_literal))
+      (number_literal))
+    (body
+      (variable_assignment
+        (assignment
+          (identifier)
+          (assignment_operator)
+          (number_literal)))))
+  (do_block
+    (to_phrase
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (number_literal))
+      (function_call
+        (identifier)
+        (arguments
+          (argument
+            (string_literal)))))
+    (body
+      (variable_assignment
+        (assignment
+          (identifier)
+          (assignment_operator)
+          (number_literal)))))
+  (do_block
+    (while_phrase
+      (comparison_expression
+        (identifier)
+        (number_literal)))
+    (body
+      (variable_assignment
+        (assignment
+          (identifier)
+          (assignment_operator)
+          (number_literal)))))
+  (do_block
+    (label
+      (identifier))
+    (to_phrase
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (number_literal))
+      (number_literal))
+    (body
+      (abl_statement
+        (identifier)
+        (identifier))))
+  (do_block
+    (preselect_phrase
+      (record_phrase
+        (identifier))
+      (query_tuning)
+      (where_clause
+        (comparison_expression
+          (qualified_name
+            (identifier)
+            (identifier))
+          (number_literal))))
+    (body)))
+
+================================================================================
+PROCEDURE statement
+================================================================================
+
+PROCEDURE some_procedure:
+  define input param pcMyNumber as int no-undo.
+  /* nice */
+END PROCEDURE.
+
+PROCEDURE another_procedure:
+END.
+
+DEFINE INPUT-OUTPUT PARAMETER TABLE-HANDLE hNode.
+DEFINE OUTPUT PARAMETER TABLE-HANDLE hData.
+DEFINE OUTPUT PARAMETER TABLE-HANDLE hSchema.
+DEFINE INPUT PARAMETER DATASET-HANDLE hDset.
+DEFINE OUTPUT PARAMETER TABLE-HANDLE ttHandle.
+
+DEFINE INPUT PARAMETER TABLE FOR ttCustomer.
+DEFINE OUTPUT PARAMETER TABLE FOR ttOrder APPEND.
+DEFINE INPUT-OUTPUT PARAMETER TABLE FOR ttProduct BIND.
+DEFINE INPUT PARAMETER TABLE-HANDLE hCustomer.
+DEFINE OUTPUT PARAMETER TABLE-HANDLE hOrder BY-VALUE.
+DEFINE INPUT-OUTPUT PARAMETER TABLE-HANDLE hProduct BIND BY-VALUE.
+DEFINE INPUT PARAMETER DATASET FOR dsCustomer.
+DEFINE OUTPUT PARAMETER DATASET FOR dsOrder APPEND.
+DEFINE INPUT-OUTPUT PARAMETER DATASET FOR dsProduct BIND.
+DEFINE INPUT PARAMETER DATASET-HANDLE hCustomer.
+DEFINE OUTPUT PARAMETER DATASET-HANDLE hOrder BY-VALUE.
+DEFINE INPUT-OUTPUT PARAMETER DATASET-HANDLE hProduct BIND BY-VALUE.
+DEFINE PARAMETER BUFFER bBuf FOR field.
+DEFINE INPUT PARAMETER DATASET FOR field.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (procedure_statement
+    (identifier)
+    (body
+      (procedure_parameter_definition
+        (identifier)
+        (type_tuning
+          (primitive_type))
+        (variable_tuning)))
+    (comment))
+  (procedure_statement
+    (identifier)
+    (body))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier)
+    (procedure_parameter_tuning))
+  (procedure_parameter_definition
+    (identifier)
+    (procedure_parameter_tuning))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier)
+    (procedure_parameter_tuning))
+  (procedure_parameter_definition
+    (identifier)
+    (procedure_parameter_tuning)
+    (procedure_parameter_tuning))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier)
+    (procedure_parameter_tuning))
+  (procedure_parameter_definition
+    (identifier)
+    (procedure_parameter_tuning))
+  (procedure_parameter_definition
+    (identifier))
+  (procedure_parameter_definition
+    (identifier)
+    (procedure_parameter_tuning))
+  (procedure_parameter_definition
+    (identifier)
+    (procedure_parameter_tuning)
+    (procedure_parameter_tuning))
+  (procedure_parameter_definition
+    (identifier)
+    (identifier))
+  (procedure_parameter_definition
+    (identifier)))
+
+================================================================================
+FUNCTION statement
+================================================================================
+
+FUNCTION fn RETURNS INTEGER (INPUT par1 AS INTEGER, OUTPUT par2 AS CHARACTER).
+  RETURN par1.
+END FUNCTION.
+
+FUNCTION fn-no-mode RETURNS INTEGER (par1 AS INTEGER).
+  RETURN par1.
+END.
+
+FUNCTION fn-no-parameters RETURNS INTEGER:
+  RETURN 0.
+END.
+
+fn(INPUT somepar, OUTPUT otherpar).
+fn-no-mode(somerpar).
+fn-no-mode(somerpar) NO-ERROR.
+
+PersonData:GetById(id, output table ttPerson by-reference).
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (function_statement
+    name: (identifier)
+    (return_type
+      type: (primitive_type))
+    (parameters
+      (function_parameter
+        (function_parameter_mode)
+        name: (identifier)
+        (type_tuning
+          type: (primitive_type)))
+      (function_parameter
+        (function_parameter_mode)
+        name: (identifier)
+        (type_tuning
+          type: (primitive_type))))
+    (body
+      (return_statement
+        (identifier))))
+  (function_statement
+    name: (identifier)
+    (return_type
+      type: (primitive_type))
+    (parameters
+      (function_parameter
+        name: (identifier)
+        (type_tuning
+          type: (primitive_type))))
+    (body
+      (return_statement
+        (identifier))))
+  (function_statement
+    name: (identifier)
+    (return_type
+      type: (primitive_type))
+    (body
+      (return_statement
+        (number_literal))))
+  (function_call_statement
+    (function_call
+      function: (identifier)
+      (arguments
+        (argument
+          (input_expression
+            field: (identifier)))
+        (argument
+          (argument_mode)
+          (identifier)))))
+  (function_call_statement
+    (function_call
+      function: (identifier)
+      (arguments
+        (argument
+          (identifier)))))
+  (function_call_statement
+    (function_call
+      function: (identifier)
+      (arguments
+        (argument
+          (identifier)))))
+  (function_call_statement
+    (function_call
+      function: (object_access
+        object: (identifier)
+        property: (identifier))
+      (arguments
+        (argument
+          (identifier))
+        (argument
+          (argument_mode)
+          (identifier)
+          (argument_tuning))))))
+
+================================================================================
+DO TRANSACTION statement
+================================================================================
+
+DO TRANSACTION:
+  CREATE x.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (do_block
+    (do_tuning)
+    (body
+      (abl_statement
+        statement: (identifier)
+        (identifier)))))
+
+================================================================================
+ABL statements
+================================================================================
+
+DISPLAY "test" a 5 f().
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (abl_statement
+    statement: (identifier)
+    (string_literal)
+    (identifier)
+    (number_literal)
+    (function_call
+      function: (identifier)
+      (arguments))))
+
+================================================================================
+ASSIGN statement
+================================================================================
+
+ASSIGN
+  a = 1
+  b = "ABC"
+  c = f()
+  qualified.name = var + 1
+.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (assign_statement
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (number_literal))
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (string_literal))
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (function_call
+        (identifier)
+        (arguments)))
+    (assignment
+      (qualified_name
+        (identifier)
+        (identifier))
+      (assignment_operator)
+      (additive_expression
+        (identifier)
+        (number_literal)))))
+
+================================================================================
+FOR EACH statement
+================================================================================
+
+FOR EACH some_table OF other_table WHERE x = 5 NO-LOCK:
+  DISPLAY some_table.
+END.
+
+
+FOR EACH some_table NO-LOCK, FIRST something OF other:
+  DISPLAY something some_table.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (for_statement
+    table: (identifier)
+    (of
+      (identifier))
+    (where_clause
+      condition: (comparison_expression
+        (identifier)
+        (number_literal)))
+    (query_tuning)
+    (body
+      (abl_statement
+        statement: (identifier)
+        (identifier))))
+  (for_statement
+    table: (identifier)
+    (query_tuning)
+    (for_phrase
+      table: (identifier)
+      (of
+        (identifier)))
+    (body
+      (abl_statement
+        statement: (identifier)
+        (identifier)
+        (identifier)))))
+
+================================================================================
+FOR EACH (sorted) statement
+================================================================================
+
+FOR EACH some_table WHERE x = 5 BREAK BY col1 DESCENDING col2:
+  DISPLAY some_table.
+END.
+
+FOR EACH some_table WHERE x = 5 BREAK BY some_table.col2:
+  DISPLAY some_table.
+END.
+
+FOR EACH some_table WHERE x = 5 BY some_table.col1 BY some_table.col2:
+  DISPLAY some_table.
+END.
+
+FOR EACH some_table WHERE x = 10 BY SOME-FUNC(col1):
+  DISPLAY some_table.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (for_statement
+    table: (identifier)
+    (where_clause
+      condition: (comparison_expression
+        (identifier)
+        (number_literal)))
+    (sort_clause
+      (sort_column
+        column: (identifier)
+        (sort_order))
+      (sort_column
+        column: (identifier)))
+    (body
+      (abl_statement
+        statement: (identifier)
+        (identifier))))
+  (for_statement
+    table: (identifier)
+    (where_clause
+      condition: (comparison_expression
+        (identifier)
+        (number_literal)))
+    (sort_clause
+      (sort_column
+        column: (qualified_name
+          (identifier)
+          (identifier))))
+    (body
+      (abl_statement
+        statement: (identifier)
+        (identifier))))
+  (for_statement
+    table: (identifier)
+    (where_clause
+      condition: (comparison_expression
+        (identifier)
+        (number_literal)))
+    (sort_clause
+      (sort_column
+        column: (qualified_name
+          (identifier)
+          (identifier))))
+    (sort_clause
+      (sort_column
+        column: (qualified_name
+          (identifier)
+          (identifier))))
+    (body
+      (abl_statement
+        statement: (identifier)
+        (identifier))))
+  (for_statement
+    table: (identifier)
+    (where_clause
+      condition: (comparison_expression
+        (identifier)
+        (number_literal)))
+    (sort_clause
+      (sort_column
+        column: (function_call
+          function: (identifier)
+          (arguments
+            (argument
+              (identifier))))))
+    (body
+      (abl_statement
+        statement: (identifier)
+        (identifier)))))
+
+================================================================================
+FIND statement
+================================================================================
+
+FIND some_table OF other_table WHERE x > 5 EXCLUSIVE-LOCK NO-ERROR.
+
+FIND some_table NO-LOCK WHERE x > 5 NO-ERROR.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (find_statement
+    table: (identifier)
+    (of
+      (identifier))
+    (where_clause
+      condition: (comparison_expression
+        (identifier)
+        (number_literal)))
+    (query_tuning)
+    (query_tuning))
+  (find_statement
+    table: (identifier)
+    (query_tuning)
+    (where_clause
+      condition: (comparison_expression
+        (identifier)
+        (number_literal)))
+    (query_tuning)))
+
+================================================================================
+FIND FIRST (no terminator) statement
+================================================================================
+
+FIND FIRST some_table WHERE NOT x > 5.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (find_statement
+    table: (identifier)
+    (where_clause
+      condition: (unary_expression
+        (comparison_expression
+          (identifier)
+          (number_literal))))))
+
+================================================================================
+CAN-FIND function
+================================================================================
+
+w = CAN-FIND(LAST x OF y USING z1 AND FRAME f z2 WHERE z NO-LOCK).
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (can_find_expression
+        table: (identifier)
+        (of
+          (identifier))
+        (query_tuning
+          (using
+            (using_field
+              field: (identifier))
+            (using_field
+              frame: (identifier)
+              field: (identifier))))
+        (where_clause
+          condition: (identifier))
+        (query_tuning)))))
+
+================================================================================
+OBJECT ACCESSORS statement
+================================================================================
+
+DISPLAY some_object:root.
+DISPLAY some_object:chained_property:chained_another:method().
+
+PUT some_object:array[5].
+
+Object:Length = new OpenEdge.Core.String(pcMessage):Size.
+oObject:Length -= String(pcMessage):Size.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (abl_statement
+    statement: (identifier)
+    (object_access
+      object: (identifier)
+      property: (identifier)))
+  (abl_statement
+    statement: (identifier)
+    (function_call
+      function: (object_access
+        object: (identifier)
+        property: (identifier)
+        property: (identifier)
+        property: (identifier))
+      (arguments)))
+  (abl_statement
+    statement: (identifier)
+    (array_access
+      array: (object_access
+        object: (identifier)
+        property: (identifier))
+      (array_literal
+        (number_literal))))
+  (variable_assignment
+    (assignment
+      name: (object_access
+        object: (identifier)
+        property: (identifier))
+      (assignment_operator)
+      (object_access
+        object: (new_expression
+          (qualified_name
+            (identifier)
+            (identifier)
+            (identifier))
+          (arguments
+            (argument
+              (identifier))))
+        property: (identifier))))
+  (variable_assignment
+    (assignment
+      name: (object_access
+        object: (identifier)
+        property: (identifier))
+      (assignment_operator)
+      (object_access
+        object: (function_call
+          function: (identifier)
+          (arguments
+            (argument
+              (identifier))))
+        property: (identifier)))))
+
+================================================================================
+TERNARY EXPRESSION statement
+================================================================================
+
+x = IF x > 10 THEN 10 ELSE x.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (ternary_expression
+        condition: (comparison_expression
+          (identifier)
+          (number_literal))
+        then: (number_literal)
+        else: (identifier)))))
+
+================================================================================
+TERNARY EXPRESSION (parenthesised) statement
+================================================================================
+
+x = (IF NOT x > 10 THEN 10 ELSE x).
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (parenthesized_expression
+        (ternary_expression
+          condition: (unary_expression
+            (comparison_expression
+              (identifier)
+              (number_literal)))
+          then: (number_literal)
+          else: (identifier))))))
+
+================================================================================
+ACCUMULATE statement
+================================================================================
+
+ACCUMULATE Customer.CreditLimit (AVERAGE COUNT MAXIMUM).
+value = (accum total Customer.CreditLimit).
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (accumulate_statement
+    (qualified_name
+      (identifier)
+      (identifier))
+    (accumulate_aggregate)
+    (accumulate_aggregate)
+    (accumulate_aggregate))
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (parenthesized_expression
+        (accumulate_expression
+          (accumulate_aggregate)
+          (qualified_name
+            (identifier)
+            (identifier)))))))
+
+================================================================================
+STREAM statements
+================================================================================
+
+INPUT FROM VALUE(in).
+OUTPUT TO VALUE(out).
+
+OUTPUT CLOSE.
+INPUT CLOSE.
+
+DEFINE GLOBAL SHARED STREAM i.
+INPUT STREAM i FROM VALUE(in).
+INPUT CLOSE.
+
+INPUT STREAM-HANDLE hi FROM VALUE(in).
+INPUT CLOSE.
+
+DEFINE NEW SHARED STREAM o.
+OUTPUT STREAM o TO "CLIPBOARD".
+OUTPUT CLOSE.
+
+OUTPUT STREAM-HANDLE ho TO "CLIPBOARD".
+OUTPUT CLOSE.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (input_stream_statement
+    target: (function_call
+      function: (identifier)
+      (arguments
+        (argument
+          (identifier)))))
+  (output_stream_statement
+    target: (function_call
+      function: (identifier)
+      (arguments
+        (argument
+          (identifier)))))
+  (output_close_statement)
+  (input_close_statement)
+  (stream_definition
+    (scope_tuning)
+    (scope_tuning)
+    name: (identifier))
+  (input_stream_statement
+    source: (identifier)
+    target: (function_call
+      function: (identifier)
+      (arguments
+        (argument
+          (identifier)))))
+  (input_close_statement)
+  (input_stream_statement
+    source: (identifier)
+    target: (function_call
+      function: (identifier)
+      (arguments
+        (argument
+          (identifier)))))
+  (input_close_statement)
+  (stream_definition
+    (scope_tuning)
+    (scope_tuning)
+    name: (identifier))
+  (output_stream_statement
+    source: (identifier)
+    target: (string_literal))
+  (output_close_statement)
+  (output_stream_statement
+    source: (identifier)
+    target: (string_literal))
+  (output_close_statement))
+
+================================================================================
+Keyword comparison operators
+================================================================================
+
+v = 9 GE 0 AND 0 LT 9.
+w = (9 + 10 LE 21) NE (9 + 10 > 21).
+x = (2 + 2 GT 0) EQ (2 + 2 > 0).
+y = "y" BEGINS "yes".
+z = "yes" MATCHES "y*".
+FIND foo WHERE bar CONTAINS "stuff" OR baz CONTAINS "what?".
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (logical_expression
+        (comparison_expression
+          (number_literal)
+          (number_literal))
+        (comparison_expression
+          (number_literal)
+          (number_literal)))))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (comparison_expression
+        (parenthesized_expression
+          (comparison_expression
+            (additive_expression
+              (number_literal)
+              (number_literal))
+            (number_literal)))
+        (parenthesized_expression
+          (comparison_expression
+            (additive_expression
+              (number_literal)
+              (number_literal))
+            (number_literal))))))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (comparison_expression
+        (parenthesized_expression
+          (comparison_expression
+            (additive_expression
+              (number_literal)
+              (number_literal))
+            (number_literal)))
+        (parenthesized_expression
+          (comparison_expression
+            (additive_expression
+              (number_literal)
+              (number_literal))
+            (number_literal))))))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (comparison_expression
+        (string_literal)
+        (string_literal))))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (comparison_expression
+        (string_literal)
+        (string_literal))))
+  (find_statement
+    table: (identifier)
+    (where_clause
+      condition: (logical_expression
+        (comparison_expression
+          (identifier)
+          (string_literal))
+        (comparison_expression
+          (identifier)
+          (string_literal))))))
+
+================================================================================
+Miscellaneous unary expressions
+================================================================================
+
+FIND foo WHERE bar NO-ERROR.
+success = AVAILABLE foo AND NOT AMBIGUOUS foo.
+PROMPT-FOR bar FRAME y.
+baz = INPUT FRAME y bar.
+PROMPT-FOR qux.
+quux = INPUT qux.
+IF LOCKED foo THEN RETURN 'error'.
+FIND CURRENT x.
+IF CURRENT-CHANGED x THEN RETURN '!'.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (find_statement
+    table: (identifier)
+    (where_clause
+      condition: (identifier))
+    (query_tuning))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (logical_expression
+        (available_expression
+          (identifier))
+        (unary_expression
+          (ambiguous_expression
+            (identifier))))))
+  (prompt_for_statement
+    (identifier)
+    frame: (identifier))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (input_expression
+        frame: (identifier)
+        field: (identifier))))
+  (prompt_for_statement
+    (identifier))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (input_expression
+        field: (identifier))))
+  (if_statement
+    condition: (locked_expression
+      (identifier))
+    (return_statement
+      (string_literal)))
+  (find_statement
+    table: (identifier))
+  (if_statement
+    condition: (current_changed_expression
+      (identifier))
+    (return_statement
+      (string_literal))))
+
+================================================================================
+CATCH and FINALLY statements
+================================================================================
+
+DO TRANSACTION:
+  CATCH e AS CLASS Progress.Lang.SysError:
+    MESSAGE "sys error" VIEW-AS ALERT-BOX.
+    UNDO, THROW e.
+  END.
+  CATCH e AS Progress.Lang.Error:
+    MESSAGE "other error" VIEW-AS ALERT-BOX.
+  END CATCH.
+  FINALLY:
+    MESSAGE "done." VIEW-AS ALERT-BOX.
+  END FINALLY.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (do_block
+    (do_tuning)
+    (body
+      (catch_statement
+        variable: (identifier)
+        type: (qualified_name
+          (identifier)
+          (identifier)
+          (identifier))
+        (body
+          (abl_statement
+            statement: (identifier)
+            (string_literal)
+            (identifier)
+            (identifier))
+          (undo_statement
+            (identifier))))
+      (catch_statement
+        variable: (identifier)
+        type: (qualified_name
+          (identifier)
+          (identifier)
+          (identifier))
+        (body
+          (abl_statement
+            statement: (identifier)
+            (string_literal)
+            (identifier)
+            (identifier))))
+      (finally_statement
+        (body
+          (abl_statement
+            statement: (identifier)
+            (string_literal)
+            (identifier)
+            (identifier)))))))
+
+================================================================================
+CLASS statement
+================================================================================
+
+CLASS x IMPLEMENTS y:
+  DEFINE VARIABLE foo AS INTEGER.
+END CLASS.
+
+CLASS z INHERITS x FINAL SERIALIZABLE:
+  DEFINE VARIABLE bar AS INTEGER.
+END CLASS.
+
+instance = NEW z().
+
+USING Acme.BusObjs.* FROM ASSEMBLY.
+
+CLASS r-CustObj FINAL:
+
+  /* Public properties to return basic values for a customer with the
+     highest balance */
+  DEFINE PUBLIC PROPERTY HighCustBalance AS DECIMAL INITIAL 0.0 NO-UNDO
+    GET.
+    PRIVATE SET.
+  DEFINE PUBLIC PROPERTY HighCustNum AS INTEGER INITIAL ? NO-UNDO
+    GET.
+    PRIVATE SET.
+
+
+END CLASS.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (class_statement
+    name: (identifier)
+    (class_tuning
+      (implements
+        (identifier)))
+    (body
+      (variable_definition
+        name: (identifier)
+        (type_tuning
+          type: (primitive_type)))))
+  (class_statement
+    name: (identifier)
+    (class_tuning
+      (inherits
+        (identifier)))
+    (class_tuning
+      (final))
+    (class_tuning
+      (serializable))
+    (body
+      (variable_definition
+        name: (identifier)
+        (type_tuning
+          type: (primitive_type)))))
+  (variable_assignment
+    (assignment
+      name: (identifier)
+      (assignment_operator)
+      (new_expression
+        (identifier)
+        (arguments))))
+  (using_statement
+    (qualified_name
+      (identifier)
+      (identifier)))
+  (class_statement
+    name: (identifier)
+    (class_tuning
+      (final))
+    (body
+      (comment)
+      (property_definition
+        (access_tuning)
+        name: (identifier)
+        (type_tuning
+          type: (primitive_type))
+        (property_tuning
+          (number_literal))
+        (property_tuning)
+        (getter)
+        (setter
+          (access_tuning)))
+      (property_definition
+        (access_tuning)
+        name: (identifier)
+        (type_tuning
+          type: (primitive_type))
+        (property_tuning
+          (null_expression))
+        (property_tuning)
+        (getter)
+        (setter
+          (access_tuning))))))
+
+================================================================================
+CASE statement
+================================================================================
+
+CASE test:
+  WHEN "abc" THEN DO:
+    x = 5.
+    y = 20.
+  END.
+  WHEN "yyy" OR WHEN "zxc" THEN y = 3.
+  WHEN "def" THEN y = 10.
+  OTHERWISE c = 8.
+END CASE.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (case_statement
+    (identifier)
+    (body
+      (case_when_branch
+        (case_condition
+          (string_literal))
+        (do_block
+          (body
+            (variable_assignment
+              (assignment
+                (identifier)
+                (assignment_operator)
+                (number_literal)))
+            (variable_assignment
+              (assignment
+                (identifier)
+                (assignment_operator)
+                (number_literal))))))
+      (case_when_branch
+        (case_condition
+          (logical_expression
+            (string_literal)
+            (identifier)))
+        (case_condition
+          (string_literal))
+        (variable_assignment
+          (assignment
+            (identifier)
+            (assignment_operator)
+            (number_literal))))
+      (case_when_branch
+        (case_condition
+          (string_literal))
+        (variable_assignment
+          (assignment
+            (identifier)
+            (assignment_operator)
+            (number_literal))))
+      (case_otherwise_branch
+        (variable_assignment
+          (assignment
+            (identifier)
+            (assignment_operator)
+            (number_literal)))))))
+
+================================================================================
+DO block
+================================================================================
+
+DO ON ERROR UNDO, THROW:
+  UNDO, THROW NEW Progress.Lang.AppError("Rethrow me :)").
+END.
+
+DO ON QUIT UNDO, RETURN ERROR:
+  QUIT.
+END.
+
+labeled:
+DO ON STOP UNDO label1, LEAVE label2:
+  STOP.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (do_block
+    (on_error_phrase)
+    (body
+      (undo_statement
+        (new_expression
+          (qualified_name
+            (identifier)
+            (identifier)
+            (identifier))
+          (arguments
+            (argument
+              (string_literal)))))))
+  (do_block
+    (on_quit_phrase)
+    (body
+      (abl_statement
+        (identifier))))
+  (do_block
+    (label
+      (identifier))
+    (on_stop_phrase
+      (identifier)
+      (identifier))
+    (body
+      (abl_statement
+        (identifier)))))
+
+================================================================================
+UNDO statement
+================================================================================
+
+UNDO, THROW NEW Progress.Lang.AppError("test message", 420).
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (undo_statement
+    (new_expression
+      (qualified_name
+        (identifier)
+        (identifier)
+        (identifier))
+      (arguments
+        (argument
+          (string_literal))
+        (argument
+          (number_literal))))))
+
+================================================================================
+ON ERROR/QUIT/STOP phrases
+================================================================================
+
+ROUTINE-LEVEL ON ERROR UNDO, THROW.
+BLOCK-LEVEL ON ERROR UNDO, THROW.
+
+REPEAT ON ERROR UNDO, THROW:
+  UNDO, LEAVE.
+END.
+
+FOR EACH tb_mstr WHERE tb_field = 1 NO-LOCK ON QUIT, NEXT:
+  QUIT.
+END.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (error_scope_statement
+    (on_error_phrase))
+  (error_scope_statement
+    (on_error_phrase))
+  (repeat_statement
+    (on_error_phrase)
+    (body
+      (undo_statement)))
+  (for_statement
+    (identifier)
+    (where_clause
+      (comparison_expression
+        (identifier)
+        (number_literal)))
+    (query_tuning)
+    (on_quit_phrase)
+    (body
+      (abl_statement
+        (identifier)))))
+
+================================================================================
+DEFINE TEMP-TABLE statement
+================================================================================
+
+DEFINE NEW GLOBAL PRIVATE SERIALIZABLE TEMP-TABLE temp-item NO-UNDO REFERENCE-ONLY
+  FIELD cat-page  LIKE Item.CatPage
+  FIELD inventory LIKE Item.Price LABEL "Inventory Value"
+  INDEX cat-page  IS PRIMARY cat-page ASCENDING
+  INDEX inventory-value inventory DESCENDING.
+
+DEFINE TEMP-TABLE foo
+  FIELD a AS CHARACTER
+  FIELD b AS CHARACTER
+  FIELD c AS CHARACTER
+  INDEX x a DESC b DESC c DESC
+.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (temp_table_definition
+    (scope_tuning)
+    (scope_tuning)
+    (access_tuning)
+    (serialization_tuning)
+    (identifier)
+    (temp_table_tuning)
+    (temp_table_tuning)
+    (field_definition
+      (identifier)
+      (type_tuning
+        (qualified_name
+          (identifier)
+          (identifier))))
+    (field_definition
+      (identifier)
+      (type_tuning
+        (qualified_name
+          (identifier)
+          (identifier)))
+      (field_option
+        (string_literal)))
+    (index_definition
+      (identifier)
+      (index_tuning)
+      (sort_column
+        (identifier)
+        (sort_order)))
+    (index_definition
+      (identifier)
+      (sort_column
+        (identifier)
+        (sort_order))))
+  (temp_table_definition
+    (identifier)
+    (field_definition
+      (identifier)
+      (type_tuning
+        (primitive_type)))
+    (field_definition
+      (identifier)
+      (type_tuning
+        (primitive_type)))
+    (field_definition
+      (identifier)
+      (type_tuning
+        (primitive_type)))
+    (index_definition
+      (identifier)
+      (sort_column
+        (identifier)
+        (sort_order))
+      (sort_column
+        (identifier)
+        (sort_order))
+      (sort_column
+        (identifier)
+        (sort_order)))))
+
+================================================================================
+QUIRKS
+================================================================================
+
+nonAlphaChars = "~"!@#$%^&*()-_=+[]{}\|;:'~",<.>/?~~".
+
+DISPLAY Order.CustNum Order.OrderDate Andsomething AndBug.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (variable_assignment
+    (assignment
+      (identifier)
+      (assignment_operator)
+      (string_literal)))
+  (abl_statement
+    (identifier)
+    (qualified_name
+      (identifier)
+      (identifier))
+    (qualified_name
+      (identifier)
+      (identifier))
+    (identifier)
+    (identifier)))
+
+================================================================================
+INTERFACE statement
+================================================================================
+
+INTERFACE r-ICustObj:
+
+  /* Property prototypes to return basic values for the Customer
+     identified with the highest balance in the database */
+  DEFINE PUBLIC PROPERTY HighCustBalance AS DECIMAL NO-UNDO
+    GET.
+    SET.
+  DEFINE PUBLIC PROPERTY HighCustNum AS INTEGER NO-UNDO
+    GET.
+    SET.
+
+  /* Event prototype to notify about Customers with Invoices */
+  DEFINE PUBLIC EVENT CustHasInvoices
+    SIGNATURE VOID ( piCustNum AS INTEGER ).
+
+  /* Temp-tables for the ProDataSet parameter */
+  DEFINE TEMP-TABLE ttCust NO-UNDO LIKE Customer.
+  DEFINE TEMP-TABLE ttInv  NO-UNDO LIKE Invoice.
+
+  /* ProDataSet parameter for passing a single Customer with the highest
+     balance along with its related Invoices */
+  DEFINE DATASET dsHighCustData FOR ttCust, ttInv
+    DATA-RELATION FOR ttCust, ttInv
+      RELATION-FIELDS (ttCust.CustNum, ttInv.CustNum).
+
+  /* Method prototype to get the current high Customer balance data */
+  METHOD PUBLIC VOID GetHighCustomerData
+    ( OUTPUT DATASET dsHighCustData BIND ).
+
+  /* Method prototype to set (or reset) the current high Customer data */
+  METHOD PUBLIC VOID SetHighCustomerData ( ).
+END INTERFACE.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (interface_statement
+    (identifier)
+    (body
+      (comment)
+      (property_definition
+        (access_tuning)
+        (identifier)
+        (type_tuning
+          (primitive_type))
+        (property_tuning)
+        (getter)
+        (setter))
+      (property_definition
+        (access_tuning)
+        (identifier)
+        (type_tuning
+          (primitive_type))
+        (property_tuning)
+        (getter)
+        (setter))
+      (comment)
+      (event_definition
+        (access_tuning)
+        (identifier)
+        (parameters
+          (function_parameter
+            (identifier)
+            (type_tuning
+              (primitive_type)))))
+      (comment)
+      (temp_table_definition
+        (identifier)
+        (temp_table_tuning)
+        (type_tuning
+          (identifier)))
+      (temp_table_definition
+        (identifier)
+        (temp_table_tuning)
+        (type_tuning
+          (identifier)))
+      (comment)
+      (dataset_definition
+        (identifier)
+        (identifier)
+        (identifier)
+        (data_relation
+          (identifier)
+          (identifier)
+          (qualified_name
+            (identifier)
+            (identifier))
+          (qualified_name
+            (identifier)
+            (identifier))))
+      (comment)
+      (method_definition
+        (access_tuning)
+        (return_type
+          (primitive_type))
+        (identifier)
+        (parameters
+          (function_parameter
+            (function_parameter_mode)
+            (identifier)
+            (function_parameter_tuning))))
+      (comment)
+      (method_definition
+        (access_tuning)
+        (return_type
+          (primitive_type))
+        (identifier)
+        (parameters)))))
+
+================================================================================
+VAR statement
+================================================================================
+
+/* Four character variables with default initial values */
+VAR CHAR s1, s2, s3, s4.
+
+/* Three integer variables. */
+/* z’s initial value is 3. x and y default to 0 */
+VAR INT x, y, z = 3.
+
+/* Three date variables */
+VAR DATE d1, d2 = 1/1/2020, d3 = TODAY.
+
+/* Date variables with the protected access mode */
+VAR PROTECTED DATE d1, d2 = 1/1/2020.
+
+/* Three arrays of size 3 */
+/* x's third element defaults to 2 (the previous element) */
+/* y's elements default to 0 */
+VAR INT[3] x = [1, 2], y, z = [100, 200, 300].
+
+/* Two indeterminate arrays. x has no size. y has a size of 3. */
+VAR INT[] x, y = [1,2,3].
+
+/* .NET generic object */
+VAR "System.Collections.Generic.List<char>" cList.
+
+/* Three object variables */
+VAR mypackage.subdir.myclass myobj1, myobj2, myobj3.
+
+/* Object variable with the optional CLASS keyword */
+VAR CLASS mypackage.subdir.myclass myobj1.
+
+/* Object array of size 2 */
+VAR foo[2] classArray.
+
+/* Instantiated object variables */
+VAR myclass myobj = NEW myclass().
+VAR myclass myobj = NEW myclass("Progress", 2020,?).
+
+/* Multiple instantiated object variables */
+VAR myclass myobj1 = NEW myclass("MA"),
+            myobj2 = NEW myclass("VT"),
+            myobj3 = NEW myclass("NH").
+
+/* Instantiated base class type */
+VAR baseclass myobj1 = NEW derivedAClass(), myobj2 = NEW derivedBClass("foo").
+
+/* Instantiated interface type */
+VAR IMaps myobj1 = NEW GoogleMap("CANADA"), myobj2 = NEW OpenStreetMap("USA").
+
+/* Instantiated and initialized determinate array object variable */
+VAR StateClass[2] objArrayA = [NEW StateClass("MA"), NEW StateClass("NH")].
+
+/* Instantiated and initialized indeterminate array object variable */
+VAR StateClass[] objArrayB = [NEW StateClass("MA"), NEW StateClass("NH")].
+
+/* Integer variables initialized using expressions */
+VAR INT x = a + b , y = a - b, z = x - y.
+
+/* Indeterminate integer array initialized using expressions */
+VAR INT[ ] x = [funct( ), a + b].
+
+/* Generic type */
+var List<Ant> ListOfAnts.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (comment)
+  (var_statement
+    (type_tuning
+      (primitive_type))
+    (variable
+      (identifier))
+    (variable
+      (identifier))
+    (variable
+      (identifier))
+    (variable
+      (identifier)))
+  (comment)
+  (comment)
+  (var_statement
+    (type_tuning
+      (primitive_type))
+    (variable
+      (identifier))
+    (variable
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (number_literal))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (primitive_type))
+    (variable
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (date_literal)))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (identifier))))
+  (comment)
+  (var_statement
+    (access_tuning)
+    (type_tuning
+      (primitive_type))
+    (variable
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (date_literal))))
+  (comment)
+  (comment)
+  (comment)
+  (var_statement
+    (type_tuning
+      (primitive_type))
+    (array_literal
+      (number_literal))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (array_literal
+          (number_literal)
+          (number_literal))))
+    (variable
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (array_literal
+          (number_literal)
+          (number_literal)
+          (number_literal)))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (primitive_type))
+    (array_literal)
+    (variable
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (array_literal
+          (number_literal)
+          (number_literal)
+          (number_literal)))))
+  (comment)
+  (var_statement
+    (type_tuning)
+    (variable
+      (identifier)))
+  (comment)
+  (var_statement
+    (type_tuning
+      (qualified_name
+        (identifier)
+        (identifier)
+        (identifier)))
+    (variable
+      (identifier))
+    (variable
+      (identifier))
+    (variable
+      (identifier)))
+  (comment)
+  (var_statement
+    (type_tuning
+      (class_type
+        (qualified_name
+          (identifier)
+          (identifier)
+          (identifier))))
+    (variable
+      (identifier)))
+  (comment)
+  (var_statement
+    (type_tuning
+      (identifier))
+    (array_literal
+      (number_literal))
+    (variable
+      (identifier)))
+  (comment)
+  (var_statement
+    (type_tuning
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments)))))
+  (var_statement
+    (type_tuning
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments
+            (argument
+              (string_literal))
+            (argument
+              (number_literal))
+            (argument
+              (null_expression)))))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments
+            (argument
+              (string_literal))))))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments
+            (argument
+              (string_literal))))))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments
+            (argument
+              (string_literal)))))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments))))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments
+            (argument
+              (string_literal)))))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (identifier))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments
+            (argument
+              (string_literal))))))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (new_expression
+          (identifier)
+          (arguments
+            (argument
+              (string_literal)))))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (identifier))
+    (array_literal
+      (number_literal))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (array_literal
+          (new_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))))
+          (new_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))))))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (identifier))
+    (array_literal)
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (array_literal
+          (new_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))))
+          (new_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))))))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (primitive_type))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (additive_expression
+          (identifier)
+          (identifier))))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (additive_expression
+          (identifier)
+          (identifier))))
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (additive_expression
+          (identifier)
+          (identifier)))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (primitive_type))
+    (array_literal)
+    (variable
+      (assignment
+        (identifier)
+        (assignment_operator)
+        (array_literal
+          (function_call
+            (identifier)
+            (arguments))
+          (additive_expression
+            (identifier)
+            (identifier))))))
+  (comment)
+  (var_statement
+    (type_tuning
+      (generic_type
+        (identifier)
+        (generic_expression
+          (identifier))))
+    (variable
+      (identifier))))
+
+================================================================================
+RUN statement
+================================================================================
+
+RUN getMyNumber.p(piFirstNum, piSecNum).
+RUN VALUE(programs[INDEX("12345", selection)]).
+RUN recall-query IN phand.
+
+RUN server-error.p ON SERVER hServer
+  ASYNCHRONOUS SET hRequest EVENT-PROCEDURE "procDone" IN
+  THIS-PROCEDURE (OUTPUT numLines AS INTEGER).
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (run_statement
+    (qualified_name
+      (identifier)
+      (identifier))
+    (arguments
+      (argument
+        (identifier))
+      (argument
+        (identifier))))
+  (run_statement
+    (function_call
+      (identifier)
+      (arguments
+        (argument
+          (array_access
+            (identifier)
+            (array_literal
+              (function_call
+                (identifier)
+                (arguments
+                  (argument
+                    (string_literal))
+                  (argument
+                    (identifier))))))))))
+  (run_statement
+    (identifier)
+    (run_tuning
+      (identifier)))
+  (run_statement
+    (qualified_name
+      (identifier)
+      (identifier))
+    (run_tuning
+      (identifier))
+    (run_tuning)
+    (run_tuning
+      (identifier))
+    (run_tuning
+      (string_literal))
+    (run_tuning)
+    (arguments
+      (argument
+        (argument_mode)
+        (identifier)
+        (type_tuning
+          (primitive_type))))))
+
+================================================================================
+ENUM statement
+================================================================================
+
+ENUM Weather:
+  define ENUM Rainy
+              Default = Sunny
+              Cloudy
+              Snowy
+              Apocalyptic.
+END ENUM.
+
+ENUM Permission FLAGS:
+    DEFINE ENUM None = 0
+                Read
+                Write
+                Update = Write
+                ReadWrite = Read,Write
+                Create
+                Delete
+                Execute.
+END ENUM.
+
+ENUM Direction:
+    DEFINE ENUM North
+                South
+                East
+                West.
+END ENUM.
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (enum_statement
+    (identifier)
+    (body
+      (enum_definition
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier)
+          (identifier))
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier)))))
+  (enum_statement
+    (identifier)
+    (enum_tuning)
+    (body
+      (enum_definition
+        (enum_member
+          (identifier)
+          (number_literal))
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier)
+          (identifier))
+        (enum_member
+          (identifier)
+          (identifier)
+          (identifier))
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier)))))
+  (enum_statement
+    (identifier)
+    (body
+      (enum_definition
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier))
+        (enum_member
+          (identifier))))))
+
+================================================================================
+Preprocessor Directives
+================================================================================
+
+&if DEFINED(is_Running) <> 0 &THEN
+  DEFINE VARIABLE cParm AS CHARACTER.
+&ELSE
+  DEFINE INPUT PARAMETER cParm AS CHARACTER.
+&ENDIF
+
+&Scoped-define OPEN-QUERY-DEFAULT-FRAME OPEN QUERY DEFAULT-FRAME FOR EACH ITEM ~
+      WHERE item.system_id = ipcItemSysid AND ~
+item.item = ipcItem NO-LOCK.
+&Scoped-define TABLES-IN-QUERY-DEFAULT-FRAME ITEM
+
+--------------------------------------------------------------------------------
+
+(source_code
+  (preprocessor_directive)
+  (preprocessor_directive)
+  (preprocessor_directive))
+

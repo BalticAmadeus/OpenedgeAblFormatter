@@ -1,1 +1,0 @@
-find Vacation no-lock where Vacation.id = 123.
