@@ -7,3 +7,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 0.1.0 (2025-02-28)
 
 - Initial release (see readme)
+
+## 0.1.1 (2025-03-14)
+
+- Disabled formatting for VS Code 1.98 and newer, until the correct solution is found. [See](https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/358)
