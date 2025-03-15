@@ -21,6 +21,7 @@ export class VariableDefinitionFormatter
     private alignVariableTuning: number = 0;
     private alignExtent: number = 0;
     private alignVariableKeyword: number = 0;
+    private countAccessTuning: number = 0;
     private hasAccessTuning = false;
 
     public constructor(configurationManager: IConfigurationManager) {
@@ -107,6 +108,7 @@ export class VariableDefinitionFormatter
                 );
                 break;
             case SyntaxNodeType.AccessTuning:
+                this.countAccessTuning++;
                 this.alignVariableKeyword = Math.max(
                     this.alignVariableKeyword,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
@@ -191,6 +193,20 @@ export class VariableDefinitionFormatter
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
+            case SyntaxNodeType.ScopeTuning: {
+                const text = FormatterHelper.getCurrentText(
+                    node,
+                    fullText
+                ).trim();
+
+                const spacesCount =
+                    this.hasAccessTuning || this.countAccessTuning === 0
+                        ? 1
+                        : this.alignVariableKeyword + 2; // Compensate 2 spaces when trimmed
+
+                newString = " ".repeat(spacesCount) + text;
+                break;
+            }
             case SyntaxNodeType.VariableTuning:
                 let variableTuningText = "";
                 let spacesCount = 0;
