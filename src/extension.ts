@@ -11,6 +11,11 @@ import { DebugManager } from "./providers/DebugManager";
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
 
+    if (vscode.version >= "1.98") {
+        debugManager.disableExtension();
+        return;
+    }
+
     await Parser.init().then(() => {});
 
     ConfigurationManager.getInstance();
