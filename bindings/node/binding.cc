@@ -1,28 +1,22 @@
 #include "tree_sitter/parser.h"
-#include <node.h>
-#include <nan.h>
+#include <napi.h>
 
-using namespace v8;
+typedef struct TSLanguage TSLanguage;
 
-extern "C" TSLanguage * tree_sitter_abl();
+extern "C" TSLanguage *tree_sitter_abl();
 
-namespace {
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+    // Set the "name" property to "abl"
+    exports.Set("name", Napi::String::New(env, "abl"));
 
-NAN_METHOD(New) {}
+    // Create an external reference to the Tree-sitter language
+    Napi::External<TSLanguage> language = Napi::External<TSLanguage>::New(env, tree_sitter_abl());
 
-void Init(Local<Object> exports, Local<Object> module) {
-  Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
-  tpl->SetClassName(Nan::New("Language").ToLocalChecked());
-  tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    // Attach the language object to exports
+    exports.Set("language", language);
 
-  Local<Function> constructor = Nan::GetFunction(tpl).ToLocalChecked();
-  Local<Object> instance = constructor->NewInstance(Nan::GetCurrentContext()).ToLocalChecked();
-  Nan::SetInternalFieldPointer(instance, 0, tree_sitter_abl());
-
-  Nan::Set(instance, Nan::New("name").ToLocalChecked(), Nan::New("abl").ToLocalChecked());
-  Nan::Set(module, Nan::New("exports").ToLocalChecked(), instance);
+    return exports;
 }
 
-NODE_MODULE(tree_sitter_abl_binding, Init)
-
-}  // namespace
+// Register the module with N-API
+NODE_API_MODULE(tree_sitter_abl_binding, Init)

@@ -1,26 +1,22 @@
 {
-  "name": "@usagi-coffee/tree-sitter-abl",
+  "name": "tree-sitter-abl",
   "version": "0.0.46",
   "description": "ABL grammar for tree-sitter",
   "main": "bindings/node",
   "scripts": {
-    "install": "node-gyp-build || echo 'Using prebuilt binary'",
+    "install": "node-gyp-build",
     "generate": "tree-sitter generate",
-    "build:wasm": "tree-sitter build-wasm",
-    "parse": "tree-sitter parse",
-    "test": "tree-sitter test",
-    "dev": "nodemon --ignore ./src -e js,json,p --exec 'tree-sitter parse example.p'",
-    "prepublishOnly": "npm run build:wasm"
+    "prestart": "tree-sitter build --wasm",
+    "parse": "tree-sitter parse"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@usagi-coffee/tree-sitter-abl": "file:usagi-coffee-tree-sitter-abl-0.0.46.tgz",
-    "nan": "^2.22.2",
-    "node-addon-api": "^8.3.1",
-    "node-gyp-build": "^4.8.4"
+    "tree-sitter-abl": "file:tree-sitter-abl-0.0.46.tgz"
   },
   "devDependencies": {
+    "node-addon-api": "^8.3.1",
+    "node-gyp-build": "^4.8.4",
     "nodemon": "^3.1.9",
     "prebuildify": "^6.0.1",
     "tree-sitter-cli": "^0.25.3"
