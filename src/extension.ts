@@ -17,7 +17,6 @@ export async function activate(context: vscode.ExtensionContext) {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
-    Telemetry.initialize();
     context.subscriptions.push(Telemetry.getInstance());
 
     const parserHelper = new AblParserHelper(

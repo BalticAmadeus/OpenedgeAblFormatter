@@ -35,6 +35,41 @@
         ]
       }
     ],
+    "walkthroughs": [
+      {
+        "id": "ablFormatter",
+        "title": "AblFormatter",
+        "description": "OpenEdge ABL Formatter is a OpenEdge (ABL) code formatter.",
+        "steps": [
+        {
+          "id": "telemetryNotice",
+          "title": "Telemetry notice for OpenEdge ABL Formatter",
+          "description": "How and What data is collected by Formatter\n [Learn More](https://code.visualstudio.com/docs/editor/telemetry#:~:text=Visual%20Studio%20Code%20collects%20telemetry%20data%2C%20which%20is,slow%20start-up%20times%2C%20and%20to%20prioritize%20new%20features.)",
+          "media": {
+            "markdown": "resources/walkthrough/TelemetryNotice.md"
+          }
+        },
+        {
+          "id": "DisableGlobalTelemetry",
+          "title": "How to disable all Telemetry",
+          "description": "Disabling all telemetry that VSCode sends.\n[Global Telemetry Setting](command:toSide:workbench.action.openSettings?%22@tag:telemetry%22)",
+          "media": {
+            "image": "resources/walkthrough/DisableGlobalTelemetry.png",
+            "altText": "Settings for disabling all telemetry sent by VSCode can be found in settings with @tag:telemetry tag"
+          }
+        },
+        {
+          "id": "DisableAblFormatterTelemetry",
+          "title": "How to disable only ABL Formatter Telemetry",
+          "description": "If global setting for telemetry is \"off\" then this setting is ignored and no telemetry is sent.\n[ABL Formatter Telemetry Setting](command:toSide:workbench.action.openSettings?%22Telemetry.ablFormatterTelemetry%22)",
+          "media": {
+            "image": "resources/walkthrough/DisableFormatterTelemetry.png",
+            "altText": "Settings for disabling telemetry sent by OpenEdge ABL Formatter can be found in settings with @tag:telemetry tag"
+          }
+        }
+        ]
+      }
+    ],
     "configuration": {
       "title": "AblFormatter",
       "properties": {
@@ -301,6 +336,13 @@
           "type": "boolean",
           "default": "true",
           "description": "Enable table view with tree info on hover"
+        },
+        "Telemetry.ablFormatterTelemetry": {
+          "order": 10200,
+          "type": "boolean",
+          "default": true,
+          "description": "Enable telemetry",
+          "tags": ["usesOnlineServices", "telemetry"]
         }
       }
     }
