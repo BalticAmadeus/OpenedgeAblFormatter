@@ -187,4 +187,22 @@ export class DebugManager implements IDebugManager {
                 true || this.debugModeOverride
         );
     }
+
+    public disableExtension(): void {
+        const message =
+            "OpenEdge ABL Formatter is currently unavailable with VS Code versions starting from 1.98.\n" +
+            "To use it, downgrade to 1.97 or lower. \n";
+
+        window.showErrorMessage(
+            message +
+                "[Track this issue](https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/358)"
+        );
+
+        this.statusBarItem.text = "ABL Formatter • Disabled";
+        this.statusBarItem.backgroundColor = new ThemeColor(
+            "statusBarItem.warningBackground"
+        );
+        this.statusBarItem.show();
+        this.statusBarItem.tooltip = message;
+    }
 }
