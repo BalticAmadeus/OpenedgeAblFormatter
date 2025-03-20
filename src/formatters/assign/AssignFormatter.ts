@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
 import { FullText } from "../../model/FullText";
@@ -22,12 +22,12 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         this.settings = new AssignSettings(configurationManager);
     }
 
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         return node.type === SyntaxNodeType.AssignStatement;
     }
 
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectAssignStructure(node, fullText);
@@ -40,7 +40,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
     }
 
     private collectAssignStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ) {
         this.startColumn = this.getStartColumn(node);
@@ -48,7 +48,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
     }
 
     private getAssignBlock(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -80,7 +80,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
     }
 
     private getAssigStatementString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         longestLeft: number
     ): string {
@@ -114,7 +114,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
     }
 
     private getAssignmentString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         longestLeft: number
     ): string {
@@ -160,7 +160,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
     }
 
     private formatWhenExpression(
-        whenExpressionNode: SyntaxNode,
+        whenExpressionNode: Node,
         fullText: Readonly<FullText>
     ): string {
         let formattedString = "";
@@ -180,7 +180,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
     }
 
     private getLongestLeft(
-        assignments: SyntaxNode[],
+        assignments: Node[],
         fullText: FullText
     ): number {
         let longestLeft = 0;
@@ -200,7 +200,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         return longestLeft;
     }
 
-    private getStartColumn(node: SyntaxNode): number {
+    private getStartColumn(node: Node): number {
         if (node.type === SyntaxNodeType.AssignStatement) {
             return node.startPosition.column;
         } else {
@@ -208,7 +208,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         }
     }
 
-    private findParentAssignStatementStartColumn(node: SyntaxNode): number {
+    private findParentAssignStatementStartColumn(node: Node): number {
         if (node.parent === null) {
             return 0;
         }

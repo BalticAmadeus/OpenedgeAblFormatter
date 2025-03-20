@@ -1,4 +1,4 @@
-import { SyntaxNode, Tree } from "web-tree-sitter";
+import { Node, Tree } from "web-tree-sitter";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { IFormatter } from "./IFormatter";
@@ -51,7 +51,7 @@ export class FormattingEngine {
         formatters: IFormatter[]
     ) {
         let cursor = tree.walk(); // Initialize the cursor at the root node
-        let lastVisitedNode: SyntaxNode | null = null;
+        let lastVisitedNode: Node | null = null;
 
         while (true) {
             // Try to go as deep as possible
@@ -61,7 +61,7 @@ export class FormattingEngine {
 
             // Process the current node (this is a leaf node or a node with no unvisited children)
             while (true) {
-                const node = cursor.currentNode();
+                const node = cursor.currentNode;
 
                 // Skip the node if it was the last one visited
                 if (node === lastVisitedNode) {
@@ -111,11 +111,13 @@ export class FormattingEngine {
         }
     }
 
-    private logTree(node: SyntaxNode): string[] {
+    private logTree(node: Node): string[] {
         let arr: string[] = [];
         arr.push(node.toString());
         node.children.forEach((child) => {
-            arr = arr.concat(this.logTree(child));
+            if (child !== null) {
+                arr = arr.concat(this.logTree(child));
+            }
         });
 
         return arr;
@@ -141,7 +143,7 @@ export class FormattingEngine {
     }
 
     private parse(
-        node: SyntaxNode,
+        node: Node,
         fullText: FullText,
         formatters: IFormatter[]
     ): CodeEdit | CodeEdit[] | undefined {
@@ -165,7 +167,7 @@ export class FormattingEngine {
     }
 
     private isScopeOK(
-        node: SyntaxNode,
+        node: Node,
         result: CodeEdit | CodeEdit[],
         formatter: IFormatter
     ): boolean {
@@ -189,7 +191,7 @@ export class FormattingEngine {
         }
     }
 
-    public getOverrideSettingsComment(node: SyntaxNode): string | undefined {
+    public getOverrideSettingsComment(node: Node): string | undefined {
         const firstChildNode = node.child(0);
 
         if (firstChildNode === null) {

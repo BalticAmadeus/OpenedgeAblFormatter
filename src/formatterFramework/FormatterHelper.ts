@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { FullText } from "../model/FullText";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { log } from "console";
@@ -44,7 +44,7 @@ export class FormatterHelper {
     }
 
     public static getActualStatementIndentation(
-        node: SyntaxNode,
+        node: Node,
         fullText: FullText
     ): number {
         const nodeText = FormatterHelper.getCurrentText(node, fullText);
@@ -72,7 +72,7 @@ export class FormatterHelper {
     }
 
     public static getCurrentText(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): string {
         if (node !== undefined && fullText !== undefined) {
@@ -82,7 +82,7 @@ export class FormatterHelper {
     }
 
     public static getBodyText(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): string {
         let text = this.getCurrentText(node, fullText);
@@ -91,7 +91,7 @@ export class FormatterHelper {
     }
 
     public static getCurrentTextMultilineAdjust(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>,
         moveDelta: number
     ): string {
@@ -152,7 +152,7 @@ export class FormatterHelper {
     }
 
     public static collectExpression(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -197,7 +197,7 @@ export class FormatterHelper {
     }
 
     private static getExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         currentlyInsideParentheses: Boolean
     ): string {
@@ -240,7 +240,7 @@ export class FormatterHelper {
     }
 
     public static getParenthesizedExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ) {
         let newString = "";
