@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import Parser from "web-tree-sitter";
+import { Parser } from "web-tree-sitter";
 import { AblFormatterProvider } from "./providers/AblFormatterProvider";
 import { Constants } from "./model/Constants";
 import { AblParserHelper } from "./parser/AblParserHelper";

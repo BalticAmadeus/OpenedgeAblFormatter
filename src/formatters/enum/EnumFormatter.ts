@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -20,11 +20,11 @@ export class EnumFormatter extends AFormatter implements IFormatter {
         this.settings = new EnumSettings(configurationManager);
     }
 
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         return node.type === SyntaxNodeType.EnumDefinition;
     }
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
@@ -34,7 +34,7 @@ export class EnumFormatter extends AFormatter implements IFormatter {
     }
 
     private collectEnumStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let foundFirstMember = false;
@@ -61,7 +61,7 @@ export class EnumFormatter extends AFormatter implements IFormatter {
     }
 
     private getEnumExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         foundFirstMember: boolean
     ): string {
