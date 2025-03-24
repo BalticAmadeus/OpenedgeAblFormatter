@@ -30,17 +30,23 @@ export class Telemetry {
     }
 
     public static addTreeSitterErrors(errorCount: number): void {
-        if (!this.isTelemetryEnabled()) return;
+        if (!this.isTelemetryEnabled()) {
+            return;
+        }
         this.treeSitterErrors += errorCount;
     }
 
     public static addLinesOfCodeFormatted(lines: number): void {
-        if (!this.isTelemetryEnabled()) return;
+        if (!this.isTelemetryEnabled()) {
+            return;
+        }
         this.linesOfCodeFormatted += lines;
     }
 
     public static increaseFormattingActions(type: string): void {
-        if (!this.isTelemetryEnabled()) return;
+        if (!this.isTelemetryEnabled()) {
+            return;
+        }
 
         switch (type) {
             case "Document":
@@ -55,7 +61,9 @@ export class Telemetry {
     }
 
     public static sendTreeSitterErrors(): void {
-        if (!this.isTelemetryEnabled()) return;
+        if (!this.isTelemetryEnabled()) {
+            return;
+        }
 
         let errorsPerLocf = 0;
         if (this.treeSitterErrors !== 0)
@@ -93,7 +101,9 @@ export class Telemetry {
     }
 
     public static sendExtensionSettings(): void {
-        if (!this.isTelemetryEnabled()) return;
+        if (!this.isTelemetryEnabled()) {
+            return;
+        }
 
         const configuration = vscode.workspace.getConfiguration("AblFormatter");
 
@@ -111,8 +121,12 @@ export class Telemetry {
     }
 
     public static sendAllTelemetry(): void {
-        if (!this.isTelemetryEnabled()) return;
-        if (this.totalFormattingActions() < this.sendThreshold) return;
+        if (
+            this.totalFormattingActions() < this.sendThreshold ||
+            !this.isTelemetryEnabled()
+        ) {
+            return;
+        }
 
         this.sendTreeSitterErrors();
         this.sendFormattingActions();
