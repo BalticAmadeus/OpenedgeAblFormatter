@@ -2,7 +2,7 @@ name: Node.js CI Insiders
 
 on:
     schedule:
-        - cron: "16 * * * *"
+        - cron: "30 * * * *"
 
 jobs:
     insider-stability-test:
