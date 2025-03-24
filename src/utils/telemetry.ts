@@ -96,9 +96,8 @@ export class Telemetry {
         if (!this.isTelemetryEnabled()) return;
 
         const configuration = vscode.workspace.getConfiguration("AblFormatter");
-        const settings = configuration.inspect("");
 
-        if (settings) {
+        if (configuration) {
             Telemetry.instance.sendTelemetryEvent(
                 "ExtensionSettings",
                 { settings: configuration } as { [key: string]: any },
@@ -107,14 +106,13 @@ export class Telemetry {
         }
     }
 
+    private static totalFormattingActions(): number {
+        return this.fullFormattingActions + this.selectionFormattingActions;
+    }
+
     public static sendAllTelemetry(): void {
         if (!this.isTelemetryEnabled()) return;
-
-        if (
-            this.fullFormattingActions + this.selectionFormattingActions <
-            this.sendThreshold
-        )
-            return;
+        if (this.totalFormattingActions() < this.sendThreshold) return;
 
         this.sendTreeSitterErrors();
         this.sendFormattingActions();
