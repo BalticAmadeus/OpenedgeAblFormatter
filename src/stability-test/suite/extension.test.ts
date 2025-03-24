@@ -8,7 +8,7 @@ import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
-import Parser from "web-tree-sitter";
+import { Parser, Node } from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import path, { join } from "path";
 import { EOL } from "../../model/EOL";
@@ -217,7 +217,7 @@ function countActualSymbols(text: string): number {
 function parseAndCheckForErrors(
     text: string,
     name: string
-): Parser.SyntaxNode[] {
+): Node[] {
     const parseResult = parserHelper.parse(new FileIdentifier(name, 1), text);
 
     const rootNode = parseResult.tree.rootNode;
@@ -237,10 +237,10 @@ function treeSitterTest(text: string, name: string): void {
     assert.strictEqual(errors.length, 0, errorMessage);
 }
 
-function getNodesWithErrors(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
-    let errorNodes: Parser.SyntaxNode[] = [];
+function getNodesWithErrors(node: Node): Node[] {
+    let errorNodes: Node[] = [];
 
-    if (node.hasError()) {
+    if (node.hasError) {
         errorNodes.push(node);
     }
 
@@ -251,7 +251,7 @@ function getNodesWithErrors(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
     return errorNodes;
 }
 
-function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
+function formatErrorMessage(errors: Node[], name: string): string {
     if (errors.length === 0) {
         return "";
     }

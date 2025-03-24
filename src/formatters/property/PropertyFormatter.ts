@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -22,14 +22,14 @@ export class PropertyFormatter extends AFormatter implements IFormatter {
         this.settings = new PropertySettings(configurationManager);
     }
 
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         if (node.type === SyntaxNodeType.PropertyDefinition) {
             return true;
         }
         return false;
     }
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectPropertyStructure(node, fullText);
@@ -43,7 +43,7 @@ export class PropertyFormatter extends AFormatter implements IFormatter {
     }
 
     private collectPropertyStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ) {
         this.startColumn = FormatterHelper.getActualStatementIndentation(
@@ -54,7 +54,7 @@ export class PropertyFormatter extends AFormatter implements IFormatter {
         this.propertyBodyValue = this.getPropertyBlock(node, fullText);
     }
 
-    private getPropertyBlock(node: SyntaxNode, fullText: FullText): string {
+    private getPropertyBlock(node: Node, fullText: FullText): string {
         let resultString = "";
 
         node.children.forEach((child) => {
@@ -67,7 +67,7 @@ export class PropertyFormatter extends AFormatter implements IFormatter {
     }
 
     private getPropertyExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: FullText
     ): string {
         let newString = "";

@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -34,14 +34,14 @@ export class FunctionParameterFormatter
         this.settings = new FunctionParameterSettings(configurationManager);
     }
 
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         if (node.type === SyntaxNodeType.Parameters) {
             return true;
         }
         return false;
     }
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
@@ -69,7 +69,7 @@ export class FunctionParameterFormatter
     }
 
     private collectString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -80,7 +80,7 @@ export class FunctionParameterFormatter
     }
 
     private collectStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): void {
         node.children.forEach((child) => {
@@ -88,7 +88,7 @@ export class FunctionParameterFormatter
         });
     }
 
-    private getStructure(node: SyntaxNode, fullText: Readonly<FullText>): void {
+    private getStructure(node: Node, fullText: Readonly<FullText>): void {
         switch (node.type) {
             case SyntaxNodeType.LeftParenthesis:
                 this.alignParameters = node.startPosition.column + 1;
@@ -102,7 +102,7 @@ export class FunctionParameterFormatter
     }
 
     private getParameterStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): void {
         switch (node.type) {
@@ -126,7 +126,7 @@ export class FunctionParameterFormatter
                 break;
         }
     }
-    private getString(node: SyntaxNode, fullText: Readonly<FullText>): string {
+    private getString(node: Node, fullText: Readonly<FullText>): string {
         let newString = "";
         switch (node.type) {
             case parentheses.hasFancy(node.type, ""):
@@ -160,7 +160,7 @@ export class FunctionParameterFormatter
     }
 
     private collectParameterString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         this.typeTuningInCurrentParameter = node.children.some(
@@ -180,7 +180,7 @@ export class FunctionParameterFormatter
     }
 
     private getParameterString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -255,7 +255,7 @@ export class FunctionParameterFormatter
     }
 
     private collectTypeTuningString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -268,7 +268,7 @@ export class FunctionParameterFormatter
     }
 
     private getTypeTuningString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";

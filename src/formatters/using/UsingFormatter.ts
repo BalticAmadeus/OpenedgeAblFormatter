@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -24,14 +24,14 @@ export class UsingFormatter extends AFormatter implements IFormatter {
         this.settings = new UsingSettings(configurationManager);
     }
 
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         if (node.type === SyntaxNodeType.UsingStatement) {
             return true;
         }
         return false;
     }
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.usingStatementsFound++;
@@ -54,7 +54,7 @@ export class UsingFormatter extends AFormatter implements IFormatter {
     }
 
     private collectAllUsingStatements(
-        node: SyntaxNode | null,
+        node: Node | null,
         fullText: FullText
     ): void {
         for (node; node !== null; node = node.nextSibling) {

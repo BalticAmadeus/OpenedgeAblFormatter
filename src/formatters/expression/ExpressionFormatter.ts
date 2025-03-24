@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -26,7 +26,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         super(configurationManager);
         this.settings = new ExpressionSettings(configurationManager);
     }
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         if (
             node.type === SyntaxNodeType.LogicalExpression ||
             node.type === SyntaxNodeType.ComparisonExpression ||
@@ -44,7 +44,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         return false;
     }
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
@@ -62,7 +62,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         return this.getCodeEdit(node, text, newText, fullText);
     }
     private collectLogicalStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -96,7 +96,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
     }
 
     private getLogicalExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -133,7 +133,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         return newString;
     }
 
-    private hasLogicalExpressionParent(node: Readonly<SyntaxNode>): boolean {
+    private hasLogicalExpressionParent(node: Readonly<Node>): boolean {
         if (node.parent === null) {
             return false;
         }
@@ -145,7 +145,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         }
         return false;
     }
-    private hasWhilePhraseParent(node: Readonly<SyntaxNode>): boolean {
+    private hasWhilePhraseParent(node: Readonly<Node>): boolean {
         if (node.parent === null) {
             return false;
         }

@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -21,14 +21,14 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
         this.settings = new IfFunctionSettings(configurationManager);
     }
 
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         if (node.type === SyntaxNodeType.TernaryExpression) {
             return true;
         }
         return false;
     }
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
@@ -42,7 +42,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
             ) {
                 newText = this.addParenthesesAroundExpression(newText);
                 if (!this.hasTernaryExpressionParent(node)) {
-                    /* 
+                    /*
                         The expression gets pushed by 1 space since the '(' is added at the start
                     */
                     const delta =
@@ -60,7 +60,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
     }
 
     private collectStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -94,7 +94,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
     }
 
     private getIfExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -135,7 +135,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
     }
 
     private getParenthesizedExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ) {
         let newString = "";
@@ -161,7 +161,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
         return expression.replace(trimmedExpression, `(${trimmedExpression})`);
     }
 
-    private hasTernaryExpressionChildren(node: Readonly<SyntaxNode>): boolean {
+    private hasTernaryExpressionChildren(node: Readonly<Node>): boolean {
         let foundTernaryExpression = false;
         node.children.forEach((child) => {
             if (child.type === SyntaxNodeType.TernaryExpression) {
@@ -177,7 +177,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
         return foundTernaryExpression;
     }
 
-    private hasTernaryExpressionParent(node: Readonly<SyntaxNode>): boolean {
+    private hasTernaryExpressionParent(node: Readonly<Node>): boolean {
         if (node.parent === null) {
             return false;
         }

@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { IConfigurationManager } from "../utils/IConfigurationManager";
 import { CodeEdit } from "../model/CodeEdit";
 import { FullText } from "../model/FullText";
@@ -11,7 +11,7 @@ export abstract class AFormatter {
     }
 
     protected getCodeEdit(
-        node: SyntaxNode,
+        node: Node,
         oldText: string,
         newText: string,
         fullText: FullText

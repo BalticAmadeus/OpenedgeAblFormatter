@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { SyntaxNodeType } from "../../model/SyntaxNodeType";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -22,7 +22,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
         this.settings = new ForSettings(configurationManager);
     }
 
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         if (node.type === SyntaxNodeType.ForStatement) {
             return true;
         }
@@ -31,7 +31,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectForStructure(node, fullText);
@@ -45,7 +45,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     private collectForStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ) {
         this.startColumn = FormatterHelper.getActualStatementIndentation(
@@ -56,7 +56,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     private getForStatementBlock(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -75,7 +75,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     private getForExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         alignColumn: number
     ): string {
@@ -150,7 +150,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     private getWhereClauseBlock(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         alignColumn: number
     ): string {
@@ -182,7 +182,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     private getSortClauseText(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         alignColumn: number
     ): string {
@@ -198,7 +198,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     private getSortClauseChildText(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         alignColumn: number
     ): string {
@@ -230,7 +230,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     private getSortColumnChildText(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         alignColumn: number
     ): string {
@@ -259,7 +259,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     }
 
     private getSortClauseBlock(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>,
         alignColumn: number
     ): string {

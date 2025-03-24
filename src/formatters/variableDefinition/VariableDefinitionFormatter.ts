@@ -1,4 +1,4 @@
-import { SyntaxNode } from "web-tree-sitter";
+import { Node } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -28,14 +28,14 @@ export class VariableDefinitionFormatter
         this.settings = new VariableDefinitionSettings(configurationManager);
     }
 
-    match(node: Readonly<SyntaxNode>): boolean {
+    match(node: Readonly<Node>): boolean {
         if (node.type === SyntaxNodeType.VariableDefinition) {
             return true;
         }
         return false;
     }
     parse(
-        node: Readonly<SyntaxNode>,
+        node: Readonly<Node>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
@@ -47,7 +47,7 @@ export class VariableDefinitionFormatter
         }
 
         this.resetVariables();
-        let currentNode: SyntaxNode | null = node;
+        let currentNode: Node | null = node;
         for (
             currentNode;
             currentNode !== null;
@@ -67,7 +67,7 @@ export class VariableDefinitionFormatter
     }
 
     private collectDefineString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -81,7 +81,7 @@ export class VariableDefinitionFormatter
     }
 
     private collectDefineStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): void {
         node.children.forEach((child) => {
@@ -90,7 +90,7 @@ export class VariableDefinitionFormatter
     }
 
     private getDefineStructure(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): void {
         switch (node.type) {
@@ -130,7 +130,7 @@ export class VariableDefinitionFormatter
     }
 
     private getExpressionString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -233,7 +233,7 @@ export class VariableDefinitionFormatter
     }
 
     private collectTypeTuningString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -246,7 +246,7 @@ export class VariableDefinitionFormatter
     }
 
     private getTypeTuningString(
-        node: SyntaxNode,
+        node: Node,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
