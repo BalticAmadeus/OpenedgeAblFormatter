@@ -66,9 +66,10 @@ export class Telemetry {
         }
 
         let errorsPerLocf = 0;
-        if (this.treeSitterErrors !== 0)
+        if (this.treeSitterErrors !== 0) {
             errorsPerLocf =
                 (this.treeSitterErrors * 1.0) / this.linesOfCodeFormatted;
+        }
 
         Telemetry.instance.sendTelemetryEvent(
             "TreeSitterErrors",
