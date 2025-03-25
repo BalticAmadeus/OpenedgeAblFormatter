@@ -1,8 +1,13 @@
-name: Node.js CI Insiders
+name: VSCode Insiders Daily Stability Test
 
 on:
+    push:
+        branches: ["develop"]
+    pull_request:
+        branches: ["develop"]
     schedule:
-        - cron: "30 * * * *"
+        - cron: "0 4 * * *" #4:00 AM UTC
+    workflow_dispatch:
 
 jobs:
     insider-stability-test:
