@@ -1,13 +1,9 @@
 name: VSCode Insiders Daily Stability Test
 
 on:
-    push:
-        branches: ["develop"]
-    pull_request:
-        branches: ["develop"]
     schedule:
         - cron: "0 4 * * *" #4:00 AM UTC
-    workflow_dispatch:
+    workflow_dispatch: # Manually trigger the workflow
 
 jobs:
     insider-stability-test:
