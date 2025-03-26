@@ -1,7 +1,7 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.blockFormatting": true,
 "AblFormatter.propertyFormatting": true,
-"AblFormatter.expressionFormatting": true }*/
+"AblFormatter.statementFormatting": true }*/
  
 CLASS TestProperty:
 

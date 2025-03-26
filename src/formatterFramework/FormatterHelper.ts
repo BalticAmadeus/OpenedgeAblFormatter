@@ -180,10 +180,7 @@ export class FormatterHelper {
                 resultString = resultString.trimStart();
             } else if (node.type === SyntaxNodeType.VariableAssignment) {
                 resultString = resultString.trimStart() + ".";
-            } else if (node.type === SyntaxNodeType.ReturnStatement) {
-                resultString = resultString + ".";
             }
-
             const parent = node.parent;
             if (
                 parent !== null &&

@@ -1,5 +1,6 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.blockFormatting": true}*/
+/*  { "AblFormatter.blockFormatting": true,
+"AblFormatter.statementFormatting": true}*/
 
 PROCEDURE proc:
     DEFINE VAR err AS PROGRESS.Lang.AppError.
