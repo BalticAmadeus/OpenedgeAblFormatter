@@ -8,7 +8,7 @@ import { IDebugManager } from "../providers/IDebugManager";
 
 export class AblParserHelper implements IParserHelper {
     private parser = new Parser();
-    private trees = new Map<string, Tree>();
+    private trees = new Map<string, Parser.Tree>();
     private ablLanguagePromise: Promise<Parser.Language>;
     private debugManager: IDebugManager;
 
