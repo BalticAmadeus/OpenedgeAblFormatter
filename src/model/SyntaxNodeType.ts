@@ -30,7 +30,7 @@ export enum SyntaxNodeType {
     ProcedureParameterDefinition = "procedure_parameter_definition",
     ConstructorDefinition = "constructor_definition",
     DestructorDefinition = "destructor_definition",
-    MethodDefinition = "method_definition",
+    MethodStatement = "method_statement",
     FindStatement = "find_statement",
     WhereClause = "where_clause",
     UndoStatement = "undo_statement",
