@@ -1,4 +1,4 @@
-import { Parser, Tree, Language, Range, SyntaxNode } from "web-tree-sitter";
+import Parser, { Tree } from "web-tree-sitter";
 import { IParserHelper } from "./IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { ParseResult } from "../model/ParseResult";
@@ -9,12 +9,12 @@ import { IDebugManager } from "../providers/IDebugManager";
 export class AblParserHelper implements IParserHelper {
     private parser = new Parser();
     private trees = new Map<string, Tree>();
-    private ablLanguagePromise: Promise<Language>;
+    private ablLanguagePromise: Promise<Parser.Language>;
     private debugManager: IDebugManager;
 
     public constructor(extensionPath: string, debugManager: IDebugManager) {
         this.debugManager = debugManager;
-        this.ablLanguagePromise = Language.load(
+        this.ablLanguagePromise = Parser.Language.load(
             path.join(extensionPath, "resources/tree-sitter-abl.wasm")
         );
 
@@ -34,7 +34,7 @@ export class AblParserHelper implements IParserHelper {
         previousTree?: Tree
     ): ParseResult {
         const newTree = this.parser.parse(text, previousTree);
-        let ranges: Range[];
+        let ranges: Parser.Range[];
 
         if (previousTree !== undefined) {
             ranges = previousTree.getChangedRanges(newTree);
@@ -54,10 +54,10 @@ export class AblParserHelper implements IParserHelper {
 }
 
 function getNodesWithErrors(
-    node: SyntaxNode,
+    node: Parser.SyntaxNode,
     isRoot: boolean
-): SyntaxNode[] {
-    let errorNodes: SyntaxNode[] = [];
+): Parser.SyntaxNode[] {
+    let errorNodes: Parser.SyntaxNode[] = [];
 
     if (
         node.type === SyntaxNodeType.Error &&

@@ -61,7 +61,7 @@ export class FormattingEngine {
 
             // Process the current node (this is a leaf node or a node with no unvisited children)
             while (true) {
-                const node = cursor.currentNode;
+                const node = cursor.currentNode();
 
                 // Skip the node if it was the last one visited
                 if (node === lastVisitedNode) {
@@ -115,9 +115,7 @@ export class FormattingEngine {
         let arr: string[] = [];
         arr.push(node.toString());
         node.children.forEach((child) => {
-            if (child !== null) {
-                arr = arr.concat(this.logTree(child));
-            }
+            arr = arr.concat(this.logTree(child));
         });
 
         return arr;

@@ -1,6 +1,6 @@
-import { Tree, Range } from "web-tree-sitter";
+import Parser from "web-tree-sitter";
 
 export interface ParseResult {
-    tree: Tree;
-    ranges: Range[];
+    tree: Parser.Tree;
+    ranges: Parser.Range[];
 }

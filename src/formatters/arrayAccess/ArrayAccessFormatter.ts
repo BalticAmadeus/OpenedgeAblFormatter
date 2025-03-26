@@ -62,7 +62,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         return resultString;
     }
 
-    private getString(node: Node, fullText: Readonly<FullText>): string {
+    private getString(node: SyntaxNode, fullText: Readonly<FullText>): string {
         let newString = "";
         if (node.type === SyntaxNodeType.LeftBracket) {
             newString = FormatterHelper.getCurrentText(node, fullText).trim();

@@ -7,7 +7,7 @@ import {
     ThemeColor,
     window,
 } from "vscode";
-import { Node, Tree } from "web-tree-sitter";
+import { SyntaxNode, Tree } from "web-tree-sitter";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { IDebugManager } from "./IDebugManager";
@@ -133,10 +133,10 @@ export class DebugManager implements IDebugManager {
     }
 
     private getNodesWithErrors(
-        node: Node,
+        node: SyntaxNode,
         isRoot: boolean
-    ): Node[] {
-        let errorNodes: Node[] = [];
+    ): SyntaxNode[] {
+        let errorNodes: SyntaxNode[] = [];
 
         if (
             node.type === SyntaxNodeType.Error &&
