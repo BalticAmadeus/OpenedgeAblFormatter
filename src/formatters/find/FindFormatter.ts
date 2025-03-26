@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { SyntaxNodeType } from "../../model/SyntaxNodeType";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -22,12 +22,12 @@ export class FindFormatter extends AFormatter implements IFormatter {
         this.settings = new FindSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         return node.type === SyntaxNodeType.FindStatement;
     }
 
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectCaseStructure(node, fullText);
@@ -40,7 +40,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
     }
 
     private collectCaseStructure(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ) {
         this.startColumn = node.startPosition.column;
@@ -48,7 +48,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
     }
 
     private getFindStatementBlock(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -67,7 +67,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
     }
 
     private getFindExpressionString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>,
         alignColumn: number
     ): string {
@@ -108,7 +108,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
     }
 
     private getWhereClauseBlock(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>,
         alignColumn: number
     ): string {

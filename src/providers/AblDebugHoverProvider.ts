@@ -6,7 +6,7 @@ import {
     ProviderResult,
     TextDocument,
 } from "vscode";
-import { Point, Node } from "web-tree-sitter";
+import { Point, SyntaxNode } from "web-tree-sitter";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { ParseResult } from "../model/ParseResult";
@@ -47,7 +47,7 @@ export class AblDebugHoverProvider implements HoverProvider {
         );
     }
 
-    private getNodeForPoint(document: TextDocument, point: Point): Node {
+    private getNodeForPoint(document: TextDocument, point: Point): SyntaxNode {
         let result = this.getResultIfDocumentWasAlreadyParsed(document);
 
         if (result === undefined) {
@@ -91,7 +91,7 @@ export class AblDebugHoverProvider implements HoverProvider {
         return parseResult;
     }
 
-    private fillTreeWithAcendantsInfo(node: Node): string {
+    private fillTreeWithAcendantsInfo(node: SyntaxNode): string {
         const str =
             "| " +
             node.id +

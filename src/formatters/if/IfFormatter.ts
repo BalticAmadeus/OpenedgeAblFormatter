@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
 import { FullText } from "../../model/FullText";
@@ -25,7 +25,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
         this.settings = new IfSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         if (
             node.type === SyntaxNodeType.IfStatement ||
             node.type === SyntaxNodeType.ElseIfStatement
@@ -36,7 +36,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
         return false;
     }
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectIfStructure(node, fullText);
@@ -49,13 +49,13 @@ export class IfFormatter extends AFormatter implements IFormatter {
         );
     }
 
-    private collectIfStructure(node: Node, fullText: Readonly<FullText>) {
+    private collectIfStructure(node: SyntaxNode, fullText: Readonly<FullText>) {
         this.startColumn = this.getStartColumn(node);
         this.ifBodyValue = this.getCaseBodyBranchBlock(node, fullText);
     }
 
     private getCaseBodyBranchBlock(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -70,7 +70,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
     }
 
     private getIfExpressionString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -141,7 +141,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
         return newString;
     }
 
-    private getElseStatementPart(node: Node, fullText: FullText): string {
+    private getElseStatementPart(node: SyntaxNode, fullText: FullText): string {
         let newString = "";
 
         switch (node.type) {
@@ -193,7 +193,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
     }
 
     private getElseIfStatementPart(
-        node: Node,
+        node: SyntaxNode,
         fullText: FullText
     ): string {
         let newString = "";
@@ -229,7 +229,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
         return newString;
     }
 
-    private getStartColumn(node: Node): number {
+    private getStartColumn(node: SyntaxNode): number {
         if (node.type === SyntaxNodeType.IfStatement) {
             return node.startPosition.column;
         } else {
@@ -237,7 +237,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
         }
     }
 
-    private findParentIfStatementStartColumn(node: Node): number {
+    private findParentIfStatementStartColumn(node: SyntaxNode): number {
         if (node.parent === null) {
             return 0;
         }

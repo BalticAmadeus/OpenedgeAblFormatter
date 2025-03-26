@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { SyntaxNodeType } from "../../model/SyntaxNodeType";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -21,7 +21,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         this.settings = new ArrayAccessSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         if (
             node.type === SyntaxNodeType.ArrayAccess ||
             node.type === SyntaxNodeType.ArrayLiteral
@@ -33,7 +33,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
     }
 
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         if (node.type === SyntaxNodeType.ArrayLiteral) {
@@ -52,7 +52,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
     }
 
     private collectString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";

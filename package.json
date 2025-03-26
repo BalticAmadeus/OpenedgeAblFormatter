@@ -341,7 +341,7 @@
     "@vscode/test-electron": "^2.3.6",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
-    "esbuild": "^0.25.1",
+    "esbuild": "^0.19.11",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
@@ -350,6 +350,6 @@
     "vscode-extension-tester": "^6.0.0"
   },
   "dependencies": {
-    "web-tree-sitter": "^0.25.3"
+    "web-tree-sitter": "^0.20.8"
   }
 }

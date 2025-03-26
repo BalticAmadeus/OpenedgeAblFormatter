@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -23,14 +23,14 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         this.settings = new TempTableSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         if (node.type === SyntaxNodeType.TemptableDefinition) {
             return true;
         }
         return false;
     }
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectTemptableStructure(node, fullText);
@@ -39,7 +39,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         return this.getCodeEdit(node, text, this.temptableBodyValue, fullText);
     }
 
-    private collectTemptableString(node: Node, fullText: FullText) {
+    private collectTemptableString(node: SyntaxNode, fullText: FullText) {
         this.startColumn = FormatterHelper.getActualStatementIndentation(
             node,
             fullText
@@ -48,7 +48,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         this.temptableBodyValue = this.getTemptableBlock(node, fullText);
     }
 
-    private getTemptableBlock(node: Node, fullText: FullText): string {
+    private getTemptableBlock(node: SyntaxNode, fullText: FullText): string {
         let resultString = "";
 
         node.children.forEach((child) => {
@@ -69,7 +69,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     private collectTemptableStructure(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): void {
         node.children.forEach((child) => {
@@ -77,7 +77,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         });
     }
 
-    private getTemptableStructure(node: Node, fullText: FullText): void {
+    private getTemptableStructure(node: SyntaxNode, fullText: FullText): void {
         switch (node.type) {
             case SyntaxNodeType.FieldClause:
                 node.children.forEach((child) => {
@@ -87,7 +87,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         }
     }
 
-    private getFieldStructure(node: Node, fullText: FullText): void {
+    private getFieldStructure(node: SyntaxNode, fullText: FullText): void {
         switch (node.type) {
             case SyntaxNodeType.Identifier:
                 this.alignType = Math.max(
@@ -99,7 +99,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     private collectFieldString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -110,7 +110,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     private getFieldString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -140,7 +140,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     private collectTypeTuningString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -153,7 +153,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     private getTypeTuningString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -170,7 +170,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     private getTemptableExpressionString(
-        node: Node,
+        node: SyntaxNode,
         separator: string,
         fullText: FullText
     ): string {

@@ -1,4 +1,4 @@
-import { Parser, Tree, Language, Range, Node } from "web-tree-sitter";
+import { Parser, Tree, Language, Range, SyntaxNode } from "web-tree-sitter";
 import { IParserHelper } from "./IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { ParseResult } from "../model/ParseResult";
@@ -54,10 +54,10 @@ export class AblParserHelper implements IParserHelper {
 }
 
 function getNodesWithErrors(
-    node: Node,
+    node: SyntaxNode,
     isRoot: boolean
-): Node[] {
-    let errorNodes: Node[] = [];
+): SyntaxNode[] {
+    let errorNodes: SyntaxNode[] = [];
 
     if (
         node.type === SyntaxNodeType.Error &&

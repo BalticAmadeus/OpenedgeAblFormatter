@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -30,14 +30,14 @@ export class ProcedureParameterFormatter
         this.settings = new ProcedureParameterSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         if (node.type === SyntaxNodeType.ProcedureParameterDefinition) {
             return true;
         }
         return false;
     }
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
@@ -47,7 +47,7 @@ export class ProcedureParameterFormatter
         }
 
         this.resetStaticVariables();
-        let currentNode: Node | null = node;
+        let currentNode: SyntaxNode | null = node;
         for (
             currentNode;
             currentNode !== null;
@@ -69,7 +69,7 @@ export class ProcedureParameterFormatter
     }
 
     private collectString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -81,7 +81,7 @@ export class ProcedureParameterFormatter
     }
 
     private collectStructure(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): void {
         node.children.forEach((child) => {
@@ -89,7 +89,7 @@ export class ProcedureParameterFormatter
         });
     }
 
-    private getStructure(node: Node, fullText: Readonly<FullText>): void {
+    private getStructure(node: SyntaxNode, fullText: Readonly<FullText>): void {
         switch (node.type) {
             case SyntaxNodeType.TypeTuning:
                 ProcedureParameterFormatter.alignNoUndo = Math.max(
@@ -112,7 +112,7 @@ export class ProcedureParameterFormatter
         }
     }
 
-    private getString(node: Node, fullText: Readonly<FullText>): string {
+    private getString(node: SyntaxNode, fullText: Readonly<FullText>): string {
         let newString = "";
         switch (node.type) {
             case SyntaxNodeType.DotKeyword:
@@ -176,7 +176,7 @@ export class ProcedureParameterFormatter
     }
 
     private collectTypeTuningString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -189,7 +189,7 @@ export class ProcedureParameterFormatter
     }
 
     private getTypeTuningString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";

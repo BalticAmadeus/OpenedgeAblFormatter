@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -21,14 +21,14 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
         this.settings = new IfFunctionSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         if (node.type === SyntaxNodeType.TernaryExpression) {
             return true;
         }
         return false;
     }
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
@@ -60,7 +60,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
     }
 
     private collectStructure(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -94,7 +94,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
     }
 
     private getIfExpressionString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";
@@ -135,7 +135,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
     }
 
     private getParenthesizedExpressionString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ) {
         let newString = "";
@@ -161,7 +161,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
         return expression.replace(trimmedExpression, `(${trimmedExpression})`);
     }
 
-    private hasTernaryExpressionChildren(node: Readonly<Node>): boolean {
+    private hasTernaryExpressionChildren(node: Readonly<SyntaxNode>): boolean {
         let foundTernaryExpression = false;
         node.children.forEach((child) => {
             if (child.type === SyntaxNodeType.TernaryExpression) {
@@ -177,7 +177,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
         return foundTernaryExpression;
     }
 
-    private hasTernaryExpressionParent(node: Readonly<Node>): boolean {
+    private hasTernaryExpressionParent(node: Readonly<SyntaxNode>): boolean {
         if (node.parent === null) {
             return false;
         }

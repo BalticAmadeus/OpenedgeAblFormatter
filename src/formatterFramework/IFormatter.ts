@@ -1,11 +1,11 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { CodeEdit } from "../model/CodeEdit";
 import { FullText } from "../model/FullText";
 
 export interface IFormatter {
-    match(node: Readonly<Node>): boolean;
+    match(node: Readonly<SyntaxNode>): boolean;
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined;
 }

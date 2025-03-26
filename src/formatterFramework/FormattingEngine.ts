@@ -1,4 +1,4 @@
-import { Node, Tree } from "web-tree-sitter";
+import { SyntaxNode, Tree } from "web-tree-sitter";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { IFormatter } from "./IFormatter";
@@ -51,7 +51,7 @@ export class FormattingEngine {
         formatters: IFormatter[]
     ) {
         let cursor = tree.walk(); // Initialize the cursor at the root node
-        let lastVisitedNode: Node | null = null;
+        let lastVisitedNode: SyntaxNode | null = null;
 
         while (true) {
             // Try to go as deep as possible
@@ -111,7 +111,7 @@ export class FormattingEngine {
         }
     }
 
-    private logTree(node: Node): string[] {
+    private logTree(node: SyntaxNode): string[] {
         let arr: string[] = [];
         arr.push(node.toString());
         node.children.forEach((child) => {
@@ -143,7 +143,7 @@ export class FormattingEngine {
     }
 
     private parse(
-        node: Node,
+        node: SyntaxNode,
         fullText: FullText,
         formatters: IFormatter[]
     ): CodeEdit | CodeEdit[] | undefined {
@@ -167,7 +167,7 @@ export class FormattingEngine {
     }
 
     private isScopeOK(
-        node: Node,
+        node: SyntaxNode,
         result: CodeEdit | CodeEdit[],
         formatter: IFormatter
     ): boolean {
@@ -191,7 +191,7 @@ export class FormattingEngine {
         }
     }
 
-    public getOverrideSettingsComment(node: Node): string | undefined {
+    public getOverrideSettingsComment(node: SyntaxNode): string | undefined {
         const firstChildNode = node.child(0);
 
         if (firstChildNode === null) {

@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -19,7 +19,7 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         this.settings = new StatementSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         if (
             node.type === SyntaxNodeType.AblStatement ||
             node.type === SyntaxNodeType.InputStreamStatement ||
@@ -31,7 +31,7 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         return false;
     }
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
@@ -45,7 +45,7 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         return this.getCodeEdit(node, oldText, newText, fullText);
     }
 
-    private collectStatement(node: Node, fullText: FullText): string {
+    private collectStatement(node: SyntaxNode, fullText: FullText): string {
         let resultString = "";
         let firstChild = true;
 
@@ -64,7 +64,7 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         return resultString + ".";
     }
 
-    private getStatementString(node: Node, fullText: FullText): string {
+    private getStatementString(node: SyntaxNode, fullText: FullText): string {
         let resultString = "";
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
         switch (node.type) {

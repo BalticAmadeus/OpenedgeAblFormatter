@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -23,7 +23,7 @@ export class VariableAssignmentFormatter
         this.settings = new VariableDefinitionSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         if (node.type === SyntaxNodeType.Assignment) {
             const parent = node.parent;
             if (
@@ -36,7 +36,7 @@ export class VariableAssignmentFormatter
         return false;
     }
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.startOfAssignment = true;
@@ -45,7 +45,7 @@ export class VariableAssignmentFormatter
         return this.getCodeEdit(node, oldText, newText, fullText);
     }
 
-    private collectString(node: Node, fullText: FullText): string {
+    private collectString(node: SyntaxNode, fullText: FullText): string {
         let resultString = "";
         node.children.forEach((child) => {
             resultString = resultString.concat(this.getString(child, fullText));
@@ -53,7 +53,7 @@ export class VariableAssignmentFormatter
         return resultString;
     }
 
-    private getString(node: Node, fullText: FullText): string {
+    private getString(node: SyntaxNode, fullText: FullText): string {
         let newString = "";
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
         switch (node.type) {

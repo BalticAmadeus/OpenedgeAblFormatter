@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
 import { FullText } from "../../model/FullText";
@@ -25,7 +25,7 @@ export class CaseFormatter extends AFormatter implements IFormatter {
         this.settings = new CaseSettings(configurationManager);
     }
 
-    match(node: Readonly<Node>): boolean {
+    match(node: Readonly<SyntaxNode>): boolean {
         return (
             node.type === SyntaxNodeType.CaseWhenBranch ||
             node.type === SyntaxNodeType.CaseOtherwiseBranch
@@ -33,7 +33,7 @@ export class CaseFormatter extends AFormatter implements IFormatter {
     }
 
     parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectCaseStructure(node, fullText);
@@ -46,7 +46,7 @@ export class CaseFormatter extends AFormatter implements IFormatter {
     }
 
     private collectCaseStructure(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ) {
         this.startColumn = FormatterHelper.getActualStatementIndentation(
@@ -57,7 +57,7 @@ export class CaseFormatter extends AFormatter implements IFormatter {
     }
 
     private getCaseBodyBranchBlock(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
@@ -72,7 +72,7 @@ export class CaseFormatter extends AFormatter implements IFormatter {
     }
 
     private getCaseExpressionString(
-        node: Node,
+        node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
         let newString = "";

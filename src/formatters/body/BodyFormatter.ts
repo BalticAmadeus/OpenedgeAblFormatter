@@ -1,4 +1,4 @@
-import { Node } from "web-tree-sitter";
+import { SyntaxNode } from "web-tree-sitter";
 import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
@@ -19,7 +19,7 @@ export class BodyFormatter extends AFormatter implements IFormatter {
         this.settings = new BodySettings(configurationManager);
     }
 
-    public match(node: Readonly<Node>): boolean {
+    public match(node: Readonly<SyntaxNode>): boolean {
         if (!bodyBlockKeywords.hasFancy(node.type, "")) {
             return false;
         }
@@ -32,7 +32,7 @@ export class BodyFormatter extends AFormatter implements IFormatter {
         return true;
     }
     public parse(
-        node: Readonly<Node>,
+        node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         let indentationEdits: IndentationEdits[] = [];
@@ -115,7 +115,7 @@ export class BodyFormatter extends AFormatter implements IFormatter {
     }
 
     private getCodeEditsFromIndentationEdits(
-        node: Node,
+        node: SyntaxNode,
         fullText: FullText,
         indentationEdits: IndentationEdits[]
     ): CodeEdit | CodeEdit[] | undefined {
@@ -166,7 +166,7 @@ export class BodyFormatter extends AFormatter implements IFormatter {
     }
 
     //refactor
-    private getParentIndentationSourceNode(node: Node): Node {
+    private getParentIndentationSourceNode(node: SyntaxNode): SyntaxNode {
         if (
             node.type === SyntaxNodeType.DoBlock &&
             node.parent?.type === SyntaxNodeType.IfStatement
