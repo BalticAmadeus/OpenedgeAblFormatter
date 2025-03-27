@@ -314,7 +314,7 @@
   "scripts": {
     "copy-wasm": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out",
     "delete-out": "rimraf out",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && npm run copy-wasm",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --define:import.meta.url=_importMetaUrl --banner:js=\"const _importMetaUrl=require('url').pathToFileURL(__filename).href\" && npm run copy-wasm",
     "build": "npm run esbuild",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
@@ -331,6 +331,7 @@
     "stability-test": "node ./out/stability-test/runTest.js"
   },
   "devDependencies": {
+    "@chialab/esbuild-plugin-meta-url": "^0.18.2",
     "@electron/rebuild": "^3.3.1",
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.3",
