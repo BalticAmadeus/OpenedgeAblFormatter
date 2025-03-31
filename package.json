@@ -351,6 +351,7 @@
     "vscode-extension-tester": "^6.0.0"
   },
   "dependencies": {
+    "@types/emscripten": "^1.40.0",
     "web-tree-sitter": "^0.25.3"
   }
 }
