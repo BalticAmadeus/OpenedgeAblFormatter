@@ -147,10 +147,12 @@ export enum SyntaxNodeType {
     ReturnKeyword = "RETURN",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
+    VarKeyword = "VAR",
     TableKeyword = "TABLE",
     TableHandleKeyword = "TABLE-HANDLE",
     DatasetKeyword = "DATASET",
     DatasetHandleKeyword = "DATASET-HANDLE",
+    StaticKeyword = "STATIC",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
@@ -197,4 +199,9 @@ export const parentheses = new MyFancySet<string>([
 export const logicalKeywords = new MyFancySet<string>([
     SyntaxNodeType.AndKeyword,
     SyntaxNodeType.OrKeyword,
+]);
+
+export const variableKeywords = new MyFancySet<string>([
+    SyntaxNodeType.VariableKeyword,
+    SyntaxNodeType.VarKeyword,
 ]);
