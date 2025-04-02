@@ -3,7 +3,7 @@
 
 VSCode extension for Progress OpenEdge ABL code formatting.
 
-This extension uses [**tree-sitter-abl**](https://github.com/usagi-coffee/tree-sitter-abl) implementation by Kamil Jakubus.
+This extension uses [**tree-sitter-abl**](https://github.com/eglekaz/tree-sitter-abl) implementation.
 
 ## Current status
 
@@ -44,7 +44,7 @@ There are no additional dependencies needed to launch this extension.
 
 We implemented extensive settings configuration to allow users to easly tailor the experience to their needs. This might not be the case in the future.
 
-### Settings 
+### Settings
 
 | Property Name                             | Type    | Default     | Values list                 | Description                                                                                                   |
 |-------------------------------------------|---------|-------------|-----------------------------|---------------------------------------------------------------------------------------------------------------|
@@ -111,7 +111,7 @@ Example:
 
 ```
 /* formatterSettingsOverride */
-/* { 
+/* {
 "AblFormatter.blockFormatting": true,
 "AblFormatter.assignFormatting": true,
 "abl.completion.upperCase": false
