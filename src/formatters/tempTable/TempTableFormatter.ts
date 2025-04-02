@@ -79,7 +79,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     private getTemptableStructure(node: SyntaxNode, fullText: FullText): void {
         switch (node.type) {
-            case SyntaxNodeType.FieldDefinition:
+            case SyntaxNodeType.FieldClause:
                 node.children.forEach((child) => {
                     this.getFieldStructure(child, fullText);
                 });
@@ -180,10 +180,10 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
             case definitionKeywords.hasFancy(node.type, ""):
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
-            case SyntaxNodeType.FieldDefinition:
+            case SyntaxNodeType.FieldClause:
                 newString = separator + this.collectFieldString(node, fullText);
                 break;
-            case SyntaxNodeType.IndexDefinition:
+            case SyntaxNodeType.IndexClause:
                 node.children.forEach((child) => {
                     newString = newString.concat(
                         this.getTemptableExpressionString(
@@ -201,8 +201,8 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.LikeKeyword:
                 if (
                     node.parent!.type.trim() ===
-                        SyntaxNodeType.FieldDefinition ||
-                    node.parent!.type.trim() === SyntaxNodeType.IndexDefinition
+                        SyntaxNodeType.FieldClause ||
+                    node.parent!.type.trim() === SyntaxNodeType.IndexClause
                 ) {
                     newString =
                         " " +
