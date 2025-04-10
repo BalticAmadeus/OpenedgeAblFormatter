@@ -68,13 +68,14 @@ suite("Extension Test Suite", () => {
     });
 
     stabilityTestCases.forEach((cases) => {
-        test(`Empty space test: ${cases}`, () => {
-            stabilityTest(cases);
-        }).timeout(10000);
-
-        // test(`Idempotence test: ${cases}`, () => {
-        //     idempotenceTest(cases);
+        // test(`Empty space test: ${cases}`, () => {
+        //     stabilityTest(cases);
         // }).timeout(10000);
+
+        // try to run 3 times
+        test(`Idempotence test: ${cases}`, () => {
+            runFormattingNTimes(cases, 2);
+        }).timeout(10000);
     });
 });
 
@@ -86,6 +87,7 @@ function stabilityTest(name: string): void {
     const afterText = format(beforeText, name);
 
     const beforeCount = countActualSymbols(beforeText);
+
     const afterCount = countActualSymbols(afterText);
 
     if (beforeCount !== afterCount) {
@@ -114,6 +116,7 @@ function idempotenceTest(name: string) {
     enableFormatterDecorators();
 
     const beforeText = getInput(name);
+
     const afterText = format(beforeText, name);
 
     ConfigurationManager2.getInstance();
@@ -139,6 +142,40 @@ function idempotenceTest(name: string) {
         After: ${afterFilePath}
         After2: ${after2FilePath}
         `);
+    }
+}
+
+function runFormattingNTimes(name: string, n: number) {
+    let currentText = getInput(name);
+    const symbolCount = countActualSymbols(currentText);
+    for (let i = 1; i < n; i++) {
+        if (symbolCount < 500 || symbolCount > 1500) {
+            console.log("Skipping test", name);
+            return;
+        }
+        const afterText = format(currentText, name);
+        fs.writeFileSync(name, afterText);
+        if (i == n - 1 && currentText !== afterText) {
+            const fileName = path.basename(name, path.extname(name));
+            const afterFilePath = join(
+                testRunDirIdempotence,
+                `${fileName}_before${path.extname(name)}`
+            );
+            const after2FilePath = join(
+                testRunDirIdempotence,
+                `${fileName}_after${path.extname(name)}`
+            );
+
+            fs.writeFileSync(afterFilePath, currentText);
+            fs.writeFileSync(after2FilePath, afterText);
+
+            assert.fail(`Text mismach
+        After: ${afterFilePath}
+        After2: ${after2FilePath}
+        `);
+        }
+
+        currentText = afterText;
     }
 }
 
