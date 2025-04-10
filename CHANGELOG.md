@@ -16,3 +16,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 0.1.2 (2025-04-02)
 
 - __tree-sitter-abl__ version bump and other small fixes. [See fixed issues](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/5?closed=1)
+
+## 0.1.3 (2025-04-11)
+
+- VS Code (version 1.98+) Extension Host crash fix. [See](https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/358)
