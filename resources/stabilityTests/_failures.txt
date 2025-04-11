@@ -91,9 +91,6 @@ web_examples_w-cstinf.w
 web_examples_w-cststa.w
 //0046 issues <--
 //0047 issues -->
-aderes_e-type.p
-aderes_l-type.p
-aderes_p-type.p
 adeuib__adjcols.i
 adeuib__drwbutt.p
 adeuib__drwcomb.p
