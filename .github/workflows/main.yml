@@ -38,7 +38,7 @@ jobs:
 
     stability-test:
         env:
-            VSCODE_VERSION: "1.97.2"
+            VSCODE_VERSION: "1.98.2"
         needs: test # Runs only if 'test' job is successful
         runs-on: ubuntu-latest
         steps:
