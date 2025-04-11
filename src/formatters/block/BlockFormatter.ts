@@ -44,12 +44,12 @@ export class BlockFormater extends AFormatter implements IFormatter {
         }
 
         let formattingOnStatement = false;
+        let sibling = parent.previousNamedSibling;
         if (parent.type === SyntaxNodeType.DoBlock) {
             /* Workaround until tree-sitter fixes this */
-            let sibling = parent.previousNamedSibling;
             for (let i = 0; i < 5 && sibling !== null; i++) {
-                console.log("sibling:", sibling.type);
                 if (sibling.type === SyntaxNodeType.OnStatement) {
+                    parent = sibling;
                     formattingOnStatement = true;
                     break;
                 }
