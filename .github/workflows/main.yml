@@ -11,6 +11,8 @@ on:
 
 jobs:
     test:
+        env:
+            VSCODE_VERSION: "1.97.2"
         strategy:
             matrix:
                 os: [ubuntu-latest, windows-latest, macos-latest]
@@ -35,6 +37,8 @@ jobs:
               if: runner.os != 'Linux'
 
     stability-test:
+        env:
+            VSCODE_VERSION: "1.97.2"
         needs: test # Runs only if 'test' job is successful
         runs-on: ubuntu-latest
         steps:
