@@ -1,11 +1,11 @@
 {
 	"compilerOptions": {
-		"module": "Node16",
+		"module": "nodenext",
 		"target": "ES2022",
 		"outDir": "out",
 		"experimentalDecorators": true,
 		"lib": [
-			"ES2022"
+			"ES2022", "DOM"
 		],
 		"sourceMap": true,
 		"rootDir": "src",
