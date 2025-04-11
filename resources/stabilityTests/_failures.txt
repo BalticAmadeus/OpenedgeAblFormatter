@@ -1,13 +1,11 @@
 adecomm_peditor.i
 adecomm__dswidfunc.p
 adecomm__pweditor.i
-adecomm__reg2ini.p
 adeshar__mchgi.i
 adeuib_sookver.i
 adeuib__ttyss.i
 auditing_sdo__audfieldpolicysdo.w
 auditing_sdo__audfilepolicysdo.w
-OpenEdge_DataAdmin_DataSource_IndexDataSource.cls
 prodict_dump__dmpsec.p
 prodict_dump__lodsddl.p
 prores_reslang_t-a-dan.p
@@ -47,7 +45,6 @@ adecomm__auddtl.p
 adecomm__cust-flt.p
 adecomm__disconn.p
 adedesk_menus.i
-adedict_DB__getdbs.p
 adedict_FLD_fldvar.i
 adedict_SEQ_seqvar.i
 aderes_j-both.p
@@ -62,7 +59,6 @@ adeuib_uibmdefs.i
 adeuib__attr-ed.w
 adeuib__chkrlnk.i
 adeuib__cr_palette.p
-adeuib__seprocs.i
 adeuib__tabedit.w
 adeuib__tempdb.w
 adm_samples_b-cuslkp.w
@@ -78,7 +74,6 @@ adm2_support_folderd.w
 adm2_support__so-attr.w
 adm2_template_browser.w
 corelib_OpenEdge_Core_Util_leakobject.i
-OpenEdge_DataAdmin_Binding_ExtentContext.cls
 OpenEdge_DataAdmin_Binding_TableContext.cls
 prodict_aud__aud-pol.p
 prodict_dump__lodaudp.p
@@ -96,10 +91,6 @@ web_examples_w-cstinf.w
 web_examples_w-cststa.w
 //0046 issues <--
 //0047 issues -->
-aderes_e-type.p
-aderes_l-type.p
-aderes_p-type.p
-adeshar__gen4gl.p
 adeuib__adjcols.i
 adeuib__drwbutt.p
 adeuib__drwcomb.p
@@ -126,9 +117,7 @@ adeuib__undbutt.p
 adeuib__undcomb.p
 adeuib__undcont.p
 adeuib__undedit.p
-adeuib__undfill.p
 adeuib__undimag.p
-adeuib__undqry.p
 adeuib__undradi.p
 adeuib__undrect.p
 adeuib__undsdo.p
@@ -137,15 +126,72 @@ adeuib__undslid.p
 adeuib__undtext.p
 adeuib__undtogg.p
 adeuib_validbrw.i
-adm2_exportdata.p
 adm2_logic.i
 auditing_src_adm2_logic.i
 prodict_gate_cmp_tbl.i
-protools_widattrs.w
 web_examples_w-custdir.w
 //0047 issues <--
 //0048pre issues -->
 adecomm__getwidobjs.w
-adeuib_vabattrwidg.w
-prodict_misc__db-optn.p
 //0048pre issues <--
+//0049 issues (reduced functionality) -->
+adecomm_aud-tts.i
+adecomm_uibpref.i
+adecomm__audrpt.p
+adecomm__dbcreat.p
+adecomm__dlgmnua.p
+adecomm__dtblrpt.p
+adecomm__encprpt.p
+adecomm__praudrpt.p
+adecomm__report.p
+aderes__rdraw.p
+adeuib_layout.i
+adeuib_sharvars.i
+adeuib__calcselb.w
+adeuib__calcself.w
+adeuib__convertadm2dynamics.w
+adeuib__newcalcv.w
+adeuib__ttmaint.w
+adeuib__tview.w
+adeuib__widgetidassign.w
+adm2_support_brouter.w
+auditing_ui__audevpolicybrowb.w
+auditing_ui__audevpolicyviewv.w
+auditing_ui__audfieldpolicybrowb.w
+auditing_ui__audfieldpolicyviewv.w
+auditing_ui__audfilepolicybrowb.w
+auditing_ui__audfilepolicyviewv.w
+auditing_ui__audpolicybrowb.w
+auditing_ui__audpolicyviewv.w
+corelib_OpenEdge_Core_Collections_List.cls
+netlib_OpenEdge_Web_DataObject_Writer_StatusCodeElementWriter.cls
+OpenEdge_DataAdmin_ExtentList.cls
+OpenEdge_DataAdmin_IndexFieldList.cls
+OpenEdge_DataAdmin_ServerCommand_TableDataCommand.cls
+prodict_dump__dmpuser.p
+prodict_dump__dmpview.p
+prodict_gate_cmp_fld.i
+prodict_gate_cmp_idf.i
+prodict_gate_cmp_idx.i
+prodict_gate__gat_cmp.p
+prodict_gui__guiuchg.p
+prodict_load_seq.p
+prodict_misc__prt_rpt.p
+prodict_misc__rptwdat.p
+prodict_mss_key_check.i
+prodict_mss_key_clust.i
+prodict_mss_key_default.i
+prodict_mss_key_modcheck.i
+prodict_mss_key_modclus.i
+prodict_mss_key_moddef.i
+prodict_mss_key_moduni.i
+prodict_mss_key_unique.i
+prodict_ora_key_check.i
+prodict_ora_key_modcheck.i
+prodict_ora_key_moduni.i
+prodict_ora_key_unique.i
+prodict_sec__sec-gen-key.p
+protools_as-partn.w
+protools__procfg.w
+protools__v89conv.w
+//0049 issues (reduced functionality) <--
