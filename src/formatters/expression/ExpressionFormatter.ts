@@ -33,10 +33,10 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
             node.type === SyntaxNodeType.ParenthesizedExpression ||
             node.type === SyntaxNodeType.AdditiveExpression ||
             node.type === SyntaxNodeType.MultiplicativeExpression ||
-            node.type === SyntaxNodeType.UnaryExpression
+            (node.type === SyntaxNodeType.UnaryExpression &&
+                node.child(0)?.type === SyntaxNodeType.Not)
         ) {
-            const parent = node.parent;
-            if (parent !== null && parent.type === SyntaxNodeType.WhilePhrase) {
+            if (this.hasWhilePhraseParent(node)) {
                 return false;
             }
             return true;
@@ -144,5 +144,14 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
             return this.hasLogicalExpressionParent(node.parent);
         }
         return false;
+    }
+    private hasWhilePhraseParent(node: Readonly<SyntaxNode>): boolean {
+        if (node.parent === null) {
+            return false;
+        }
+        if (node.parent.type === SyntaxNodeType.WhilePhrase) {
+            return true;
+        }
+        return this.hasWhilePhraseParent(node.parent);
     }
 }
