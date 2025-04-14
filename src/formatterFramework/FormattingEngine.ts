@@ -151,11 +151,9 @@ export class FormattingEngine {
             if (formatter.match(node)) {
                 result = formatter.parse(node, fullText);
 
-                if (result !== undefined) {
-                    result = undefined;
-                }
                 return true;
             }
+
             return false;
         });
 
