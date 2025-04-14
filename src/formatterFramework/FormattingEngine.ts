@@ -152,9 +152,7 @@ export class FormattingEngine {
                 result = formatter.parse(node, fullText);
 
                 if (result !== undefined) {
-                    if (!this.isScopeOK(node, result, formatter)) {
-                        result = undefined;
-                    }
+                    result = undefined;
                 }
                 return true;
             }
@@ -162,19 +160,6 @@ export class FormattingEngine {
         });
 
         return result;
-    }
-
-    private isScopeOK(
-        node: SyntaxNode,
-        result: CodeEdit | CodeEdit[],
-        formatter: IFormatter
-    ): boolean {
-        if (formatter instanceof BlockFormater) {
-            return true;
-        }
-
-        // console.log("BAD SCOPE - TODO");
-        return true;
     }
 
     private settingsOverride(parseResult: ParseResult) {
