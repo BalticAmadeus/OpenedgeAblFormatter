@@ -87,6 +87,7 @@ export enum SyntaxNodeType {
     Parameters = "parameters",
     FunctionParameter = "function_parameter",
     FunctionParameterMode = "function_parameter_mode",
+    ScopeTuning = "scope_tuning",
     // arithmetic operators
     Add = "+",
     Subtract = "-",
@@ -147,10 +148,12 @@ export enum SyntaxNodeType {
     ReturnKeyword = "RETURN",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
+    VarKeyword = "VAR",
     TableKeyword = "TABLE",
     TableHandleKeyword = "TABLE-HANDLE",
     DatasetKeyword = "DATASET",
     DatasetHandleKeyword = "DATASET-HANDLE",
+    StaticKeyword = "STATIC",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
@@ -197,4 +200,9 @@ export const parentheses = new MyFancySet<string>([
 export const logicalKeywords = new MyFancySet<string>([
     SyntaxNodeType.AndKeyword,
     SyntaxNodeType.OrKeyword,
+]);
+
+export const variableKeywords = new MyFancySet<string>([
+    SyntaxNodeType.VariableKeyword,
+    SyntaxNodeType.VarKeyword,
 ]);
