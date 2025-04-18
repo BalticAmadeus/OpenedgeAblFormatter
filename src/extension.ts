@@ -7,7 +7,7 @@ import { AblDebugHoverProvider } from "./providers/AblDebugHoverProvider";
 import { ConfigurationManager } from "./utils/ConfigurationManager";
 import { enableFormatterDecorators } from "./formatterFramework/enableFormatterDecorators";
 import { DebugManager } from "./providers/DebugManager";
-import { Telemetry } from "./utils/telemetry";
+import { Telemetry } from "./utils/Telemetry";
 
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);

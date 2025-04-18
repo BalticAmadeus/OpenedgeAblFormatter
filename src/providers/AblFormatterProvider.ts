@@ -5,7 +5,7 @@ import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
-import { Telemetry } from "../utils/telemetry";
+import { Telemetry } from "../utils/Telemetry";
 
 export class AblFormatterProvider
     implements

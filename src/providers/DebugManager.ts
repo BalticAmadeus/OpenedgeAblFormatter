@@ -11,7 +11,7 @@ import { SyntaxNode, Tree } from "web-tree-sitter";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { IDebugManager } from "./IDebugManager";
-import { Telemetry } from "../utils/telemetry";
+import { Telemetry } from "../utils/Telemetry";
 
 export class DebugManager implements IDebugManager {
     private static instance: DebugManager;
