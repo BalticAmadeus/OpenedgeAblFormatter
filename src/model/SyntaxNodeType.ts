@@ -5,6 +5,7 @@ export enum SyntaxNodeType {
 
     AvailableExpression = "available_expression",
     CaseStatement = "case_statement",
+    CaseCondition = "case_condition",
     CaseBody = "case_body",
     CaseWhenBranch = "case_when_branch",
     CaseOtherwiseBranch = "case_otherwise_branch",
@@ -17,10 +18,11 @@ export enum SyntaxNodeType {
     AblStatement = "abl_statement",
     LogicalExpression = "logical_expression",
     WhenExpression = "when_expression",
+    Definition = "definition",
     TemptableDefinition = "temp_table_definition",
     PropertyDefinition = "property_definition",
-    FieldDefinition = "field_definition",
-    IndexDefinition = "index_definition",
+    FieldClause = "field_clause",
+    IndexClause = "index_clause",
     InputStreamStatement = "input_stream_statement",
     OutputStreamStatement = "output_stream_statement",
     OutputCloseStatement = "output_close_statement",
@@ -28,13 +30,14 @@ export enum SyntaxNodeType {
     ProcedureParameterDefinition = "procedure_parameter_definition",
     ConstructorDefinition = "constructor_definition",
     DestructorDefinition = "destructor_definition",
-    MethodDefinition = "method_definition",
+    MethodStatement = "method_statement",
     FindStatement = "find_statement",
     WhereClause = "where_clause",
     UndoStatement = "undo_statement",
     AssignStatement = "assign_statement",
     Assignment = "assignment",
     VariableAssignment = "variable_assignment",
+    VariableTuning = "variable_tuning",
     Identifier = "identifier",
     SourceCode = "source_code",
     Argument = "argument",
@@ -72,6 +75,7 @@ export enum SyntaxNodeType {
     AccessTuning = "access_tuning",
     ArrayAccess = "array_access",
     ArrayLiteral = "array_literal",
+    ToPhrase = "to_phrase",
     Comment = "comment",
     Getter = "getter",
     Setter = "setter",
@@ -83,6 +87,7 @@ export enum SyntaxNodeType {
     Parameters = "parameters",
     FunctionParameter = "function_parameter",
     FunctionParameterMode = "function_parameter_mode",
+    ScopeTuning = "scope_tuning",
     // arithmetic operators
     Add = "+",
     Subtract = "-",
@@ -90,6 +95,7 @@ export enum SyntaxNodeType {
     Divide = "/",
     Modulus = "%",
     EqualsSign = "=",
+    Not = "NOT",
     // comparison operators
     EqualTo = "EQ",
     NotEqualTo = "NE",
@@ -125,6 +131,7 @@ export enum SyntaxNodeType {
     AssignKeyword = "ASSIGN",
     EachKeyword = "EACH",
     EndKeyword = "END",
+    ExtentKeyword = "EXTENT",
     IfKeyword = "IF",
     FindKeyword = "FIND",
     ForKeyword = "FOR",
@@ -141,10 +148,12 @@ export enum SyntaxNodeType {
     ReturnKeyword = "RETURN",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
+    VarKeyword = "VAR",
     TableKeyword = "TABLE",
     TableHandleKeyword = "TABLE-HANDLE",
     DatasetKeyword = "DATASET",
     DatasetHandleKeyword = "DATASET-HANDLE",
+    StaticKeyword = "STATIC",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
@@ -191,4 +200,9 @@ export const parentheses = new MyFancySet<string>([
 export const logicalKeywords = new MyFancySet<string>([
     SyntaxNodeType.AndKeyword,
     SyntaxNodeType.OrKeyword,
+]);
+
+export const variableKeywords = new MyFancySet<string>([
+    SyntaxNodeType.VariableKeyword,
+    SyntaxNodeType.VarKeyword,
 ]);

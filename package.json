@@ -1,11 +1,11 @@
 {
-  "name": "abl-formatter",
-  "displayName": "Abl Formatter",
+  "name": "openedge-abl-formatter",
+  "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.0.2",
+  "version": "0.1.3",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
-    "url": "https://github.com/BalticAmadeus/AblFormatter"
+    "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
   },
   "engines": {
     "vscode": "^1.84.0"
@@ -87,7 +87,7 @@
             "New",
             "Same"
           ],
-          "description": "Should assigns be located on same or new line after ASSIGN keyword?"
+          "description": "Should assigns be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.assignFormattingAlignRightExpression": {
           "order": 102,
@@ -108,7 +108,7 @@
             "New aligned",
             "Same"
           ],
-          "description": "Should end dot be located on same or new line after ASSIGN statement?"
+          "description": "Should end dot be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.findFormatting": {
           "order": 300,
@@ -136,12 +136,12 @@
             "New",
             "Same"
           ],
-          "description": "Should THEN clause be on a new line or the same line as the WHEN keyword?"
+          "description": "Should THEN clause be on a new line or the same line as the CASE keyword?"
         },
         "AblFormatter.caseFormattingDoLocation": {
           "order": 502,
           "type": "string",
-          "default": "New",
+          "default": "Same",
           "enum": [
             "New",
             "Same"
@@ -248,7 +248,7 @@
             "New",
             "Same"
           ],
-          "description": "Add a new line before the ELSE?"
+          "description": "Should ELSE clause be on a new line or the same line as the IF FUNCTION keyword?"
         },
         "AblFormatter.enumFormatting": {
           "order": 1300,
@@ -302,7 +302,7 @@
         "AblFormatter.arrayAccessFormattingAddSpaceAfterComma": {
           "order": 1701,
           "type": "string",
-          "default": "No",
+          "default": "Yes",
           "enum": [
             "Yes",
             "No"
@@ -318,7 +318,7 @@
         "AblFormatter.expressionFormattingLogicalLocation": {
           "order": 1801,
           "type": "string",
-          "default": "Same",
+          "default": "New",
           "enum": [
             "New",
             "Same"
@@ -327,6 +327,12 @@
         },
         "AblFormatter.statementFormatting": {
           "order": 1900,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable STATEMENT formatting"
+        },
+        "AblFormatter.variableAssignmentFormatting": {
+          "order": 2000,
           "type": "boolean",
           "default": "true",
           "description": "Enable STATEMENT formatting"
@@ -369,21 +375,21 @@
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
     "@types/chai": "^4.3.11",
-    "@types/mocha": "^10.0.3",
+    "@types/mocha": "^10.0.10",
     "@types/node": "18.x",
     "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
-    "@vscode/test-electron": "^2.3.6",
+    "@vscode/test-electron": "^2.5.2",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
-    "esbuild": "0.19.11",
+    "esbuild": "^0.25.2",
     "eslint": "^8.52.0",
-    "glob": "^10.3.10",
-    "mocha": "^10.2.0",
+    "glob": "^11.0.1",
+    "mocha": "^10.8.2",
     "rimraf": "^5.0.5",
     "typescript": "^5.2.2",
-    "vscode-extension-tester": "^6.0.0"
+    "vscode-extension-tester": "^8.13.0"
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.9.8",

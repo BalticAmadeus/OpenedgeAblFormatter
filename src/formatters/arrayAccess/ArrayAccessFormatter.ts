@@ -14,6 +14,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "arrayAccessFormatting";
     private readonly settings: ArrayAccessSettings;
     private formattingArrayLiteral: boolean = false;
+    private addSpaceBeforeLeftBracket: boolean = false;
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
@@ -35,7 +36,16 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
-        this.formattingArrayLiteral = node.type === SyntaxNodeType.ArrayLiteral;
+        if (node.type === SyntaxNodeType.ArrayLiteral) {
+            this.formattingArrayLiteral = true;
+
+            if (
+                node.previousSibling?.type !== SyntaxNodeType.Identifier &&
+                node.previousNamedSibling?.type !== SyntaxNodeType.TypeTuning
+            ) {
+                this.addSpaceBeforeLeftBracket = true;
+            }
+        }
         const oldText = FormatterHelper.getCurrentText(node, fullText);
         const text = this.collectString(node, fullText);
         return this.getCodeEdit(node, oldText, text, fullText);
@@ -56,7 +66,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         let newString = "";
         if (node.type === SyntaxNodeType.LeftBracket) {
             newString = FormatterHelper.getCurrentText(node, fullText).trim();
-            if (this.formattingArrayLiteral) {
+            if (this.addSpaceBeforeLeftBracket) {
                 newString = " " + newString;
             }
         } else if (
