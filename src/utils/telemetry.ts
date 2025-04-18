@@ -9,7 +9,7 @@ export class Telemetry {
     private static selectionFormattingActions: number = 0;
     private static sendThreshold: number = 5;
     private static readonly TELEMETRY_KEY =
-        "46efa758-98ee-417f-88bb-397d4f2ca82b";
+        "InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0";
 
     private constructor() {}
 
