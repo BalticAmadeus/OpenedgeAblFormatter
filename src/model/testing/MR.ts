@@ -1,4 +1,10 @@
-export interface MR<T> {
-    inputFunction(sourceInput: T): T;
-    outputFunction(code: T): T;
+import { InputOutputType } from "./MG";
+
+export interface MR<T extends InputOutputType> {
+    mrName: string;
+
+    inputFunction(sourceInput: T): string;
+    outputFunction(folowUpInput: T): string;
+
+    checkIfApplicable(sourceInput: T): boolean;
 }
