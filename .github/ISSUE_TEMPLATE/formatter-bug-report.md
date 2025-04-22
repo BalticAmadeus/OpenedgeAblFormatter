@@ -1,16 +1,16 @@
 ---
-name: Formatter Bug report
+name: Formatter Bug Report
 about: Create a report to help us improve
 title: ''
 labels: bug
+types: bug
 assignees: eglekaz
 
 ---
 
 **Describe the bug**
 
-Provide 3 code snippets
-
+**Provide 3 code snippets:**
 **Before code snippet**
 
 ```
