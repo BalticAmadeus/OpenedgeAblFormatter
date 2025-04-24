@@ -2,7 +2,7 @@
 name: Formatter Feature Request
 about: Suggest an idea for this project
 title: ''
-labels: enhancement
+types: Feature
 assignees: eglekaz
 
 ---

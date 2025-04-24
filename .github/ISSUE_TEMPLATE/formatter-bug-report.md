@@ -2,7 +2,7 @@
 name: Formatter Bug Report
 about: Create a report to help us improve
 title: ''
-types: bug
+types: Bug
 assignees: eglekaz
 
 ---
