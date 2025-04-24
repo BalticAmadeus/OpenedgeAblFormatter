@@ -2,7 +2,6 @@
 name: Formatter Bug Report
 about: Create a report to help us improve
 title: ''
-labels: bug
 types: bug
 assignees: eglekaz
 
@@ -13,19 +12,19 @@ assignees: eglekaz
 **Provide 3 code snippets:**
 **Before code snippet**
 
-```
+``` abl
 Insert code here
 ```
 
 **After code snippet**
 
-```
+``` abl
 Insert code here
 ```
 
 **Expected code snippet**
 
-```
+``` abl
 Insert code here
 ```
 

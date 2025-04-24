@@ -12,13 +12,13 @@ assignees: eglekaz
 
 **Example code snippet**
 
-```
+``` abl
 Insert code here
 ```
 
 **Expected formatted code snippet**
 
-```
+``` abl
 Insert code here
 ```
 
