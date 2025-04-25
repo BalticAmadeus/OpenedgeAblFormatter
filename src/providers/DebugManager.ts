@@ -62,7 +62,7 @@ export class DebugManager implements IDebugManager {
 
         this.errorRanges = [];
 
-        if (nodes.length > 0) {
+        if (true || nodes.length > 0) {
             this.statusBarItem.backgroundColor = this.isInDebugMode()
                 ? new ThemeColor("statusBarItem.errorBackground")
                 : new ThemeColor("statusBarItem.warningBackground");

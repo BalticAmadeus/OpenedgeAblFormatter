@@ -24,7 +24,8 @@ export class StatementFormatter extends AFormatter implements IFormatter {
             node.type === SyntaxNodeType.AblStatement ||
             node.type === SyntaxNodeType.InputStreamStatement ||
             node.type === SyntaxNodeType.OutputStreamStatement ||
-            node.type === SyntaxNodeType.OutputCloseStatement
+            node.type === SyntaxNodeType.OutputCloseStatement ||
+            node.type === SyntaxNodeType.ReturnStatement
         ) {
             return true;
         }
