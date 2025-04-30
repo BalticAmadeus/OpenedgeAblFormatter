@@ -22,7 +22,7 @@ export class DebugManager implements IDebugManager {
 
     private readonly parserErrorTextDecorationType =
         window.createTextEditorDecorationType({
-            backgroundColor: new ThemeColor("errorForeground"),
+            backgroundColor: 'rgba(255, 238, 0, 0.25)',
         });
 
     public static getInstance(
@@ -46,10 +46,11 @@ export class DebugManager implements IDebugManager {
         this.statusBarItem.text = "ABL Formatter • Loading.....";
         this.statusBarItem.show();
         this.statusBarItem.tooltip = "Loading";
+        this.statusBarItem.command = this.debugModeCommandName;
         extensionContext.subscriptions.push(this.statusBarItem);
 
         const commandHandler = () => {
-            this.ebnableDebugModeOverride(!this.debugModeOverride);
+            this.enableDebugModeOverride(!this.debugModeOverride);
         };
 
         extensionContext.subscriptions.push(
@@ -59,57 +60,27 @@ export class DebugManager implements IDebugManager {
 
     public handleErrors(tree: Tree): void {
         const nodes = this.getNodesWithErrors(tree.rootNode, true);
-
         this.errorRanges = [];
+        nodes.forEach((node) => {
+            this.errorRanges.push(
+                new Range(
+                    node.startPosition.row,
+                    node.startPosition.column,
+                    node.endPosition.row,
+                    node.endPosition.column
+                )
+            );
+        });
 
-        if (nodes.length > 0) {
-            this.statusBarItem.backgroundColor = this.isInDebugMode()
-                ? new ThemeColor("statusBarItem.errorBackground")
-                : new ThemeColor("statusBarItem.warningBackground");
+        this.updateStatusBar();
 
-            this.statusBarItem.text =
-                "Abl Formatter • " + nodes.length + " parser Error(s)";
-
-            this.statusBarItem.command =
-                this.debugModeOverride || !this.isInDebugMode()
-                    ? this.debugModeCommandName
-                    : undefined;
-
-            this.statusBarItem.tooltip =
-                this.statusBarItem.command === undefined
-                    ? this.statusBarItem.tooltip
-                    : "Click to " +
-                      (this.isInDebugMode() ? "DISABLE" : "ENABLE") +
-                      " debug mode \n";
-
-            nodes.forEach((node) => {
-                this.errorRanges.push(
-                    new Range(
-                        node.startPosition.row,
-                        node.startPosition.column,
-                        node.endPosition.row,
-                        node.endPosition.column
-                    )
-                );
-            });
-
-            if (this.isInDebugMode()) {
-                window.activeTextEditor?.setDecorations(
-                    this.parserErrorTextDecorationType,
-                    []
-                );
-
-                window.activeTextEditor?.setDecorations(
-                    this.parserErrorTextDecorationType,
-                    this.errorRanges
-                );
-            }
+        // Show decorations according to debug mode
+        if (this.isInDebugMode()) {
+            window.activeTextEditor?.setDecorations(
+                this.parserErrorTextDecorationType,
+                this.errorRanges
+            );
         } else {
-            this.statusBarItem.text = "Abl Formatter • No Parser Errors";
-            this.statusBarItem.tooltip = "All good \n";
-            this.statusBarItem.backgroundColor = undefined;
-            this.statusBarItem.command = undefined;
-
             window.activeTextEditor?.setDecorations(
                 this.parserErrorTextDecorationType,
                 []
@@ -117,11 +88,29 @@ export class DebugManager implements IDebugManager {
         }
     }
 
+    private updateStatusBar(): void {
+        if (this.errorRanges.length > 0) {
+            // There are parser errors
+            if (this.isInDebugMode()) {
+                this.statusBarItem.backgroundColor = new ThemeColor("statusBarItem.errorBackground");
+                this.statusBarItem.tooltip = `${this.errorRanges.length} parser error(s) detected.\nClick to DISABLE debug mode.`;
+            } else {
+                this.statusBarItem.backgroundColor = new ThemeColor("statusBarItem.warningBackground");
+                this.statusBarItem.tooltip = `${this.errorRanges.length} parser error(s) detected.\nClick to ENABLE debug mode.`;
+            }
+            this.statusBarItem.text = `Abl Formatter • ${this.errorRanges.length} parser Error(s)`;
+        } else {
+            // No errors
+            this.statusBarItem.backgroundColor = undefined;
+            this.statusBarItem.text = "Abl Formatter • Ready";
+            this.statusBarItem.tooltip = `No parser errors.\nClick to ${this.isInDebugMode() ? "DISABLE" : "ENABLE"} debug mode.`;
+        }
+        this.statusBarItem.command = this.debugModeCommandName;
+        this.statusBarItem.show();
+    }
+
     public parserReady(): void {
-        this.statusBarItem.text = "Abl Formatter • Ready";
-        this.statusBarItem.tooltip = this.isInDebugMode()
-            ? "In DEBUG mode"
-            : "";
+        this.updateStatusBar();
     }
 
     public fileFormattedSuccessfully(numOfEdits: number): void {
@@ -155,7 +144,7 @@ export class DebugManager implements IDebugManager {
         return errorNodes;
     }
 
-    private ebnableDebugModeOverride(enable: boolean) {
+    private enableDebugModeOverride(enable: boolean) {
         this.debugModeOverride = enable;
         this.statusBarItem.backgroundColor = enable
             ? new ThemeColor("statusBarItem.errorBackground")
@@ -178,31 +167,28 @@ export class DebugManager implements IDebugManager {
             );
         }
 
-        this.statusBarItem.command = this.debugModeCommandName;
+        this.updateStatusBar();
     }
 
     public isInDebugMode(): boolean {
         return (
+            this.debugModeOverride
+        );
+    }
+
+    public isShowTreeOnHover(): boolean {
+        return (
             ConfigurationManager.getInstance().get("showTreeInfoOnHover") ===
-                true || this.debugModeOverride
+                true || this.isInDebugMode()
         );
     }
 
     public disableExtension(): void {
-        const message =
-            "OpenEdge ABL Formatter is currently unavailable with VS Code versions starting from 1.98.\n" +
-            "To use it, downgrade to 1.97 or lower. \n";
-
-        window.showErrorMessage(
-            message +
-                "[Track this issue](https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/358)"
-        );
 
         this.statusBarItem.text = "ABL Formatter • Disabled";
         this.statusBarItem.backgroundColor = new ThemeColor(
             "statusBarItem.warningBackground"
         );
         this.statusBarItem.show();
-        this.statusBarItem.tooltip = message;
     }
 }
