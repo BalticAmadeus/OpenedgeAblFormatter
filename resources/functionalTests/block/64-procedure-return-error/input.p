@@ -8,5 +8,5 @@ PROCEDURE proc:
     err = NEW PROGRESS.Lang.AppError("The car cannot be rented",1).
     err:AddMessage ("No driver's license was provided", 98).
 
-    RETURN   ERROR   err  .
+    RETURN   ERROR err.
 END.

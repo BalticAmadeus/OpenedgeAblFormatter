@@ -22,10 +22,9 @@ export class StatementFormatter extends AFormatter implements IFormatter {
     match(node: Readonly<SyntaxNode>): boolean {
         if (
             node.type === SyntaxNodeType.AblStatement ||
-            node.type === SyntaxNodeType.InputStreamStatement ||
-            node.type === SyntaxNodeType.OutputStreamStatement ||
-            node.type === SyntaxNodeType.OutputCloseStatement ||
-            node.type === SyntaxNodeType.ReturnStatement
+            node.type === SyntaxNodeType.ReturnStatement ||
+            node.type === SyntaxNodeType.InputOutputStatement ||
+            node.type === SyntaxNodeType.ReleaseStatement
         ) {
             return true;
         }
@@ -70,7 +69,14 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
         switch (node.type) {
             case SyntaxNodeType.Error:
-                resultString = FormatterHelper.getCurrentText(node, fullText);
+                if (text.toUpperCase() === "ERROR") {
+                    resultString = " " + text;
+                } else {
+                    resultString = FormatterHelper.getCurrentText(
+                        node,
+                        fullText
+                    );
+                }
                 break;
             default:
                 resultString = text.length === 0 ? "" : " " + text;
