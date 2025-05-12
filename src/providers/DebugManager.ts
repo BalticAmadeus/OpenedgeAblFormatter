@@ -22,7 +22,7 @@ export class DebugManager implements IDebugManager {
 
     private readonly parserErrorTextDecorationType =
         window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(255, 238, 0, 0.25)',
+            backgroundColor: "rgba(255, 238, 0, 0.25)",
         });
 
     public static getInstance(
