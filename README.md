@@ -132,7 +132,7 @@ For more examples you can check out our [test directory](resources/functionalTes
 We implemented debug mode for looking into tree-sitter issues. You can also enable it:
 
 1. First you have to format the document.
-2. Then you can enable debug mode by pressing Abl Formater button in the middle bottom of the editor.
+2. Then you can enable debug mode by pressing Abl Formater button in the Status Bar.
 3. Hover on highlighted parts of code to get more information and see the tree view.
 
 ![Debug Mode](./resources/debug_mode.png)
