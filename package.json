@@ -303,7 +303,7 @@
           "description": "Enable STATEMENT formatting"
         },
         "AblFormatter.showTreeInfoOnHover": {
-          "order": 10100,
+          "order": 99,
           "type": "boolean",
           "default": "true",
           "description": "Enable table view with tree info on hover"
