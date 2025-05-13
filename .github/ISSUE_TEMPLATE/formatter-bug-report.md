@@ -3,6 +3,7 @@ name: Formatter Bug Report
 about: Create a report to help us improve
 title: ''
 types: Bug
+labels: bug, needs triage
 assignees: eglekaz
 
 ---
