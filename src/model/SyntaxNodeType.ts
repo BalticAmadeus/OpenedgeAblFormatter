@@ -23,11 +23,9 @@ export enum SyntaxNodeType {
     PropertyDefinition = "property_definition",
     FieldClause = "field_clause",
     IndexClause = "index_clause",
-    InputStreamStatement = "input_stream_statement",
-    OutputStreamStatement = "output_stream_statement",
-    OutputCloseStatement = "output_close_statement",
+    InputOutputStatement = "input_output_statement",
     VariableDefinition = "variable_definition",
-    ProcedureParameterDefinition = "procedure_parameter_definition",
+    ParameterDefinition = "parameter_definition",
     ConstructorDefinition = "constructor_definition",
     DestructorDefinition = "destructor_definition",
     MethodStatement = "method_statement",
@@ -58,8 +56,9 @@ export enum SyntaxNodeType {
     BooleanLiteral = "boolean_literal",
     ElseIfStatement = "else_if_statement",
     ReturnStatement = "return_statement",
+    ReleaseStatement = "release_statement",
     FunctionCallStatement = "function_call_statement",
-    FunctionalCallArgument = "functional_call_argument",
+    FunctionCallArgument = "function_call_argument",
     UsingStatement = "using_statement",
     ClassStatement = "class_statement",
     FinallyStatement = "finally_statement",
@@ -86,7 +85,8 @@ export enum SyntaxNodeType {
     Label = "label",
     Parameters = "parameters",
     FunctionParameter = "function_parameter",
-    FunctionParameterMode = "function_parameter_mode",
+    ArgumentMode = "argument_mode",
+    ScopeTuning = "scope_tuning",
     // arithmetic operators
     Add = "+",
     Subtract = "-",
@@ -147,10 +147,12 @@ export enum SyntaxNodeType {
     ReturnKeyword = "RETURN",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
+    VarKeyword = "VAR",
     TableKeyword = "TABLE",
     TableHandleKeyword = "TABLE-HANDLE",
     DatasetKeyword = "DATASET",
     DatasetHandleKeyword = "DATASET-HANDLE",
+    StaticKeyword = "STATIC",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
@@ -197,4 +199,9 @@ export const parentheses = new MyFancySet<string>([
 export const logicalKeywords = new MyFancySet<string>([
     SyntaxNodeType.AndKeyword,
     SyntaxNodeType.OrKeyword,
+]);
+
+export const variableKeywords = new MyFancySet<string>([
+    SyntaxNodeType.VariableKeyword,
+    SyntaxNodeType.VarKeyword,
 ]);

@@ -106,7 +106,7 @@ export class FunctionParameterFormatter
         fullText: Readonly<FullText>
     ): void {
         switch (node.type) {
-            case SyntaxNodeType.FunctionParameterMode:
+            case SyntaxNodeType.ArgumentMode:
                 this.alignParameterMode = Math.max(
                     this.alignParameterMode,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
@@ -167,7 +167,7 @@ export class FunctionParameterFormatter
             (child) => child.type === SyntaxNodeType.TypeTuning
         );
         this.parameterModeInCurrentParameter = node.children.some(
-            (child) => child.type === SyntaxNodeType.FunctionParameterMode
+            (child) => child.type === SyntaxNodeType.ArgumentMode
         );
 
         let resultString = "";
@@ -194,7 +194,7 @@ export class FunctionParameterFormatter
                     newString = " " + newString;
                 }
                 break;
-            case SyntaxNodeType.FunctionParameterMode:
+            case SyntaxNodeType.ArgumentMode:
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
