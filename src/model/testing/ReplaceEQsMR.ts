@@ -3,15 +3,15 @@ import { MR } from "./MR";
 export class ReplaceEQsMR implements MR<string> {
     mrName: string = "ReplaceEQsMR";
 
-    inputFunction(sourceInput: string): string {
-        return sourceInput.replace("eq", "=");
+    inputFunction(input: string): string {
+        return input.replace("eq", "=");
     }
 
-    outputFunction(folowUpInput: string): string {
-        return this.inputFunction(folowUpInput);
+    outputFunction(output: string): string {
+        return this.inputFunction(output);
     }
 
-    checkIfApplicable(sourceInput: string): boolean {
+    checkIfApplicable(input: string): boolean {
         return true;
     }
 }
