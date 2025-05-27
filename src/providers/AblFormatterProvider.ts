@@ -5,6 +5,7 @@ import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
+import { Telemetry } from "../utils/Telemetry";
 
 export class AblFormatterProvider
     implements
@@ -22,6 +23,8 @@ export class AblFormatterProvider
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
         console.log("AblFormatterProvider.provideDocumentFormattingEdits");
+        Telemetry.increaseFormattingActions("Document");
+        Telemetry.addLinesOfCodeFormatted(document.lineCount);
 
         const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
@@ -65,6 +68,8 @@ export class AblFormatterProvider
         range: vscode.Range
     ): vscode.ProviderResult<vscode.TextEdit[]> {
         console.log("AblFormatterProvider.provideDocumentFormattingEdits");
+        Telemetry.increaseFormattingActions("Selection");
+        Telemetry.addLinesOfCodeFormatted(range.end.line - range.start.line);
 
         const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
