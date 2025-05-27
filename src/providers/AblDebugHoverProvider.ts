@@ -30,7 +30,7 @@ export class AblDebugHoverProvider implements HoverProvider {
         position: Position,
         token: CancellationToken
     ): ProviderResult<Hover> {
-        if (!DebugManager.getInstance().isInDebugMode()) {
+        if (!DebugManager.getInstance().isShowTreeOnHover()) {
             return;
         }
 

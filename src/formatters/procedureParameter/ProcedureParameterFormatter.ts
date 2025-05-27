@@ -31,7 +31,7 @@ export class ProcedureParameterFormatter
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
-        if (node.type === SyntaxNodeType.ProcedureParameterDefinition) {
+        if (node.type === SyntaxNodeType.ParameterDefinition) {
             return true;
         }
         return false;
@@ -57,7 +57,7 @@ export class ProcedureParameterFormatter
                 continue;
             }
             if (
-                currentNode.type !== SyntaxNodeType.ProcedureParameterDefinition
+                currentNode.type !== SyntaxNodeType.ParameterDefinition
             ) {
                 break;
             }

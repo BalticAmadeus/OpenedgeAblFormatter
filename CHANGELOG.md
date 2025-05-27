@@ -20,3 +20,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 0.1.3 (2025-04-11)
 
 - VS Code (version 1.98+) Extension Host crash fix. [See](https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/358)
+
+## 0.1.4 (2025-05-13)
+
+- Improved Debbuger Appearance
+- __tree-sitter-abl__ version bump and other small fixes. [See fixed issues](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/10?closed=1)
