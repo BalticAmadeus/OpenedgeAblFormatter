@@ -22,6 +22,7 @@ export enum SyntaxNodeType {
     TemptableDefinition = "temp_table_definition",
     PropertyDefinition = "property_definition",
     FieldClause = "field_clause",
+    FieldOption = "field_option",
     IndexClause = "index_clause",
     InputOutputStatement = "input_output_statement",
     VariableDefinition = "variable_definition",
@@ -153,6 +154,7 @@ export enum SyntaxNodeType {
     DatasetKeyword = "DATASET",
     DatasetHandleKeyword = "DATASET-HANDLE",
     StaticKeyword = "STATIC",
+    SerializeNameKeyword = "SERIALIZE-NAME",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
