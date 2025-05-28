@@ -2,7 +2,6 @@ adecomm_peditor.i
 adecomm__dswidfunc.p
 adecomm__pweditor.i
 adeshar__mchgi.i
-adeuib_sookver.i
 adeuib__ttyss.i
 prodict_dump__dmpsec.p
 prodict_dump__lodsddl.p
@@ -43,8 +42,6 @@ adecomm__auddtl.p
 adecomm__cust-flt.p
 adecomm__disconn.p
 adedesk_menus.i
-adedict_FLD_fldvar.i
-adedict_SEQ_seqvar.i
 aderes_j-both.p
 aderes_j-field1.p
 aderes_j-field2.p
@@ -88,15 +85,6 @@ web_examples_w-cststa.w
 //0046 issues <--
 //0047 issues -->
 adeuib__adjcols.i
-adeuib__drwbutt.p
-adeuib__drwcomb.p
-adeuib__drwcont.p
-adeuib__drwfill.p
-adeuib__drwradi.p
-adeuib__drwrect.p
-adeuib__drwslid.p
-adeuib__drwsmar.p
-adeuib__drwtext.p
 adeuib__undcont.p
 adeuib_validbrw.i
 adm2_logic.i
@@ -141,7 +129,6 @@ protools__v89conv.w
 //0049 issues -->
 adecomm_dswid.i
 adecomm__reg2ini.p
-adedict_DB__getdbs.p
 aderes_e-type.p
 aderes_l-type.p
 aderes_p-type.p
@@ -153,7 +140,30 @@ adeuib__prvcont.w
 adeuib__uibshut.p
 adm2_exportdata.p
 netlib_OpenEdge_Net_HTTP_Filter_Payload_XmlEntityWriter.cls
-OpenEdge_DataAdmin_ServerCommand_SequenceValueWriterCommand.cls
 prores_r-main.p
 protools__session.w
 //0049 issues <--
+//0050-pre issues -->
+adecomm__dtblrpt.p
+adecomm__encprpt.p
+prodict_misc__rptwdat.p
+prodict_mss_key_check.i
+prodict_mss_key_clust.i
+prodict_mss_key_default.i
+prodict_mss_key_modcheck.i
+prodict_mss_key_modclus.i
+prodict_mss_key_moddef.i
+prodict_mss_key_modpri.i
+prodict_mss_key_moduni.i
+prodict_mss_key_primary.i
+prodict_mss_key_unique.i
+prodict_ora_key_check.i
+prodict_ora_key_modcheck.i
+prodict_ora_key_modpri.i
+prodict_ora_key_moduni.i
+prodict_ora_key_primary.i
+prodict_ora_key_unique.i
+prores_b-build.p
+prores_c-cache1.i
+protools__prospy.w
+//0050-pre issues <--
