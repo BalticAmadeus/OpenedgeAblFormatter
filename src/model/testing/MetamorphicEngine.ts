@@ -33,7 +33,6 @@ export class MetamorphicEngine {
             console.log(
                 mg.mr.mrName,
                 pair.name,
-                result,
                 "\n---input---\n",
                 pair.input,
                 "\n---output---\n",
@@ -44,7 +43,8 @@ export class MetamorphicEngine {
                 actualFolowUpOutput,
                 "\n---expectedFolowUpOutput---\n",
                 expectedFolowUpOutput,
-                "\n---INPUT---\n"
+                "\n---INPUT---\n",
+                "RESULT: " + result
             );
         });
     }
