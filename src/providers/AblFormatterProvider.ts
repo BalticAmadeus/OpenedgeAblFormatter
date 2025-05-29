@@ -5,6 +5,8 @@ import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
+import { MetamorphicEngine } from "../model/testing/MetamorphicEngine";
+import { MGBuilder } from "../model/testing/MGBuilder";
 import { Telemetry } from "../utils/Telemetry";
 
 export class AblFormatterProvider
@@ -12,10 +14,15 @@ export class AblFormatterProvider
         vscode.DocumentRangeFormattingEditProvider,
         vscode.DocumentFormattingEditProvider
 {
-    private parserHelper: IParserHelper;
+    private readonly parserHelper: IParserHelper;
+    private readonly metamorphicTestingEngine: MetamorphicEngine;
 
-    public constructor(parserHelper: IParserHelper) {
+    public constructor(
+        parserHelper: IParserHelper,
+        metamorphicTestingEngine: MetamorphicEngine
+    ) {
         this.parserHelper = parserHelper;
+        this.metamorphicTestingEngine = metamorphicTestingEngine;
     }
 
     public provideDocumentFormattingEdits(
@@ -39,8 +46,9 @@ export class AblFormatterProvider
                 debugManager
             );
 
-            const str = codeFormatter.formatText(
-                document.getText(),
+            const initialText = document.getText();
+            const outputText = codeFormatter.formatText(
+                initialText,
                 new EOL(document.eol)
             );
 
@@ -52,11 +60,18 @@ export class AblFormatterProvider
                             new vscode.Position(0, 0),
                             new vscode.Position(10000000, 10000000)
                         ),
-                        str
+                        outputText
                     );
                 },
                 { undoStopBefore: false, undoStopAfter: false }
             );
+
+            const mg = MGBuilder.buildOneFromInputAndOutput(
+                document.fileName,
+                initialText,
+                outputText
+            );
+            this.metamorphicTestingEngine.runOneMG(mg);
         } catch (e) {
             console.log(e);
             return;
