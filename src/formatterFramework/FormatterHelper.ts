@@ -180,7 +180,6 @@ export class FormatterHelper {
             } else if (node.type === SyntaxNodeType.VariableAssignment) {
                 resultString = resultString.trimStart() + ".";
             }
-
             const parent = node.parent;
             if (
                 parent !== null &&
