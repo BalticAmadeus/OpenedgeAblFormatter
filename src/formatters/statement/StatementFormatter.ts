@@ -22,6 +22,7 @@ export class StatementFormatter extends AFormatter implements IFormatter {
     match(node: Readonly<SyntaxNode>): boolean {
         if (
             node.type === SyntaxNodeType.AblStatement ||
+            node.type === SyntaxNodeType.ReturnStatement ||
             node.type === SyntaxNodeType.InputOutputStatement ||
             node.type === SyntaxNodeType.ReleaseStatement
         ) {
