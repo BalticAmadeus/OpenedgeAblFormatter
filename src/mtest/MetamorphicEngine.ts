@@ -1,9 +1,9 @@
-import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
-import { AblParserHelper } from "../../parser/AblParserHelper";
-import { DebugManagerMock } from "../../stability-test/suite/DebugManagerMock";
-import { ConfigurationManager } from "../../utils/ConfigurationManager";
-import { EOL } from "../EOL";
-import { FileIdentifier } from "../FileIdentifier";
+import { FormattingEngine } from "../formatterFramework/FormattingEngine";
+import { AblParserHelper } from "../parser/AblParserHelper";
+import { DebugManagerMock } from "../stability-test/suite/DebugManagerMock";
+import { ConfigurationManager } from "../utils/ConfigurationManager";
+import { EOL } from "../model/EOL";
+import { FileIdentifier } from "../model/FileIdentifier";
 import { MG } from "./MG";
 import { MGBuilder } from "./MGBuilder";
 

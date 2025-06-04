@@ -5,8 +5,8 @@ import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
-import { MetamorphicEngine } from "../model/testing/MetamorphicEngine";
-import { MGBuilder } from "../model/testing/MGBuilder";
+import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
+import { MGBuilder } from "../mtest/MGBuilder";
 import { Telemetry } from "../utils/Telemetry";
 
 export class AblFormatterProvider
