@@ -4,76 +4,118 @@ import { DebugManagerMock } from "../stability-test/suite/DebugManagerMock";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { FileIdentifier } from "../model/FileIdentifier";
-import { MG } from "./MG";
+import { MetamorphicGroup, MG, OriginalTestCase, TextTree } from "./MG";
 import { MGBuilder } from "./MGBuilder";
+import { MR } from "./MR";
 
 export class MetamorphicEngine {
-    private readonly parserHelper: AblParserHelper;
+    private readonly formattingEngine: FormattingEngine;
 
-    public constructor(parserHelper: AblParserHelper) {
-        this.parserHelper = parserHelper;
+    private currentTestCase: OriginalTestCase<TextTree> | undefined = undefined;
+
+    private metamorphicRelations: MR<TextTree>[] = [];
+    private inputAndOutputPairs: OriginalTestCase<TextTree>[] = [];
+
+    public constructor(formattingEngine: FormattingEngine) {
+        this.formattingEngine = formattingEngine;
     }
 
-    public run() {
-        const mgs = MGBuilder.build();
+    public addNameInputAndOutputPair(
+        name: string,
+        input: TextTree,
+        output: TextTree
+    ): this {
+        this.inputAndOutputPairs.push({
+            name: name,
+            input: input,
+            output: output,
+        });
+        return this;
+    }
 
-        mgs.forEach((mg) => {
-            this.runOneMG(mg);
+    public addMR(mr: MR<TextTree>): this {
+        this.metamorphicRelations.push(mr);
+        return this;
+    }
+
+    public runAll() {
+        this.inputAndOutputPairs.forEach((pair) => {
+            this.metamorphicRelations.forEach((mr) => {
+                const folowUpInput = mr.inputFunction(pair.input);
+                const actualFolowUpOutput = this.formattingEngine.formatText(
+                    folowUpInput,
+                    this.getFileEOL(folowUpInput)
+                );
+                const expectedFolowUpOutput = mr.outputFunction(pair.output);
+
+                const result = actualFolowUpOutput === expectedFolowUpOutput;
+
+                console.log(
+                    mr.mrName,
+                    pair.name,
+                    "\n---input---\n",
+                    pair.input,
+                    "\n---output---\n",
+                    pair.output,
+                    "\n---folowUpInput---\n",
+                    folowUpInput,
+                    "\n---actualFolowUpOutput---\n",
+                    actualFolowUpOutput,
+                    "\n---expectedFolowUpOutput---\n",
+                    expectedFolowUpOutput,
+                    "\n---INPUT---\n",
+                    "RESULT: " + result
+                );
+            });
         });
     }
 
-    public runOneMG(mg: MG<any>): void {
-        mg.inputAndOutputPairs.forEach((pair) => {
-            const folowUpInput = mg.mr.inputFunction(pair.input);
-            const actualFolowUpOutput = this.format(folowUpInput, pair.name);
-            const expectedFolowUpOutput = mg.mr.outputFunction(pair.output);
+    // public run(mrName: string, fileName: string): this {
+    //     return this;
+    // }
 
-            const result = actualFolowUpOutput === expectedFolowUpOutput;
+    // public run() {
+    //     const mgs = MGBuilder.build();
 
-            console.log(
-                mg.mr.mrName,
-                pair.name,
-                "\n---input---\n",
-                pair.input,
-                "\n---output---\n",
-                pair.output,
-                "\n---folowUpInput---\n",
-                folowUpInput,
-                "\n---actualFolowUpOutput---\n",
-                actualFolowUpOutput,
-                "\n---expectedFolowUpOutput---\n",
-                expectedFolowUpOutput,
-                "\n---INPUT---\n",
-                "RESULT: " + result
-            );
-        });
-    }
+    //     mgs.forEach((mg) => {
+    //         this.runOneMG(mg);
+    //     });
+    // }
 
-    private format(text: string, name: string): string {
-        const configurationManager = ConfigurationManager.getInstance();
+    // public runOneMG(mg: MG<any>): void {
+    //     mg.inputAndOutputPairs.forEach((pair) => {
+    //         const folowUpInput = mg.mr.inputFunction(pair.input);
+    //         const actualFolowUpOutput = this.format(folowUpInput, pair.name);
+    //         const expectedFolowUpOutput = mg.mr.outputFunction(pair.output);
 
-        const codeFormatter = new FormattingEngine(
-            this.parserHelper,
-            new FileIdentifier(name, 1),
-            configurationManager,
-            new DebugManagerMock()
-        );
+    //         const result = actualFolowUpOutput === expectedFolowUpOutput;
 
-        const result = codeFormatter.formatText(
-            text,
-            new EOL(this.getFileEOL(text))
-        );
+    //         console.log(
+    //             mg.mr.mrName,
+    //             pair.name,
+    //             "\n---input---\n",
+    //             pair.input,
+    //             "\n---output---\n",
+    //             pair.output,
+    //             "\n---folowUpInput---\n",
+    //             folowUpInput,
+    //             "\n---actualFolowUpOutput---\n",
+    //             actualFolowUpOutput,
+    //             "\n---expectedFolowUpOutput---\n",
+    //             expectedFolowUpOutput,
+    //             "\n---INPUT---\n",
+    //             "RESULT: " + result
+    //         );
+    //     });
+    // }
 
-        return result;
-    }
-
-    private getFileEOL(fileText: string): string {
+    private getFileEOL(fileText: string): EOL {
         if (fileText.includes("\r\n")) {
-            return "\r\n"; // Windows EOL
+            return new EOL("\r\n"); // Windows EOL
         } else if (fileText.includes("\n")) {
-            return "\n"; // Unix/Linux/Mac EO
+            return new EOL("\n"); // Unix/Linux/Mac EO
         } else {
-            return "\n"; // No EOL found
+            return new EOL("\n"); // No EOL found
         }
     }
 }

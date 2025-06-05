@@ -8,9 +8,8 @@ export interface OriginalTestCase<T> {
 }
 
 export type TextTree = { text: string; tree: Tree };
-export type InputOutputType = string | TextTree;
 
-export class MG<T extends InputOutputType> {
+export class MG<T extends TextTree> {
     public inputAndOutputPairs: OriginalTestCase<T>[] = [];
     public mr: MR<T>;
 
@@ -18,4 +17,9 @@ export class MG<T extends InputOutputType> {
         this.inputAndOutputPairs = inputAndOutputPairs;
         this.mr = mr;
     }
+}
+
+export interface MetamorphicGroup {
+    inputAndOutputPairs: OriginalTestCase<TextTree>[];
+    mr: MR<TextTree>;
 }

@@ -1,6 +1,6 @@
-import { InputOutputType } from "./MG";
+import { TextTree } from "./MG";
 
-export interface MR<T extends InputOutputType> {
+export interface MR<T extends TextTree> {
     mrName: string;
 
     inputFunction(input: T): string;

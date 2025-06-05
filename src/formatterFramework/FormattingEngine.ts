@@ -10,6 +10,7 @@ import { ParseResult } from "../model/ParseResult";
 import { FormatterFactory } from "./FormatterFactory";
 import { EOL } from "../model/EOL";
 import { IDebugManager } from "../providers/IDebugManager";
+import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -18,7 +19,8 @@ export class FormattingEngine {
         private parserHelper: IParserHelper,
         private fileIdentifier: FileIdentifier,
         private configurationManager: IConfigurationManager,
-        private debugManager: IDebugManager
+        private debugManager: IDebugManager,
+        private metamorphicTestingEngine?: MetamorphicEngine
     ) {}
 
     public formatText(fulfullTextString: string, eol: EOL): string {
@@ -31,6 +33,10 @@ export class FormattingEngine {
             this.fileIdentifier,
             fulfullTextString
         );
+
+        if (this.metamorphicTestingEngine !== undefined) {
+            this.metamorphicTestingEngine;
+        }
 
         this.settingsOverride(parseResult);
 
