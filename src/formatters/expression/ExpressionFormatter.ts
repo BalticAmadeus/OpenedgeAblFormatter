@@ -52,8 +52,8 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         /* PK: a nasty hack, I know it's wrong (remove this code after fixed: https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/439) */
         if (
             node.type === SyntaxNodeType.AdditiveExpression &&
-            !text.includes("+") &&
-            !text.includes("-")
+            !text.includes(" +") &&
+            !text.includes(" -")
         ) {
             return undefined;
         }
