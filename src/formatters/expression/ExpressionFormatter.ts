@@ -35,7 +35,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
                 (node.text.includes(" + ") ||
                     node.text.includes(
                         " - "
-                    ))) /* PK: a nasty hack, I know it's wrong) */ ||
+                    ))) /* PK: a nasty hack, I know it's wrong */ ||
             node.type === SyntaxNodeType.MultiplicativeExpression ||
             (node.type === SyntaxNodeType.UnaryExpression &&
                 node.child(0)?.type === SyntaxNodeType.Not)
