@@ -3,7 +3,6 @@ adecomm__dswidfunc.p
 adecomm__pweditor.i
 adeshar__mchgi.i
 adeuib__ttyss.i
-prodict_dump__dmpsec.p
 prodict_dump__lodsddl.p
 prores_reslang_t-a-dan.p
 prores_reslang_t-a-fr7.p
