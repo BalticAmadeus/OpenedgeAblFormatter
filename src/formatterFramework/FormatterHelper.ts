@@ -1,7 +1,6 @@
 import { SyntaxNode } from "web-tree-sitter";
 import { FullText } from "../model/FullText";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
-import { log } from "console";
 
 export class FormatterHelper {
     public static getActualTextIndentation(
@@ -181,13 +180,13 @@ export class FormatterHelper {
             } else if (node.type === SyntaxNodeType.VariableAssignment) {
                 resultString = resultString.trimStart() + ".";
             }
-
             const parent = node.parent;
             if (
                 parent !== null &&
                 (parent.type === SyntaxNodeType.ArrayAccess ||
                     parent.type === SyntaxNodeType.Argument ||
-                    parent.type === SyntaxNodeType.Arguments)
+                    parent.type === SyntaxNodeType.Arguments ||
+                    parent.type === SyntaxNodeType.AblStatement)
             ) {
                 return resultString.trim();
             } else {
