@@ -7,7 +7,9 @@ import { AblDebugHoverProvider } from "./providers/AblDebugHoverProvider";
 import { ConfigurationManager } from "./utils/ConfigurationManager";
 import { enableFormatterDecorators } from "./formatterFramework/enableFormatterDecorators";
 import { DebugManager } from "./providers/DebugManager";
+import { MetamorphicEngine } from "./mtest/MetamorphicEngine";
 import { Telemetry } from "./utils/Telemetry";
+import { ReplaceEQ } from "./mtest/mrs/ReplaceEQ";
 
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
@@ -23,7 +25,14 @@ export async function activate(context: vscode.ExtensionContext) {
         context.extensionPath,
         debugManager
     );
-    const formatter = new AblFormatterProvider(parserHelper);
+
+    const metamorphicTestingEngine = new MetamorphicEngine();
+    metamorphicTestingEngine.addMR(new ReplaceEQ());
+
+    const formatter = new AblFormatterProvider(
+        parserHelper,
+        metamorphicTestingEngine
+    );
 
     vscode.languages.registerDocumentRangeFormattingEditProvider(
         Constants.ablId,
