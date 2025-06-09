@@ -13,6 +13,10 @@ import { enableFormatterDecorators } from "../../formatterFramework/enableFormat
 import path from "path";
 import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
+import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
+import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
+import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
+import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 
 let parserHelper: AblParserHelper;
 
@@ -36,6 +40,13 @@ const treeSitterErrorTestDirs = getDirs(
     path.join(extensionDevelopmentPath, treeSitterErrorTestDir)
 );
 let treeSitterTestCases: string[] = [];
+
+const metamorphicEngine = new MetamorphicEngine();
+metamorphicEngine
+    .addMR(new ReplaceEQ())
+    .addMR(new ReplaceForEachToForLast())
+    .addMR(new RemoveNoError());
+
 treeSitterErrorTestDirs.forEach((dir) => {
     const testsInsideDir = getDirs(
         path.join(extensionDevelopmentPath, treeSitterErrorTestDir + "/" + dir)
@@ -85,6 +96,28 @@ suite("Extension Test Suite", () => {
     treeSitterTestCases.forEach((cases) => {
         test(`Tree Sitter Error test: ${cases}`, () => {
             treeSitterTest(cases);
+        });
+    });
+
+    suiteTeardown(() => {
+        const metamorphicTestCases = metamorphicEngine.getMatrix();
+        console.log("Running Metamorphic Tests:", metamorphicTestCases);
+
+        suite("Metamorphic Tests", () => {
+            metamorphicTestCases.forEach((cases) => {
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, () => {
+                    const result = metamorphicEngine.runOne(
+                        cases.fileName,
+                        cases.mrName
+                    );
+
+                    assert.equal(
+                        result,
+                        undefined,
+                        result?.actual + "\r\n" + result?.expected
+                    );
+                });
+            });
         });
     });
 });
@@ -147,10 +180,17 @@ function format(text: string, name: string): string {
         parserHelper,
         new FileIdentifier(name, 1),
         configurationManager,
-        new DebugManagerMock()
+        new DebugManagerMock(),
+        metamorphicEngine
     );
 
-    const result = codeFormatter.formatText(text, new EOL(getFileEOL(text)));
+    metamorphicEngine.setFormattingEngine(codeFormatter);
+
+    const result = codeFormatter.formatText(
+        text,
+        new EOL(getFileEOL(text)),
+        true
+    );
 
     return result;
 }

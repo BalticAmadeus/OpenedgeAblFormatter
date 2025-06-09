@@ -1,32 +1,28 @@
 import { FormattingEngine } from "../formatterFramework/FormattingEngine";
-import { AblParserHelper } from "../parser/AblParserHelper";
-import { DebugManagerMock } from "../stability-test/suite/DebugManagerMock";
-import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
-import { FileIdentifier } from "../model/FileIdentifier";
-import { MetamorphicGroup, MG, OriginalTestCase, TextTree } from "./MG";
-import { MGBuilder } from "./MGBuilder";
+import { OriginalTestCase, TextTree } from "./MG";
 import { MR } from "./MR";
 
 export class MetamorphicEngine {
-    private readonly formattingEngine: FormattingEngine;
-
-    private currentTestCase: OriginalTestCase<TextTree> | undefined = undefined;
+    private formattingEngine: FormattingEngine | undefined = undefined;
 
     private metamorphicRelations: MR<TextTree>[] = [];
     private inputAndOutputPairs: OriginalTestCase<TextTree>[] = [];
 
-    public constructor(formattingEngine: FormattingEngine) {
+    public setFormattingEngine(formattingEngine: FormattingEngine) {
         this.formattingEngine = formattingEngine;
     }
 
     public addNameInputAndOutputPair(
         name: string,
+        eol: EOL,
         input: TextTree,
         output: TextTree
     ): this {
+        console.log("Added test case:", name);
         this.inputAndOutputPairs.push({
             name: name,
+            eol: eol,
             input: input,
             output: output,
         });
@@ -34,88 +30,99 @@ export class MetamorphicEngine {
     }
 
     public addMR(mr: MR<TextTree>): this {
+        console.log("Added mr:", mr.mrName);
         this.metamorphicRelations.push(mr);
         return this;
     }
 
-    public runAll() {
-        this.inputAndOutputPairs.forEach((pair) => {
-            this.metamorphicRelations.forEach((mr) => {
-                const folowUpInput = mr.inputFunction(pair.input);
-                const actualFolowUpOutput = this.formattingEngine.formatText(
-                    folowUpInput,
-                    this.getFileEOL(folowUpInput)
-                );
-                const expectedFolowUpOutput = mr.outputFunction(pair.output);
+    private test(
+        mr: MR<TextTree>,
+        pair: OriginalTestCase<TextTree>
+    ): undefined | { actual: string; expected: string } {
+        if (this.formattingEngine === undefined) {
+            throw new Error(
+                `Missing Formatting engine in Metamophic test engine.`
+            );
+        }
 
-                const result = actualFolowUpOutput === expectedFolowUpOutput;
+        const folowUpInput = mr.inputFunction(pair.input);
+        const actualFolowUpOutput = this.formattingEngine.formatText(
+            folowUpInput,
+            pair.eol,
+            false
+        );
+        const expectedFolowUpOutput = mr.outputFunction(pair.output);
 
-                console.log(
-                    mr.mrName,
-                    pair.name,
-                    "\n---input---\n",
-                    pair.input,
-                    "\n---output---\n",
-                    pair.output,
-                    "\n---folowUpInput---\n",
-                    folowUpInput,
-                    "\n---actualFolowUpOutput---\n",
-                    actualFolowUpOutput,
-                    "\n---expectedFolowUpOutput---\n",
-                    expectedFolowUpOutput,
-                    "\n---INPUT---\n",
-                    "RESULT: " + result
-                );
-            });
-        });
+        const result = actualFolowUpOutput === expectedFolowUpOutput;
+        return !result
+            ? { actual: actualFolowUpOutput, expected: expectedFolowUpOutput }
+            : undefined;
+        // console.log(
+        //     mr.mrName,
+        //     pair.name,
+        //     "\n---input---\n",
+        //     pair.input,
+        //     "\n---output---\n",
+        //     pair.output,
+        //     "\n---folowUpInput---\n",
+        //     folowUpInput,
+        //     "\n---actualFolowUpOutput---\n",
+        //     actualFolowUpOutput,
+        //     "\n---expectedFolowUpOutput---\n",
+        //     expectedFolowUpOutput,
+        //     "\n---INPUT---\n",
+        //     "RESULT: " + result
+        // );
     }
 
-    // public run(mrName: string, fileName: string): this {
-    //     return this;
-    // }
+    public getMatrix(): { fileName: string; mrName: string }[] {
+        const matrix: { fileName: string; mrName: string }[] = [];
 
-    // public run() {
-    //     const mgs = MGBuilder.build();
+        this.inputAndOutputPairs.forEach((pair) => {
+            this.metamorphicRelations.forEach((mr) => {
+                matrix.push({ fileName: pair.name, mrName: mr.mrName });
+            });
+        });
 
-    //     mgs.forEach((mg) => {
-    //         this.runOneMG(mg);
-    //     });
-    // }
+        return matrix;
+    }
 
-    // public runOneMG(mg: MG<any>): void {
-    //     mg.inputAndOutputPairs.forEach((pair) => {
-    //         const folowUpInput = mg.mr.inputFunction(pair.input);
-    //         const actualFolowUpOutput = this.format(folowUpInput, pair.name);
-    //         const expectedFolowUpOutput = mg.mr.outputFunction(pair.output);
+    public runOne(
+        fileName: string,
+        mrName: string
+    ): undefined | { actual: string; expected: string } {
+        const pair = this.inputAndOutputPairs.find(
+            (pair) => pair.name === fileName
+        );
+        const mr = this.metamorphicRelations.find(
+            (relation) => relation.mrName === mrName
+        );
 
-    //         const result = actualFolowUpOutput === expectedFolowUpOutput;
-
-    //         console.log(
-    //             mg.mr.mrName,
-    //             pair.name,
-    //             "\n---input---\n",
-    //             pair.input,
-    //             "\n---output---\n",
-    //             pair.output,
-    //             "\n---folowUpInput---\n",
-    //             folowUpInput,
-    //             "\n---actualFolowUpOutput---\n",
-    //             actualFolowUpOutput,
-    //             "\n---expectedFolowUpOutput---\n",
-    //             expectedFolowUpOutput,
-    //             "\n---INPUT---\n",
-    //             "RESULT: " + result
-    //         );
-    //     });
-    // }
-
-    private getFileEOL(fileText: string): EOL {
-        if (fileText.includes("\r\n")) {
-            return new EOL("\r\n"); // Windows EOL
-        } else if (fileText.includes("\n")) {
-            return new EOL("\n"); // Unix/Linux/Mac EO
-        } else {
-            return new EOL("\n"); // No EOL found
+        if (!pair) {
+            throw new Error(
+                `Input/Output pair with fileName "${fileName}" not found.`
+            );
         }
+
+        if (!mr) {
+            throw new Error(
+                `Metamorphic relation with mrName "${mrName}" not found.`
+            );
+        }
+
+        return this.test(mr, pair);
+    }
+
+    public runAll() {
+        console.log("runAll");
+
+        this.inputAndOutputPairs.forEach((pair) => {
+            this.metamorphicRelations.forEach((mr) => {
+                this.test(mr, pair);
+            });
+        });
+
+        // Clear
+        this.inputAndOutputPairs = [];
     }
 }

@@ -1,8 +1,10 @@
 import { Tree } from "web-tree-sitter";
 import { MR } from "./MR";
+import { EOL } from "../model/EOL";
 
 export interface OriginalTestCase<T> {
     name: string;
+    eol: EOL;
     input: T;
     output: T;
 }

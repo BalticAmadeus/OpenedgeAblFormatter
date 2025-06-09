@@ -6,7 +6,6 @@ import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
-import { MGBuilder } from "../mtest/MGBuilder";
 import { Telemetry } from "../utils/Telemetry";
 
 export class AblFormatterProvider
@@ -43,13 +42,15 @@ export class AblFormatterProvider
                 this.parserHelper,
                 new FileIdentifier(document.fileName, document.version),
                 configurationManager,
-                debugManager
+                debugManager,
+                this.metamorphicTestingEngine
             );
 
             const initialText = document.getText();
             const outputText = codeFormatter.formatText(
                 initialText,
-                new EOL(document.eol)
+                new EOL(document.eol),
+                true
             );
 
             const editor = vscode.window.activeTextEditor;
@@ -65,16 +66,11 @@ export class AblFormatterProvider
                 },
                 { undoStopBefore: false, undoStopAfter: false }
             );
-
-            const mg = MGBuilder.buildOneFromInputAndOutput(
-                document.fileName,
-                initialText,
-                outputText
-            );
-            this.metamorphicTestingEngine.runOneMG(mg);
         } catch (e) {
             console.log(e);
             return;
+        } finally {
+            this.metamorphicTestingEngine.runAll();
         }
     }
 
