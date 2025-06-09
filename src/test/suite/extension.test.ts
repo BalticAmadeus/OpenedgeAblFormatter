@@ -18,6 +18,10 @@ let parserHelper: AblParserHelper;
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
 const functionalTestDir = "resources/functionalTests";
+const testResultsDir = path.join(
+    extensionDevelopmentPath,
+    "resources/testResults/functionalTests"
+);
 const functionalTestDirs = getDirs(
     path.join(extensionDevelopmentPath, functionalTestDir)
 );
@@ -58,6 +62,11 @@ suite("Extension Test Suite", () => {
             console.log("Parser initialized");
         });
 
+        if (fs.existsSync(testResultsDir)) {
+            fs.rmSync(testResultsDir, { recursive: true, force: true });
+        }
+        fs.mkdirSync(testResultsDir, { recursive: true });
+
         parserHelper = new AblParserHelper(
             extensionDevelopmentPath,
             new DebugManagerMock()
@@ -97,16 +106,28 @@ function functionalTest(name: string): void {
     const resultText = format(inputText, name);
     const targetText = getTarget(name);
 
-    assert.strictEqual(
-        resultText
-            .replaceAll(" ", "_")
-            .replaceAll("\r\n", "#CRLF\r\n")
-            .replaceAll("(?<!\r)\n", "#LF\n"),
-        targetText
-            .replaceAll(" ", "_")
-            .replaceAll("\r\n", "#CRLF\r\n")
-            .replaceAll("(?<!\r)\n", "#LF\n")
-    );
+    try {
+        assert.strictEqual(
+            resultText
+                .replaceAll(" ", "_")
+                .replaceAll("\r\n", "#CRLF\r\n")
+                .replaceAll("(?<!\r)\n/g", "#LF\n"),
+            targetText
+                .replaceAll(" ", "_")
+                .replaceAll("\r\n", "#CRLF\r\n")
+                .replaceAll("(?<!\r)\n/g", "#LF\n")
+        );
+    } catch (err: any) {
+        const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
+
+        const afterFilePath = path.join(testResultsDir, `${fileName}.p`);
+
+        fs.writeFileSync(afterFilePath, resultText, "utf-8");
+
+        err.stack = `${err.stack}\n\n Failing output written to: ${afterFilePath}\n`;
+
+        throw err;
+    }
 }
 
 function getError(fileName: string): string {
