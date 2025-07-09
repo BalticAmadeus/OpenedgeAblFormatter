@@ -17,7 +17,10 @@ import { DebugManagerMock } from "./DebugManagerMock";
 let parserHelper: AblParserHelper;
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
-const testResultsDir = join(extensionDevelopmentPath, "resources/testResults");
+const testResultsDir = join(
+    extensionDevelopmentPath,
+    "resources/testResults/stabilityTests"
+);
 
 const stabilityTestDir = join(extensionDevelopmentPath, "resources/ade");
 const extensionsToFind = [".p", ".w", ".cls", ".i"];
