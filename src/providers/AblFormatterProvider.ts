@@ -7,6 +7,7 @@ import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { Telemetry } from "../utils/Telemetry";
+import { BaseEngineOutput } from "../mtest/EngineParams";
 
 export class AblFormatterProvider
     implements
@@ -14,11 +15,11 @@ export class AblFormatterProvider
         vscode.DocumentFormattingEditProvider
 {
     private readonly parserHelper: IParserHelper;
-    private readonly metamorphicTestingEngine: MetamorphicEngine;
+    private readonly metamorphicTestingEngine: MetamorphicEngine<BaseEngineOutput>;
 
     public constructor(
         parserHelper: IParserHelper,
-        metamorphicTestingEngine: MetamorphicEngine
+        metamorphicTestingEngine: MetamorphicEngine<BaseEngineOutput>
     ) {
         this.parserHelper = parserHelper;
         this.metamorphicTestingEngine = metamorphicTestingEngine;
@@ -70,7 +71,15 @@ export class AblFormatterProvider
             console.log(e);
             return;
         } finally {
-            this.metamorphicTestingEngine.runAll();
+            const results = this.metamorphicTestingEngine.runAll();
+            console.log("DEBUG INFO FOR TELEMETRY:");
+            results.forEach((result) => {
+                console.log("MR", result.mrName);
+            });
+            console.log(
+                "Number of Metamorphic testing failures:",
+                results.length
+            );
         }
     }
 

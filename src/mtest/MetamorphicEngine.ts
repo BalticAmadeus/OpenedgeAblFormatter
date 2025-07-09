@@ -1,13 +1,14 @@
 import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { EOL } from "../model/EOL";
-import { OriginalTestCase, TextTree } from "./MG";
+import { BaseEngineOutput, DebugTestingEngineOutput } from "./EngineParams";
+import { OriginalTestCase, TextTree } from "./OriginalTestCase";
 import { MR } from "./MR";
 
-export class MetamorphicEngine {
+export class MetamorphicEngine<T extends BaseEngineOutput> {
     private formattingEngine: FormattingEngine | undefined = undefined;
 
-    private metamorphicRelations: MR<TextTree>[] = [];
-    private inputAndOutputPairs: OriginalTestCase<TextTree>[] = [];
+    private readonly metamorphicRelations: MR[] = [];
+    private inputAndOutputPairs: OriginalTestCase[] = [];
 
     public setFormattingEngine(formattingEngine: FormattingEngine) {
         this.formattingEngine = formattingEngine;
@@ -29,16 +30,16 @@ export class MetamorphicEngine {
         return this;
     }
 
-    public addMR(mr: MR<TextTree>): this {
+    public addMR(mr: MR): this {
         console.log("Added mr:", mr.mrName);
         this.metamorphicRelations.push(mr);
         return this;
     }
 
     private test(
-        mr: MR<TextTree>,
-        pair: OriginalTestCase<TextTree>
-    ): undefined | { actual: string; expected: string } {
+        mr: MR,
+        pair: OriginalTestCase
+    ): undefined | DebugTestingEngineOutput {
         if (this.formattingEngine === undefined) {
             throw new Error(
                 `Missing Formatting engine in Metamophic test engine.`
@@ -53,26 +54,18 @@ export class MetamorphicEngine {
         );
         const expectedFolowUpOutput = mr.outputFunction(pair.output);
 
-        const result = actualFolowUpOutput === expectedFolowUpOutput;
-        return !result
-            ? { actual: actualFolowUpOutput, expected: expectedFolowUpOutput }
+        const pass = actualFolowUpOutput === expectedFolowUpOutput;
+
+        // console.log(pass ? "PASS -" : "FAIL -", mr.mrName, pair.name);
+
+        return !pass
+            ? {
+                  fileName: pair.name,
+                  mrName: mr.mrName,
+                  actual: actualFolowUpOutput,
+                  expected: expectedFolowUpOutput,
+              }
             : undefined;
-        // console.log(
-        //     mr.mrName,
-        //     pair.name,
-        //     "\n---input---\n",
-        //     pair.input,
-        //     "\n---output---\n",
-        //     pair.output,
-        //     "\n---folowUpInput---\n",
-        //     folowUpInput,
-        //     "\n---actualFolowUpOutput---\n",
-        //     actualFolowUpOutput,
-        //     "\n---expectedFolowUpOutput---\n",
-        //     expectedFolowUpOutput,
-        //     "\n---INPUT---\n",
-        //     "RESULT: " + result
-        // );
     }
 
     public getMatrix(): { fileName: string; mrName: string }[] {
@@ -87,10 +80,7 @@ export class MetamorphicEngine {
         return matrix;
     }
 
-    public runOne(
-        fileName: string,
-        mrName: string
-    ): undefined | { actual: string; expected: string } {
+    public runOne(fileName: string, mrName: string): T | undefined {
         const pair = this.inputAndOutputPairs.find(
             (pair) => pair.name === fileName
         );
@@ -110,19 +100,28 @@ export class MetamorphicEngine {
             );
         }
 
-        return this.test(mr, pair);
+        const result = this.test(mr, pair);
+
+        return result as T | undefined;
     }
 
-    public runAll() {
+    public runAll(): T[] {
         console.log("runAll");
+
+        let results: T[] = [];
 
         this.inputAndOutputPairs.forEach((pair) => {
             this.metamorphicRelations.forEach((mr) => {
-                this.test(mr, pair);
+                const result = this.test(mr, pair);
+                if (result !== undefined) {
+                    results.push(result as unknown as T);
+                }
             });
         });
 
         // Clear
         this.inputAndOutputPairs = [];
+
+        return results;
     }
 }

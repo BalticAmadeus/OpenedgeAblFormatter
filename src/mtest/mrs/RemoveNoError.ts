@@ -1,7 +1,7 @@
-import { TextTree } from "../MG";
+import { TextTree } from "../OriginalTestCase";
 import { MR } from "../MR";
 
-export class RemoveNoError implements MR<TextTree> {
+export class RemoveNoError implements MR {
     mrName: string = "RemoveNoError";
 
     inputFunction(input: TextTree): string {

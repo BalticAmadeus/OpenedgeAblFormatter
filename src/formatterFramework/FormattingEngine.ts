@@ -11,6 +11,7 @@ import { FormatterFactory } from "./FormatterFactory";
 import { EOL } from "../model/EOL";
 import { IDebugManager } from "../providers/IDebugManager";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
+import { BaseEngineOutput } from "../mtest/EngineParams";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -20,7 +21,7 @@ export class FormattingEngine {
         private fileIdentifier: FileIdentifier,
         private configurationManager: IConfigurationManager,
         private debugManager: IDebugManager,
-        private metamorphicTestingEngine?: MetamorphicEngine
+        private metamorphicTestingEngine?: MetamorphicEngine<BaseEngineOutput>
     ) {}
 
     public formatText(

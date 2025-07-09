@@ -1,7 +1,7 @@
-import { TextTree } from "../MG";
+import { TextTree } from "../OriginalTestCase";
 import { MR } from "../MR";
 
-export class ReplaceForEachToForLast implements MR<TextTree> {
+export class ReplaceForEachToForLast implements MR {
     mrName: string = "ReplaceForEachToForLast";
 
     inputFunction(input: TextTree): string {

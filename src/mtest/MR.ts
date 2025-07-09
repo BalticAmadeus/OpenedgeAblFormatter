@@ -1,10 +1,10 @@
-import { TextTree } from "./MG";
+import { TextTree } from "./OriginalTestCase";
 
-export interface MR<T extends TextTree> {
+export interface MR {
     mrName: string;
 
-    inputFunction(input: T): string;
-    outputFunction(output: T): string;
+    inputFunction(input: TextTree): string;
+    outputFunction(output: TextTree): string;
 
-    checkIfApplicable(input: T): boolean;
+    checkIfApplicable(input: TextTree): boolean;
 }

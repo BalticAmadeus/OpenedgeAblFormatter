@@ -17,6 +17,7 @@ import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
 import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
+import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 
 let parserHelper: AblParserHelper;
 
@@ -41,8 +42,7 @@ const treeSitterErrorTestDirs = getDirs(
 );
 let treeSitterTestCases: string[] = [];
 
-const metamorphicEngine = new MetamorphicEngine();
-metamorphicEngine
+const metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>()
     .addMR(new ReplaceEQ())
     .addMR(new ReplaceForEachToForLast())
     .addMR(new RemoveNoError());
@@ -101,7 +101,12 @@ suite("Extension Test Suite", () => {
 
     suiteTeardown(() => {
         const metamorphicTestCases = metamorphicEngine.getMatrix();
-        console.log("Running Metamorphic Tests:", metamorphicTestCases);
+        console.log(
+            "Running Metamorphic Tests:",
+            metamorphicTestCases
+                .map((item) => `${item.fileName}:${item.mrName}`)
+                .join(",")
+        );
 
         suite("Metamorphic Tests", () => {
             metamorphicTestCases.forEach((cases) => {
@@ -183,8 +188,6 @@ function format(text: string, name: string): string {
         new DebugManagerMock(),
         metamorphicEngine
     );
-
-    metamorphicEngine.setFormattingEngine(codeFormatter);
 
     const result = codeFormatter.formatText(
         text,

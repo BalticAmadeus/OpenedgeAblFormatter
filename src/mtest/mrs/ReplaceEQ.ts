@@ -1,7 +1,7 @@
-import { TextTree } from "../MG";
+import { TextTree } from "../OriginalTestCase";
 import { MR } from "../MR";
 
-export class ReplaceEQ implements MR<TextTree> {
+export class ReplaceEQ implements MR {
     mrName: string = "ReplaceEQ";
 
     inputFunction(input: TextTree): string {
