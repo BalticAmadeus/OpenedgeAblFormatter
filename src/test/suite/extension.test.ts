@@ -111,11 +111,11 @@ function functionalTest(name: string): void {
             resultText
                 .replaceAll(" ", "_")
                 .replaceAll("\r\n", "#CRLF\r\n")
-                .replaceAll("(?<!\r)\n/g", "#LF\n"),
+                .replaceAll(/(?<!\r)\n/g, "#LF\n"),
             targetText
                 .replaceAll(" ", "_")
                 .replaceAll("\r\n", "#CRLF\r\n")
-                .replaceAll("(?<!\r)\n/g", "#LF\n")
+                .replaceAll(/(?<!\r)\n/g, "#LF\n")
         );
     } catch (err: any) {
         const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
