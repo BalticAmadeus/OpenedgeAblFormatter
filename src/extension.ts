@@ -15,21 +15,6 @@ import { RemoveNoError } from "./mtest/mrs/RemoveNoError";
 import { BaseEngineOutput } from "./mtest/EngineParams";
 
 export async function activate(context: vscode.ExtensionContext) {
-    const response = await fetch("https://ai.ba.lt/auth", {
-        method: "GET", // Or GET etc.
-        headers: {
-            Authorization:
-                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI2NDA0YzdjLTgyNDQtNDIxNi1iZmNlLWI5MWMxOGY1YzBkMiJ9.NoOEJBP8jGxhOckyz4SGj5Te8HtACFtg7qL6H1f5DDY",
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            model: "gpt-4.1",
-            input: "Tell me a three sentence bedtime story about a unicorn.",
-        }),
-    });
-    // const data = await response.json();
-    console.log(response);
-
     const debugManager = DebugManager.getInstance(context);
 
     await Parser.init().then(() => {});
