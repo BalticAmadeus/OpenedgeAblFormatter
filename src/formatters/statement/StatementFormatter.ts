@@ -61,7 +61,10 @@ export class StatementFormatter extends AFormatter implements IFormatter {
                 );
             }
         });
-        return resultString + ".";
+        if (FormatterHelper.getCurrentText(node, fullText).endsWith(".")) {
+            resultString = resultString.concat(".");
+        }
+        return resultString;
     }
 
     private getStatementString(node: SyntaxNode, fullText: FullText): string {
