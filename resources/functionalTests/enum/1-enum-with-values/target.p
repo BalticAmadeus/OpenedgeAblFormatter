@@ -3,7 +3,7 @@
       "AblFormatter.enumFormatting": true}*/
 
 ENUM Oper:
-    define ENUM Invalid = 0
+    DEFINE ENUM Invalid = 0
                 Create = 1
                 Delete = 2
                 BeforeUpdate = 3

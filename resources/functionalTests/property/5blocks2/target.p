@@ -18,5 +18,5 @@ class myRequest implements IWebRequest:
         set(cProp as char):
             undo, throw new AppError(GetReadOnlyMessage(),?).
         end set.
-         
+    
 end class.

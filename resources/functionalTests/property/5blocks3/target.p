@@ -15,5 +15,5 @@ class Writer implements IWebRequest:
             return AuthenticationRequestWriterBuilder:Registry.
         end get.
         private set.
-         
+     
 end class.

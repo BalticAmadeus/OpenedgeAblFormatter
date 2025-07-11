@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
-import { FormattingEngine } from "../v2/formatterFramework/FormattingEngine";
-import { ConfigurationManager2 } from "../utils/ConfigurationManager";
-import { EOL } from "../v2/model/EOL";
+import { FormattingEngine } from "../formatterFramework/FormattingEngine";
+import { ConfigurationManager } from "../utils/ConfigurationManager";
+import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
+import { Telemetry } from "../utils/Telemetry";
 
 export class AblFormatterProvider
     implements
@@ -22,8 +23,10 @@ export class AblFormatterProvider
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
         console.log("AblFormatterProvider.provideDocumentFormattingEdits");
+        Telemetry.increaseFormattingActions("Document");
+        Telemetry.addLinesOfCodeFormatted(document.lineCount);
 
-        const configurationManager = ConfigurationManager2.getInstance();
+        const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
 
         configurationManager.setTabSize(options.tabSize);
@@ -65,8 +68,10 @@ export class AblFormatterProvider
         range: vscode.Range
     ): vscode.ProviderResult<vscode.TextEdit[]> {
         console.log("AblFormatterProvider.provideDocumentFormattingEdits");
+        Telemetry.increaseFormattingActions("Selection");
+        Telemetry.addLinesOfCodeFormatted(range.end.line - range.start.line);
 
-        const configurationManager = ConfigurationManager2.getInstance();
+        const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
 
         try {

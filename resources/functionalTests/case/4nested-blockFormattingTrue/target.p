@@ -11,8 +11,7 @@ PROCEDURE testCase:
     j = 2.
 
     CASE i:
-        WHEN 1 THEN
-        DO:
+        WHEN 1 THEN DO:
             CASE j:
                 WHEN 1 THEN
                     MESSAGE "i=1, j=1".

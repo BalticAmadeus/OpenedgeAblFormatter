@@ -4,17 +4,20 @@ import { AblFormatterProvider } from "./providers/AblFormatterProvider";
 import { Constants } from "./model/Constants";
 import { AblParserHelper } from "./parser/AblParserHelper";
 import { AblDebugHoverProvider } from "./providers/AblDebugHoverProvider";
-import { ConfigurationManager2 } from "./utils/ConfigurationManager";
-import { enableFormatterDecorators } from "./v2/formatterFramework/enableFormatterDecorators";
+import { ConfigurationManager } from "./utils/ConfigurationManager";
+import { enableFormatterDecorators } from "./formatterFramework/enableFormatterDecorators";
 import { DebugManager } from "./providers/DebugManager";
+import { Telemetry } from "./utils/Telemetry";
 
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
 
     await Parser.init().then(() => {});
 
-    ConfigurationManager2.getInstance();
+    ConfigurationManager.getInstance();
     enableFormatterDecorators();
+
+    context.subscriptions.push(Telemetry.getInstance());
 
     const parserHelper = new AblParserHelper(
         context.extensionPath,
@@ -34,6 +37,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const hoverProvider = new AblDebugHoverProvider(parserHelper);
     vscode.languages.registerHoverProvider(Constants.ablId, hoverProvider);
+    Telemetry.sendExtensionSettings();
 }
 
 // This method is called when your extension is deactivated

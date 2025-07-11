@@ -7,8 +7,8 @@ CLASS Validation.Something
     {&SERIALIZABLE}:
 
     METHOD PUBLIC OVERRIDE IType GetType():
-        define VARIABLE oType AS IType NO-UNDO.
-        RETURN oType .
+        DEFINE VARIABLE oType AS IType NO-UNDO.
+        RETURN oType.
     END METHOD.
 
 END CLASS.

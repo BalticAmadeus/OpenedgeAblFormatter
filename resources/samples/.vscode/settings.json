@@ -2,7 +2,6 @@
 {
     "abl.completion.upperCase": false,
     "AblFormatter.assignFormatting": true,
-    "AblFormatter.defineFormatting": false,
     "AblFormatter.findFormatting": false,
     "AblFormatter.forFormatting": false,
     "AblFormatter.caseFormatting": false,

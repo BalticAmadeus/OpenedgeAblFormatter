@@ -4,7 +4,8 @@
 "AblFormatter.functionParameterFormatting": false,
 "AblFormatter.assignFormattingAssignLocation": "New",
 "AblFormatter.assignFormattingAlignRightExpression": "Yes",
-"AblFormatter.assignFormattingEndDotLocation": "New aligned"}*/
+"AblFormatter.assignFormattingEndDotLocation": "New aligned",
+"AblFormatter.expressionFormatting": false}*/
 
 FUNCTION sumNumbers RETURNS INTEGER (number3 AS INTEGER, number4 AS INTEGER):
 ASSIGN

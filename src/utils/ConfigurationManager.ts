@@ -1,8 +1,8 @@
 import { commands, window, workspace, WorkspaceConfiguration } from "vscode";
 import { IConfigurationManager } from "./IConfigurationManager";
 
-export class ConfigurationManager2 implements IConfigurationManager {
-    private static instance: ConfigurationManager2;
+export class ConfigurationManager implements IConfigurationManager {
+    private static instance: ConfigurationManager;
     private reloadConfig = true;
     private reloadExternalConfig = true;
     private configuration: WorkspaceConfiguration | undefined = undefined;
@@ -18,8 +18,14 @@ export class ConfigurationManager2 implements IConfigurationManager {
                 window.showInformationMessage(
                     "ABL Formatter settings were changed!"
                 );
-            }
 
+                const config = workspace.getConfiguration("AblFormatter");
+                const expressionSetting = config.get("expressionFormatting");
+                const arrayAccessSetting = config.get("arrayAccessFormatting");
+                if (expressionSetting || arrayAccessSetting) {
+                    config.update("variableAssignmentFormatting", true);
+                }
+            }
             if (e.affectsConfiguration("abl.completion")) {
                 this.reloadExternalConfig = true;
                 window.showInformationMessage(
@@ -29,11 +35,11 @@ export class ConfigurationManager2 implements IConfigurationManager {
         });
     }
 
-    public static getInstance(): ConfigurationManager2 {
-        if (!ConfigurationManager2.instance) {
-            ConfigurationManager2.instance = new ConfigurationManager2();
+    public static getInstance(): ConfigurationManager {
+        if (!ConfigurationManager.instance) {
+            ConfigurationManager.instance = new ConfigurationManager();
         }
-        return ConfigurationManager2.instance;
+        return ConfigurationManager.instance;
     }
 
     public get(name: string) {

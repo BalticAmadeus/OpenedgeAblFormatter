@@ -6,12 +6,12 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
-import { FormattingEngine } from "../../v2/formatterFramework/FormattingEngine";
-import { ConfigurationManager2 } from "../../utils/ConfigurationManager";
+import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
+import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
-import { enableFormatterDecorators } from "../../v2/formatterFramework/enableFormatterDecorators";
+import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import path, { join } from "path";
-import { EOL } from "../../v2/model/EOL";
+import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
 
 let parserHelper: AblParserHelper;
@@ -80,7 +80,7 @@ suite("Extension Test Suite", () => {
 });
 
 function stabilityTest(name: string): void {
-    ConfigurationManager2.getInstance();
+    ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const beforeText = getInput(name);
@@ -90,8 +90,20 @@ function stabilityTest(name: string): void {
 
     const afterCount = countActualSymbols(afterText);
 
+    const nameWithRelativePath = name.startsWith(stabilityTestDir)
+        ? name.slice(stabilityTestDir.length + 1)
+        : name;
+
+    const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
+
     if (beforeCount !== afterCount) {
-        const fileName = path.basename(name, path.extname(name));
+        // if (knownFailures.includes(fileName)) {
+        //     console.log("Known issue");
+        //     return;
+        // }
+
+        addFailedTestCase(testRunDir, "_failures.txt", fileName);
+
         const beforeFilePath = join(
             testRunDir,
             `${fileName}_before${path.extname(name)}`
@@ -112,14 +124,14 @@ function stabilityTest(name: string): void {
 }
 
 function idempotenceTest(name: string) {
-    ConfigurationManager2.getInstance();
+    ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const beforeText = getInput(name);
 
     const afterText = format(beforeText, name);
 
-    ConfigurationManager2.getInstance();
+    ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const afterText2 = format(afterText, name);
@@ -184,7 +196,7 @@ function getInput(fileName: string): string {
 }
 
 function format(text: string, name: string): string {
-    const configurationManager = ConfigurationManager2.getInstance();
+    const configurationManager = ConfigurationManager.getInstance();
 
     const codeFormatter = new FormattingEngine(
         parserHelper,
@@ -272,7 +284,7 @@ function parseAndCheckForErrors(
 }
 
 function treeSitterTest(text: string, name: string): void {
-    ConfigurationManager2.getInstance();
+    ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const errors = parseAndCheckForErrors(text, name);
@@ -318,4 +330,33 @@ function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
     });
 
     return errorMessage;
+}
+
+function getFailedTestCases(filePath: string): string[] {
+    const failedFilePath = path.join(filePath, "_failures.txt");
+
+    // Check if the file exists to avoid errors
+    if (!fs.existsSync(failedFilePath)) {
+        console.log("Known Failures file does not exist!");
+        return [];
+    }
+
+    // Read the file and split lines into an array
+    const data = fs.readFileSync(failedFilePath, "utf8");
+    const failures = data.split("\n").filter((line) => line.trim() !== "");
+
+    console.log("Known failures list has ", failures.length, "cases");
+
+    return failures;
+}
+
+function addFailedTestCase(
+    filePath: string,
+    fileName: string,
+    failedCase: string
+): void {
+    const failedFilePath = path.join(filePath, fileName);
+
+    // Append the failed test case to the file with a newline
+    fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
 }
