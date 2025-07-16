@@ -7,7 +7,6 @@
 "AblFormatter.expressionFormatting": false}*/
 
 ASSIGN
-    number2  = 2
-    when number3 = 2
+    number2  = 2 when number3 = 2
     number11 = 2
     .
