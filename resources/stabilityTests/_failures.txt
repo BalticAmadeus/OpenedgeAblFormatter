@@ -43,19 +43,7 @@ aderes_j-table2.p
 aderes_y-total.p
 adeshar__qenable.p
 adeuib__chkrlnk.i
-adm_samples_itemsel.w
-adm_support_filtedit.w
-adm_support_folderd.w
-adm_support_sortedit.w
-adm_support__so-attr.w
-adm_template_browser.w
-adm_template_wbrowser.w
-adm2_support_folderd.w
-adm2_support__so-attr.w
-adm2_template_browser.w
 prodict_aud__aud-pol.p
-prodict_dump__lodaudp.p
-prodict_gate__snd_sql.i
 prodict_misc__cdc-pol.p
 prodict_misc__db-id-hst.p
 prodict_misc__db-id-mnt.p
@@ -69,18 +57,13 @@ web_examples_w-custdir.w
 //0048pre issues -->
 //0048pre issues <--
 //0049 issues (reduced functionality) -->
-adecomm__audrpt.p
 adeuib__calcself.w
 adeuib__newcalcv.w
 adeuib__tview.w
-adm2_support_brouter.w
-auditing_ui__audevpolicybrowb.w
 auditing_ui__audevpolicyviewv.w
-auditing_ui__audfieldpolicybrowb.w
 auditing_ui__audfieldpolicyviewv.w
 auditing_ui__audfilepolicybrowb.w
 auditing_ui__audfilepolicyviewv.w
-auditing_ui__audpolicybrowb.w
 auditing_ui__audpolicyviewv.w
 //0049 issues (reduced functionality) <--
 //0049 issues -->
@@ -90,7 +73,6 @@ aderes_e-type.p
 aderes_l-type.p
 aderes_p-type.p
 adm2_exportdata.p
-netlib_OpenEdge_Net_HTTP_Filter_Payload_XmlEntityWriter.cls
 //0049 issues <--
 //0050-pre issues -->
 unique.i
@@ -98,6 +80,5 @@ prores_c-cache1.i
 protools__prospy.w
 //0050-pre issues <--
 //0050 issues -->
-adm2_support_toggleframe.w
 prodict_dump__dmpsec.p
 //0050 issues <--
