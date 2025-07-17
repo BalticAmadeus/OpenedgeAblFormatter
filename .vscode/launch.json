@@ -43,7 +43,8 @@
 				"${workspaceFolder}/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
-		},		{
+		},
+		{
 			"name": "Stability Tests",
 			"type": "extensionHost",
 			"request": "launch",
@@ -58,7 +59,6 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		}
 	],
-
 	"folders": [
 		{
 			"path": "${workspaceFolder}/resources/samples"
