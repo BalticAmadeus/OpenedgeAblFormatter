@@ -71,15 +71,16 @@ export class AblFormatterProvider
             console.log(e);
             return;
         } finally {
-            const results = this.metamorphicTestingEngine.runAll();
-            console.log("DEBUG INFO FOR TELEMETRY:");
-            results.forEach((result) => {
-                console.log("MR", result.mrName);
-            });
-            console.log(
-                "Number of Metamorphic testing failures:",
-                results.length
-            );
+            // const results = this.metamorphicTestingEngine.runAll();
+            // console.log("DEBUG INFO FOR TELEMETRY:");
+            // results.forEach((result) => {
+            //     console.log("MR", result.mrName);
+            // });
+            // console.log(
+            //     "Number of Metamorphic testing failures:",
+            //     results.length
+            // );
+            // Telemetry.sendMetamorphicTestResults(results);
         }
     }
 

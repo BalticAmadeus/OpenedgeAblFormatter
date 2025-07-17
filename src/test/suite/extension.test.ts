@@ -46,10 +46,16 @@ const treeSitterErrorTestDirs = getDirs(
 );
 let treeSitterTestCases: string[] = [];
 
-const metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>()
-    .addMR(new ReplaceEQ())
-    .addMR(new ReplaceForEachToForLast())
-    .addMR(new RemoveNoError());
+const isMetamorphicEnabled =
+    process.argv.includes("--metamorphic") ||
+    process.env.TEST_MODE === "metamorphic";
+
+const metamorphicEngine = isMetamorphicEnabled
+    ? new MetamorphicEngine<DebugTestingEngineOutput>(console)
+          .addMR(new ReplaceEQ())
+          .addMR(new ReplaceForEachToForLast())
+          .addMR(new RemoveNoError())
+    : undefined;
 
 treeSitterErrorTestDirs.forEach((dir) => {
     const testsInsideDir = getDirs(
@@ -109,6 +115,10 @@ suite("Extension Test Suite", () => {
     });
 
     suiteTeardown(() => {
+        if (metamorphicEngine === undefined) {
+            return;
+        }
+
         const metamorphicTestCases = metamorphicEngine.getMatrix();
         console.log(
             "Running Metamorphic Tests:",

@@ -6,6 +6,7 @@ import { MR } from "./MR";
 
 export class MetamorphicEngine<T extends BaseEngineOutput> {
     private formattingEngine: FormattingEngine | undefined = undefined;
+    private resultsList: (T | boolean)[] = [];
 
     private readonly metamorphicRelations: MR[] = [];
     private inputAndOutputPairs: OriginalTestCase[] = [];
@@ -14,13 +15,19 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         this.formattingEngine = formattingEngine;
     }
 
+    private readonly engineConsole: Console | undefined;
+
+    public constructor(engineConsole: Console | undefined) {
+        this.engineConsole = engineConsole;
+    }
+
     public addNameInputAndOutputPair(
         name: string,
         eol: EOL,
         input: TextTree,
         output: TextTree
     ): this {
-        console.log("Added test case:", name);
+        this.engineConsole?.log("Added test case:", name);
         this.inputAndOutputPairs.push({
             name: name,
             eol: eol,
@@ -31,9 +38,15 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     }
 
     public addMR(mr: MR): this {
-        console.log("Added mr:", mr.mrName);
+        this.engineConsole?.log("Added mr:", mr.mrName);
         this.metamorphicRelations.push(mr);
         return this;
+    }
+
+    public addMRs(mrs: MR[]): void {
+        mrs.forEach((mr) => {
+            this.addMR(mr);
+        });
     }
 
     private test(
@@ -105,23 +118,28 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         return result as T | undefined;
     }
 
-    public runAll(): T[] {
-        console.log("runAll");
-
-        let results: T[] = [];
+    public runAll(): (T | boolean)[] {
+        let results: (T | boolean)[] = [];
 
         this.inputAndOutputPairs.forEach((pair) => {
             this.metamorphicRelations.forEach((mr) => {
                 const result = this.test(mr, pair);
                 if (result !== undefined) {
                     results.push(result as unknown as T);
+                } else {
+                    results.push(true);
                 }
             });
         });
 
         // Clear
         this.inputAndOutputPairs = [];
+        this.resultsList = this.resultsList.concat(results);
 
         return results;
+    }
+
+    public getResults(): (T | boolean)[] {
+        return this.resultsList;
     }
 }

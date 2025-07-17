@@ -14,6 +14,10 @@ import { ReplaceForEachToForLast } from "./mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "./mtest/mrs/RemoveNoError";
 import { BaseEngineOutput } from "./mtest/EngineParams";
 
+const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
+    undefined //no excessive logging
+);
+
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
 
@@ -29,11 +33,12 @@ export async function activate(context: vscode.ExtensionContext) {
         debugManager
     );
 
-    const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>();
-    metamorphicTestingEngine
-        .addMR(new ReplaceEQ())
-        .addMR(new ReplaceForEachToForLast())
-        .addMR(new RemoveNoError());
+    const metamorphicRelationsList = [
+        new ReplaceEQ(),
+        new ReplaceForEachToForLast(),
+        new RemoveNoError(),
+    ];
+    metamorphicTestingEngine.addMRs(metamorphicRelationsList);
 
     const formatter = new AblFormatterProvider(
         parserHelper,
@@ -53,6 +58,31 @@ export async function activate(context: vscode.ExtensionContext) {
     const hoverProvider = new AblDebugHoverProvider(parserHelper);
     vscode.languages.registerHoverProvider(Constants.ablId, hoverProvider);
     Telemetry.sendExtensionSettings();
+
+    setInterval(runPeriodicTask, 20_000);
+}
+
+function runPeriodicTask() {
+    const resultList = metamorphicTestingEngine.runAll();
+    let numOfFails = 0;
+
+    resultList.forEach((result) => {
+        if (result !== true) {
+            numOfFails++;
+            console.log("Fail", (result as BaseEngineOutput).mrName);
+        }
+    });
+
+    if (resultList.length > 0) {
+        console.log(
+            "Num of test cases",
+            resultList.length,
+            ". Pass rate %",
+            ((resultList.length - numOfFails) / resultList.length) * 100
+        );
+    } else {
+        console.log("Nothing to test");
+    }
 }
 
 // This method is called when your extension is deactivated
