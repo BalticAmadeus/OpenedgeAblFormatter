@@ -17,6 +17,7 @@ async function main() {
         if (isMetamorphic) {
             console.log("DEBUG");
             launchArgs.push("--metamorphic");
+            process.env.TEST_MODE = "metamorphic";
         }
 
         // The path to test runner
