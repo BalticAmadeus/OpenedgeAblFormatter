@@ -50,6 +50,8 @@ const isMetamorphicEnabled =
     process.argv.includes("--metamorphic") ||
     process.env.TEST_MODE === "metamorphic";
 
+console.log("Is Metamorphic Enabled:", isMetamorphicEnabled);
+
 const metamorphicEngine = isMetamorphicEnabled
     ? new MetamorphicEngine<DebugTestingEngineOutput>(console)
           .addMR(new ReplaceEQ())

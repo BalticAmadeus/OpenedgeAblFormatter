@@ -15,7 +15,6 @@ async function main() {
         const launchArgs = ["--disable-extensions"];
 
         if (isMetamorphic) {
-            // Option 2: pass a command line arg (e.g., your extension reads it)
             launchArgs.push("--metamorphic");
         }
 
