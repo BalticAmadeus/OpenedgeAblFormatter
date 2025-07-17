@@ -4,6 +4,12 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.2.1 (2025-07-10)
+
+- Improved alignment of Variable Definitions
+- Added support for Frame Definitions
+- Various Bug fixes and Improvements [See all](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/14?closed=1)
+
 ## 0.2.0 (2025-06-06)
 
 - Added formatting of Return Statement

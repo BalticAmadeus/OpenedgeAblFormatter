@@ -8,6 +8,5 @@
 
 ASSIGN
     number2  = 2
-    number11 = 2
-    when number3 = 2 NO-ERROR
+    number11 = 2 when number3 = 2 NO-ERROR
     .
