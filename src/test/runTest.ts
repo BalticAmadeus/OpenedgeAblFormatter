@@ -15,6 +15,7 @@ async function main() {
         const launchArgs = ["--disable-extensions"];
 
         if (isMetamorphic) {
+            console.log("DEBUG");
             launchArgs.push("--metamorphic");
         }
 
