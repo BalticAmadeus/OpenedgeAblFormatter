@@ -62,7 +62,6 @@ adeuib__newcalcv.w
 adeuib__tview.w
 auditing_ui__audevpolicyviewv.w
 auditing_ui__audfieldpolicyviewv.w
-auditing_ui__audfilepolicybrowb.w
 auditing_ui__audfilepolicyviewv.w
 auditing_ui__audpolicyviewv.w
 //0049 issues (reduced functionality) <--
