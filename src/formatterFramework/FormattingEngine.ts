@@ -10,6 +10,8 @@ import { ParseResult } from "../model/ParseResult";
 import { FormatterFactory } from "./FormatterFactory";
 import { EOL } from "../model/EOL";
 import { IDebugManager } from "../providers/IDebugManager";
+import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
+import { BaseEngineOutput } from "../mtest/EngineParams";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -18,10 +20,15 @@ export class FormattingEngine {
         private parserHelper: IParserHelper,
         private fileIdentifier: FileIdentifier,
         private configurationManager: IConfigurationManager,
-        private debugManager: IDebugManager
+        private debugManager: IDebugManager,
+        private metamorphicTestingEngine?: MetamorphicEngine<BaseEngineOutput>
     ) {}
 
-    public formatText(fulfullTextString: string, eol: EOL): string {
+    public formatText(
+        fulfullTextString: string,
+        eol: EOL,
+        metemorphicEngineIsEnabled: boolean = false
+    ): string {
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
@@ -41,6 +48,25 @@ export class FormattingEngine {
         this.iterateTree(parseResult.tree, fullText, formatters);
 
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
+
+        if (
+            metemorphicEngineIsEnabled &&
+            this.metamorphicTestingEngine !== undefined
+        ) {
+            this.metamorphicTestingEngine.setFormattingEngine(this);
+
+            const parseResult2 = this.parserHelper.parse(
+                this.fileIdentifier,
+                fullText.text
+            );
+
+            this.metamorphicTestingEngine.addNameInputAndOutputPair(
+                this.fileIdentifier.name,
+                eol,
+                { text: fulfullTextString, tree: parseResult.tree },
+                { text: fullText.text, tree: parseResult2.tree }
+            );
+        }
 
         return fullText.text;
     }
