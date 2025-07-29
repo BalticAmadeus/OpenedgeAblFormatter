@@ -49,7 +49,7 @@ We implemented extensive settings configuration to allow users to easly tailor t
 | Property Name                             | Type    | Default     | Values list                 | Description                                                                                                   |
 |-------------------------------------------|---------|-------------|-----------------------------|---------------------------------------------------------------------------------------------------------------|
 | assign formatting                         | boolean | true        | true, false                           | Enable/disable ASSIGN statement formatting.                                                                   |
-| assign formatting assign location         | string  | New         | New, Same                   | Should assigns be located on a new line or the same line as the ASSIGN keyword   |
+| assign formatting assign location         | string  | New         | New, Same                   | Should first assignment be located on a new line or the same line as the ASSIGN keyword   |
 | assign formatting align right expression  | string  | Yes         | Yes, No                     | Should right expression be aligned by longest one                                |
 | assign formatting end dot location        | string  | New aligned | New, New aligned, Same      | Should end dot be located on a new line or the same line as the ASSIGN keyword|
 | find formatting                           | boolean | true        | true,false                  | Enable FIND formatting |
