@@ -56,7 +56,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
 
         node.children.forEach((child) => {
             resultString = resultString.concat(
-                this.getAssigStatementString(child, fullText, longestLeft)
+                this.getAssignStatementString(child, fullText, longestLeft)
             );
         });
 
@@ -69,7 +69,12 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         if (this.settings.endDotAlignment()) {
             return (
                 fullText.eolDelimiter +
-                " ".repeat(this.startColumn + this.settings.tabSize()) +
+                " ".repeat(
+                    this.startColumn +
+                        (this.settings.newLineAfterAssign()
+                            ? this.settings.tabSize()
+                            : SyntaxNodeType.AssignKeyword.length + 1)
+                ) +
                 "."
             );
         } else if (this.settings.endDotLocationNew()) {
@@ -79,7 +84,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         }
     }
 
-    private getAssigStatementString(
+    private getAssignStatementString(
         node: SyntaxNode,
         fullText: Readonly<FullText>,
         longestLeft: number
@@ -148,7 +153,19 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                   middleText +
                   " " +
                   rightText
-                : " " + paddedLeftText + " " + middleText + " " + rightText;
+                : (node.previousSibling?.type === SyntaxNodeType.AssignKeyword // is it first assignment?
+                      ? " "
+                      : fullText.eolDelimiter +
+                        " ".repeat(
+                            this.startColumn +
+                                SyntaxNodeType.AssignKeyword.length +
+                                1
+                        )) +
+                  paddedLeftText +
+                  " " +
+                  middleText +
+                  " " +
+                  rightText;
         }
         if (whenExpressionNode) {
             newString += this.formatWhenExpression(
@@ -164,12 +181,6 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>
     ): string {
         let formattedString = "";
-
-        if (this.settings.newLineAfterAssign()) {
-            formattedString +=
-                fullText.eolDelimiter +
-                " ".repeat(this.startColumn + this.settings.tabSize() - 1);
-        }
 
         whenExpressionNode.children.forEach((child) => {
             formattedString +=
