@@ -4,10 +4,10 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## 0.2.1 (2025-07-30)
+## 0.3.0 (2025-07-30)
 
 - Improved ASSIGN formatting
-- Improved statement foramtting
+- Improved statement formatting
 
 ## 0.2.1 (2025-07-10)
 
