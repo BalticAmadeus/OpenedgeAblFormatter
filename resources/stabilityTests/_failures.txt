@@ -34,13 +34,7 @@ prores_t-s-eng.p
 protools__scrcap.w
 adexml__xmlview.w
 //0046 issues -->
-adecomm__assign-wid.w
-adecomm__auddat.p
 adecomm__auddfilt.p
-adecomm__auddtl.p
-adecomm__cust-flt.p
-adecomm__disconn.p
-adedesk_menus.i
 aderes_j-both.p
 aderes_j-field1.p
 aderes_j-field2.p
@@ -48,79 +42,28 @@ aderes_j-table1.p
 aderes_j-table2.p
 aderes_y-total.p
 adeshar__qenable.p
-adeuib_uibmdefs.i
-adeuib__attr-ed.w
 adeuib__chkrlnk.i
-adeuib__cr_palette.p
-adeuib__tabedit.w
-adeuib__tempdb.w
-adm_samples_b-cuslkp.w
-adm_samples_b-linord.w
-adm_samples_itemsel.w
-adm_support_filtedit.w
-adm_support_folderd.w
-adm_support_sortedit.w
-adm_support__so-attr.w
-adm_template_browser.w
-adm_template_wbrowser.w
-adm2_support_folderd.w
-adm2_support__so-attr.w
-adm2_template_browser.w
-OpenEdge_DataAdmin_Binding_TableContext.cls
 prodict_aud__aud-pol.p
-prodict_dump__lodaudp.p
-prodict_gate__snd_sql.i
 prodict_misc__cdc-pol.p
 prodict_misc__db-id-hst.p
 prodict_misc__db-id-mnt.p
-prodict_mss__mssschg.p
-prodict_ora__ora_lkg.p
-prodict_ora__ora_lkz.p
-prodict_user__usrschg.p
 prodict__dctgues.p
-template_tty-dial.w
-web_examples_w-cstinf.w
-web_examples_w-cststa.w
 //0046 issues <--
 //0047 issues -->
-adeuib__undcont.p
 adm2_logic.i
 auditing_src_adm2_logic.i
 web_examples_w-custdir.w
 //0047 issues <--
 //0048pre issues -->
-adecomm__getwidobjs.w
 //0048pre issues <--
 //0049 issues (reduced functionality) -->
-adecomm__audrpt.p
-adecomm__dbcreat.p
-adecomm__dlgmnua.p
-adecomm__praudrpt.p
-adecomm__report.p
-aderes__rdraw.p
-adeuib__calcselb.w
 adeuib__calcself.w
-adeuib__convertadm2dynamics.w
 adeuib__newcalcv.w
-adeuib__ttmaint.w
 adeuib__tview.w
-adeuib__widgetidassign.w
-adm2_support_brouter.w
-auditing_ui__audevpolicybrowb.w
 auditing_ui__audevpolicyviewv.w
-auditing_ui__audfieldpolicybrowb.w
 auditing_ui__audfieldpolicyviewv.w
-auditing_ui__audfilepolicybrowb.w
 auditing_ui__audfilepolicyviewv.w
-auditing_ui__audpolicybrowb.w
 auditing_ui__audpolicyviewv.w
-OpenEdge_DataAdmin_ExtentList.cls
-OpenEdge_DataAdmin_IndexFieldList.cls
-prodict_misc__prt_rpt.p
-prodict_sec__sec-gen-key.p
-protools_as-partn.w
-protools__procfg.w
-protools__v89conv.w
 //0049 issues (reduced functionality) <--
 //0049 issues -->
 adecomm_dswid.i
@@ -128,42 +71,13 @@ adecomm__reg2ini.p
 aderes_e-type.p
 aderes_l-type.p
 aderes_p-type.p
-aderes_y-run.p
-adeuib__acontp.w
-adeuib__cr_cust.p
-adeuib__ocxevnt.p
-adeuib__prvcont.w
-adeuib__uibshut.p
 adm2_exportdata.p
-netlib_OpenEdge_Net_HTTP_Filter_Payload_XmlEntityWriter.cls
-prores_r-main.p
-protools__session.w
 //0049 issues <--
 //0050-pre issues -->
-adecomm__dtblrpt.p
-adecomm__encprpt.p
-prodict_misc__rptwdat.p
-prodict_mss_key_check.i
-prodict_mss_key_clust.i
-prodict_mss_key_default.i
-prodict_mss_key_modcheck.i
-prodict_mss_key_modclus.i
-prodict_mss_key_moddef.i
-prodict_mss_key_modpri.i
-prodict_mss_key_moduni.i
-prodict_mss_key_primary.i
-prodict_mss_key_unique.i
-prodict_ora_key_check.i
-prodict_ora_key_modcheck.i
-prodict_ora_key_modpri.i
-prodict_ora_key_moduni.i
-prodict_ora_key_primary.i
-prodict_ora_key_unique.i
-prores_b-build.p
+unique.i
 prores_c-cache1.i
 protools__prospy.w
 //0050-pre issues <--
 //0050 issues -->
-adm2_support_toggleframe.w
 prodict_dump__dmpsec.p
 //0050 issues <--
