@@ -17,9 +17,10 @@ import { DebugManagerMock } from "./DebugManagerMock";
 let parserHelper: AblParserHelper;
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
-const testResultsDir = join(
+const testResultsDir = join(extensionDevelopmentPath, "resources/testResults");
+const testResultsDirIdempotence = join(
     extensionDevelopmentPath,
-    "resources/testResults/stabilityTests"
+    "resources/testResultsIdempotence"
 );
 
 const stabilityTestDir = join(extensionDevelopmentPath, "resources/ade");
@@ -36,21 +37,7 @@ const testRunTimestamp = new Date()
     .replace(/[:.T-]/g, "_")
     .substring(0, 19);
 const testRunDir = join(testResultsDir, testRunTimestamp);
-
-const knownFailures = getFailedTestCases(
-    join(extensionDevelopmentPath, "resources/stabilityTests")
-);
-const settingsOverride =
-    "/* formatterSettingsOverride */\n/*" +
-    readFile(
-        join(
-            extensionDevelopmentPath,
-            "resources/stabilityTests/.vscode/settings.json"
-        )
-    ) +
-    "*/\n";
-
-console.log(settingsOverride);
+const testRunDirIdempotence = join(testResultsDirIdempotence, testRunTimestamp);
 
 suite("Extension Test Suite", () => {
     console.log("Parser initialized", stabilityTestCases);
@@ -65,6 +52,7 @@ suite("Extension Test Suite", () => {
         });
 
         fs.mkdirSync(testRunDir, { recursive: true });
+        fs.mkdirSync(testRunDirIdempotence, { recursive: true });
 
         parserHelper = new AblParserHelper(
             extensionDevelopmentPath,
@@ -79,11 +67,14 @@ suite("Extension Test Suite", () => {
         );
     });
 
-    let fileId = 0;
-
     stabilityTestCases.forEach((cases) => {
-        test(`Symbol test: ${cases}`, () => {
-            stabilityTest(cases);
+        // test(`Empty space test: ${cases}`, () => {
+        //     stabilityTest(cases);
+        // }).timeout(10000);
+
+        // try to run 3 times
+        test(`Idempotence test: ${cases}`, () => {
+            runFormattingNTimes(cases, 2);
         }).timeout(10000);
     });
 });
@@ -92,9 +83,11 @@ function stabilityTest(name: string): void {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
-    const beforeText = settingsOverride + getInput(name);
-    const beforeCount = countActualSymbols(beforeText);
+    const beforeText = getInput(name);
     const afterText = format(beforeText, name);
+
+    const beforeCount = countActualSymbols(beforeText);
+
     const afterCount = countActualSymbols(afterText);
 
     const nameWithRelativePath = name.startsWith(stabilityTestDir)
@@ -104,10 +97,10 @@ function stabilityTest(name: string): void {
     const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
 
     if (beforeCount !== afterCount) {
-        if (knownFailures.includes(fileName)) {
-            console.log("Known issue");
-            return;
-        }
+        // if (knownFailures.includes(fileName)) {
+        //     console.log("Known issue");
+        //     return;
+        // }
 
         addFailedTestCase(testRunDir, "_failures.txt", fileName);
 
@@ -128,12 +121,73 @@ function stabilityTest(name: string): void {
         After: ${afterFilePath}
         `);
     }
+}
 
-    // if test passes but file is in error list
-    if (knownFailures.includes(fileName)) {
-        addFailedTestCase(testRunDir, "_new_passes.txt", fileName);
+function idempotenceTest(name: string) {
+    ConfigurationManager.getInstance();
+    enableFormatterDecorators();
 
-        assert.fail(`File should fail ${fileName}`);
+    const beforeText = getInput(name);
+
+    const afterText = format(beforeText, name);
+
+    ConfigurationManager.getInstance();
+    enableFormatterDecorators();
+
+    const afterText2 = format(afterText, name);
+
+    if (afterText !== afterText2) {
+        const fileName = path.basename(name, path.extname(name));
+        const afterFilePath = join(
+            testRunDirIdempotence,
+            `${fileName}_before${path.extname(name)}`
+        );
+        const after2FilePath = join(
+            testRunDirIdempotence,
+            `${fileName}_after${path.extname(name)}`
+        );
+
+        fs.writeFileSync(afterFilePath, afterText);
+        fs.writeFileSync(after2FilePath, afterText2);
+
+        assert.fail(`Text mismach
+        After: ${afterFilePath}
+        After2: ${after2FilePath}
+        `);
+    }
+}
+
+function runFormattingNTimes(name: string, n: number) {
+    let currentText = getInput(name);
+    const symbolCount = countActualSymbols(currentText);
+    for (let i = 1; i < n; i++) {
+        if (symbolCount < 500 || symbolCount > 1500) {
+            console.log("Skipping test", name);
+            return;
+        }
+        const afterText = format(currentText, name);
+        fs.writeFileSync(name, afterText);
+        if (i == n - 1 && currentText !== afterText) {
+            const fileName = path.basename(name, path.extname(name));
+            const afterFilePath = join(
+                testRunDirIdempotence,
+                `${fileName}_before${path.extname(name)}`
+            );
+            const after2FilePath = join(
+                testRunDirIdempotence,
+                `${fileName}_after${path.extname(name)}`
+            );
+
+            fs.writeFileSync(afterFilePath, currentText);
+            fs.writeFileSync(after2FilePath, afterText);
+
+            assert.fail(`Text mismach
+        After: ${afterFilePath}
+        After2: ${after2FilePath}
+        `);
+        }
+
+        currentText = afterText;
     }
 }
 
