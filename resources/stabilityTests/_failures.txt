@@ -83,6 +83,6 @@ prodict_dump__dmpsec.p
 //0050 issues <--
 
 // ADE update issues
-_runsylk.i
-_runload.i
-_lod_raw.i
+prodict_dump__lod_raw.i
+prodict_misc__runload.i
+prodict_misc__runsylk.i
