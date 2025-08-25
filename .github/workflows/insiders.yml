@@ -17,7 +17,7 @@ jobs:
             - name: Install Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 20.x
+                  node-version: 22.x
 
             - run: npm install
 
@@ -32,3 +32,4 @@ jobs:
             - name: Run Stability Test
               run: xvfb-run -a npm run stability-test
               if: runner.os == 'Linux'
+
