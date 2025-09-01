@@ -12,8 +12,6 @@ Copyright (c) 2016 by Progress Software Corporation and/or one of its subsidiari
   ----------------------------------------------------------------------*/
 block-level on error undo, throw.
 
-USING OpenEdge.Logging.Filter.ILoggerFilter.
-USING OpenEdge.Logging.LogEvent.
 
 class OpenEdge.Logging.Writer.VoidWriter implements ILoggerFilter:
     

@@ -1,4 +1,3 @@
-USING Progress.Lang.*.
 
 interface adeuib.ide.request.irequest :  
     
