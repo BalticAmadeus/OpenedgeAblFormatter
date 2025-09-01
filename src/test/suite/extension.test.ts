@@ -36,7 +36,9 @@ functionalTestDirs.forEach((dir) => {
     });
 });
 
-const knownFailures = getFailedTestCases(join(extensionDevelopmentPath, "resources/functionalTests"));
+const knownFailures = getFailedTestCases(
+    join(extensionDevelopmentPath, "resources/functionalTests")
+);
 const treeSitterErrorTestDir = "resources/treeSitterErrorTests";
 const treeSitterErrorTestDirs = getDirs(
     path.join(extensionDevelopmentPath, treeSitterErrorTestDir)
@@ -121,8 +123,7 @@ function functionalTest(name: string): void {
                     .replaceAll("\r\n", "#CRLF\r\n")
                     .replaceAll(/(?<!\r)\n/g, "#LF\n")
             );
-        }
-        else {
+        } else {
             assert.strictEqual(
                 resultText
                     .replaceAll(" ", "_")
@@ -135,8 +136,11 @@ function functionalTest(name: string): void {
             );
         }
     } catch (err: any) {
-        if (knownFailures.includes(fileName)){
-            console.log("Issue was fixed - please remove from known failures list: ", fileName);
+        if (knownFailures.includes(fileName)) {
+            console.log(
+                "Issue was fixed - please remove from known failures list: ",
+                fileName
+            );
         }
 
         const afterFilePath = path.join(testResultsDir, `${fileName}.p`);
@@ -291,10 +295,12 @@ function getFailedTestCases(filePath: string): string[] {
 
     // Read the file and split lines into an array
     const data = fs.readFileSync(failedFilePath, "utf8");
-    const failures = data.split("\n").filter((line) => line.trim() !== "");
+    const failures = data
+        .split("\n")
+        .map((line) => line.replace(/\r$/, "")) // Remove trailing \r if present
+        .filter((line) => line.trim() !== ""); // Filter out empty lines
 
     console.log("Known failures list has ", failures.length, "cases");
 
     return failures;
 }
-
