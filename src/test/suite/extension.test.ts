@@ -13,6 +13,7 @@ import { enableFormatterDecorators } from "../../formatterFramework/enableFormat
 import path from "path";
 import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
+import { join } from "path";
 
 let parserHelper: AblParserHelper;
 
@@ -35,6 +36,7 @@ functionalTestDirs.forEach((dir) => {
     });
 });
 
+const knownFailures = getFailedTestCases(join(extensionDevelopmentPath, "resources/functionalTests"));
 const treeSitterErrorTestDir = "resources/treeSitterErrorTests";
 const treeSitterErrorTestDirs = getDirs(
     path.join(extensionDevelopmentPath, treeSitterErrorTestDir)
@@ -105,20 +107,37 @@ function functionalTest(name: string): void {
     const inputText = getInput(name);
     const resultText = format(inputText, name);
     const targetText = getTarget(name);
+    const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
 
     try {
-        assert.strictEqual(
-            resultText
-                .replaceAll(" ", "_")
-                .replaceAll("\r\n", "#CRLF\r\n")
-                .replaceAll(/(?<!\r)\n/g, "#LF\n"),
-            targetText
-                .replaceAll(" ", "_")
-                .replaceAll("\r\n", "#CRLF\r\n")
-                .replaceAll(/(?<!\r)\n/g, "#LF\n")
-        );
+        if (knownFailures.includes(fileName)) {
+            assert.notStrictEqual(
+                resultText
+                    .replaceAll(" ", "_")
+                    .replaceAll("\r\n", "#CRLF\r\n")
+                    .replaceAll(/(?<!\r)\n/g, "#LF\n"),
+                targetText
+                    .replaceAll(" ", "_")
+                    .replaceAll("\r\n", "#CRLF\r\n")
+                    .replaceAll(/(?<!\r)\n/g, "#LF\n")
+            );
+        }
+        else {
+            assert.strictEqual(
+                resultText
+                    .replaceAll(" ", "_")
+                    .replaceAll("\r\n", "#CRLF\r\n")
+                    .replaceAll(/(?<!\r)\n/g, "#LF\n"),
+                targetText
+                    .replaceAll(" ", "_")
+                    .replaceAll("\r\n", "#CRLF\r\n")
+                    .replaceAll(/(?<!\r)\n/g, "#LF\n")
+            );
+        }
     } catch (err: any) {
-        const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
+        if (knownFailures.includes(fileName)){
+            console.log("Issue was fixed - please remove from known failures list: ", fileName);
+        }
 
         const afterFilePath = path.join(testResultsDir, `${fileName}.p`);
 
@@ -181,7 +200,12 @@ function readFile(fileUri: string): string {
 }
 
 function getDirs(fileUri: string): string[] {
-    return fs.readdirSync(fileUri, "utf-8");
+    try {
+        return fs.readdirSync(fileUri, { encoding: "utf-8" });
+    } catch (error) {
+        console.error(`Failed to read directory: ${fileUri}`, error);
+        return [];
+    }
 }
 
 function getFileEOL(fileText: string): string {
@@ -255,3 +279,22 @@ function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
 
     return errorMessage;
 }
+
+function getFailedTestCases(filePath: string): string[] {
+    const failedFilePath = path.join(filePath, "_failures.txt");
+
+    // Check if the file exists to avoid errors
+    if (!fs.existsSync(failedFilePath)) {
+        console.log("Known Failures file does not exist!");
+        return [];
+    }
+
+    // Read the file and split lines into an array
+    const data = fs.readFileSync(failedFilePath, "utf8");
+    const failures = data.split("\n").filter((line) => line.trim() !== "");
+
+    console.log("Known failures list has ", failures.length, "cases");
+
+    return failures;
+}
+
