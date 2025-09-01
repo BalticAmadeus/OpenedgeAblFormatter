@@ -5,8 +5,8 @@ issuesGithub_163_3
 issuesGithub_163_4
 issuesGithub_196_1
 issuesGithub_196_2
-issuesGithub_226
-issuesGithub_338
+issuesGithub_226 - fixed
+issuesGithub_338 - fixed
 issuesGithub_353
 issuesGithub_433_1
 issuesGithub_433_2
