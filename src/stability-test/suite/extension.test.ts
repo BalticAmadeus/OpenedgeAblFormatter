@@ -8,7 +8,7 @@ import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
-import Parser from "web-tree-sitter";
+import Parser, { SyntaxNode, Tree } from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import path, { join } from "path";
 import { EOL } from "../../model/EOL";
@@ -83,12 +83,18 @@ suite("Extension Test Suite", () => {
 
     stabilityTestCases.forEach((cases) => {
         test(`Symbol test: ${cases}`, () => {
-            stabilityTest(cases);
+            symbolTest(cases);
+        }).timeout(10000);
+    });
+
+    stabilityTestCases.forEach((cases) => {
+        test(`AST test: ${cases}`, () => {
+            astTest(cases);
         }).timeout(10000);
     });
 });
 
-function stabilityTest(name: string): void {
+function symbolTest(name: string): void {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
@@ -135,6 +141,83 @@ function stabilityTest(name: string): void {
 
         assert.fail(`File should fail ${fileName}`);
     }
+}
+
+function astTest(name: string): void {
+    ConfigurationManager.getInstance();
+    enableFormatterDecorators();
+
+    const beforeText = settingsOverride + getInput(name);
+    const beforeAst = generateAst(beforeText);
+    const afterText = format(beforeText, name);
+    const afterAst = generateAst(afterText);
+
+    const nameWithRelativePath = name.startsWith(stabilityTestDir)
+        ? name.slice(stabilityTestDir.length + 1)
+        : name;
+
+    const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
+
+    if (beforeAst === undefined) {
+        return;
+    }
+
+    if (afterAst === undefined) {
+        return;
+    }
+
+    if (compareAst(beforeAst, afterAst)) {
+        if (knownFailures.includes(fileName)) {
+            console.log("Known issue");
+            return;
+        }
+
+        addFailedTestCase(testRunDir, "_failures.txt", fileName);
+
+        const beforeFilePath = join(
+            testRunDir,
+            `${fileName}_before${path.extname(name)}`
+        );
+        const afterFilePath = join(
+            testRunDir,
+            `${fileName}_after${path.extname(name)}`
+        );
+
+        fs.writeFileSync(beforeFilePath, beforeText);
+        fs.writeFileSync(afterFilePath, afterText);
+
+        assert.fail(`Symbol count mismatch
+        Before: ${beforeFilePath}
+        After: ${afterFilePath}
+        `);
+    }
+
+    // if test passes but file is in error list
+    if (knownFailures.includes(fileName)) {
+        addFailedTestCase(testRunDir, "_new_passes.txt", fileName);
+
+        assert.fail(`File should fail ${fileName}`);
+    }
+}
+
+function generateAst(text: string): Tree | undefined {
+    const tree = parserHelper.parse(new FileIdentifier("test", 1), text).tree;
+
+    return tree;
+}
+
+function compareAst(ast1: Tree, ast2: Tree): SyntaxNode | undefined {
+    // const iterator1 = ast1.rootNode.walk();
+    // const iterator2 = ast2.rootNode.walk();
+
+    // while(true) {
+    //     if (iterator1.nodeType !== iterator2.nodeType) {
+    //         return iterator1.currentNode();
+    //     }
+
+    // }
+
+    return undefined;
 }
 
 function getInput(fileName: string): string {

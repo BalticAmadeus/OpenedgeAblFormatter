@@ -43,6 +43,11 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>

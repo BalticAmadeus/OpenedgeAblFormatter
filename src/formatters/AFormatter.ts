@@ -10,6 +10,13 @@ export abstract class AFormatter {
         this.configurationManager = configurationManager;
     }
 
+    protected compare(
+        node1: Readonly<SyntaxNode>,
+        node2: Readonly<SyntaxNode>
+    ): boolean {
+        return node1.equals(node2);
+    }
+
     protected getCodeEdit(
         node: SyntaxNode,
         oldText: string,
