@@ -81,8 +81,3 @@ protools__prospy.w
 //0050 issues -->
 prodict_dump__dmpsec.p
 //0050 issues <--
-
-// ADE update issues
-prodict_dump__lod_raw.i
-prodict_misc__runload.i
-prodict_misc__runsylk.i
