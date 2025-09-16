@@ -89,7 +89,8 @@ export class AblFormatterProvider
                 this.parserHelper,
                 new FileIdentifier(document.fileName, document.version),
                 configurationManager,
-                debugManager
+                debugManager,
+                this.metamorphicTestingEngine
             );
 
             const str = codeFormatter.formatText(

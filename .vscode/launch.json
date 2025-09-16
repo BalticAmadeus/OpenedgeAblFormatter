@@ -45,7 +45,7 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
-			"name": "Extension Tests w Metamorphic",
+			"name": "Extension Tests (Metamorphic)",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [

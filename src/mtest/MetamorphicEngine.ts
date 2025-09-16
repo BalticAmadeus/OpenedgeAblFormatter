@@ -55,7 +55,7 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     ): undefined | DebugTestingEngineOutput {
         if (this.formattingEngine === undefined) {
             throw new Error(
-                `Missing Formatting engine in Metamophic test engine.`
+                `Missing Formatting engine in Metamorphic test engine.`
             );
         }
 
