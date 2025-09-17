@@ -387,6 +387,7 @@
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.3.2",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
     "esbuild": "^0.25.2",
@@ -396,11 +397,10 @@
     "replace-in-file": "^8.3.0",
     "rimraf": "^5.0.5",
     "typescript": "^5.2.2",
-    "vscode-extension-tester": "^8.13.0",
-    "@vscode/vsce": "^3.3.2"
+    "vscode-extension-tester": "^8.13.0"
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.9.8",
-    "web-tree-sitter": "0.20.8"
+    "web-tree-sitter": "^0.25.9"
   }
 }
