@@ -13,6 +13,7 @@ import { IConfigurationManager } from "../../utils/IConfigurationManager";
 export class ForFormatter extends AFormatter implements IFormatter {
     private startColumn = 0;
     private forBodyValue = "";
+    private alignEach = 0;
     private eachStatementsFound = 0;
 
     public static readonly formatterLabel = "forFormatting";
@@ -70,6 +71,9 @@ export class ForFormatter extends AFormatter implements IFormatter {
                 child.type === SyntaxNodeType.Identifier
             ) {
                 alignColumn = this.startColumn + resultString.length;
+            } else if (child.type === SyntaxNodeType.EachKeyword) {
+                this.alignEach = this.startColumn + resultString.length;
+                console.log("AlignEach: " + this.alignEach);
             }
             resultString = resultString.concat(
                 this.getForExpressionString(child, fullText, alignColumn)
@@ -128,11 +132,19 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     fullText,
                     alignColumn
                 );
-                newString = FormatterHelper.alignIndentation(
-                    newString,
-                    alignColumn + 1,
-                    fullText.eolDelimiter
-                );
+                if (!this.settings.whereClauseLocation()) {
+                    newString = FormatterHelper.alignIndentation(
+                        newString,
+                        alignColumn + 1,
+                        fullText.eolDelimiter
+                    );
+                } else {
+                    newString = FormatterHelper.alignIndentation(
+                        newString,
+                        this.alignEach,
+                        fullText.eolDelimiter
+                    );
+                }
                 break;
             case SyntaxNodeType.EndKeyword:
                 newString =
@@ -178,12 +190,27 @@ export class ForFormatter extends AFormatter implements IFormatter {
         node.children.forEach((child) => {
             switch (child.type) {
                 case SyntaxNodeType.WhereKeyword:
-                    resultString = resultString.concat(
-                        " ",
-                        FormatterHelper.getCurrentText(child, fullText).trim(),
-                        fullText.eolDelimiter,
-                        " ".repeat(alignColumn)
-                    );
+                    if (true || this.settings.whereClauseLocation()) {
+                        resultString = resultString.concat(
+                            fullText.eolDelimiter,
+                            " ".repeat(this.alignEach),
+                            FormatterHelper.getCurrentText(
+                                child,
+                                fullText
+                            ).trim()
+                        );
+                        break;
+                    } else {
+                        resultString = resultString.concat(
+                            " ",
+                            FormatterHelper.getCurrentText(
+                                child,
+                                fullText
+                            ).trim(),
+                            fullText.eolDelimiter,
+                            " ".repeat(alignColumn)
+                        );
+                    }
                     break;
                 default:
                     const text = FormatterHelper.getCurrentText(
@@ -195,6 +222,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     );
                     break;
             }
+            console.log("ResultString in Where: " + resultString);
         });
 
         return resultString;

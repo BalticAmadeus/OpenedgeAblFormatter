@@ -5,4 +5,12 @@ export class ForSettings extends ASettings {
     public forFormatting() {
         return this.configurationManager.get("forFormatting") ? true : false;
     }
+
+    public whereClauseLocation() {
+        return (
+            this.configurationManager.get(
+                "forFormattingWhereClauseLocation"
+            ) === "New"
+        );
+    }
 }

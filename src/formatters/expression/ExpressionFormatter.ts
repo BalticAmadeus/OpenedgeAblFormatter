@@ -62,7 +62,8 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         if (
             node.type === SyntaxNodeType.LogicalExpression &&
             node.parent?.type !== SyntaxNodeType.CaseCondition &&
-            this.settings.newLineAfterLogical()
+            (this.settings.newLineAfterLogical() ||
+                this.settings.newLineBeforeLogical())
         ) {
             newText = this.collectLogicalStructure(node, fullText);
         } else {
@@ -114,12 +115,20 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
             case logicalKeywords.hasFancy(node.type, ""):
-                newString = this.settings.newLineAfterLogical()
-                    ? " " +
-                      FormatterHelper.getCurrentText(node, fullText).trim() +
-                      fullText.eolDelimiter
-                    : " " +
-                      FormatterHelper.getCurrentText(node, fullText).trim();
+                if (this.settings.newLineAfterLogical()) {
+                    newString =
+                        " " +
+                        FormatterHelper.getCurrentText(node, fullText).trim() +
+                        fullText.eolDelimiter;
+                } else if (this.settings.newLineBeforeLogical()) {
+                    newString =
+                        fullText.eolDelimiter +
+                        FormatterHelper.getCurrentText(node, fullText);
+                } else {
+                    newString =
+                        " " +
+                        FormatterHelper.getCurrentText(node, fullText).trim();
+                }
                 break;
             case SyntaxNodeType.ParenthesizedExpression:
                 node.children.forEach((child) => {

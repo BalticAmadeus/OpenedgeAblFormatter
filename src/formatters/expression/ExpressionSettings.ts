@@ -13,4 +13,12 @@ export class ExpressionSettings extends ASettings {
             ) === "New"
         );
     }
+
+    public newLineBeforeLogical() {
+        return (
+            this.configurationManager.get(
+                "expressionFormattingLogicalLocation"
+            ) === "Before"
+        );
+    }
 }
