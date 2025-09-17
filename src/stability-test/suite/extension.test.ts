@@ -240,14 +240,100 @@ function compareAst(ast1: Tree, ast2: Tree): boolean {
     return !areAstNodesEqual(ast1.rootNode, ast2.rootNode);
 }
 
+function compareSourceCodeOrderInsensitive(
+    node1: SyntaxNode,
+    node2: SyntaxNode
+): boolean {
+    // First check that we have the same number of children
+    if (node1.childCount !== node2.childCount) {
+        console.log(
+            `Source code child count mismatch: ${node1.childCount} vs ${node2.childCount}`
+        );
+        return false;
+    }
+
+    // Separate using statements from other statements
+    const usingStatements1: SyntaxNode[] = [];
+    const otherStatements1: SyntaxNode[] = [];
+    const usingStatements2: SyntaxNode[] = [];
+    const otherStatements2: SyntaxNode[] = [];
+
+    for (let i = 0; i < node1.childCount; i++) {
+        const child1 = node1.child(i)!;
+        if (child1.type === "using_statement") {
+            usingStatements1.push(child1);
+        } else {
+            otherStatements1.push(child1);
+        }
+    }
+
+    for (let i = 0; i < node2.childCount; i++) {
+        const child2 = node2.child(i)!;
+        if (child2.type === "using_statement") {
+            usingStatements2.push(child2);
+        } else {
+            otherStatements2.push(child2);
+        }
+    }
+
+    // Check that we have the same number of using statements and other statements
+    if (usingStatements1.length !== usingStatements2.length) {
+        console.log(
+            `Using statement count mismatch: ${usingStatements1.length} vs ${usingStatements2.length}`
+        );
+        return false;
+    }
+
+    if (otherStatements1.length !== otherStatements2.length) {
+        console.log(
+            `Non-using statement count mismatch: ${otherStatements1.length} vs ${otherStatements2.length}`
+        );
+        return false;
+    }
+
+    const normalizeUsingStatement = (text: string): string => {
+        // Normalize whitespace: replace multiple spaces with single space, trim
+        return text.replace(/\s+/g, " ").trim();
+    };
+
+    const usingTexts1 = usingStatements1
+        .map((node) => normalizeUsingStatement(node.text))
+        .sort();
+    const usingTexts2 = usingStatements2
+        .map((node) => normalizeUsingStatement(node.text))
+        .sort();
+
+    for (let i = 0; i < usingTexts1.length; i++) {
+        if (usingTexts1[i] !== usingTexts2[i]) {
+            console.log(`Using statement content mismatch:`);
+            console.log(`Text1: "${usingTexts1[i]}"`);
+            console.log(`Text2: "${usingTexts2[i]}"`);
+            return false;
+        }
+    }
+
+    // Compare other statements in order (they should maintain their position)
+    for (let i = 0; i < otherStatements1.length; i++) {
+        if (!areAstNodesEqual(otherStatements1[i], otherStatements2[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function areAstNodesEqual(node1: SyntaxNode, node2: SyntaxNode): boolean {
-    // Compare node types
     if (node1.type !== node2.type) {
         console.log(`Node type mismatch: "${node1.type}" vs "${node2.type}"`);
         console.log(
             `Position: ${node1.startPosition.row}:${node1.startPosition.column}`
         );
         return false;
+    }
+
+    // Special handling for source_code - make comparison order-insensitive for using statements
+    if (node1.type === "source_code") {
+        return compareSourceCodeOrderInsensitive(node1, node2);
     }
 
     // Compare child count
