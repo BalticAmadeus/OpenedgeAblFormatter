@@ -150,6 +150,8 @@ _Precondition_: Disable VS Code auto save.
 
 ## Contributing
 
+asdas
+
 ### Registering formatter issues
 
 -   Use [Formatter bug template](https://github.com/BalticAmadeus/AblFormatter/issues/new/choose)
