@@ -39,7 +39,6 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.languages.registerHoverProvider(Constants.ablId, hoverProvider);
     Telemetry.sendExtensionSettings();
 
-    // Register 'Report a Bug' command
     const reportBugCommand = vscode.commands.registerCommand(
         "openedgeAblFormatter.reportBug",
         () => {
@@ -52,12 +51,11 @@ export async function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(reportBugCommand);
 
-    // Add a status bar button for reporting bugs
     const bugStatusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
         99
     );
-    bugStatusBarItem.text = "$(bug) Report Bug";
+    bugStatusBarItem.text = "$(bug) ABL Formatter: Report Bug";
     bugStatusBarItem.command = "openedgeAblFormatter.reportBug";
     bugStatusBarItem.tooltip =
         "Report a bug or issue for OpenEdge ABL Formatter";
