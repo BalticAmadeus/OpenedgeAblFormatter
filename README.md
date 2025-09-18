@@ -137,6 +137,17 @@ We implemented debug mode for looking into tree-sitter issues. You can also enab
 
 ![Debug Mode](./resources/debug_mode.png)
 
+### How to View Diff Between Preformatted and Formatted ABL Code Files in VSCode
+
+_Precondition_: Disable VS Code auto save.
+
+1. Open the file you want to format.
+2. Open the Command Palette (Ctrl+Shift+P).
+3. Run "Compare Active File with Saved".
+4. In the right view format document or format selection.
+5. Check the diffs.
+6. If everything is OK, save the file (Ctrl+S). Otherwise return/undo (Ctrl+Z).
+
 ## Contributing
 
 ### Registering formatter issues
