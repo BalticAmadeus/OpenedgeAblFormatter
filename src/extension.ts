@@ -44,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext) {
         () => {
             vscode.env.openExternal(
                 vscode.Uri.parse(
-                    "https://github.com/BalticAmadeus/AblFormatter/issues/new/choose"
+                    "https://github.com/BalticAmadeus/AblFormatter/issues/new"
                 )
             );
         }

@@ -358,7 +358,7 @@
     "commands": [
       {
         "command": "openedgeAblFormatter.reportBug",
-        "title": "Report a Bug",
+        "title": "Report Bug",
         "category": "OpenEdge ABL Formatter"
       }
     ]
