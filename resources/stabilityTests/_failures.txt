@@ -83,6 +83,6 @@ prodict_dump__dmpsec.p
 //0050 issues <--
 
 // ADE update issues
-prodict_dump__lod_raw.i
-prodict_misc__runload.i
-prodict_misc__runsylk.i
+// prodict_dump__lod_raw.i - non existant
+// prodict_misc__runload.i - stability test passes
+// prodict_misc__runsylk.i - stability test passes

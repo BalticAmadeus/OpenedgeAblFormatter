@@ -14,7 +14,36 @@ export abstract class AFormatter {
         node1: Readonly<SyntaxNode>,
         node2: Readonly<SyntaxNode>
     ): boolean {
-        return node1.equals(node2);
+        // Skip comparison for nodes that have using_statement ancestors
+        // since using statements are compared as groups and may be reordered
+        if (
+            this.hasUsingStatementAncestor(node1) ||
+            this.hasUsingStatementAncestor(node2)
+        ) {
+            return true; // Let UsingFormatter handle using statement comparisons
+        }
+
+        if (node1.type !== node2.type) {
+            return false;
+        }
+
+        if (node1.childCount !== node2.childCount) {
+            return false;
+        }
+
+        if (node1.namedChildCount !== node2.namedChildCount) {
+            return false;
+        }
+
+        if (node1.childCount === 0) {
+            const text1 = node1.text.replace(/\s+/g, " ").trim();
+            const text2 = node2.text.replace(/\s+/g, " ").trim();
+            if (text1 !== text2) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected getCodeEdit(
@@ -45,5 +74,16 @@ export abstract class AFormatter {
                 },
             },
         };
+    }
+
+    private hasUsingStatementAncestor(node: SyntaxNode): boolean {
+        let currentNode: SyntaxNode | null = node.parent;
+        while (currentNode) {
+            if (currentNode.type === "using_statement") {
+                return true;
+            }
+            currentNode = currentNode.parent;
+        }
+        return false;
     }
 }

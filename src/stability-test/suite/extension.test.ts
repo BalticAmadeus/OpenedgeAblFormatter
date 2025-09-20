@@ -29,8 +29,6 @@ const stabilityTestCases = getFilesWithExtensions(
     extensionsToFind
 );
 
-console.log("Parser initialized", stabilityTestCases);
-
 const testRunTimestamp = new Date()
     .toISOString()
     .replace(/[:.T-]/g, "_")
@@ -52,8 +50,8 @@ const settingsOverride =
 
 console.log(settingsOverride);
 
-suite("Extension Test Suite", () => {
-    console.log("Parser initialized", stabilityTestCases);
+suite("Stability Test Suite", () => {
+    console.log("Parser initialized");
 
     suiteTeardown(() => {
         vscode.window.showInformationMessage("All tests done!");
@@ -61,7 +59,7 @@ suite("Extension Test Suite", () => {
 
     suiteSetup(async () => {
         await Parser.init().then(() => {
-            console.log("Parser initialized");
+            console.log("Suite setup");
         });
 
         fs.mkdirSync(testRunDir, { recursive: true });
@@ -149,21 +147,10 @@ function astTest(name: string): void {
 
     const beforeText = settingsOverride + getInput(name);
     const beforeAst = generateAst(beforeText);
-
-    if (beforeAst === undefined) {
-        console.warn(
-            `Skipping AST test for ${name} - could not generate before AST`
-        );
-        return;
-    }
-
     const afterText = format(beforeText, name);
     const afterAst = generateAst(afterText);
 
-    if (afterAst === undefined) {
-        console.warn(
-            `Skipping AST test for ${name} - could not generate after AST`
-        );
+    if (beforeAst === undefined || afterAst === undefined) {
         return;
     }
 
@@ -195,10 +182,6 @@ function astTest(name: string): void {
         fs.writeFileSync(beforeFilePath, beforeText);
         fs.writeFileSync(afterFilePath, afterText);
 
-        // Also write AST representations for easier analysis
-        writeAstToFile(beforeAst, beforeFilePath);
-        writeAstToFile(afterAst, afterFilePath);
-
         assert.fail(`AST structure mismatch
         Before: ${beforeFilePath}
         After: ${afterFilePath}
@@ -214,172 +197,20 @@ function astTest(name: string): void {
 }
 
 function generateAst(text: string): Tree | undefined {
-    try {
-        const tree = parserHelper.parse(
-            new FileIdentifier("test", 1),
-            text
-        ).tree;
-        return tree;
-    } catch (error) {
-        // Handle Tree-sitter WASM memory errors
-        if (
-            error instanceof Error &&
-            error.message.includes("memory access out of bounds")
-        ) {
-            console.warn(
-                "Tree-sitter memory error - skipping AST generation for large file"
-            );
-            return undefined;
-        }
-        // Re-throw other unexpected errors
-        throw error;
-    }
+    const tree = parserHelper.parse(new FileIdentifier("test", 1), text).tree;
+    return tree;
 }
 
 function compareAst(ast1: Tree, ast2: Tree): boolean {
-    return !areAstNodesEqual(ast1.rootNode, ast2.rootNode);
-}
+    const configurationManager = ConfigurationManager.getInstance();
+    const formattingEngine = new FormattingEngine(
+        parserHelper,
+        new FileIdentifier("comparison", 1),
+        configurationManager,
+        new DebugManagerMock()
+    );
 
-function compareSourceCodeOrderInsensitive(
-    node1: SyntaxNode,
-    node2: SyntaxNode
-): boolean {
-    // First check that we have the same number of children
-    if (node1.childCount !== node2.childCount) {
-        console.log(
-            `Source code child count mismatch: ${node1.childCount} vs ${node2.childCount}`
-        );
-        return false;
-    }
-
-    // Separate using statements from other statements
-    const usingStatements1: SyntaxNode[] = [];
-    const otherStatements1: SyntaxNode[] = [];
-    const usingStatements2: SyntaxNode[] = [];
-    const otherStatements2: SyntaxNode[] = [];
-
-    for (let i = 0; i < node1.childCount; i++) {
-        const child1 = node1.child(i)!;
-        if (child1.type === "using_statement") {
-            usingStatements1.push(child1);
-        } else {
-            otherStatements1.push(child1);
-        }
-    }
-
-    for (let i = 0; i < node2.childCount; i++) {
-        const child2 = node2.child(i)!;
-        if (child2.type === "using_statement") {
-            usingStatements2.push(child2);
-        } else {
-            otherStatements2.push(child2);
-        }
-    }
-
-    // Check that we have the same number of using statements and other statements
-    if (usingStatements1.length !== usingStatements2.length) {
-        console.log(
-            `Using statement count mismatch: ${usingStatements1.length} vs ${usingStatements2.length}`
-        );
-        return false;
-    }
-
-    if (otherStatements1.length !== otherStatements2.length) {
-        console.log(
-            `Non-using statement count mismatch: ${otherStatements1.length} vs ${otherStatements2.length}`
-        );
-        return false;
-    }
-
-    const normalizeUsingStatement = (text: string): string => {
-        // Normalize whitespace: replace multiple spaces with single space, trim
-        return text.replace(/\s+/g, " ").trim();
-    };
-
-    const usingTexts1 = usingStatements1
-        .map((node) => normalizeUsingStatement(node.text))
-        .sort();
-    const usingTexts2 = usingStatements2
-        .map((node) => normalizeUsingStatement(node.text))
-        .sort();
-
-    for (let i = 0; i < usingTexts1.length; i++) {
-        if (usingTexts1[i] !== usingTexts2[i]) {
-            console.log(`Using statement content mismatch:`);
-            console.log(`Text1: "${usingTexts1[i]}"`);
-            console.log(`Text2: "${usingTexts2[i]}"`);
-            return false;
-        }
-    }
-
-    // Compare other statements in order (they should maintain their position)
-    for (let i = 0; i < otherStatements1.length; i++) {
-        if (!areAstNodesEqual(otherStatements1[i], otherStatements2[i])) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-function areAstNodesEqual(node1: SyntaxNode, node2: SyntaxNode): boolean {
-    if (node1.type !== node2.type) {
-        console.log(`Node type mismatch: "${node1.type}" vs "${node2.type}"`);
-        console.log(
-            `Position: ${node1.startPosition.row}:${node1.startPosition.column}`
-        );
-        return false;
-    }
-
-    // Special handling for source_code - make comparison order-insensitive for using statements
-    if (node1.type === "source_code") {
-        return compareSourceCodeOrderInsensitive(node1, node2);
-    }
-
-    // Compare child count
-    if (node1.childCount !== node2.childCount) {
-        console.log(
-            `Child count mismatch for ${node1.type}: ${node1.childCount} vs ${node2.childCount}`
-        );
-        console.log(
-            `Position: ${node1.startPosition.row}:${node1.startPosition.column}`
-        );
-        return false;
-    }
-
-    // Compare named child count
-    if (node1.namedChildCount !== node2.namedChildCount) {
-        console.log(
-            `Named child count mismatch for ${node1.type}: ${node1.namedChildCount} vs ${node2.namedChildCount}`
-        );
-        console.log(
-            `Position: ${node1.startPosition.row}:${node1.startPosition.column}`
-        );
-        return false;
-    }
-
-    if (node1.childCount === 0) {
-        const text1 = node1.text.replace(/\s+/g, " ").trim();
-        const text2 = node2.text.replace(/\s+/g, " ").trim();
-        if (text1 !== text2) {
-            console.log(`Terminal node text mismatch for ${node1.type}:`);
-            console.log(
-                `Position: ${node1.startPosition.row}:${node1.startPosition.column}`
-            );
-            console.log(`Text1: "${text1}"`);
-            console.log(`Text2: "${text2}"`);
-            return false;
-        }
-        return true;
-    }
-
-    for (let i = 0; i < node1.childCount; i++) {
-        if (!areAstNodesEqual(node1.child(i)!, node2.child(i)!)) {
-            return false;
-        }
-    }
-
-    return true;
+    return !formattingEngine.isAstEqual(ast1, ast2);
 }
 
 function getInput(fileName: string): string {
@@ -557,101 +388,86 @@ function analyzeAstDifferences(
     afterAst: Tree,
     fileName: string
 ): void {
-    console.log(`\n=== AST Analysis for ${fileName} ===`);
+    const analysisFilePath = join(testRunDir, `${fileName}_ast_analysis.txt`);
+
+    let analysisContent = `AST Analysis for ${fileName}\n`;
+    analysisContent += `${"=".repeat(50)}\n\n`;
 
     const beforeRoot = beforeAst.rootNode;
     const afterRoot = afterAst.rootNode;
 
-    console.log(
-        `Before AST - Type: ${beforeRoot.type}, Children: ${beforeRoot.childCount}, Named Children: ${beforeRoot.namedChildCount}`
-    );
-    console.log(
-        `After AST  - Type: ${afterRoot.type}, Children: ${afterRoot.childCount}, Named Children: ${afterRoot.namedChildCount}`
-    );
+    analysisContent += `Before AST - Type: ${beforeRoot.type}, Children: ${beforeRoot.childCount}, Named Children: ${beforeRoot.namedChildCount}\n`;
+    analysisContent += `After AST  - Type: ${afterRoot.type}, Children: ${afterRoot.childCount}, Named Children: ${afterRoot.namedChildCount}\n\n`;
 
-    findFirstDifference(beforeRoot, afterRoot, "");
-    console.log(`=== End AST Analysis ===\n`);
+    analysisContent += "Differences found:\n";
+    analysisContent += "-".repeat(30) + "\n";
+
+    const differences = findAllDifferences(beforeRoot, afterRoot, "");
+
+    if (differences.length === 0) {
+        analysisContent +=
+            "No differences found (this shouldn't happen if the test failed)\n";
+    } else {
+        differences.forEach((diff: string, index: number) => {
+            analysisContent += `${index + 1}. ${diff}\n`;
+        });
+    }
+
+    analysisContent += `\n${"=".repeat(50)}\n`;
+    analysisContent += `Total differences found: ${differences.length}\n`;
+
+    fs.writeFileSync(analysisFilePath, analysisContent, "utf8");
 }
 
-function findFirstDifference(
+function findAllDifferences(
     node1: SyntaxNode,
     node2: SyntaxNode,
     path: string
-): boolean {
+): string[] {
+    const differences: string[] = [];
     const currentPath = path ? `${path} > ${node1.type}` : node1.type;
 
     if (node1.type !== node2.type) {
-        console.log(`❌ First difference found at path: ${currentPath}`);
-        console.log(`   Node type: "${node1.type}" vs "${node2.type}"`);
-        console.log(
-            `   Position: ${node1.startPosition.row}:${node1.startPosition.column}`
+        differences.push(
+            `Path: ${currentPath} - Node type mismatch: "${node1.type}" vs "${node2.type}"\n
+            at position ${node1.startPosition.row}:${node1.startPosition.column}\n`
         );
-        return true;
+        return differences;
     }
 
     if (node1.childCount !== node2.childCount) {
-        console.log(`❌ First difference found at path: ${currentPath}`);
-        console.log(
-            `   Child count: ${node1.childCount} vs ${node2.childCount}`
+        differences.push(
+            `Path: ${currentPath} - Child count mismatch: ${node1.childCount} vs ${node2.childCount}\n
+            at position ${node1.startPosition.row}:${node1.startPosition.column}\n`
         );
-        console.log(
-            `   Position: ${node1.startPosition.row}:${node1.startPosition.column}`
-        );
-        return true;
+        return differences;
     }
 
     if (node1.childCount === 0) {
         const text1 = node1.text.replace(/\s+/g, " ").trim().toLowerCase();
         const text2 = node2.text.replace(/\s+/g, " ").trim().toLowerCase();
         if (text1 !== text2) {
-            console.log(`❌ First difference found at path: ${currentPath}`);
-            console.log(`   Terminal text: "${text1}" vs "${text2}"`);
-            console.log(
-                `   Position: ${node1.startPosition.row}:${node1.startPosition.column}`
+            differences.push(
+                `Path: ${currentPath} - Terminal text mismatch: "${text1}" vs "${text2}"\n
+                at position ${node1.startPosition.row}:${node1.startPosition.column}
+                node1 text:\n
+                "${node1.text}"\n
+                node2 text:\n
+                "${node2.text}"\n`
             );
-            return true;
+            ``;
         }
-        return false;
+        return differences;
     }
 
     for (let i = 0; i < node1.childCount; i++) {
-        if (
-            findFirstDifference(node1.child(i)!, node2.child(i)!, currentPath)
-        ) {
-            return true;
-        }
+        const childDifferences = findAllDifferences(
+            node1.child(i)!,
+            node2.child(i)!,
+            currentPath
+        );
+        differences.push(...childDifferences);
     }
 
-    return false;
-}
-
-function writeAstToFile(ast: Tree, filePath: string): void {
-    const astText = serializeAstNode(ast.rootNode, 0);
-    fs.writeFileSync(
-        filePath.replace(path.extname(filePath), "_ast.txt"),
-        astText
-    );
-}
-
-function serializeAstNode(node: SyntaxNode, depth: number): string {
-    const indent = "  ".repeat(depth);
-    let result = `${indent}${node.type}`;
-
-    if (node.childCount === 0) {
-        // Terminal node - show normalized text
-        const text = node.text.replace(/\s+/g, " ").trim();
-        if (text) {
-            result += ` [${text}]`;
-        }
-    } else {
-        result += ` (${node.childCount} children)`;
-    }
-
-    result += `\n`;
-
-    for (let i = 0; i < node.childCount; i++) {
-        result += serializeAstNode(node.child(i)!, depth + 1);
-    }
-
-    return result;
+    return differences;
 }

@@ -2,7 +2,6 @@ import { SyntaxNode, Tree } from "web-tree-sitter";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { IFormatter } from "./IFormatter";
-import { BlockFormater } from "../formatters/block/BlockFormatter";
 import { CodeEdit } from "../model/CodeEdit";
 import { FullText } from "../model/FullText";
 import { IConfigurationManager } from "../utils/IConfigurationManager";
@@ -192,5 +191,48 @@ export class FormattingEngine {
             2,
             secondChildNode.text.length - 2
         );
+    }
+
+    private compare(
+        node1: SyntaxNode,
+        node2: SyntaxNode,
+        formatters: IFormatter[]
+    ): boolean {
+        const matchingFormatter = formatters.find((formatter) =>
+            formatter.match(node1)
+        );
+
+        let result: boolean;
+
+        if (matchingFormatter) {
+            result = matchingFormatter.compare(node1, node2);
+        } else {
+            result = formatters[0].compare(node1, node2);
+        }
+
+        if (!result) {
+            return false;
+        }
+
+        if (node1.childCount > 0) {
+            for (let i = 0; i < node1.childCount; i++) {
+                const child1 = node1.child(i)!;
+                const child2 = node2.child(i)!;
+
+                if (!this.compare(child1, child2, formatters)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public isAstEqual(tree1: Tree, tree2: Tree): boolean | undefined {
+        const formatters = FormatterFactory.getFormatterInstances(
+            this.configurationManager
+        );
+
+        return this.compare(tree1.rootNode, tree2.rootNode, formatters);
     }
 }

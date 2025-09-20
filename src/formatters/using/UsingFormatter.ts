@@ -15,8 +15,6 @@ export class UsingFormatter extends AFormatter implements IFormatter {
     private readonly settings: UsingSettings;
 
     private usingStatementsFound: number = 0;
-    private alignOptionalStatements: number = 0;
-    private usingStatements: UsingStatement[] = [];
     private textUsingStatements: string[] = [];
 
     public constructor(configurationManager: IConfigurationManager) {
@@ -31,8 +29,72 @@ export class UsingFormatter extends AFormatter implements IFormatter {
         return false;
     }
 
-    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+    compare(node1: SyntaxNode, node2: SyntaxNode): boolean {
+        if (node1.type === SyntaxNodeType.UsingStatement) {
+            const usingStatements1 = this.collectAllUsingStatements(node1);
+            const usingStatements2 = this.collectAllUsingStatements(node2);
+
+            if (usingStatements1.length !== usingStatements2.length) {
+                console.log(
+                    `Using statement count mismatch: ${usingStatements1.length} vs ${usingStatements2.length}`
+                );
+                return false;
+            }
+
+            const formattedStatements1 = usingStatements1
+                .map((stmt) => this.formatUsingStatementForComparison(stmt))
+                .sort();
+            const formattedStatements2 = usingStatements2
+                .map((stmt) => this.formatUsingStatementForComparison(stmt))
+                .sort();
+
+            for (let i = 0; i < formattedStatements1.length; i++) {
+                if (formattedStatements1[i] !== formattedStatements2[i]) {
+                    console.log(
+                        `Using statement content mismatch after sorting:`
+                    );
+                    console.log(`Expected: "${formattedStatements1[i]}"`);
+                    console.log(`Actual: "${formattedStatements2[i]}"`);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         return super.compare(node1, node2);
+    }
+
+    private formatUsingStatementForComparison(
+        statement: UsingStatement
+    ): string {
+        if (statement.optionalDefinitions === "") {
+            return statement.identifier + ".";
+        } else {
+            return (
+                statement.identifier + " " + statement.optionalDefinitions + "."
+            );
+        }
+    }
+
+    private formatUsingStatementForOutput(
+        statement: UsingStatement,
+        allStatements: UsingStatement[]
+    ): string {
+        const maxAlignment = Math.max(
+            ...allStatements.map((stmt) => stmt.identifier.length + 1)
+        );
+
+        if (statement.optionalDefinitions === "") {
+            return statement.identifier + ".";
+        } else {
+            return (
+                statement.identifier +
+                " ".repeat(maxAlignment - statement.identifier.length) +
+                statement.optionalDefinitions +
+                "."
+            );
+        }
     }
 
     parse(
@@ -41,9 +103,16 @@ export class UsingFormatter extends AFormatter implements IFormatter {
     ): CodeEdit | CodeEdit[] | undefined {
         this.usingStatementsFound++;
         if (this.usingStatementsFound === 1) {
-            this.collectAllUsingStatements(node, fullText);
-            this.textUsingStatements = this.usingStatements.map(
-                (usingStatement) => this.usingStatementToString(usingStatement)
+            const collectedStatements = this.collectAllUsingStatements(
+                node,
+                fullText
+            );
+            this.textUsingStatements = collectedStatements.map(
+                (usingStatement) =>
+                    this.formatUsingStatementForOutput(
+                        usingStatement,
+                        collectedStatements
+                    )
             );
             this.textUsingStatements.sort();
         }
@@ -59,88 +128,106 @@ export class UsingFormatter extends AFormatter implements IFormatter {
     }
 
     private collectAllUsingStatements(
-        node: SyntaxNode | null,
-        fullText: FullText
-    ): void {
-        for (node; node !== null; node = node.nextSibling) {
-            if (node.type === SyntaxNodeType.Comment) {
+        startNode: SyntaxNode,
+        fullText?: Readonly<FullText>
+    ): UsingStatement[] {
+        const usingStatements: UsingStatement[] = [];
+
+        let firstUsingNode = startNode;
+        while (
+            firstUsingNode.previousSibling &&
+            (firstUsingNode.previousSibling.type ===
+                SyntaxNodeType.UsingStatement ||
+                firstUsingNode.previousSibling.type === SyntaxNodeType.Comment)
+        ) {
+            firstUsingNode = firstUsingNode.previousSibling;
+        }
+
+        let currentNode: SyntaxNode | null = firstUsingNode;
+        while (currentNode) {
+            if (currentNode.type === SyntaxNodeType.Comment) {
+                currentNode = currentNode.nextSibling;
                 continue;
             }
-            if (!this.match(node)) {
+            if (!this.match(currentNode)) {
                 break;
             }
 
-            const keywordChild = node.child(0);
-            const identifierChild = node.child(1);
+            const keywordChild = currentNode.child(0);
+            const identifierChild = currentNode.child(1);
 
             if (keywordChild === null || identifierChild === null) {
-                return;
+                currentNode = currentNode.nextSibling;
+                continue;
             }
 
-            let keyword = FormatterHelper.getCurrentText(
-                keywordChild,
-                fullText
-            );
-            keyword = this.settings.casing()
-                ? keyword.trim().toUpperCase()
-                : keyword.trim().toLowerCase();
-            const identifier = FormatterHelper.getCurrentText(
-                identifierChild,
-                fullText
-            ).trim();
-
+            let keyword: string;
+            let identifier: string;
             let optionalDefinitions = "";
-            this.alignOptionalStatements = Math.max(
-                this.alignOptionalStatements,
-                /*  The format is this:
-                    USING IDENTIFIER OPTIONAL_DEFINITIONS.
-                    therefore we add +1 for the spaces between different parts.
-                */
-                keyword.length + 1 + identifier.length + 1
-            );
-            if (node.childCount > 2) {
-                for (let i = 2; i < node.childCount; ++i) {
-                    const currentChild = node.child(i);
-                    if (currentChild === null) {
-                        continue;
+
+            if (fullText) {
+                keyword = FormatterHelper.getCurrentText(
+                    keywordChild,
+                    fullText
+                );
+                keyword = this.settings.casing()
+                    ? keyword.trim().toUpperCase()
+                    : keyword.trim().toLowerCase();
+                identifier = FormatterHelper.getCurrentText(
+                    identifierChild,
+                    fullText
+                ).trim();
+
+                if (currentNode.childCount > 2) {
+                    for (let i = 2; i < currentNode.childCount; ++i) {
+                        const currentChild = currentNode.child(i);
+                        if (currentChild === null) {
+                            continue;
+                        }
+                        optionalDefinitions +=
+                            FormatterHelper.getCurrentText(
+                                currentChild,
+                                fullText
+                            ).trim() + " ";
                     }
-                    optionalDefinitions +=
-                        FormatterHelper.getCurrentText(
-                            currentChild,
-                            fullText
-                        ).trim() + " ";
+                    optionalDefinitions = this.settings.casing()
+                        ? optionalDefinitions.trim().toUpperCase()
+                        : optionalDefinitions.trim().toLowerCase();
                 }
-                optionalDefinitions = this.settings.casing()
-                    ? optionalDefinitions.trim().toUpperCase()
-                    : optionalDefinitions.trim().toLowerCase();
+            } else {
+                keyword = keywordChild.text.trim();
+                keyword = this.settings.casing()
+                    ? keyword.toUpperCase()
+                    : keyword.toLowerCase();
+                identifier = identifierChild.text.trim();
+
+                if (currentNode.childCount > 2) {
+                    for (let i = 2; i < currentNode.childCount; i++) {
+                        const currentChild = currentNode.child(i);
+                        if (currentChild) {
+                            optionalDefinitions +=
+                                currentChild.text.trim() + " ";
+                        }
+                    }
+                    optionalDefinitions = this.settings.casing()
+                        ? optionalDefinitions.trim().toUpperCase()
+                        : optionalDefinitions.trim().toLowerCase();
+                }
             }
 
-            this.usingStatements.push({
+            usingStatements.push({
                 identifier: keyword + " " + identifier,
                 optionalDefinitions,
             });
-        }
-    }
 
-    private usingStatementToString(statement: UsingStatement): string {
-        if (statement.optionalDefinitions === "") {
-            return statement.identifier + ".";
-        } else {
-            return (
-                statement.identifier +
-                " ".repeat(
-                    this.alignOptionalStatements - statement.identifier.length
-                ) +
-                statement.optionalDefinitions +
-                "."
-            );
+            currentNode = currentNode.nextSibling;
         }
+
+        return usingStatements;
     }
 
     private reset(): void {
         this.usingStatementsFound = 0;
-        this.alignOptionalStatements = 0;
-        this.usingStatements = [];
         this.textUsingStatements = [];
     }
 }
