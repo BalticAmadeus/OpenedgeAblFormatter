@@ -36,8 +36,15 @@ const testRunTimestamp = new Date()
 const testRunDir = join(testResultsDir, testRunTimestamp);
 
 const knownFailures = getFailedTestCases(
-    join(extensionDevelopmentPath, "resources/stabilityTests")
+    join(extensionDevelopmentPath, "resources/stabilityTests"),
+    "_failures.txt"
 );
+
+const knownAstFailures = getFailedTestCases(
+    join(extensionDevelopmentPath, "resources/stabilityTests"),
+    "_astfailures.txt"
+);
+
 const settingsOverride =
     "/* formatterSettingsOverride */\n/*" +
     readFile(
@@ -79,11 +86,11 @@ suite("Stability Test Suite", () => {
 
     let fileId = 0;
 
-    // stabilityTestCases.forEach((cases) => {
-    //     test(`Symbol test: ${cases}`, () => {
-    //         symbolTest(cases);
-    //     }).timeout(10000);
-    // });
+    stabilityTestCases.forEach((cases) => {
+        test(`Symbol test: ${cases}`, () => {
+            symbolTest(cases);
+        }).timeout(10000);
+    });
 
     stabilityTestCases.forEach((cases) => {
         test(`AST test: ${cases}`, () => {
@@ -161,7 +168,7 @@ function astTest(name: string): void {
     const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
 
     if (compareAst(beforeAst, afterAst)) {
-        if (knownFailures.includes(fileName)) {
+        if (knownAstFailures.includes(fileName)) {
             console.log("Known issue");
             return;
         }
@@ -189,7 +196,7 @@ function astTest(name: string): void {
     }
 
     // if test passes but file is in error list
-    if (knownFailures.includes(fileName)) {
+    if (knownAstFailures.includes(fileName)) {
         addFailedTestCase(testRunDir, "_new_passes.txt", fileName);
 
         assert.fail(`File should fail ${fileName}`);
@@ -354,8 +361,8 @@ function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
     return errorMessage;
 }
 
-function getFailedTestCases(filePath: string): string[] {
-    const failedFilePath = path.join(filePath, "_failures.txt");
+function getFailedTestCases(filePath: string, file: string): string[] {
+    const failedFilePath = path.join(filePath, file);
 
     // Check if the file exists to avoid errors
     if (!fs.existsSync(failedFilePath)) {
