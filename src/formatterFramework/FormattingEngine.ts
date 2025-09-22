@@ -14,6 +14,7 @@ import { bodyBlockKeywords, SyntaxNodeType } from "../model/SyntaxNodeType";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
+    private skipFormatting = false;
 
     constructor(
         private parserHelper: IParserHelper,
@@ -33,7 +34,7 @@ export class FormattingEngine {
             fulfullTextString
         );
 
-        this.settingsOverride(parseResult);
+        console.log(this.logTree(parseResult.tree.rootNode).join("\n"));
 
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
@@ -81,8 +82,32 @@ export class FormattingEngine {
                     continue; // Continue with the parent node
                 }
 
+                if (node.type === SyntaxNodeType.Annotation) {
+                    const children = node.children;
+                    const keywordNode = children[1];
+                    const annotationName = keywordNode?.toString();
+
+                    console.log(children.toString());
+                    console.log(keywordNode?.toString());
+                    console.log("AnnoName");
+
+                    if (annotationName === '("ABLFORMATTEREXCLUDESTART")') {
+                        console.log("Point of true reached");
+                        this.skipFormatting = true;
+                    } else if (
+                        annotationName === '("ABLFORMATTEREXCLUDEEND")'
+                    ) {
+                        this.skipFormatting = false;
+                    }
+                }
+
+                console.log(this.skipFormatting);
+
                 // Parse and process the current node
-                if (!bodyBlockKeywords.hasFancy(node.type, "")) {
+                if (
+                    !this.skipFormatting &&
+                    !bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
@@ -139,7 +164,25 @@ export class FormattingEngine {
                     continue; // Continue with the parent node
                 }
 
-                if (bodyBlockKeywords.hasFancy(node.type, "")) {
+                if (node.type === SyntaxNodeType.Annotation) {
+                    const children = node.children;
+                    const keywordNode = children[1];
+                    const annotationName = keywordNode?.toString();
+
+                    if (annotationName === '("ABLFORMATTEREXCLUDESTART")') {
+                        console.log("Point of true reached");
+                        this.skipFormatting = true;
+                    } else if (
+                        annotationName === '("ABLFORMATTEREXCLUDEEND")'
+                    ) {
+                        this.skipFormatting = false;
+                    }
+                }
+
+                if (
+                    !this.skipFormatting &&
+                    bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
