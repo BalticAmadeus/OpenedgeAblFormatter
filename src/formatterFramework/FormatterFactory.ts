@@ -1,12 +1,14 @@
 import { IConfigurationManager } from "../utils/IConfigurationManager";
 import { IFormatter } from "./IFormatter";
 import { formatterRegistry } from "./formatterDecorator";
+import { DefaultFormatter } from "../stability-test/suite/default/DefaultFormatter";
 
 export class FormatterFactory {
     public static getFormatterInstances(
         configurationManager: IConfigurationManager
     ): IFormatter[] {
         const instances: IFormatter[] = [];
+        instances.push(new DefaultFormatter(configurationManager));
         for (const formatterClass in formatterRegistry) {
             if (
                 FormatterFactory.isEnabled(

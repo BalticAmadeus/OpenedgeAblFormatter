@@ -207,7 +207,17 @@ export class FormattingEngine {
         if (matchingFormatter) {
             result = matchingFormatter.compare(node1, node2);
         } else {
-            result = formatters[0].compare(node1, node2);
+            // Select the default formatter if no match is found
+            const defaultFormatter = formatters.find(
+                (f) =>
+                    (f.constructor as any).formatterLabel ===
+                    "defaultFormatting"
+            );
+            if (defaultFormatter) {
+                result = defaultFormatter.compare(node1, node2);
+            } else {
+                result = false;
+            }
         }
 
         if (!result) {
