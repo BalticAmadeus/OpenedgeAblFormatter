@@ -16,6 +16,6 @@ PROCEDURE testCase:
             MESSAGE "Case 1".
         END.
         OTHERWISE
-        MESSAGE "No match found".
+            MESSAGE "No match found".
     END CASE.
 END PROCEDURE.
