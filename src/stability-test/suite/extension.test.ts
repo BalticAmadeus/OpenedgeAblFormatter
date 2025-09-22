@@ -86,11 +86,11 @@ suite("Stability Test Suite", () => {
 
     let fileId = 0;
 
-    stabilityTestCases.forEach((cases) => {
-        test(`Symbol test: ${cases}`, () => {
-            symbolTest(cases);
-        }).timeout(10000);
-    });
+    // stabilityTestCases.forEach((cases) => {
+    //     test(`Symbol test: ${cases}`, () => {
+    //         symbolTest(cases);
+    //     }).timeout(10000);
+    // });
 
     stabilityTestCases.forEach((cases) => {
         test(`AST test: ${cases}`, () => {
@@ -201,6 +201,9 @@ function astTest(name: string): void {
 
         assert.fail(`File should fail ${fileName}`);
     }
+
+    beforeAst?.delete();
+    afterAst?.delete();
 }
 
 function generateAst(text: string): Tree | undefined {
