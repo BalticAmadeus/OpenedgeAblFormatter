@@ -38,6 +38,38 @@ export async function activate(context: vscode.ExtensionContext) {
     const hoverProvider = new AblDebugHoverProvider(parserHelper);
     vscode.languages.registerHoverProvider(Constants.ablId, hoverProvider);
     Telemetry.sendExtensionSettings();
+
+    const excludeCodeCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.excludeCode",
+        async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                return;
+            }
+
+            const selection = editor.selection;
+
+            if (selection.isEmpty) {
+                vscode.window.showInformationMessage(
+                    "Please select a block of code to exclude."
+                );
+                return;
+            }
+
+            const selectedText = editor.document.getText(selection);
+
+            const newText =
+                `@AblFormatterExcludeStart.\n` +
+                selectedText +
+                `\n@AblFormatterExcludeEnd.`;
+
+            await editor.edit((editBuilder) => {
+                editBuilder.replace(selection, newText);
+            });
+        }
+    );
+
+    context.subscriptions.push(excludeCodeCommand);
 }
 
 // This method is called when your extension is deactivated
