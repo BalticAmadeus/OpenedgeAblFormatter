@@ -3,34 +3,6 @@ adecomm__dswidfunc.p
 adecomm__pweditor.i
 adeshar__mchgi.i
 adeuib__ttyss.i
-prodict_dump__lodsddl.p
-prores_reslang_t-a-dan.p
-prores_reslang_t-a-fr7.p
-prores_reslang_t-a-fre.p
-prores_reslang_t-b-fr7.p
-prores_reslang_t-b-fre.p
-prores_reslang_t-c-fr7.p
-prores_reslang_t-c-fre.p
-prores_reslang_t-d-fr7.p
-prores_reslang_t-d-fre.p
-prores_reslang_t-i-eng.p
-prores_reslang_t-i-fr7.p
-prores_reslang_t-i-fre.p
-prores_reslang_t-l-fr7.p
-prores_reslang_t-l-fre.p
-prores_reslang_t-l-gr1.p
-prores_reslang_t-l-gre.p
-prores_reslang_t-q-fr7.p
-prores_reslang_t-q-fre.p
-prores_reslang_t-q-gr1.p
-prores_reslang_t-q-gre.p
-prores_reslang_t-r-fr7.p
-prores_reslang_t-r-fre.p
-prores_reslang_t-s-eng.p
-prores_reslang_t-s-fr7.p
-prores_reslang_t-s-fre.p
-prores_t-i-eng.p
-prores_t-s-eng.p
 protools__scrcap.w
 adexml__xmlview.w
 //0046 issues -->
@@ -67,7 +39,6 @@ auditing_ui__audpolicyviewv.w
 //0049 issues (reduced functionality) <--
 //0049 issues -->
 adecomm_dswid.i
-adecomm__reg2ini.p
 aderes_e-type.p
 aderes_l-type.p
 aderes_p-type.p
