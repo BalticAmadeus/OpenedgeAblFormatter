@@ -99,6 +99,19 @@ export class FormattingEngine {
                     ) {
                         this.skipFormatting = false;
                     }
+
+                    lastVisitedNode = node;
+
+                    if (cursor.gotoNextSibling()) {
+                        break;
+                    }
+
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        return;
+                    }
+
+                    continue;
                 }
 
                 console.log(this.skipFormatting);
@@ -177,6 +190,21 @@ export class FormattingEngine {
                     ) {
                         this.skipFormatting = false;
                     }
+
+                    lastVisitedNode = node;
+
+                    // Try to move to the next sibling
+                    if (cursor.gotoNextSibling()) {
+                        break; // Move to the next sibling if it exists
+                    }
+
+                    // If no more siblings, move up to the parent node
+                    if (!cursor.gotoParent()) {
+                        cursor.delete(); // Clean up the cursor
+                        return; // Exit if there are no more nodes to visit
+                    }
+
+                    return;
                 }
 
                 if (
