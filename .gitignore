@@ -8,3 +8,4 @@ node_modules
 resources/ade
 resources/testResults
 resources/Formatter_in_action.gif
+resources/testResultsIdempotence
