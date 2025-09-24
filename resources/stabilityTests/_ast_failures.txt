@@ -897,3 +897,6 @@ adm_template_wquery.w
 prodict_pro__domain-model.cls
 prodict_pro__tenant-model.cls
 prores_q-main.p
+
+// times out sometimes
+adeuib__tview.w
