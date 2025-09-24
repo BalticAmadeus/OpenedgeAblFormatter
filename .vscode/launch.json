@@ -43,19 +43,6 @@
 				"${workspaceFolder}/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
-		},		{
-			"name": "Stability Tests",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/stability-test/suite/index",
-				"${workspaceFolder}/resources/stabilityTests"
-			],
-			"outFiles": [
-				"${workspaceFolder}/out/stability-test/**/*.js"
-			],
-			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
 			"name": "Symbol Tests",
@@ -63,11 +50,11 @@
 			"request": "launch",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/symbol-test/suite/index",
+				"--extensionTestsPath=${workspaceFolder}/out/test-symbol/suite/index",
 				"${workspaceFolder}/resources/stabilityTests"
 			],
 			"outFiles": [
-				"${workspaceFolder}/out/symbol-test/**/*.js"
+				"${workspaceFolder}/out/test-symbol/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
@@ -77,11 +64,11 @@
 			"request": "launch",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/ast-test/suite/index",
+				"--extensionTestsPath=${workspaceFolder}/out/test-ast/suite/index",
 				"${workspaceFolder}/resources/stabilityTests"
 			],
 			"outFiles": [
-				"${workspaceFolder}/out/ast-test/**/*.js"
+				"${workspaceFolder}/out/test-ast/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		}

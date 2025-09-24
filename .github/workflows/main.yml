@@ -57,7 +57,7 @@ jobs:
               if: runner.os == 'Linux'
 
             - name: Run Symbol Test
-              run: xvfb-run -a npm run symbol-test
+              run: xvfb-run -a npm run test-symbol
               if: runner.os == 'Linux'
 
             - name: Save Symbol Test Results as Artifact
@@ -65,7 +65,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: symbol-test-results
-                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults
+                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults/symbolTests
                   retention-days: 7
 
     ast-test:
@@ -91,7 +91,7 @@ jobs:
               if: runner.os == 'Linux'
 
             - name: Run AST Test
-              run: xvfb-run -a npm run ast-test
+              run: xvfb-run -a npm run test-ast
               if: runner.os == 'Linux'
 
             - name: Save AST Test Results as Artifact
@@ -99,5 +99,5 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ast-test-results
-                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults
+                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults/astTests
                   retention-days: 7

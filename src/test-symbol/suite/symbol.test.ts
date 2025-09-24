@@ -4,7 +4,7 @@ import { enableFormatterDecorators } from "../../formatterFramework/enableFormat
 import {
     setupParserHelper,
     stabilityTestCases,
-    testRunDir,
+    getTestRunDir,
     runGenericTest,
     TestConfig,
     logKnownFailures,
@@ -16,7 +16,8 @@ let parserHelper: AblParserHelper;
 suite("Symbol Stability Test Suite", () => {
     suiteSetup(async () => {
         console.log("Symbol Test Suite setup");
-        fs.mkdirSync(testRunDir, { recursive: true });
+        const symbolTestRunDir = getTestRunDir("symbolTests");
+        fs.mkdirSync(symbolTestRunDir, { recursive: true });
         parserHelper = await setupParserHelper();
         console.log(
             "Symbol StabilityTests: ",

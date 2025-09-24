@@ -7,7 +7,7 @@ import { enableFormatterDecorators } from "../../formatterFramework/enableFormat
 import {
     setupParserHelper,
     stabilityTestCases,
-    testRunDir,
+    getTestRunDir,
     runGenericTest,
     TestConfig,
     logKnownFailures,
@@ -22,7 +22,8 @@ let parserHelper: AblParserHelper;
 suite("AST Stability Test Suite", () => {
     suiteSetup(async () => {
         console.log("AST Test Suite setup");
-        fs.mkdirSync(testRunDir, { recursive: true });
+        const astTestRunDir = getTestRunDir("astTests");
+        fs.mkdirSync(astTestRunDir, { recursive: true });
         parserHelper = await setupParserHelper();
         console.log(
             "AST StabilityTests: ",
@@ -106,7 +107,11 @@ function analyzeAstDifferences(
     afterAst: Tree,
     fileName: string
 ): void {
-    const analysisFilePath = join(testRunDir, `${fileName}_ast_analysis.txt`);
+    const astTestRunDir = getTestRunDir("astTests");
+    const analysisFilePath = join(
+        astTestRunDir,
+        `${fileName}_ast_analysis.txt`
+    );
 
     let analysisContent = `AST Analysis for ${fileName}\n`;
     analysisContent += `${"=".repeat(50)}\n\n`;

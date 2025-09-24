@@ -383,8 +383,8 @@
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
     "test": "node ./out/test/runTest.js",
     "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
-    "symbol-test": "node ./out/symbol-test/runTest.js",
-    "ast-test": "node ./out/ast-test/runTest.js"
+    "symbol-test": "node ./out/test-symbol/runTest.js",
+    "ast-test": "node ./out/test-ast/runTest.js"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",

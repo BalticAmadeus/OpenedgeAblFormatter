@@ -8,14 +8,14 @@ import { FileIdentifier } from "../model/FileIdentifier";
 import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "./ConfigurationManager";
 import { EOL } from "../model/EOL";
-import { DebugManagerMock } from "../stability-test/suite/DebugManagerMock";
+import { DebugManagerMock } from "../test-ast/suite/DebugManagerMock";
 
 // Shared constants
 export const extensionDevelopmentPath = path.resolve(__dirname, "../../");
-export const testResultsDir = join(
-    extensionDevelopmentPath,
-    "resources/testResults/stabilityTests"
-);
+
+export function getTestResultsDir(endpoint: string): string {
+    return join(extensionDevelopmentPath, `resources/testResults/${endpoint}`);
+}
 
 export const stabilityTestDir = join(extensionDevelopmentPath, "resources/ade");
 export const extensionsToFind = [".p", ".w", ".cls", ".i"];
@@ -48,6 +48,7 @@ export function runGenericTest<TResult>(
 
     const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
     const knownFailures = getKnownFailures(config.knownFailuresFile);
+    const currentTestRunDir = getTestRunDir(config.testType);
 
     const hasMismatch = config.compareResults(
         beforeResult,
@@ -64,14 +65,18 @@ export function runGenericTest<TResult>(
         // Call custom mismatch handler if provided
         config.onMismatch?.(beforeResult, afterResult, fileName);
 
-        addFailedTestCase(testRunDir, config.resultFailuresFile, fileName);
+        addFailedTestCase(
+            currentTestRunDir,
+            config.resultFailuresFile,
+            fileName
+        );
 
         const beforeFilePath = join(
-            testRunDir,
+            currentTestRunDir,
             `${fileName}_before${path.extname(name)}`
         );
         const afterFilePath = join(
-            testRunDir,
+            currentTestRunDir,
             `${fileName}_after${path.extname(name)}`
         );
 
@@ -88,7 +93,7 @@ export function runGenericTest<TResult>(
 
     // if test passes but file is in error list
     if (knownFailures.includes(fileName)) {
-        addFailedTestCase(testRunDir, "_new_passes.txt", fileName);
+        addFailedTestCase(currentTestRunDir, "_new_passes.txt", fileName);
         config.cleanup?.(beforeResult, afterResult);
         assert.fail(`File should fail ${fileName}`);
     }
@@ -100,7 +105,11 @@ export const testRunTimestamp = new Date()
     .toISOString()
     .replace(/[:.T-]/g, "_")
     .substring(0, 19);
-export const testRunDir = join(testResultsDir, testRunTimestamp);
+
+export function getTestRunDir(testType: string): string {
+    const baseDir = getTestResultsDir(testType);
+    return join(baseDir, testRunTimestamp);
+}
 
 // Function to get known failures for a specific test type
 export function getKnownFailures(fileName: string): string[] {

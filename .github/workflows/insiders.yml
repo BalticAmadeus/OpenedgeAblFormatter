@@ -30,7 +30,7 @@ jobs:
               if: runner.os == 'Linux'
 
             - name: Run Symbol Test
-              run: xvfb-run -a npm run symbol-test
+              run: xvfb-run -a npm run test-symbol
               if: runner.os == 'Linux'
 
     insider-ast-test:
@@ -57,5 +57,5 @@ jobs:
               if: runner.os == 'Linux'
 
             - name: Run AST Test
-              run: xvfb-run -a npm run ast-test
+              run: xvfb-run -a npm run test-ast
               if: runner.os == 'Linux'
