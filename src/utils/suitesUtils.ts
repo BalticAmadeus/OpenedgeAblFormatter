@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import { join } from "path";
-import Parser, { SyntaxNode, Tree } from "web-tree-sitter";
+import Parser from "web-tree-sitter";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { FormattingEngine } from "../formatterFramework/FormattingEngine";
@@ -48,7 +48,7 @@ export function runGenericTest<TResult>(
 
     const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
     const knownFailures = getKnownFailures(config.knownFailuresFile);
-    const currentTestRunDir = getTestRunDir(config.testType);
+    const currentTestRunDir = getTestRunDir(config.testType + "Tests");
 
     const hasMismatch = config.compareResults(
         beforeResult,
@@ -80,12 +80,12 @@ export function runGenericTest<TResult>(
             `${fileName}_after${path.extname(name)}`
         );
 
+        fs.mkdirSync(currentTestRunDir, { recursive: true });
+
         fs.writeFileSync(beforeFilePath, beforeText);
         fs.writeFileSync(afterFilePath, afterText);
 
-        const testTypeLabel =
-            config.testType === "symbol" ? "Symbol count" : "AST structure";
-        assert.fail(`${testTypeLabel} mismatch
+        assert.fail(`${config.testType} mismatch
         Before: ${beforeFilePath}
         After: ${afterFilePath}
         `);
@@ -245,13 +245,15 @@ export function addFailedTestCase(
 ): void {
     const failedFilePath = path.join(filePath, fileName);
 
+    fs.mkdirSync(filePath, { recursive: true });
+
     // Append the failed test case to the file with a newline
     fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
 }
 
 // Generic test abstraction
 export interface TestConfig<TResult> {
-    testType: "symbol" | "ast";
+    testType: string;
     knownFailuresFile: string;
     resultFailuresFile: string;
     processBeforeText: (text: string) => TResult;
