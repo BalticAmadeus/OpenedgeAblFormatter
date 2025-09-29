@@ -176,8 +176,20 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         let n = 0;
         let lineChangeDelta = 0;
+        const excludedRanges = this.getExcludedRanges(parent);
         codeLines.forEach((codeLine, index) => {
             const lineNumber = parent.startPosition.row + index;
+            console.log("CodeLine: ", codeLine);
+            console.log("Index: ", index);
+
+            if (
+                excludedRanges.some(
+                    (r) => lineNumber >= r.start && lineNumber <= r.end
+                )
+            ) {
+                console.log("Excluded");
+                return;
+            }
 
             // adjust delta
             if (blockStatementsStartRows[n] === lineNumber) {
@@ -265,7 +277,8 @@ export class BlockFormater extends AFormatter implements IFormatter {
             parent,
             fullText,
             indentationEdits,
-            codeLines
+            codeLines,
+            excludedRanges
         );
     }
 
@@ -273,13 +286,15 @@ export class BlockFormater extends AFormatter implements IFormatter {
         node: SyntaxNode,
         fullText: FullText,
         indentationEdits: IndentationEdits[],
-        codeLines: string[]
+        codeLines: string[],
+        excludedRanges: { start: number; end: number }[]
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
         const newText = this.applyIndentationEdits(
             indentationEdits,
             fullText,
-            codeLines
+            codeLines,
+            excludedRanges
         );
 
         return this.getCodeEdit(node, text, newText, fullText);
@@ -288,13 +303,22 @@ export class BlockFormater extends AFormatter implements IFormatter {
     private applyIndentationEdits(
         edits: IndentationEdits[],
         fullText: FullText,
-        lines: string[]
+        lines: string[],
+        excludedRanges: { start: number; end: number }[]
     ): string {
         // Split the code into lines
 
         // Apply each edit
         edits.forEach((edit) => {
             const { line, lineChangeDelta } = edit;
+
+            const isExcluded = excludedRanges.some(
+                (r) => line >= r.start && line <= r.end
+            );
+
+            if (isExcluded) {
+                return;
+            }
 
             // Ensure the line number is within the range
             if (line >= 0 && line < lines.length) {
@@ -353,6 +377,52 @@ export class BlockFormater extends AFormatter implements IFormatter {
         */
         const pattern = /^[^.]*end[^.]*\.[^.]*$/i;
         return pattern.test(str);
+    }
+
+    private getExcludedRanges(
+        node: SyntaxNode
+    ): { start: number; end: number }[] {
+        const ranges: { start: number; end: number }[] = [];
+        let excludeStart: number | null = null;
+
+        const visit = (n: SyntaxNode) => {
+            if (n.type === SyntaxNodeType.Annotation) {
+                const keywordNode = n.children[1];
+                const text = keywordNode?.toString();
+
+                console.log("Anootiation ", text);
+
+                if (text === '("ABLFORMATTEREXCLUDESTART")') {
+                    excludeStart = n.startPosition.row + 1;
+                    console.log("Exclude start found at line:", excludeStart);
+                } else if (
+                    text === '("ABLFORMATTEREXCLUDEEND")' &&
+                    excludeStart !== null
+                ) {
+                    ranges.push({
+                        start: excludeStart,
+                        end: n.endPosition.row,
+                    });
+                    console.log(
+                        "Exclude end found at line:",
+                        n.endPosition.row
+                    );
+                    excludeStart = null;
+                } else if (
+                    text === '("ABLFORMATTEREXCLUDEEND")' &&
+                    excludeStart === null
+                ) {
+                    ranges.push({
+                        start: n.startPosition.row,
+                        end: n.endPosition.row,
+                    });
+                }
+            }
+            n.children.forEach(visit);
+        };
+
+        visit(node);
+        return ranges;
     }
 }
 

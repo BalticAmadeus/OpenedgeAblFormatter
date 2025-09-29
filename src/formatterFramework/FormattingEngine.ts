@@ -34,7 +34,8 @@ export class FormattingEngine {
             fulfullTextString
         );
 
-        console.log(this.logTree(parseResult.tree.rootNode).join("\n"));
+        // console.log(this.logTree(parseResult.tree.rootNode).join("\n"));
+        this.settingsOverride(parseResult);
 
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
@@ -87,9 +88,8 @@ export class FormattingEngine {
                     const keywordNode = children[1];
                     const annotationName = keywordNode?.toString();
 
-                    console.log(children.toString());
-                    console.log(keywordNode?.toString());
-                    console.log("AnnoName");
+                    // console.log(children.toString());
+                    // console.log("AnnoName: ", keywordNode?.toString());
 
                     if (annotationName === '("ABLFORMATTEREXCLUDESTART")') {
                         console.log("Point of true reached");
@@ -183,7 +183,6 @@ export class FormattingEngine {
                     const annotationName = keywordNode?.toString();
 
                     if (annotationName === '("ABLFORMATTEREXCLUDESTART")') {
-                        console.log("Point of true reached");
                         this.skipFormatting = true;
                     } else if (
                         annotationName === '("ABLFORMATTEREXCLUDEEND")'
@@ -204,7 +203,7 @@ export class FormattingEngine {
                         return; // Exit if there are no more nodes to visit
                     }
 
-                    return;
+                    continue;
                 }
 
                 if (
