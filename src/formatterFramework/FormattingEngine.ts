@@ -2,7 +2,6 @@ import { SyntaxNode, Tree } from "web-tree-sitter";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { IFormatter } from "./IFormatter";
-import { BlockFormater } from "../formatters/block/BlockFormatter";
 import { CodeEdit } from "../model/CodeEdit";
 import { FullText } from "../model/FullText";
 import { IConfigurationManager } from "../utils/IConfigurationManager";
@@ -12,6 +11,7 @@ import { EOL } from "../model/EOL";
 import { IDebugManager } from "../providers/IDebugManager";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { BaseEngineOutput } from "../mtest/EngineParams";
+import { bodyBlockKeywords } from "../model/SyntaxNodeType";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -46,6 +46,14 @@ export class FormattingEngine {
         );
 
         this.iterateTree(parseResult.tree, fullText, formatters);
+
+        const newTree = this.parserHelper.parse(
+            this.fileIdentifier,
+            fullText.text,
+            parseResult.tree
+        ).tree;
+
+        this.iterateTreeFormatBlocks(newTree, fullText, formatters);
 
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
 
@@ -99,12 +107,71 @@ export class FormattingEngine {
                 }
 
                 // Parse and process the current node
-                const codeEdit = this.parse(node, fullText, formatters);
+                if (!bodyBlockKeywords.hasFancy(node.type, "")) {
+                    const codeEdit = this.parse(node, fullText, formatters);
 
-                if (codeEdit !== undefined) {
-                    this.insertChangeIntoTree(tree, codeEdit);
-                    this.insertChangeIntoFullText(codeEdit, fullText);
-                    this.numOfCodeEdits++;
+                    if (codeEdit !== undefined) {
+                        this.insertChangeIntoTree(tree, codeEdit);
+                        this.insertChangeIntoFullText(codeEdit, fullText);
+                        this.numOfCodeEdits++;
+                    }
+                }
+
+                // Mark the current node as the last visited node
+                lastVisitedNode = node;
+
+                // Try to move to the next sibling
+                if (cursor.gotoNextSibling()) {
+                    break; // Move to the next sibling if it exists
+                }
+
+                // If no more siblings, move up to the parent node
+                if (!cursor.gotoParent()) {
+                    cursor.delete(); // Clean up the cursor
+                    return; // Exit if there are no more nodes to visit
+                }
+            }
+        }
+    }
+
+    /*
+        This method formats solely the indentation of blocks, therefore, the number of lines remains unchanged.
+    */
+    private iterateTreeFormatBlocks(
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[]
+    ) {
+        let cursor = tree.walk(); // Initialize the cursor at the root node
+        let lastVisitedNode: SyntaxNode | null = null;
+
+        while (true) {
+            // Try to go as deep as possible
+            if (cursor.gotoFirstChild()) {
+                continue; // Move to the first child if possible
+            }
+
+            // Process the current node (this is a leaf node or a node with no unvisited children)
+            while (true) {
+                const node = cursor.currentNode();
+
+                // Skip the node if it was the last one visited
+                if (node === lastVisitedNode) {
+                    if (!cursor.gotoParent()) {
+                        cursor.delete(); // Clean up the cursor
+                        return; // Exit if there are no more nodes to visit
+                    }
+                    continue; // Continue with the parent node
+                }
+
+                if (bodyBlockKeywords.hasFancy(node.type, "")) {
+                    const codeEdit = this.parse(node, fullText, formatters);
+
+                    if (codeEdit !== undefined) {
+                        this.insertChangeIntoTree(tree, codeEdit);
+                        this.insertChangeIntoFullText(codeEdit, fullText);
+                        this.numOfCodeEdits++;
+                    }
                 }
 
                 // Mark the current node as the last visited node
