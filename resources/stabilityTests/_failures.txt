@@ -2,9 +2,6 @@ adecomm_peditor.i
 adecomm__dswidfunc.p
 adecomm__pweditor.i
 adeshar__mchgi.i
-adeuib__ttyss.i
-protools__scrcap.w
-adexml__xmlview.w
 //0046 issues -->
 adecomm__auddfilt.p
 aderes_j-both.p
@@ -20,7 +17,6 @@ prodict_misc__cdc-pol.p
 prodict_misc__db-id-hst.p
 prodict_misc__db-id-mnt.p
 prodict__dctgues.p
-protools__dblist.w
 //0046 issues <--
 //0047 issues -->
 adm2_logic.i
@@ -32,7 +28,6 @@ web_examples_w-custdir.w
 //0049 issues (reduced functionality) -->
 adeuib__calcself.w
 adeuib__newcalcv.w
-adeuib__tview.w
 auditing_ui__audevpolicyviewv.w
 auditing_ui__audfieldpolicyviewv.w
 auditing_ui__audfilepolicyviewv.w
@@ -51,5 +46,4 @@ prores_c-cache1.i
 protools__prospy.w
 //0050-pre issues <--
 //0050 issues -->
-prodict_dump__dmpsec.p
 //0050 issues <--
