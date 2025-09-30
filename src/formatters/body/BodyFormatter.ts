@@ -83,8 +83,17 @@ export class BodyFormatter extends AFormatter implements IFormatter {
 
         let n = 0;
         let lineChangeDelta = 0;
+        const excludedRanges = this.getExcludedRanges(parent);
         codeLines.forEach((codeLine, index) => {
             const lineNumber = node.startPosition.row + index;
+
+            if (
+                excludedRanges.some(
+                    (r) => lineNumber >= r.start && lineNumber <= r.end
+                )
+            ) {
+                return;
+            }
 
             // adjust delta
             if (blockStatementsStartRows[n] === lineNumber) {
@@ -110,20 +119,23 @@ export class BodyFormatter extends AFormatter implements IFormatter {
         return this.getCodeEditsFromIndentationEdits(
             node,
             fullText,
-            indentationEdits
+            indentationEdits,
+            excludedRanges
         );
     }
 
     private getCodeEditsFromIndentationEdits(
         node: SyntaxNode,
         fullText: FullText,
-        indentationEdits: IndentationEdits[]
+        indentationEdits: IndentationEdits[],
+        excludedRanges: { start: number; end: number }[]
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
         const newText = this.applyIndentationEdits(
             text,
             indentationEdits,
-            fullText
+            fullText,
+            excludedRanges
         );
 
         return this.getCodeEdit(node, text, newText, fullText);
@@ -132,7 +144,8 @@ export class BodyFormatter extends AFormatter implements IFormatter {
     private applyIndentationEdits(
         code: string,
         edits: IndentationEdits[],
-        fullText: FullText
+        fullText: FullText,
+        excludedRanges: { start: number; end: number }[]
     ): string {
         // Split the code into lines
         const lines = code.split(fullText.eolDelimiter);
@@ -140,6 +153,14 @@ export class BodyFormatter extends AFormatter implements IFormatter {
         // Apply each edit
         edits.forEach((edit) => {
             const { line, lineChangeDelta } = edit;
+
+            const isExcluded = excludedRanges.some(
+                (r) => line >= r.start && line <= r.end
+            );
+
+            if (isExcluded) {
+                return;
+            }
 
             // Ensure the line number is within the range
             if (line >= 0 && line < lines.length) {
@@ -190,6 +211,48 @@ export class BodyFormatter extends AFormatter implements IFormatter {
             return node.parent.parent;
         }
         return node;
+    }
+
+    private getExcludedRanges(
+        node: SyntaxNode
+    ): { start: number; end: number }[] {
+        const ranges: { start: number; end: number }[] = [];
+        let excludeStart: number | null = null;
+
+        const visit = (n: SyntaxNode) => {
+            if (n.type === SyntaxNodeType.Annotation) {
+                const text = n.text.replace(/[\s.@"]/g, "").toUpperCase();
+
+                if (text.includes("ABLFORMATTEREXCLUDESTART")) {
+                    excludeStart = n.startPosition.row;
+                } else if (text.includes("ABLFORMATTEREXCLUDEEND")) {
+                    if (excludeStart !== null) {
+                        ranges.push({
+                            start: excludeStart,
+                            end: n.endPosition.row,
+                        });
+
+                        excludeStart = null;
+                    } else {
+                        ranges.push({
+                            start: n.startPosition.row,
+                            end: n.endPosition.row,
+                        });
+                    }
+                }
+            }
+
+            n.children.forEach(visit);
+        };
+
+        visit(node);
+
+        const uniqueRanges = ranges.filter(
+            (v, i, a) =>
+                i === a.findIndex((t) => t.start === v.start && t.end === v.end)
+        );
+
+        return uniqueRanges;
     }
 }
 

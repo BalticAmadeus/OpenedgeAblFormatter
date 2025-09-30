@@ -179,15 +179,12 @@ export class BlockFormater extends AFormatter implements IFormatter {
         const excludedRanges = this.getExcludedRanges(parent);
         codeLines.forEach((codeLine, index) => {
             const lineNumber = parent.startPosition.row + index;
-            console.log("CodeLine: ", codeLine);
-            console.log("Index: ", index);
 
             if (
                 excludedRanges.some(
                     (r) => lineNumber >= r.start && lineNumber <= r.end
                 )
             ) {
-                console.log("Excluded");
                 return;
             }
 
@@ -204,7 +201,6 @@ export class BlockFormater extends AFormatter implements IFormatter {
                             fullText
                         );
                 }
-
                 n++;
             }
 
@@ -386,43 +382,42 @@ export class BlockFormater extends AFormatter implements IFormatter {
         let excludeStart: number | null = null;
 
         const visit = (n: SyntaxNode) => {
+            const nodeType = n.text;
+
             if (n.type === SyntaxNodeType.Annotation) {
                 const keywordNode = n.children[1];
                 const text = keywordNode?.toString();
 
-                console.log("Anootiation ", text);
+                if (text.includes("ABLFORMATTEREXCLUDESTART")) {
+                    excludeStart = n.startPosition.row;
+                } else if (text.includes("ABLFORMATTEREXCLUDEEND")) {
+                    if (excludeStart !== null) {
+                        ranges.push({
+                            start: excludeStart,
+                            end: n.endPosition.row,
+                        });
 
-                if (text === '("ABLFORMATTEREXCLUDESTART")') {
-                    excludeStart = n.startPosition.row + 1;
-                    console.log("Exclude start found at line:", excludeStart);
-                } else if (
-                    text === '("ABLFORMATTEREXCLUDEEND")' &&
-                    excludeStart !== null
-                ) {
-                    ranges.push({
-                        start: excludeStart,
-                        end: n.endPosition.row,
-                    });
-                    console.log(
-                        "Exclude end found at line:",
-                        n.endPosition.row
-                    );
-                    excludeStart = null;
-                } else if (
-                    text === '("ABLFORMATTEREXCLUDEEND")' &&
-                    excludeStart === null
-                ) {
-                    ranges.push({
-                        start: n.startPosition.row,
-                        end: n.endPosition.row,
-                    });
+                        excludeStart = null;
+                    } else {
+                        ranges.push({
+                            start: n.startPosition.row,
+                            end: n.endPosition.row,
+                        });
+                    }
                 }
             }
+
             n.children.forEach(visit);
         };
 
         visit(node);
-        return ranges;
+
+        const uniqueRanges = ranges.filter(
+            (v, i, a) =>
+                i === a.findIndex((t) => t.start === v.start && t.end === v.end)
+        );
+
+        return uniqueRanges;
     }
 }
 
