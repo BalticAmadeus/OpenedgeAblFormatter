@@ -20,6 +20,7 @@ prodict_misc__cdc-pol.p
 prodict_misc__db-id-hst.p
 prodict_misc__db-id-mnt.p
 prodict__dctgues.p
+protools__dblist.w
 //0046 issues <--
 //0047 issues -->
 adm2_logic.i
