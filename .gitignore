@@ -3,8 +3,8 @@ dist
 .ext_dir/
 .test_dir/
 node_modules
-.vscode-test/
 *.vsix
 resources/ade
+resources/ade-sourceCode
 resources/testResults
 resources/Formatter_in_action.gif

@@ -383,7 +383,8 @@
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
     "test": "node ./out/test/runTest.js",
     "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
-    "stability-test": "node ./out/stability-test/runTest.js"
+    "stability-test": "node ./out/stability-test/runTest.js",
+    "compilation-test": "npm run compile && node ./out/compilation-test/runTest.js"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
@@ -394,6 +395,7 @@
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.3.2",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
     "esbuild": "^0.25.2",
@@ -403,8 +405,7 @@
     "replace-in-file": "^8.3.0",
     "rimraf": "^5.0.5",
     "typescript": "^5.2.2",
-    "vscode-extension-tester": "^8.13.0",
-    "@vscode/vsce": "^3.3.2"
+    "vscode-extension-tester": "^8.13.0"
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.9.8",
