@@ -176,7 +176,14 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         let n = 0;
         let lineChangeDelta = 0;
-        const excludedRanges = this.getExcludedRanges(parent);
+
+        const NonRelatviveexcludedRanges = this.getExcludedRanges(parent);
+
+        const excludedRanges = NonRelatviveexcludedRanges.map((range) => ({
+            start: range.start - parent.startPosition.row,
+            end: range.end - parent.startPosition.row,
+        }));
+
         codeLines.forEach((codeLine, index) => {
             const lineNumber = parent.startPosition.row + index;
 
@@ -286,6 +293,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
         excludedRanges: { start: number; end: number }[]
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
+
         const newText = this.applyIndentationEdits(
             indentationEdits,
             fullText,

@@ -34,7 +34,6 @@ export class FormattingEngine {
             fulfullTextString
         );
 
-        // console.log(this.logTree(parseResult.tree.rootNode).join("\n"));
         this.settingsOverride(parseResult);
 
         const formatters = FormatterFactory.getFormatterInstances(
@@ -88,11 +87,7 @@ export class FormattingEngine {
                     const keywordNode = children[1];
                     const annotationName = keywordNode?.toString();
 
-                    // console.log(children.toString());
-                    // console.log("AnnoName: ", keywordNode?.toString());
-
                     if (annotationName === '("ABLFORMATTEREXCLUDESTART")') {
-                        console.log("Point of true reached");
                         this.skipFormatting = true;
                     } else if (
                         annotationName === '("ABLFORMATTEREXCLUDEEND")'
@@ -113,8 +108,6 @@ export class FormattingEngine {
 
                     continue;
                 }
-
-                console.log(this.skipFormatting);
 
                 // Parse and process the current node
                 if (

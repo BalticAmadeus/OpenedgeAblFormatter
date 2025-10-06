@@ -39,6 +39,7 @@ export class EnumFormatter extends AFormatter implements IFormatter {
     ): string {
         let foundFirstMember = false;
         let resultString = "";
+
         node.children.forEach((child) => {
             const childString = this.getEnumExpressionString(
                 child,
