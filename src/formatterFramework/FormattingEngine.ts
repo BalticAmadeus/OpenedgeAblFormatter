@@ -22,13 +22,17 @@ export class FormattingEngine {
         private debugManager: IDebugManager
     ) {}
 
-    public formatText(fulfullTextString: string, eol: EOL): string {
+    public async formatText(
+        fulfullTextString: string,
+        eol: EOL
+    ): Promise<string> {
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
         };
 
-        const parseResult = this.parserHelper.parse(
+        console.log("[FormattingEngine] Starting async parsing for formatting");
+        const parseResult = await this.parserHelper.parseAsync(
             this.fileIdentifier,
             fulfullTextString
         );
@@ -39,74 +43,109 @@ export class FormattingEngine {
             this.configurationManager
         );
 
-        this.iterateTree(parseResult.tree, fullText, formatters);
+        await this.iterateTree(parseResult.tree, fullText, formatters);
 
-        const newTree = this.parserHelper.parse(
+        console.log("[FormattingEngine] Re-parsing after initial formatting");
+        const newParseResult = await this.parserHelper.parseAsync(
             this.fileIdentifier,
             fullText.text,
             parseResult.tree
-        ).tree;
+        );
 
-        this.iterateTreeFormatBlocks(newTree, fullText, formatters);
+        this.iterateTreeFormatBlocks(newParseResult.tree, fullText, formatters);
 
+        // Report parse results to debug manager for status bar updates
+        this.debugManager.handleErrors(newParseResult.tree);
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
 
+        console.log(
+            "[FormattingEngine] Final formatted text:",
+            JSON.stringify(fullText.text)
+        );
+        console.log(
+            "[FormattingEngine] Total code edits applied:",
+            this.numOfCodeEdits
+        );
         return fullText.text;
     }
 
-    private iterateTree(
+    private async iterateTree(
         tree: Tree,
         fullText: FullText,
         formatters: IFormatter[]
     ) {
-        let cursor = tree.walk(); // Initialize the cursor at the root node
-        let lastVisitedNode: SyntaxNode | null = null;
+        console.log(
+            "[FormattingEngine] Starting tree iteration - collecting all edits first"
+        );
 
-        while (true) {
-            // Try to go as deep as possible
-            if (cursor.gotoFirstChild()) {
-                continue; // Move to the first child if possible
-            }
+        // First pass: collect all code edits without applying them
+        const allCodeEdits: {
+            edit: CodeEdit | CodeEdit[];
+            node: SyntaxNode;
+        }[] = [];
 
-            // Process the current node (this is a leaf node or a node with no unvisited children)
-            while (true) {
-                const node = cursor.currentNode();
+        const collectEditsFromNode = (node: SyntaxNode): void => {
+            // Process the current node
+            if (!bodyBlockKeywords.hasFancy(node.type, "")) {
+                const codeEdit = this.parse(node, fullText, formatters);
 
-                // Skip the node if it was the last one visited
-                if (node === lastVisitedNode) {
-                    if (!cursor.gotoParent()) {
-                        cursor.delete(); // Clean up the cursor
-                        return; // Exit if there are no more nodes to visit
-                    }
-                    continue; // Continue with the parent node
-                }
+                if (codeEdit !== undefined) {
+                    console.log(
+                        `[FormattingEngine] Code edit collected for ${node.type}:`,
+                        Array.isArray(codeEdit)
+                            ? codeEdit.map((e) => `"${e.text}"`).join(", ")
+                            : `"${codeEdit.text}"`
+                    );
 
-                // Parse and process the current node
-                if (!bodyBlockKeywords.hasFancy(node.type, "")) {
-                    const codeEdit = this.parse(node, fullText, formatters);
-
-                    if (codeEdit !== undefined) {
-                        this.insertChangeIntoTree(tree, codeEdit);
-                        this.insertChangeIntoFullText(codeEdit, fullText);
-                        this.numOfCodeEdits++;
-                    }
-                }
-
-                // Mark the current node as the last visited node
-                lastVisitedNode = node;
-
-                // Try to move to the next sibling
-                if (cursor.gotoNextSibling()) {
-                    break; // Move to the next sibling if it exists
-                }
-
-                // If no more siblings, move up to the parent node
-                if (!cursor.gotoParent()) {
-                    cursor.delete(); // Clean up the cursor
-                    return; // Exit if there are no more nodes to visit
+                    // Collect the edit for later application
+                    allCodeEdits.push({ edit: codeEdit, node });
                 }
             }
+
+            // Recursively process all child nodes
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child) {
+                    collectEditsFromNode(child);
+                }
+            }
+        };
+
+        // Start the recursive collection from the root node
+        collectEditsFromNode(tree.rootNode);
+
+        // Second pass: apply all edits in reverse order (from end to beginning)
+        // This ensures that position indices remain valid throughout the application
+        console.log(
+            `[FormattingEngine] Applying ${allCodeEdits.length} collected edits in reverse order`
+        );
+
+        // Sort edits by their start position in descending order (last to first)
+        allCodeEdits.sort((a, b) => {
+            const aStartIndex = Array.isArray(a.edit)
+                ? a.edit[0].edit.startIndex
+                : a.edit.edit.startIndex;
+            const bStartIndex = Array.isArray(b.edit)
+                ? b.edit[0].edit.startIndex
+                : b.edit.edit.startIndex;
+            return bStartIndex - aStartIndex; // Descending order
+        });
+
+        for (const { edit, node } of allCodeEdits) {
+            console.log(
+                `[FormattingEngine] Applying edit for ${node.type}:`,
+                Array.isArray(edit)
+                    ? edit.map((e) => `"${e.text}"`).join(", ")
+                    : `"${edit.text}"`
+            );
+
+            this.insertChangeIntoFullText(edit, fullText);
+            this.numOfCodeEdits++;
         }
+
+        console.log(
+            `[FormattingEngine] Tree iteration completed. Applied ${allCodeEdits.length} edits.`
+        );
     }
 
     /*
@@ -117,53 +156,79 @@ export class FormattingEngine {
         fullText: FullText,
         formatters: IFormatter[]
     ) {
-        let cursor = tree.walk(); // Initialize the cursor at the root node
-        let lastVisitedNode: SyntaxNode | null = null;
+        console.log(
+            "[FormattingEngine] Starting block formatting phase with recursive traversal"
+        );
 
-        while (true) {
-            // Try to go as deep as possible
-            if (cursor.gotoFirstChild()) {
-                continue; // Move to the first child if possible
+        // Collect all block formatting edits first, then apply them
+        const allBlockEdits: Array<{
+            edit: CodeEdit | CodeEdit[];
+            node: SyntaxNode;
+        }> = [];
+
+        const collectBlockEditsFromNode = (node: SyntaxNode): void => {
+            // Check if this node is undefined or null
+            if (!node) {
+                console.warn(
+                    "[FormattingEngine] Encountered undefined node during block formatting"
+                );
+                return;
             }
 
-            // Process the current node (this is a leaf node or a node with no unvisited children)
-            while (true) {
-                const node = cursor.currentNode();
+            // Check if this is a block node that needs formatting
+            if (bodyBlockKeywords.hasFancy(node.type, "")) {
+                const codeEdit = this.parse(node, fullText, formatters);
 
-                // Skip the node if it was the last one visited
-                if (node === lastVisitedNode) {
-                    if (!cursor.gotoParent()) {
-                        cursor.delete(); // Clean up the cursor
-                        return; // Exit if there are no more nodes to visit
-                    }
-                    continue; // Continue with the parent node
-                }
-
-                if (bodyBlockKeywords.hasFancy(node.type, "")) {
-                    const codeEdit = this.parse(node, fullText, formatters);
-
-                    if (codeEdit !== undefined) {
-                        this.insertChangeIntoTree(tree, codeEdit);
-                        this.insertChangeIntoFullText(codeEdit, fullText);
-                        this.numOfCodeEdits++;
-                    }
-                }
-
-                // Mark the current node as the last visited node
-                lastVisitedNode = node;
-
-                // Try to move to the next sibling
-                if (cursor.gotoNextSibling()) {
-                    break; // Move to the next sibling if it exists
-                }
-
-                // If no more siblings, move up to the parent node
-                if (!cursor.gotoParent()) {
-                    cursor.delete(); // Clean up the cursor
-                    return; // Exit if there are no more nodes to visit
+                if (codeEdit !== undefined) {
+                    // Collect the edit for later application
+                    allBlockEdits.push({ edit: codeEdit, node });
                 }
             }
+
+            // Recursively process all child nodes
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child) {
+                    collectBlockEditsFromNode(child);
+                }
+            }
+        };
+
+        // Start the recursive collection from the root node
+        collectBlockEditsFromNode(tree.rootNode);
+
+        // Apply all block edits in reverse order (from end to beginning)
+        console.log(
+            `[FormattingEngine] Applying ${allBlockEdits.length} block formatting edits in reverse order`
+        );
+
+        // Sort edits by their start position in descending order (last to first)
+        allBlockEdits.sort((a, b) => {
+            const aStartIndex = Array.isArray(a.edit)
+                ? a.edit[0].edit.startIndex
+                : a.edit.edit.startIndex;
+            const bStartIndex = Array.isArray(b.edit)
+                ? b.edit[0].edit.startIndex
+                : b.edit.edit.startIndex;
+            return bStartIndex - aStartIndex; // Descending order
+        });
+
+        for (const { edit, node } of allBlockEdits) {
+            console.log(
+                `[FormattingEngine] Applying block edit for ${node.type}:`,
+                Array.isArray(edit)
+                    ? edit.map((e) => `"${e.text}"`).join(", ")
+                    : `"${edit.text}"`
+            );
+
+            this.insertChangeIntoTree(tree, edit);
+            this.insertChangeIntoFullText(edit, fullText);
+            this.numOfCodeEdits++;
         }
+
+        console.log(
+            `[FormattingEngine] Block formatting completed. Applied ${allBlockEdits.length} edits.`
+        );
     }
 
     private insertChangeIntoTree(

@@ -90,24 +90,24 @@ suite("Extension Test Suite", () => {
     });
 
     functionalTestCases.forEach((cases) => {
-        test(`Functional test: ${cases}`, () => {
-            functionalTest(cases);
+        test(`Functional test: ${cases}`, async () => {
+            await functionalTest(cases);
         });
     });
 
     treeSitterTestCases.forEach((cases) => {
-        test(`Tree Sitter Error test: ${cases}`, () => {
-            treeSitterTest(cases);
+        test(`Tree Sitter Error test: ${cases}`, async () => {
+            await treeSitterTest(cases);
         });
     });
 });
 
-function functionalTest(name: string): void {
+async function functionalTest(name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const inputText = getInput(name);
-    const resultText = format(inputText, name);
+    const resultText = await format(inputText, name);
     const targetText = getTarget(name);
     const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
 
@@ -184,7 +184,7 @@ function getTarget(fileName: string): string {
     return readFile(filePath);
 }
 
-function format(text: string, name: string): string {
+async function format(text: string, name: string): Promise<string> {
     const configurationManager = ConfigurationManager.getInstance();
 
     const codeFormatter = new FormattingEngine(
@@ -194,7 +194,10 @@ function format(text: string, name: string): string {
         new DebugManagerMock()
     );
 
-    const result = codeFormatter.formatText(text, new EOL(getFileEOL(text)));
+    const result = await codeFormatter.formatText(
+        text,
+        new EOL(getFileEOL(text))
+    );
 
     return result;
 }
@@ -222,23 +225,26 @@ function getFileEOL(fileText: string): string {
     }
 }
 
-function treeSitterTest(name: string): void {
+async function treeSitterTest(name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const errorText = getError(name);
-    const errors = parseAndCheckForErrors(errorText as string, name);
+    const errors = await parseAndCheckForErrors(errorText as string, name);
 
     const errorMessage = formatErrorMessage(errors, name);
 
     assert.strictEqual(errors.length, 0, errorMessage);
 }
 
-function parseAndCheckForErrors(
+async function parseAndCheckForErrors(
     text: string,
     name: string
-): Parser.SyntaxNode[] {
-    const parseResult = parserHelper.parse(new FileIdentifier(name, 1), text);
+): Promise<Parser.SyntaxNode[]> {
+    const parseResult = await parserHelper.parseAsync(
+        new FileIdentifier(name, 1),
+        text
+    );
 
     const rootNode = parseResult.tree.rootNode;
     const errors = getNodesWithErrors(rootNode);

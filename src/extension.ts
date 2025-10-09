@@ -23,6 +23,21 @@ export async function activate(context: vscode.ExtensionContext) {
         context.extensionPath,
         debugManager
     );
+
+    // Wait for both language and worker initialization
+    try {
+        await parserHelper.awaitLanguage();
+        console.log("[Extension] Language initialization completed");
+
+        await parserHelper.awaitWorker();
+        console.log("[Extension] Worker initialization completed");
+    } catch (error) {
+        console.warn(
+            "[Extension] Worker initialization failed, some features may be limited:",
+            error
+        );
+    }
+
     const formatter = new AblFormatterProvider(parserHelper);
 
     vscode.languages.registerDocumentRangeFormattingEditProvider(

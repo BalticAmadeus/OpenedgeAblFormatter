@@ -82,19 +82,19 @@ suite("Extension Test Suite", () => {
     let fileId = 0;
 
     stabilityTestCases.forEach((cases) => {
-        test(`Symbol test: ${cases}`, () => {
-            stabilityTest(cases);
+        test(`Symbol test: ${cases}`, async () => {
+            await stabilityTest(cases);
         }).timeout(10000);
     });
 });
 
-function stabilityTest(name: string): void {
+async function stabilityTest(name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const beforeText = settingsOverride + getInput(name);
     const beforeCount = countActualSymbols(beforeText);
-    const afterText = format(beforeText, name);
+    const afterText = await format(beforeText, name);
     const afterCount = countActualSymbols(afterText);
 
     const nameWithRelativePath = name.startsWith(stabilityTestDir)
@@ -141,7 +141,7 @@ function getInput(fileName: string): string {
     return readFile(fileName);
 }
 
-function format(text: string, name: string): string {
+async function format(text: string, name: string): Promise<string> {
     const configurationManager = ConfigurationManager.getInstance();
 
     const codeFormatter = new FormattingEngine(
@@ -151,7 +151,10 @@ function format(text: string, name: string): string {
         new DebugManagerMock()
     );
 
-    const result = codeFormatter.formatText(text, new EOL(getFileEOL(text)));
+    const result = await codeFormatter.formatText(
+        text,
+        new EOL(getFileEOL(text))
+    );
 
     return result;
 }

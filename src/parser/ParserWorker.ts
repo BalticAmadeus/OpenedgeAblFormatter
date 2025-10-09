@@ -61,6 +61,10 @@ class ParserWorker {
             case "ping":
                 this.handlePingRequest(message);
                 break;
+            case "shutdown":
+                console.log("[ParserWorker] Received shutdown request");
+                process.exit(0);
+                break;
             default:
                 console.log(
                     "[ParserWorker] Unknown message type:",
@@ -94,13 +98,18 @@ class ParserWorker {
             const tree = this.parser.parse(message.text);
             const serializedTree = this.serializeTree(tree);
 
-            // Send back the serialized tree data
+            // Extract error ranges
+            const errorRanges = this.extractErrorRanges(tree);
+
+            // Send back the serialized tree data with error ranges
             if (process.send) {
                 process.send({
                     type: "parseResult",
                     id: message.id,
+                    fileId: message.fileId,
                     success: true,
                     tree: serializedTree,
+                    errorRanges: errorRanges,
                 });
             }
         } catch (error) {
@@ -109,12 +118,39 @@ class ParserWorker {
                 process.send({
                     type: "parseResult",
                     id: message.id,
+                    fileId: message.fileId,
                     success: false,
                     error:
                         error instanceof Error ? error.message : String(error),
                 });
             }
         }
+    }
+
+    private extractErrorRanges(tree: Parser.Tree): Parser.Range[] {
+        const ranges: Parser.Range[] = [];
+
+        const collectErrors = (node: Parser.SyntaxNode) => {
+            if (node.hasError() || node.type === "ERROR") {
+                ranges.push({
+                    startPosition: node.startPosition,
+                    endPosition: node.endPosition,
+                    startIndex: node.startIndex,
+                    endIndex: node.endIndex,
+                });
+            }
+
+            // Recursively check children
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child) {
+                    collectErrors(child);
+                }
+            }
+        };
+
+        collectErrors(tree.rootNode);
+        return ranges;
     }
 
     private serializeTree(tree: Parser.Tree): any {
@@ -128,6 +164,7 @@ class ParserWorker {
     private serializeNode(node: Parser.SyntaxNode): any {
         // Send only the data needed, not methods or interface implementations
         return {
+            id: node.id, // Include the node ID for hover display and formatter logic
             type: node.type,
             text: node.text,
             startPosition: node.startPosition,
@@ -137,6 +174,8 @@ class ParserWorker {
             endIndex: node.endIndex,
             childCount: node.childCount,
             namedChildCount: node.namedChildCount,
+            isNamed: node.isNamed(),
+            isMissing: node.isMissing(),
             children: node.children.map((child) => this.serializeNode(child)),
         };
     }
@@ -172,15 +211,53 @@ class ParserWorker {
             process.exit(0);
         });
 
-        // Keep the process alive by ensuring there's always something to do
-        // This prevents Node.js from exiting when there are no active handles
-        const keepAlive = setInterval(() => {
-            // Just a keep-alive timer - does nothing but keeps process alive
-        }, 30000);
+        // Handle parent process disconnect
+        process.on("disconnect", () => {
+            console.log(
+                "[ParserWorker] Parent process disconnected, shutting down..."
+            );
+            process.exit(0);
+        });
 
-        // Clean up on exit
+        // Handle uncaught exceptions to prevent hanging
+        process.on("uncaughtException", (error) => {
+            console.error("[ParserWorker] Uncaught exception:", error);
+            process.exit(1);
+        });
+
+        process.on("unhandledRejection", (reason, promise) => {
+            console.error(
+                "[ParserWorker] Unhandled rejection at:",
+                promise,
+                "reason:",
+                reason
+            );
+            process.exit(1);
+        });
+
+        // Failsafe: Exit after 5 minutes of inactivity to prevent hanging
+        let lastActivity = Date.now();
+        const activityCheck = setInterval(() => {
+            const now = Date.now();
+            if (now - lastActivity > 5 * 60 * 1000) {
+                // 5 minutes
+                console.log(
+                    "[ParserWorker] No activity for 5 minutes, shutting down..."
+                );
+                process.exit(0);
+            }
+        }, 60000); // Check every minute
+
+        // Update activity timestamp on each message
+        const originalHandleMessage = this.handleMessage.bind(this);
+        this.handleMessage = (message: any) => {
+            lastActivity = Date.now();
+            originalHandleMessage(message);
+        };
+
+        // Clean up interval on exit
         process.on("exit", () => {
-            clearInterval(keepAlive);
+            clearInterval(activityCheck);
         });
     }
 }

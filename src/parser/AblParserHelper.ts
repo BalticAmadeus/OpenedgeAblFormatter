@@ -10,7 +10,7 @@ import { spawn, ChildProcess } from "child_process";
 export class AblParserHelper implements IParserHelper {
     private parser: Parser | null = null;
     private trees = new Map<string, Parser.Tree>();
-    private ablLanguagePromise: Promise<Parser.Language>;
+
     private debugManager: IDebugManager;
     private workerProcess: ChildProcess | null = null;
     private useWorker: boolean = true;
@@ -22,30 +22,30 @@ export class AblParserHelper implements IParserHelper {
     >();
     private extensionPath: string;
     private workerInitPromise: Promise<void> | null = null;
+    private isTestMode: boolean = false;
 
-    public constructor(extensionPath: string, debugManager: IDebugManager) {
+    public constructor(
+        extensionPath: string,
+        debugManager: IDebugManager,
+        testMode: boolean = false
+    ) {
         this.extensionPath = extensionPath;
         this.debugManager = debugManager;
+        this.isTestMode = testMode;
 
-        this.ablLanguagePromise = Parser.init().then(() => {
-            this.parser = new Parser();
-            return Parser.Language.load(
-                path.join(extensionPath, "resources/tree-sitter-abl.wasm")
-            );
-        });
+        // Use worker-based parsing for crash prevention, but with a better architecture
+        console.log(
+            "[AblParserHelper] Using worker-based parsing with query architecture"
+        );
+        this.useWorker = true;
 
-        this.ablLanguagePromise.then((abl) => {
-            if (this.parser) {
-                this.parser.setLanguage(abl);
-                this.debugManager.parserReady();
-            }
-        });
-
+        // Initialize worker
         this.workerInitPromise = this.initializeWorker()
             .then(() => {
                 console.log(
                     "[AblParserHelper] Worker initialization completed successfully"
                 );
+                this.debugManager.parserReady();
             })
             .catch((error: any) => {
                 console.warn(
@@ -53,11 +53,38 @@ export class AblParserHelper implements IParserHelper {
                     error
                 );
                 this.useWorker = false;
+                return this.initializeDirectParser();
             });
     }
 
     public async awaitLanguage(): Promise<void> {
-        await this.ablLanguagePromise;
+        if (this.workerInitPromise) {
+            await this.workerInitPromise;
+        }
+    }
+
+    private async initializeDirectParser(): Promise<void> {
+        try {
+            await Parser.init();
+            this.parser = new Parser();
+            const wasmPath = path.join(
+                this.extensionPath,
+                "resources",
+                "tree-sitter-abl.wasm"
+            );
+            const Language = await Parser.Language.load(wasmPath);
+            this.parser.setLanguage(Language);
+            console.log(
+                "[AblParserHelper] Direct parser initialized for testing"
+            );
+            this.debugManager.parserReady();
+        } catch (error) {
+            console.error(
+                "[AblParserHelper] Failed to initialize direct parser:",
+                error
+            );
+            throw error;
+        }
     }
 
     public async awaitWorker(): Promise<void> {
@@ -71,73 +98,182 @@ export class AblParserHelper implements IParserHelper {
         text: string,
         previousTree?: Tree
     ): ParseResult {
-        // Always use direct parsing synchronously
-        // The worker process will be used for background optimization in the future
-        console.log("[AblParserHelper] Using direct parsing");
         if (!this.parser) {
-            throw new Error("Parser not initialized");
+            throw new Error(
+                "Parser not initialized. Call awaitLanguage() first."
+            );
         }
 
-        const newTree = this.parser.parse(text, previousTree);
-        let ranges: Parser.Range[];
+        console.log("[AblParserHelper] Using direct synchronous parsing");
+        const tree = this.parser.parse(text, previousTree);
+        this.trees.set(fileIdentifier.name, tree);
 
-        if (previousTree !== undefined) {
-            ranges = previousTree.getChangedRanges(newTree);
+        return {
+            tree,
+            ranges: this.extractErrorRanges(tree),
+        } as ParseResult;
+    }
+
+    public async parseAsync(
+        fileIdentifier: FileIdentifier,
+        text: string,
+        previousTree?: Tree
+    ): Promise<ParseResult> {
+        if (this.useWorker && this.workerReady) {
+            console.log("[AblParserHelper] Using worker-based parsing");
+            return this.parseWithWorker(fileIdentifier, text);
+        } else if (this.parser) {
+            console.log("[AblParserHelper] Using direct parsing fallback");
+            const tree = this.parser.parse(text, previousTree);
+            this.trees.set(fileIdentifier.name, tree);
+            return {
+                tree,
+                ranges: this.extractErrorRanges(tree),
+            } as ParseResult;
         } else {
-            ranges = []; // TODO
+            throw new Error("Neither worker nor direct parser available");
         }
-
-        const result: ParseResult = {
-            tree: newTree,
-            ranges: ranges,
-        };
-
-        this.debugManager.handleErrors(newTree);
-
-        return result;
     }
 
     private async initializeWorker(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const jsWorkerPath = path.join(__dirname, "ParserWorker.js");
-            const tsWorkerPath = path.join(__dirname, "ParserWorker.ts");
+            console.log(`[AblParserHelper] __dirname: ${__dirname}`);
+            console.log(
+                `[AblParserHelper] extensionPath: ${this.extensionPath}`
+            );
 
-            let workerPath: string;
+            // Try multiple possible locations for the bundled worker
+            const possibleWorkerPaths = [
+                path.join(__dirname, "ParserWorker.js"), // Same directory as AblParserHelper
+                path.join(__dirname, "parser", "ParserWorker.js"), // __dirname + parser subdirectory
+                path.join(
+                    this.extensionPath,
+                    "out",
+                    "parser",
+                    "ParserWorker.js"
+                ), // Extension path + out/parser
+                path.join(this.extensionPath, "out", "ParserWorker.js"), // Extension path + out
+                // Additional paths for packaged extension
+                path.resolve(__dirname, "..", "parser", "ParserWorker.js"), // Go up one level then parser
+                path.resolve(__dirname, "ParserWorker.js"), // Direct resolve
+            ];
+
+            let workerPath: string | null = null;
             let command: string;
             let args: string[];
 
-            try {
-                require.resolve(jsWorkerPath);
-                workerPath = jsWorkerPath;
+            // Try to find the bundled JavaScript worker
+            for (const candidatePath of possibleWorkerPaths) {
+                console.log(
+                    `[AblParserHelper] Checking worker path: ${candidatePath}`
+                );
+                const exists = require("fs").existsSync(candidatePath);
+                console.log(`[AblParserHelper] Path exists: ${exists}`);
+                if (exists) {
+                    workerPath = candidatePath;
+                    console.log(
+                        `[AblParserHelper] Found bundled JS worker: ${workerPath}`
+                    );
+                    break;
+                }
+            }
+
+            // If no worker found, list directory contents for debugging
+            if (!workerPath) {
+                console.log(
+                    `[AblParserHelper] No worker found. Debugging directory contents:`
+                );
+                try {
+                    const dirContents = require("fs").readdirSync(__dirname);
+                    console.log(
+                        `[AblParserHelper] __dirname contents:`,
+                        dirContents
+                    );
+
+                    const parserDir = path.join(__dirname, "parser");
+                    if (require("fs").existsSync(parserDir)) {
+                        const parserContents =
+                            require("fs").readdirSync(parserDir);
+                        console.log(
+                            `[AblParserHelper] parser directory contents:`,
+                            parserContents
+                        );
+                    } else {
+                        console.log(
+                            `[AblParserHelper] parser directory does not exist at:`,
+                            parserDir
+                        );
+                    }
+                } catch (error) {
+                    console.log(
+                        `[AblParserHelper] Error reading directory:`,
+                        error
+                    );
+                }
+            }
+
+            if (workerPath) {
                 command = "node";
                 args = [workerPath, this.extensionPath];
                 console.log(
                     `[AblParserHelper] Using compiled JS worker: ${workerPath}`
                 );
-            } catch {
-                workerPath = tsWorkerPath;
-                command = "node";
-                args = [
-                    "-r",
-                    "ts-node/register",
-                    workerPath,
-                    this.extensionPath,
-                ];
+            } else {
+                // Fallback to TypeScript (development mode only)
+                const tsWorkerPath = path.join(__dirname, "ParserWorker.ts");
                 console.log(
-                    `[AblParserHelper] Using TypeScript worker: ${workerPath}`
+                    `[AblParserHelper] No JS worker found, checking TypeScript fallback: ${tsWorkerPath}`
                 );
+
+                if (require("fs").existsSync(tsWorkerPath)) {
+                    workerPath = tsWorkerPath;
+                    command = "node";
+                    args = [
+                        "-r",
+                        "ts-node/register",
+                        workerPath,
+                        this.extensionPath,
+                    ];
+                    console.log(
+                        `[AblParserHelper] Using TypeScript worker: ${workerPath}`
+                    );
+                } else {
+                    console.error(
+                        `[AblParserHelper] No worker file found. Checked paths: ${possibleWorkerPaths.join(
+                            ", "
+                        )}, ${tsWorkerPath}`
+                    );
+                    reject(
+                        new Error(
+                            `Neither JS nor TS worker found. Checked: ${possibleWorkerPaths.join(
+                                ", "
+                            )}, ${tsWorkerPath}`
+                        )
+                    );
+                    return;
+                }
             }
+
+            console.log(
+                `[AblParserHelper] Spawning worker process with command: ${command} ${args.join(
+                    " "
+                )}`
+            );
 
             this.workerProcess = spawn(command, args, {
                 stdio: ["pipe", "pipe", "pipe", "ipc"],
             });
 
+            console.log(
+                `[AblParserHelper] Worker process spawned with PID: ${this.workerProcess.pid}`
+            );
+
             this.workerProcess.stdout?.on("data", (data) => {
-                console.log(`[Worker stdout]: ${data}`);
+                console.log(`[Worker stdout]: ${data.toString().trim()}`);
             });
 
             this.workerProcess.stderr?.on("data", (data) => {
-                console.error(`[Worker stderr]: ${data}`);
+                console.error(`[Worker stderr]: ${data.toString().trim()}`);
             });
 
             this.workerProcess.on("message", (message: any) => {
@@ -153,6 +289,8 @@ export class AblParserHelper implements IParserHelper {
 
             this.workerProcess.on("error", (error) => {
                 console.error("[AblParserHelper] Worker process error:", error);
+                console.error("[AblParserHelper] Command:", command);
+                console.error("[AblParserHelper] Args:", args);
                 reject(error);
             });
 
@@ -166,10 +304,23 @@ export class AblParserHelper implements IParserHelper {
             });
 
             setTimeout(() => {
-                if (this.workerProcess && !this.workerProcess.killed) {
-                    reject(new Error("Worker initialization timeout"));
+                if (!this.workerReady) {
+                    console.error(
+                        "[AblParserHelper] Worker initialization timeout - no ready message received"
+                    );
+                    if (this.workerProcess && !this.workerProcess.killed) {
+                        console.error(
+                            "[AblParserHelper] Worker process still running but not ready"
+                        );
+                        this.workerProcess.kill("SIGTERM");
+                    }
+                    reject(
+                        new Error(
+                            "Worker initialization timeout - no ready message received within 15 seconds"
+                        )
+                    );
                 }
-            }, 10000);
+            }, 15000);
         });
     }
 
@@ -179,12 +330,14 @@ export class AblParserHelper implements IParserHelper {
             if (pendingRequest) {
                 this.pendingRequests.delete(message.id);
                 if (message.success) {
-                    const mockTree = this.createMockTreeFromWorker(
+                    // Create a lightweight tree proxy that delegates operations to the worker
+                    const treeProxy = this.createTreeProxy(
+                        message.fileId,
                         message.tree
                     );
                     const parseResult: ParseResult = {
-                        tree: mockTree,
-                        ranges: [], // TODO: Handle ranges from worker
+                        tree: treeProxy,
+                        ranges: message.errorRanges || [], // Get error ranges from worker
                     };
                     pendingRequest.resolve(parseResult);
                 } else {
@@ -194,56 +347,156 @@ export class AblParserHelper implements IParserHelper {
         }
     }
 
-    private createMockTreeFromWorker(workerTree: any): Parser.Tree {
-        const mockTree: any = {
-            rootNode: this.createMockNodeFromWorker(workerTree.rootNode),
+    private createTreeProxy(fileId: string, workerTreeData: any): Parser.Tree {
+        // Create a lightweight proxy that only provides what FormattingEngine needs
+        const rootNode = this.createSimpleNodeProxy(workerTreeData.rootNode);
+
+        const treeProxy: any = {
+            rootNode: rootNode,
             getChangedRanges: (other: Parser.Tree) => [],
-            edit: () => {},
-            walk: () => this.createMockTreeCursor(workerTree.rootNode),
+            edit: (edit: any) => {
+                // For now, just log the edit - we'll implement worker editing if needed
+                console.log("[AblParserHelper] Tree edit requested:", edit);
+            },
+            walk: () => this.createSimpleTreeCursor(rootNode),
         };
-        return mockTree as Parser.Tree;
+        return treeProxy as Parser.Tree;
     }
 
-    private createMockNodeFromWorker(workerNode: any): Parser.SyntaxNode {
-        const mockNode: any = {
+    private createSimpleNodeProxy(workerNode: any): Parser.SyntaxNode {
+        // Create a much simpler node proxy with only essential properties
+        const children =
+            workerNode.children?.map((child: any) =>
+                this.createSimpleNodeProxy(child)
+            ) || [];
+
+        const nodeProxy: any = {
             type: workerNode.type,
             text: workerNode.text,
             startPosition: workerNode.startPosition,
             endPosition: workerNode.endPosition,
-            hasError: () => workerNode.hasError || false,
-            children:
-                workerNode.children?.map((child: any) =>
-                    this.createMockNodeFromWorker(child)
-                ) || [],
-            parent: null,
-            nextSibling: null,
-            previousSibling: null,
-            firstChild: null,
-            lastChild: null,
-            childCount: workerNode.childCount || 0,
-            namedChildCount: workerNode.namedChildCount || 0,
             startIndex: workerNode.startIndex || 0,
             endIndex: workerNode.endIndex || 0,
-            isNamed: () => true,
-            isMissing: () => false,
-            isExtra: () => false,
-            walk: () => this.createMockTreeCursor(workerNode),
+            childCount: children.length,
+            children: children,
+            parent: null, // Will be set after creation
+
+            // Essential methods
+            hasError: () => workerNode.hasError || false,
+            isNamed: () => workerNode.isNamed !== false,
+            isMissing: () => workerNode.isMissing || false,
+            isError: () => workerNode.type === "ERROR",
+
+            child: (index: number) => {
+                return index < children.length ? children[index] : null;
+            },
+
+            descendantForPosition: (point: Parser.Point) => {
+                // Recursive search for the most specific node at the given position
+                const findDescendant = (currentNode: Parser.SyntaxNode): Parser.SyntaxNode | null => {
+                    // Check if the point is within this node's range
+                    if (!currentNode.startPosition || !currentNode.endPosition) {
+                        return null;
+                    }
+
+                    const start = currentNode.startPosition;
+                    const end = currentNode.endPosition;
+
+                    // Check if point is within bounds
+                    if (
+                        point.row < start.row ||
+                        (point.row === start.row && point.column < start.column) ||
+                        point.row > end.row ||
+                        (point.row === end.row && point.column > end.column)
+                    ) {
+                        return null;
+                    }
+
+                    // Check children for a more specific match
+                    for (let i = 0; i < currentNode.childCount; i++) {
+                        const child = currentNode.child(i);
+                        if (child) {
+                            const descendant = findDescendant(child);
+                            if (descendant) {
+                                return descendant;
+                            }
+                        }
+                    }
+
+                    // If no child contains the point, this node is the most specific
+                    return currentNode;
+                };
+
+                return findDescendant(nodeProxy);
+            },
+
+            toString: () =>
+                `${workerNode.type}(${workerNode.startPosition?.row || 0}, ${
+                    workerNode.startPosition?.column || 0
+                })`,
         };
-        return mockNode as Parser.SyntaxNode;
+
+        // Set up parent relationships
+        children.forEach((child: any) => {
+            child.parent = nodeProxy;
+        });        return nodeProxy as Parser.SyntaxNode;
     }
 
-    private createMockTreeCursor(workerNode: any): Parser.TreeCursor {
-        const mockCursor: any = {
-            currentNode: () => this.createMockNodeFromWorker(workerNode),
-            gotoFirstChild: () => false,
-            gotoNextSibling: () => false,
-            gotoParent: () => false,
-            delete: () => {},
+    private createSimpleTreeCursor(rootNode: Parser.SyntaxNode): Parser.TreeCursor {
+        let currentNode = rootNode;
+
+        const cursor: any = {
+            currentNode: () => currentNode,
+
+            gotoFirstChild: () => {
+                if (currentNode.childCount > 0) {
+                    const firstChild = currentNode.child(0);
+                    if (firstChild) {
+                        currentNode = firstChild;
+                        return true;
+                    }
+                }
+                return false;
+            },
+
+            gotoNextSibling: () => {
+                // For simplified nodes, we don't have nextSibling, so we need to find it through parent
+                if (currentNode.parent) {
+                    const parent = currentNode.parent;
+                    for (let i = 0; i < parent.childCount - 1; i++) {
+                        if (parent.child(i) === currentNode) {
+                            const nextSibling = parent.child(i + 1);
+                            if (nextSibling) {
+                                currentNode = nextSibling;
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            },
+
+            gotoParent: () => {
+                if (currentNode.parent) {
+                    currentNode = currentNode.parent;
+                    return true;
+                }
+                return false;
+            },
+
+            delete: () => {
+                currentNode = rootNode;
+            },
         };
-        return mockCursor as Parser.TreeCursor;
+        return cursor as Parser.TreeCursor;
     }
 
-    private async parseWithWorker(text: string): Promise<ParseResult> {
+
+
+    private async parseWithWorker(
+        fileIdentifier: FileIdentifier,
+        text: string
+    ): Promise<ParseResult> {
         return new Promise<ParseResult>((resolve, reject) => {
             if (!this.workerProcess) {
                 reject(new Error("Worker process not available"));
@@ -256,6 +509,7 @@ export class AblParserHelper implements IParserHelper {
             this.workerProcess.send({
                 type: "parse",
                 id,
+                fileId: fileIdentifier.name,
                 text,
             });
 
@@ -268,10 +522,62 @@ export class AblParserHelper implements IParserHelper {
         });
     }
 
+    private extractErrorRanges(tree: Parser.Tree): Parser.Range[] {
+        const ranges: Parser.Range[] = [];
+
+        const collectErrors = (node: Parser.SyntaxNode) => {
+            if (node.hasError() || node.type === "ERROR") {
+                ranges.push({
+                    startPosition: node.startPosition,
+                    endPosition: node.endPosition,
+                    startIndex: node.startIndex,
+                    endIndex: node.endIndex,
+                });
+            }
+
+            // Recursively check children
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child) {
+                    collectErrors(child);
+                }
+            }
+        };
+
+        collectErrors(tree.rootNode);
+        return ranges;
+    }
+
     public dispose(): void {
         if (this.workerProcess) {
             console.log("[AblParserHelper] Disposing worker process");
-            this.workerProcess.kill();
+            try {
+                // Send shutdown message first
+                this.workerProcess.send({ type: "shutdown" });
+                // Force kill after a short delay to ensure cleanup
+                this.workerProcess.kill("SIGTERM");
+                console.log("[AblParserHelper] Worker process terminated");
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : String(error);
+                console.log(
+                    "[AblParserHelper] Error sending shutdown message, force killing:",
+                    errorMessage
+                );
+                // If sending message fails, just kill the process
+                try {
+                    this.workerProcess.kill("SIGKILL");
+                } catch (killError) {
+                    const killErrorMessage =
+                        killError instanceof Error
+                            ? killError.message
+                            : String(killError);
+                    console.log(
+                        "[AblParserHelper] Error killing worker process:",
+                        killErrorMessage
+                    );
+                }
+            }
             this.workerProcess = null;
         }
         this.pendingRequests.clear();
@@ -292,7 +598,7 @@ function getNodesWithErrors(
         errorNodes.push(node);
     }
 
-    node.children.forEach((child) => {
+    node.children.forEach((child: Parser.SyntaxNode) => {
         errorNodes = errorNodes.concat(getNodesWithErrors(child, false));
     });
 

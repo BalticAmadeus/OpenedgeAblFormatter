@@ -10,5 +10,8 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode"
      },
 
-     "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "AblFormatter.variableAssignmentFormatting": true,
+    "AblFormatter.variableDefinitionFormatting": true,
+    "AblFormatter.expressionFormatting": true
 }

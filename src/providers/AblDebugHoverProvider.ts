@@ -25,12 +25,22 @@ export class AblDebugHoverProvider implements HoverProvider {
         this.parserHelper = parserHelper;
     }
 
-    provideHover(
+    async provideHover(
         document: TextDocument,
         position: Position,
         token: CancellationToken
-    ): ProviderResult<Hover> {
-        if (!DebugManager.getInstance().isShowTreeOnHover()) {
+    ): Promise<Hover | undefined> {
+        console.log("[AblDebugHoverProvider] provideHover called");
+        const showTreeOnHover = DebugManager.getInstance().isShowTreeOnHover();
+        console.log(
+            "[AblDebugHoverProvider] showTreeOnHover:",
+            showTreeOnHover
+        );
+
+        if (!showTreeOnHover) {
+            console.log(
+                "[AblDebugHoverProvider] Hover disabled, returning undefined"
+            );
             return;
         }
 
@@ -39,19 +49,42 @@ export class AblDebugHoverProvider implements HoverProvider {
             column: position.character,
         };
 
-        const node = this.getNodeForPoint(document, point);
-
-        return new Hover(
-            "| ID | TYPE | START POS | END POS | INDEX | TEXT | \n | ---- | ---- | ---- | ---- | ---- | ---- | \n" +
-                this.fillTreeWithAcendantsInfo(node)
+        const node = await this.getNodeForPoint(document, point);
+        console.log(
+            "[AblDebugHoverProvider] Found node:",
+            node ? node.type : "null"
         );
+
+        if (!node) {
+            console.log(
+                "[AblDebugHoverProvider] No node found at position, returning undefined"
+            );
+            return;
+        }
+
+        const hoverText =
+            "| ID | TYPE | START POS | END POS | INDEX | TEXT | \n | ---- | ---- | ---- | ---- | ---- | ---- | \n" +
+            this.fillTreeWithAcendantsInfo(node);
+
+        console.log(
+            "[AblDebugHoverProvider] Hover text generated, length:",
+            hoverText.length
+        );
+        return new Hover(hoverText);
     }
 
-    private getNodeForPoint(document: TextDocument, point: Point): SyntaxNode {
+    private async getNodeForPoint(
+        document: TextDocument,
+        point: Point
+    ): Promise<SyntaxNode | undefined> {
         let result = this.getResultIfDocumentWasAlreadyParsed(document);
 
         if (result === undefined) {
-            result = this.parseDocumentAndAddToInstances(document);
+            result = await this.parseDocumentAndAddToInstances(document);
+        }
+
+        if (!result) {
+            return undefined;
         }
 
         return result.tree.rootNode.descendantForPosition(point);
@@ -72,10 +105,13 @@ export class AblDebugHoverProvider implements HoverProvider {
         return instance?.parseResult;
     }
 
-    private parseDocumentAndAddToInstances(
+    private async parseDocumentAndAddToInstances(
         document: TextDocument
-    ): ParseResult {
-        const parseResult = this.parserHelper.parse(
+    ): Promise<ParseResult> {
+        console.log(
+            "[AblDebugHoverProvider] Parsing document for hover using worker"
+        );
+        const parseResult = await this.parserHelper.parseAsync(
             new FileIdentifier(document.fileName, document.version),
             document.getText()
         );
@@ -88,13 +124,23 @@ export class AblDebugHoverProvider implements HoverProvider {
             parseResult: parseResult,
         });
 
+        console.log(
+            "[AblDebugHoverProvider] Document parsed successfully for hover"
+        );
         return parseResult;
     }
 
     private fillTreeWithAcendantsInfo(node: SyntaxNode): string {
+        console.log(
+            "[AblDebugHoverProvider] Processing node for hover:",
+            node.type,
+            "id:",
+            node.id
+        );
+
         const str =
             "| " +
-            node.id +
+            (node.id || "N/A") +
             " | " +
             node.type +
             " | " +
@@ -118,7 +164,10 @@ export class AblDebugHoverProvider implements HoverProvider {
             " \n";
 
         if (node.parent === null) {
-            return "";
+            console.log(
+                "[AblDebugHoverProvider] Reached root node, stopping recursion"
+            );
+            return str;
         }
 
         return str + this.fillTreeWithAcendantsInfo(node.parent);
