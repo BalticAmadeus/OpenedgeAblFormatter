@@ -177,6 +177,40 @@ class ParserWorker {
             isNamed: node.isNamed(),
             isMissing: node.isMissing(),
             children: node.children.map((child) => this.serializeNode(child)),
+            // Add sibling information
+            hasNextSibling: !!node.nextSibling,
+            hasPreviousSibling: !!node.previousSibling,
+            hasNextNamedSibling: !!node.nextNamedSibling,
+            hasPreviousNamedSibling: !!node.previousNamedSibling,
+            // Serialize sibling nodes (but only basic info to avoid circular references)
+            nextSibling: node.nextSibling
+                ? this.serializeNodeBasic(node.nextSibling)
+                : null,
+            previousSibling: node.previousSibling
+                ? this.serializeNodeBasic(node.previousSibling)
+                : null,
+            nextNamedSibling: node.nextNamedSibling
+                ? this.serializeNodeBasic(node.nextNamedSibling)
+                : null,
+            previousNamedSibling: node.previousNamedSibling
+                ? this.serializeNodeBasic(node.previousNamedSibling)
+                : null,
+        };
+    }
+
+    private serializeNodeBasic(node: Parser.SyntaxNode): any {
+        // Serialize just basic info about sibling nodes to avoid deep recursion
+        return {
+            id: node.id,
+            type: node.type,
+            text: node.text,
+            startPosition: node.startPosition,
+            endPosition: node.endPosition,
+            startIndex: node.startIndex,
+            endIndex: node.endIndex,
+            isNamed: node.isNamed(),
+            isMissing: node.isMissing(),
+            hasError: node.hasError(),
         };
     }
 

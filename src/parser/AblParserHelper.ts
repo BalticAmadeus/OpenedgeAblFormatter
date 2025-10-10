@@ -349,7 +349,12 @@ export class AblParserHelper implements IParserHelper {
 
     private createTreeProxy(fileId: string, workerTreeData: any): Parser.Tree {
         // Create a lightweight proxy that only provides what FormattingEngine needs
-        const rootNode = this.createSimpleNodeProxy(workerTreeData.rootNode);
+        // Use two-pass approach: create all nodes first, then set up sibling relationships
+        const nodeMap = new Map<any, Parser.SyntaxNode>();
+        const rootNode = this.createNodeProxyWithSiblings(
+            workerTreeData.rootNode,
+            nodeMap
+        );
 
         const treeProxy: any = {
             rootNode: rootNode,
@@ -393,9 +398,14 @@ export class AblParserHelper implements IParserHelper {
 
             descendantForPosition: (point: Parser.Point) => {
                 // Recursive search for the most specific node at the given position
-                const findDescendant = (currentNode: Parser.SyntaxNode): Parser.SyntaxNode | null => {
+                const findDescendant = (
+                    currentNode: Parser.SyntaxNode
+                ): Parser.SyntaxNode | null => {
                     // Check if the point is within this node's range
-                    if (!currentNode.startPosition || !currentNode.endPosition) {
+                    if (
+                        !currentNode.startPosition ||
+                        !currentNode.endPosition
+                    ) {
                         return null;
                     }
 
@@ -405,7 +415,8 @@ export class AblParserHelper implements IParserHelper {
                     // Check if point is within bounds
                     if (
                         point.row < start.row ||
-                        (point.row === start.row && point.column < start.column) ||
+                        (point.row === start.row &&
+                            point.column < start.column) ||
                         point.row > end.row ||
                         (point.row === end.row && point.column > end.column)
                     ) {
@@ -439,10 +450,176 @@ export class AblParserHelper implements IParserHelper {
         // Set up parent relationships
         children.forEach((child: any) => {
             child.parent = nodeProxy;
-        });        return nodeProxy as Parser.SyntaxNode;
+        });
+        return nodeProxy as Parser.SyntaxNode;
     }
 
-    private createSimpleTreeCursor(rootNode: Parser.SyntaxNode): Parser.TreeCursor {
+    private createNodeProxyWithSiblings(
+        workerNode: any,
+        nodeMap: Map<any, Parser.SyntaxNode>
+    ): Parser.SyntaxNode {
+        // First pass: create the node and all its descendants
+        const nodeProxy = this.createSimpleNodeProxy(workerNode);
+
+        // Build a complete map of all nodes in the tree
+        this.buildNodeMap(nodeProxy, workerNode, nodeMap);
+
+        // Second pass: set up sibling relationships for entire tree
+        this.setupAllSiblingRelationships(nodeProxy, workerNode, nodeMap);
+
+        return nodeProxy;
+    }
+
+    private buildNodeMap(
+        nodeProxy: Parser.SyntaxNode,
+        workerNode: any,
+        nodeMap: Map<any, Parser.SyntaxNode>
+    ): void {
+        nodeMap.set(workerNode, nodeProxy);
+
+        // Recursively build map for all children
+        if (workerNode.children && Array.isArray(workerNode.children)) {
+            for (let i = 0; i < workerNode.children.length; i++) {
+                const workerChild = workerNode.children[i];
+                const proxyChild = nodeProxy.child(i);
+                if (workerChild && proxyChild) {
+                    this.buildNodeMap(proxyChild, workerChild, nodeMap);
+                }
+            }
+        }
+    }
+
+    private setupAllSiblingRelationships(
+        nodeProxy: Parser.SyntaxNode,
+        workerNode: any,
+        nodeMap: Map<any, Parser.SyntaxNode>
+    ): void {
+        // Setup siblings for this node
+        this.setupSiblingRelationships(nodeProxy, workerNode, nodeMap);
+
+        // Recursively setup siblings for all children
+        if (workerNode.children && Array.isArray(workerNode.children)) {
+            for (let i = 0; i < workerNode.children.length; i++) {
+                const workerChild = workerNode.children[i];
+                const proxyChild = nodeProxy.child(i);
+                if (workerChild && proxyChild) {
+                    this.setupAllSiblingRelationships(
+                        proxyChild,
+                        workerChild,
+                        nodeMap
+                    );
+                }
+            }
+        }
+    }
+
+    private setupSiblingRelationships(
+        nodeProxy: any,
+        workerNode: any,
+        nodeMap: Map<any, Parser.SyntaxNode>
+    ): void {
+        // Add debug logging
+        if (workerNode.type === "do_block" || workerNode.type === "body") {
+            console.log(
+                `[AblParserHelper] Setting up siblings for ${workerNode.type}:`,
+                {
+                    hasPreviousNamedSibling: !!workerNode.previousNamedSibling,
+                    previousNamedSiblingType:
+                        workerNode.previousNamedSibling?.type,
+                }
+            );
+        }
+
+        // Add sibling properties to the node proxy
+        if (workerNode.nextSibling) {
+            // Create a basic proxy for the sibling if it doesn't exist
+            let nextSiblingProxy = nodeMap.get(workerNode.nextSibling);
+            if (!nextSiblingProxy) {
+                nextSiblingProxy = this.createBasicSiblingProxy(
+                    workerNode.nextSibling
+                );
+            }
+            nodeProxy.nextSibling = nextSiblingProxy;
+        } else {
+            nodeProxy.nextSibling = null;
+        }
+
+        if (workerNode.previousSibling) {
+            let previousSiblingProxy = nodeMap.get(workerNode.previousSibling);
+            if (!previousSiblingProxy) {
+                previousSiblingProxy = this.createBasicSiblingProxy(
+                    workerNode.previousSibling
+                );
+            }
+            nodeProxy.previousSibling = previousSiblingProxy;
+        } else {
+            nodeProxy.previousSibling = null;
+        }
+
+        if (workerNode.nextNamedSibling) {
+            let nextNamedSiblingProxy = nodeMap.get(
+                workerNode.nextNamedSibling
+            );
+            if (!nextNamedSiblingProxy) {
+                nextNamedSiblingProxy = this.createBasicSiblingProxy(
+                    workerNode.nextNamedSibling
+                );
+            }
+            nodeProxy.nextNamedSibling = nextNamedSiblingProxy;
+        } else {
+            nodeProxy.nextNamedSibling = null;
+        }
+
+        if (workerNode.previousNamedSibling) {
+            let previousNamedSiblingProxy = nodeMap.get(
+                workerNode.previousNamedSibling
+            );
+            if (!previousNamedSiblingProxy) {
+                previousNamedSiblingProxy = this.createBasicSiblingProxy(
+                    workerNode.previousNamedSibling
+                );
+            }
+            nodeProxy.previousNamedSibling = previousNamedSiblingProxy;
+        } else {
+            nodeProxy.previousNamedSibling = null;
+        }
+    }
+
+    private createBasicSiblingProxy(workerSiblingNode: any): Parser.SyntaxNode {
+        // Create a minimal proxy for sibling nodes to avoid deep recursion
+        const siblingProxy: any = {
+            type: workerSiblingNode.type,
+            text: workerSiblingNode.text,
+            startPosition: workerSiblingNode.startPosition,
+            endPosition: workerSiblingNode.endPosition,
+            startIndex: workerSiblingNode.startIndex || 0,
+            endIndex: workerSiblingNode.endIndex || 0,
+            childCount: 0,
+            children: [],
+            parent: null,
+
+            // Essential methods
+            hasError: () => workerSiblingNode.hasError || false,
+            isNamed: () => workerSiblingNode.isNamed !== false,
+            isMissing: () => workerSiblingNode.isMissing || false,
+            isError: () => workerSiblingNode.type === "ERROR",
+
+            child: () => null,
+            toString: () => `${workerSiblingNode.type}(sibling)`,
+
+            // Sibling properties (will be null for basic proxies to avoid infinite recursion)
+            nextSibling: null,
+            previousSibling: null,
+            nextNamedSibling: null,
+            previousNamedSibling: null,
+        };
+
+        return siblingProxy as Parser.SyntaxNode;
+    }
+
+    private createSimpleTreeCursor(
+        rootNode: Parser.SyntaxNode
+    ): Parser.TreeCursor {
         let currentNode = rootNode;
 
         const cursor: any = {
@@ -490,8 +667,6 @@ export class AblParserHelper implements IParserHelper {
         };
         return cursor as Parser.TreeCursor;
     }
-
-
 
     private async parseWithWorker(
         fileIdentifier: FileIdentifier,
