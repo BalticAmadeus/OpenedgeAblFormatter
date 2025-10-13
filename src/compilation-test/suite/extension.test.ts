@@ -7,6 +7,7 @@ import * as path from "path";
 import { exec } from "child_process";
 import { spawn } from "child_process";
 import { promisify } from "util";
+import * as readline from "readline";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -22,7 +23,113 @@ import { EOL } from "../../model/EOL";
 
 const execAsync = promisify(exec);
 
-// Compilation test functions
+async function promptForProgressCfgPath(): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        });
+
+        console.log("\n⚠️  Could not automatically find progress.cfg file.");
+        console.log("Please provide the full path to your progress.cfg file:");
+        console.log("Example: C:\\Progress\\OpenEdge\\progress.cfg");
+        console.log("Example: C:\\someFolder\\folder\\progress.cfg");
+
+        rl.question("Enter full path to progress.cfg: ", (userPath) => {
+            rl.close();
+
+            if (!userPath.trim()) {
+                reject(
+                    new Error(
+                        "No path provided. Please enter a valid path to progress.cfg"
+                    )
+                );
+                return;
+            }
+
+            const trimmedPath = userPath.trim();
+
+            // Validate that the file exists
+            if (!fs.existsSync(trimmedPath)) {
+                reject(
+                    new Error(
+                        `File not found: ${trimmedPath}. Please check the path and try again.`
+                    )
+                );
+                return;
+            }
+
+            // Validate that it's actually a progress.cfg file
+            if (!trimmedPath.toLowerCase().endsWith("progress.cfg")) {
+                reject(
+                    new Error(
+                        `Invalid file: ${trimmedPath}. Please provide path to progress.cfg file.`
+                    )
+                );
+                return;
+            }
+
+            console.log(`✓ Using progress.cfg from: ${trimmedPath}`);
+            resolve(trimmedPath);
+        });
+    });
+}
+
+async function findProgressCfg(): Promise<string> {
+    const commonPaths = [
+        "C:\\Progress\\OpenEdge\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.8\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.7\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.6\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.5\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.4\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.3\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.2\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.1\\progress.cfg",
+        "C:\\Progress\\OpenEdge 12.0\\progress.cfg",
+        "C:\\Progress\\OpenEdge 11.7\\progress.cfg",
+        "C:\\Progress\\OpenEdge 11.6\\progress.cfg",
+        "C:\\OpenEdge\\progress.cfg",
+        "C:\\dlc\\progress.cfg",
+    ];
+
+    console.log("Searching for progress.cfg file...");
+
+    for (const configPath of commonPaths) {
+        if (fs.existsSync(configPath)) {
+            console.log(`✓ Found progress.cfg at: ${configPath}`);
+            return configPath;
+        }
+    }
+
+    // Check if DLC environment variable is set
+    const dlcPath = process.env.DLC;
+    if (dlcPath) {
+        const configPath = path.join(dlcPath, "progress.cfg");
+        if (fs.existsSync(configPath)) {
+            console.log(
+                `✓ Found progress.cfg via DLC environment variable: ${configPath}`
+            );
+            return configPath;
+        }
+    }
+
+    // If not found anywhere, prompt user for manual input
+    console.log("❌ Could not find progress.cfg in any standard locations:");
+    commonPaths.forEach((p) => console.log(`   - ${p}`));
+    console.log(`   - DLC environment variable (${dlcPath || "not set"})`);
+
+    try {
+        return await promptForProgressCfgPath();
+    } catch (error) {
+        throw new Error(
+            `Failed to locate progress.cfg file: ${
+                error instanceof Error ? error.message : error
+            }`
+        );
+    }
+}
+
 async function checkDockerDesktopApp(): Promise<void> {
     console.log("Checking if Docker Desktop is running...");
     try {
@@ -109,6 +216,9 @@ async function runPbuildDocker(): Promise<void> {
     console.log(`Project root: ${projectRootDir}`);
     console.log(`ADE source directory: ${adeSourceDir}`);
 
+    // Find progress.cfg file automatically
+    const progressCfgPath = await findProgressCfg();
+
     // Comment out the $RMDIR "$WORK" line in pbuild to preserve working directory
     const pbuildPath = path.join(adeSourceDir, "src", "adebuild", "pbuild");
     try {
@@ -137,7 +247,7 @@ async function runPbuildDocker(): Promise<void> {
         "-v",
         `${adeSourceDir}:/app/src`,
         "-v",
-        `C:\\Progress\\OpenEdge\\progress.cfg:/usr/dlc/progress.cfg`,
+        `${progressCfgPath}:/usr/dlc/progress.cfg`,
         "devbfvio/openedge-compiler:latest",
         "bash",
         "-c",
@@ -268,6 +378,33 @@ async function formatAdeSrc(): Promise<void> {
         return;
     }
 
+    // Create output directory and timestamped filename for format failures
+    const outputDir = path.join(
+        __dirname,
+        "../../../resources/testResults/compilationTests"
+    );
+    const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .replace("T", "_")
+        .split(".")[0];
+    const formatFailsPath = path.join(
+        outputDir,
+        `formatFails_${timestamp}.txt`
+    );
+
+    // Ensure output directory exists
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Initialize format failures log
+    let formatFailures: string[] = [];
+    formatFailures.push(`Format Failures Log - ${new Date().toISOString()}`);
+    formatFailures.push(
+        `=======================================================\n`
+    );
+
     try {
         // Function to detect EOL from file content (like in the test suites)
         function getFileEOL(fileText: string): string {
@@ -359,9 +496,20 @@ async function formatAdeSrc(): Promise<void> {
 
                                 filesFormatted++;
                             } catch (error) {
-                                console.warn(
-                                    `Failed to format ${fullPath}: ${error}`
+                                const errorMessage =
+                                    error instanceof Error
+                                        ? error.message
+                                        : String(error);
+                                const relativePath = path.relative(
+                                    adeSourcePath,
+                                    fullPath
                                 );
+                                const failureEntry = `${relativePath}: ${errorMessage}`;
+
+                                console.warn(
+                                    `Failed to format ${relativePath}: ${errorMessage}`
+                                );
+                                formatFailures.push(failureEntry);
                                 filesSkipped++;
                             }
                         }
@@ -375,6 +523,24 @@ async function formatAdeSrc(): Promise<void> {
         };
 
         await formatDirectory(adeSourcePath);
+
+        // Write format failures to file
+        if (formatFailures.length > 2) {
+            // More than just header lines
+            formatFailures.push(`\nSummary:`);
+            formatFailures.push(`Total files formatted: ${filesFormatted}`);
+            formatFailures.push(`Total files failed: ${filesSkipped}`);
+
+            fs.writeFileSync(
+                formatFailsPath,
+                formatFailures.join("\n"),
+                "utf-8"
+            );
+            console.log(`📄 Format failures logged to: ${formatFailsPath}`);
+        } else {
+            console.log("✓ No formatting failures to log");
+        }
+
         console.log(
             `✓ Formatting complete: ${filesFormatted} files formatted, ${filesSkipped} files skipped`
         );
@@ -494,6 +660,13 @@ async function compareResults(): Promise<string> {
             });
             resultsContent += `\nCommon files: ${ttyCommonFiles.length}\n\n`;
 
+            // Add summary to file
+            resultsContent += `📊 TTY Comparison Results:\n`;
+            resultsContent += `   All files in tty: ${ttyFiles.length}\n`;
+            resultsContent += `   Files only in tty: ${onlyInTty.length}\n`;
+            resultsContent += `   All files in ttyNotFormatted: ${ttyNotFormattedFiles.length}\n`;
+            resultsContent += `   Files only in ttyNotFormatted: ${onlyInTtyNotFormatted.length}\n\n`;
+
             // Console log summary
             console.log(`📊 TTY Comparison Results:`);
             console.log(`   All files in tty: ${ttyFiles.length}`);
@@ -556,6 +729,13 @@ async function compareResults(): Promise<string> {
                 resultsContent += `   -pbuild.dirNotFormatted: ${f}\n`;
             });
             resultsContent += `\nCommon files: ${pbuildCommonFiles.length}\n\n`;
+
+            // Add summary to file
+            resultsContent += `📊 pbuild.dir Comparison Results:\n`;
+            resultsContent += `   All files in pbuild.dir: ${pbuildDirFiles.length}\n`;
+            resultsContent += `   Files only in pbuild.dir: ${onlyInPbuildDir.length}\n`;
+            resultsContent += `   All files in pbuild.dirNotFormatted: ${pbuildDirNotFormattedFiles.length}\n`;
+            resultsContent += `   Files only in pbuild.dirNotFormatted: ${onlyInPbuildDirNotFormatted.length}\n\n`;
 
             // Console log summary
             console.log(`📊 pbuild.dir Comparison Results:`);
