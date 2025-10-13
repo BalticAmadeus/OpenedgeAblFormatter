@@ -77,10 +77,21 @@ export class AblDebugHoverProvider implements HoverProvider {
         document: TextDocument,
         point: Point
     ): Promise<SyntaxNode | undefined> {
+        if (!this.parserHelper.isParserAvailable()) {
+            // Parser is not available (worker not started and no direct parser)
+            console.log("[AblDebugHoverProvider] Parser not available for hover");
+            return undefined;
+        }
         let result = this.getResultIfDocumentWasAlreadyParsed(document);
 
         if (result === undefined) {
-            result = await this.parseDocumentAndAddToInstances(document);
+            try {
+                result = await this.parseDocumentAndAddToInstances(document);
+            } catch (err) {
+                // If parser fails, return undefined
+                console.warn("[AblDebugHoverProvider] parseAsync failed:", err);
+                return undefined;
+            }
         }
 
         if (!result) {

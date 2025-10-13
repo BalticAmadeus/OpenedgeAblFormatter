@@ -38,23 +38,7 @@ export class AblParserHelper implements IParserHelper {
             "[AblParserHelper] Using worker-based parsing with query architecture"
         );
         this.useWorker = true;
-
-        // Initialize worker
-        this.workerInitPromise = this.initializeWorker()
-            .then(() => {
-                console.log(
-                    "[AblParserHelper] Worker initialization completed successfully"
-                );
-                this.debugManager.parserReady();
-            })
-            .catch((error: any) => {
-                console.warn(
-                    "[AblParserHelper] Failed to initialize worker, falling back to direct parsing:",
-                    error
-                );
-                this.useWorker = false;
-                return this.initializeDirectParser();
-            });
+        // Worker is NOT initialized here anymore. Call startWorker() explicitly from UI controls.
     }
 
     public async awaitLanguage(): Promise<void> {
@@ -133,6 +117,21 @@ export class AblParserHelper implements IParserHelper {
         } else {
             throw new Error("Neither worker nor direct parser available");
         }
+    }
+
+    public async startWorker(): Promise<void> {
+        if (!this.workerReady && !this.workerInitPromise) {
+            this.workerInitPromise = this.initializeWorker()
+                .then(() => {
+                    this.workerReady = true;
+                    this.debugManager.parserReady();
+                })
+                .catch((error: any) => {
+                    this.useWorker = false;
+                    return this.initializeDirectParser();
+                });
+        }
+        await this.workerInitPromise;
     }
 
     private async initializeWorker(): Promise<void> {
@@ -345,6 +344,52 @@ export class AblParserHelper implements IParserHelper {
                 }
             }
         }
+    }
+
+    private extractErrorRanges(tree: Parser.Tree): Parser.Range[] {
+        const ranges: Parser.Range[] = [];
+        const collectErrors = (node: Parser.SyntaxNode) => {
+            if (node.hasError() || node.type === "ERROR") {
+                ranges.push({
+                    startPosition: node.startPosition,
+                    endPosition: node.endPosition,
+                    startIndex: node.startIndex,
+                    endIndex: node.endIndex,
+                });
+            }
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child) collectErrors(child);
+            }
+        };
+        collectErrors(tree.rootNode);
+        return ranges;
+    }
+
+    private async parseWithWorker(
+        fileIdentifier: FileIdentifier,
+        text: string
+    ): Promise<ParseResult> {
+        return new Promise<ParseResult>((resolve, reject) => {
+            if (!this.workerProcess) {
+                reject(new Error("Worker process not available"));
+                return;
+            }
+            const id = ++this.messageId;
+            this.pendingRequests.set(id, { resolve, reject });
+            this.workerProcess.send({
+                type: "parse",
+                id,
+                fileId: fileIdentifier.name,
+                text,
+            });
+            setTimeout(() => {
+                if (this.pendingRequests.has(id)) {
+                    this.pendingRequests.delete(id);
+                    reject(new Error("Parse request timeout"));
+                }
+            }, 30000);
+        });
     }
 
     private createTreeProxy(fileId: string, workerTreeData: any): Parser.Tree {
@@ -622,10 +667,8 @@ export class AblParserHelper implements IParserHelper {
         rootNode: Parser.SyntaxNode
     ): Parser.TreeCursor {
         let currentNode = rootNode;
-
         const cursor: any = {
             currentNode: () => currentNode,
-
             gotoFirstChild: () => {
                 if (currentNode.childCount > 0) {
                     const firstChild = currentNode.child(0);
@@ -636,9 +679,7 @@ export class AblParserHelper implements IParserHelper {
                 }
                 return false;
             },
-
             gotoNextSibling: () => {
-                // For simplified nodes, we don't have nextSibling, so we need to find it through parent
                 if (currentNode.parent) {
                     const parent = currentNode.parent;
                     for (let i = 0; i < parent.childCount - 1; i++) {
@@ -653,7 +694,6 @@ export class AblParserHelper implements IParserHelper {
                 }
                 return false;
             },
-
             gotoParent: () => {
                 if (currentNode.parent) {
                     currentNode = currentNode.parent;
@@ -661,7 +701,6 @@ export class AblParserHelper implements IParserHelper {
                 }
                 return false;
             },
-
             delete: () => {
                 currentNode = rootNode;
             },
@@ -669,68 +708,11 @@ export class AblParserHelper implements IParserHelper {
         return cursor as Parser.TreeCursor;
     }
 
-    private async parseWithWorker(
-        fileIdentifier: FileIdentifier,
-        text: string
-    ): Promise<ParseResult> {
-        return new Promise<ParseResult>((resolve, reject) => {
-            if (!this.workerProcess) {
-                reject(new Error("Worker process not available"));
-                return;
-            }
-
-            const id = ++this.messageId;
-            this.pendingRequests.set(id, { resolve, reject });
-
-            this.workerProcess.send({
-                type: "parse",
-                id,
-                fileId: fileIdentifier.name,
-                text,
-            });
-
-            setTimeout(() => {
-                if (this.pendingRequests.has(id)) {
-                    this.pendingRequests.delete(id);
-                    reject(new Error("Parse request timeout"));
-                }
-            }, 30000);
-        });
-    }
-
-    private extractErrorRanges(tree: Parser.Tree): Parser.Range[] {
-        const ranges: Parser.Range[] = [];
-
-        const collectErrors = (node: Parser.SyntaxNode) => {
-            if (node.hasError() || node.type === "ERROR") {
-                ranges.push({
-                    startPosition: node.startPosition,
-                    endPosition: node.endPosition,
-                    startIndex: node.startIndex,
-                    endIndex: node.endIndex,
-                });
-            }
-
-            // Recursively check children
-            for (let i = 0; i < node.childCount; i++) {
-                const child = node.child(i);
-                if (child) {
-                    collectErrors(child);
-                }
-            }
-        };
-
-        collectErrors(tree.rootNode);
-        return ranges;
-    }
-
     public dispose(): void {
         if (this.workerProcess) {
             console.log("[AblParserHelper] Disposing worker process");
             try {
-                // Send shutdown message first
                 this.workerProcess.send({ type: "shutdown" });
-                // Force kill after a short delay to ensure cleanup
                 this.workerProcess.kill("SIGTERM");
                 console.log("[AblParserHelper] Worker process terminated");
             } catch (error) {
@@ -740,7 +722,6 @@ export class AblParserHelper implements IParserHelper {
                     "[AblParserHelper] Error sending shutdown message, force killing:",
                     errorMessage
                 );
-                // If sending message fails, just kill the process
                 try {
                     this.workerProcess.kill("SIGKILL");
                 } catch (killError) {
@@ -758,25 +739,8 @@ export class AblParserHelper implements IParserHelper {
         }
         this.pendingRequests.clear();
     }
-}
 
-function getNodesWithErrors(
-    node: Parser.SyntaxNode,
-    isRoot: boolean
-): Parser.SyntaxNode[] {
-    let errorNodes: Parser.SyntaxNode[] = [];
-
-    if (
-        node.type === SyntaxNodeType.Error &&
-        node.text.trim() !== "ERROR" &&
-        !isRoot
-    ) {
-        errorNodes.push(node);
+    public isParserAvailable(): boolean {
+        return (this.useWorker && this.workerReady) || !!this.parser;
     }
-
-    node.children.forEach((child: Parser.SyntaxNode) => {
-        errorNodes = errorNodes.concat(getNodesWithErrors(child, false));
-    });
-
-    return errorNodes;
 }

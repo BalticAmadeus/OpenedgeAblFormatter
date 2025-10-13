@@ -26,6 +26,8 @@ export class DebugManager implements IDebugManager {
             backgroundColor: "rgba(255, 238, 0, 0.25)",
         });
 
+    private parserHelper?: { startWorker: () => Promise<void>; dispose: () => void };
+
     public static getInstance(
         extensionContext?: ExtensionContext
     ): DebugManager {
@@ -50,8 +52,15 @@ export class DebugManager implements IDebugManager {
         this.statusBarItem.command = this.debugModeCommandName;
         extensionContext.subscriptions.push(this.statusBarItem);
 
-        const commandHandler = () => {
+        const commandHandler = async () => {
             this.enableDebugModeOverride(!this.debugModeOverride);
+            if (this.parserHelper) {
+                if (this.debugModeOverride) {
+                    await this.parserHelper.startWorker();
+                } else {
+                    this.parserHelper.dispose();
+                }
+            }
         };
 
         extensionContext.subscriptions.push(
@@ -171,6 +180,10 @@ export class DebugManager implements IDebugManager {
         }
 
         this.updateStatusBar();
+    }
+
+    public setParserHelper(parserHelper: { startWorker: () => Promise<void>; dispose: () => void }) {
+        this.parserHelper = parserHelper;
     }
 
     public isInDebugMode(): boolean {
