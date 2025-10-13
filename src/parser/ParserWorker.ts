@@ -268,31 +268,6 @@ class ParserWorker {
             );
             process.exit(1);
         });
-
-        // Failsafe: Exit after 5 minutes of inactivity to prevent hanging
-        let lastActivity = Date.now();
-        const activityCheck = setInterval(() => {
-            const now = Date.now();
-            if (now - lastActivity > 5 * 60 * 1000) {
-                // 5 minutes
-                console.log(
-                    "[ParserWorker] No activity for 5 minutes, shutting down..."
-                );
-                process.exit(0);
-            }
-        }, 60000); // Check every minute
-
-        // Update activity timestamp on each message
-        const originalHandleMessage = this.handleMessage.bind(this);
-        this.handleMessage = (message: any) => {
-            lastActivity = Date.now();
-            originalHandleMessage(message);
-        };
-
-        // Clean up interval on exit
-        process.on("exit", () => {
-            clearInterval(activityCheck);
-        });
     }
 }
 

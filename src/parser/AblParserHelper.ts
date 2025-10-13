@@ -120,17 +120,21 @@ export class AblParserHelper implements IParserHelper {
     }
 
     public async startWorker(): Promise<void> {
-        if (!this.workerReady && !this.workerInitPromise) {
-            this.workerInitPromise = this.initializeWorker()
-                .then(() => {
-                    this.workerReady = true;
-                    this.debugManager.parserReady();
-                })
-                .catch((error: any) => {
-                    this.useWorker = false;
-                    return this.initializeDirectParser();
-                });
+        if (this.workerProcess) {
+            // Already running, do nothing
+            return;
         }
+        this.workerReady = false;
+        this.useWorker = true; // Always allow worker usage on restart
+        this.workerInitPromise = this.initializeWorker()
+            .then(() => {
+                this.workerReady = true;
+                this.debugManager.parserReady();
+            })
+            .catch((error: any) => {
+                this.useWorker = false;
+                return this.initializeDirectParser();
+            });
         await this.workerInitPromise;
     }
 
@@ -298,8 +302,8 @@ export class AblParserHelper implements IParserHelper {
                     `[AblParserHelper] Worker process exited with code ${code}`
                 );
                 this.workerProcess = null;
-                this.useWorker = false;
                 this.workerReady = false;
+                // Do NOT set this.useWorker = false here!
             });
 
             setTimeout(() => {
@@ -421,6 +425,9 @@ export class AblParserHelper implements IParserHelper {
             }
             this.workerProcess = null;
         }
+        this.workerReady = false;
+        this.workerInitPromise = null;
+        this.useWorker = true; // Always allow retrying worker startup
         this.pendingRequests.clear();
     }
 
