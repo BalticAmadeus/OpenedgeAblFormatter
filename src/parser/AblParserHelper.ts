@@ -376,6 +376,7 @@ export class AblParserHelper implements IParserHelper {
             ) || [];
 
         const nodeProxy: any = {
+            id: workerNode.id || null,
             type: workerNode.type,
             text: workerNode.text,
             startPosition: workerNode.startPosition,
