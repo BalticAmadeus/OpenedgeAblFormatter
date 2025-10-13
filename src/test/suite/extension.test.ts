@@ -76,6 +76,7 @@ suite("Extension Test Suite", () => {
             new DebugManagerMock()
         );
         await parserHelper.awaitLanguage();
+        await parserHelper.startWorker();
 
         console.log(
             "FunctionalTests: ",
