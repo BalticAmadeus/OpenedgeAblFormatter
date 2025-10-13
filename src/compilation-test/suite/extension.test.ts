@@ -14,9 +14,11 @@ import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
+import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import { DebugManagerMock } from "./DebugManagerMock";
+import { EOL } from "../../model/EOL";
 
 const execAsync = promisify(exec);
 
@@ -267,15 +269,6 @@ async function formatAdeSrc(): Promise<void> {
     }
 
     try {
-        // Create a standalone EOL class that doesn't depend on vscode
-        class StandaloneEOL {
-            public readonly eolDel: string;
-
-            public constructor(eolString: string = "\r\n") {
-                this.eolDel = eolString;
-            }
-        }
-
         // Function to detect EOL from file content (like in the test suites)
         function getFileEOL(fileText: string): string {
             if (fileText.includes("\r\n")) {
@@ -288,83 +281,11 @@ async function formatAdeSrc(): Promise<void> {
             return "\r\n"; // Default to Windows EOL
         }
 
-        // Create a standalone configuration manager that doesn't depend on vscode
-        class StandaloneConfigurationManager {
-            private defaultSettings: { [key: string]: any } = {
-                // Enable all formatters with default settings
-                assignFormatting: true,
-                assignFormattingAssignLocation: "New",
-                assignFormattingAlignRightExpression: "Yes",
-                assignFormattingEndDotLocation: "New aligned",
-                findFormatting: true,
-                forFormatting: true,
-                caseFormatting: true,
-                caseFormattingThenLocation: "Same",
-                caseFormattingDoLocation: "Same",
-                caseFormattingStatementLocation: "New",
-                blockFormatting: true,
-                ifFormatting: true,
-                ifFormattingThenLocation: "Same",
-                ifFormattingDoLocation: "Same",
-                ifFormattingStatementLocation: "Same",
-                temptableFormatting: true,
-                usingFormatting: true,
-                bodyFormatting: true,
-                propertyFormatting: true,
-                ifFunctionFormatting: true,
-                ifFunctionFormattingAddParentheses: "No",
-                ifFunctionFormattingElseLocation: "Same",
-                enumFormatting: true,
-                enumFormattingEndDotLocation: "Same",
-                variableDefinitionFormatting: true,
-                procedureParameterFormatting: true,
-                functionParameterFormatting: true,
-                functionParameterFormattingAlignParameterTypes: "Yes",
-                arrayAccessFormatting: true,
-                arrayAccessFormattingAddSpaceAfterComma: "Yes",
-                expressionFormatting: true,
-                expressionFormattingLogicalLocation: "New",
-                statementFormatting: true,
-                variableAssignmentFormatting: true,
-                showTreeInfoOnHover: false,
-            };
-            private tabSize = 4;
-            private overridingSettings: any = undefined;
-
-            get(name: string): any {
-                if (
-                    this.overridingSettings &&
-                    this.overridingSettings[name] !== undefined
-                ) {
-                    return this.overridingSettings[name];
-                }
-                return this.defaultSettings[name] !== undefined
-                    ? this.defaultSettings[name]
-                    : false;
-            }
-
-            getTabSize(): any {
-                return this.tabSize;
-            }
-
-            getCasing(): any {
-                return false; // Default casing setting
-            }
-
-            setOverridingSettings(settings: any): void {
-                this.overridingSettings = settings;
-            }
-
-            setTabSize(size: number): void {
-                this.tabSize = size;
-            }
-        }
-
         // Initialize parser
         await Parser.init();
 
         // Initialize configuration and parser helper (like in stability tests)
-        const configurationManager = new StandaloneConfigurationManager();
+        const configurationManager = ConfigurationManager.getInstance();
         enableFormatterDecorators(); // This is crucial for formatter initialization!
 
         const debugManager = new DebugManagerMock();
@@ -426,7 +347,7 @@ async function formatAdeSrc(): Promise<void> {
                                 const detectedEOL = getFileEOL(content);
                                 const formattedContent = formatter.formatText(
                                     content,
-                                    new StandaloneEOL(detectedEOL)
+                                    new EOL(detectedEOL)
                                 );
 
                                 // Write formatted content back to file
@@ -657,7 +578,6 @@ async function compareResults(): Promise<string> {
 
         // Write results to file
         fs.writeFileSync(compareResultsPath, resultsContent, "utf-8");
-        console.log(`\n✓ Results written to: ${compareResultsPath}`);
 
         return compareResultsPath;
     } catch (error) {
