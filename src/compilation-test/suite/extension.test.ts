@@ -178,7 +178,7 @@ async function cloneAdeSourceCode(): Promise<void> {
     console.log("Cloning ADE-Sourcecode repository...");
 
     try {
-        const cloneCommand = `git clone https://github.com/consultingwerk/ADE-Sourcecode "${targetPath}"`;
+        const cloneCommand = `git clone https://github.com/GytRag/ADE-Sourcecode "${targetPath}"`;
         const { stdout, stderr } = await execAsync(cloneCommand);
 
         if (stderr && !stderr.includes("Cloning into")) {
@@ -768,7 +768,7 @@ async function compareResults(): Promise<string> {
 
 suite("Compilation Tests", function () {
     // Increase timeout for Docker operations
-    this.timeout(600000); // 10 minutes
+    this.timeout(3600000); // 60 minutes
 
     suiteTeardown(() => {
         vscode.window.showInformationMessage(
