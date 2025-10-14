@@ -46,21 +46,14 @@ export class DebugManager implements IDebugManager {
             StatusBarAlignment.Right,
             101
         );
-        this.statusBarItem.text = "ABL Formatter • Loading.....";
+        this.statusBarItem.text = "ABL Formatter • Ready";
         this.statusBarItem.show();
-        this.statusBarItem.tooltip = "Loading";
+        this.statusBarItem.tooltip = "No parser errors. Click to ENABLE debug mode.";
         this.statusBarItem.command = this.debugModeCommandName;
         extensionContext.subscriptions.push(this.statusBarItem);
 
         const commandHandler = async () => {
             this.enableDebugModeOverride(!this.debugModeOverride);
-            if (this.parserHelper) {
-                if (this.debugModeOverride) {
-                    await this.parserHelper.startWorker();
-                } else {
-                    this.parserHelper.dispose();
-                }
-            }
         };
 
         extensionContext.subscriptions.push(

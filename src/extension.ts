@@ -24,6 +24,8 @@ export async function activate(context: vscode.ExtensionContext) {
         debugManager
     );
     debugManager.setParserHelper(parserHelper);
+    // Start the parser worker ONCE when the extension is enabled
+    await parserHelper.startWorker();
 
     const formatter = new AblFormatterProvider(parserHelper);
 
