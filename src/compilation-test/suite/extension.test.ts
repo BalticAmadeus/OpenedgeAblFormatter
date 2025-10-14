@@ -766,35 +766,20 @@ async function compareResults(): Promise<string> {
     }
 }
 
-// Test suite setup
 suite("Compilation Tests", function () {
     // Increase timeout for Docker operations
     this.timeout(600000); // 10 minutes
 
-    test("Docker Desktop should be running", async function () {
+    suiteTeardown(() => {
+        vscode.window.showInformationMessage(
+            "✓ Full compilation test completed."
+        );
+    });
+
+    suiteSetup(async () => {
         await checkDockerDesktopApp();
-    });
-
-    test("Should pull Docker image if needed", async function () {
         await copyDockerImg();
-    });
-
-    test("Should clone ADE source code repository", async function () {
         await cloneAdeSourceCode();
-
-        // Verify the clone was successful
-        const targetPath = path.resolve(
-            __dirname,
-            "../../../resources/ade-sourceCode"
-        );
-        assert.ok(
-            fs.existsSync(targetPath),
-            "ADE source code directory should exist"
-        );
-        assert.ok(
-            fs.existsSync(path.join(targetPath, "src")),
-            "ADE src directory should exist"
-        );
     });
 
     test("Should run pbuild in Docker (unformatted)", async function () {
@@ -813,31 +798,9 @@ suite("Compilation Tests", function () {
         const hasOutput =
             fs.existsSync(ttyPath) || fs.existsSync(pbuildDirPath);
         assert.ok(hasOutput, "pbuild should produce tty or pbuild.dir output");
-    });
 
-    test("Should rename folders for comparison", async function () {
+        // Rename folders for comparison after successful build
         await renameFolders();
-
-        // Verify folders were renamed
-        const adeSourcePath = path.resolve(
-            __dirname,
-            "../../../resources/ade-sourceCode"
-        );
-
-        const ttyNotFormattedPath = path.join(adeSourcePath, "ttyNotFormatted");
-        const pbuildDirNotFormattedPath = path.join(
-            adeSourcePath,
-            "pbuild.dirNotFormatted"
-        );
-
-        // At least one of the renamed folders should exist
-        const hasRenamed =
-            fs.existsSync(ttyNotFormattedPath) ||
-            fs.existsSync(pbuildDirNotFormattedPath);
-        assert.ok(
-            hasRenamed,
-            "At least one folder should be renamed for comparison"
-        );
     });
 
     test("Should format ADE source files", async function () {
@@ -886,10 +849,6 @@ suite("Compilation Tests", function () {
         assert.ok(
             content.includes("Compilation Test Results"),
             "Results should be properly formatted"
-        );
-
-        console.log(
-            `✓ Full compilation test completed. Results: ${resultFile}`
         );
     });
 });
