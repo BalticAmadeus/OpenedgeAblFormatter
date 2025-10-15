@@ -63,7 +63,9 @@ export class AblParserHelper implements IParserHelper {
         options?: any
     ): Promise<string> {
         // Always send all relevant settings if not already provided
-        if (!options) options = {};
+        if (!options) {
+            options = {};
+        }
         if (!options.settings) {
             options.settings = ConfigurationManager.getInstance().getAll();
         }

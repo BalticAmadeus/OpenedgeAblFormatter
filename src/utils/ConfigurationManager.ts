@@ -82,7 +82,8 @@ export class ConfigurationManager implements IConfigurationManager {
         }
         if (this.reloadExternalConfig) {
             this.reloadExternalConfig = false;
-            this.externalConfiguration = workspace.getConfiguration("abl.completion");
+            this.externalConfiguration =
+                workspace.getConfiguration("abl.completion");
         }
         const allSettings: Record<string, any> = {};
         // Collect all AblFormatter settings
@@ -93,7 +94,8 @@ export class ConfigurationManager implements IConfigurationManager {
         }
         // Collect abl.completion.upperCase
         if (this.externalConfiguration) {
-            allSettings["abl.completion.upperCase"] = this.externalConfiguration.get("upperCase");
+            allSettings["abl.completion.upperCase"] =
+                this.externalConfiguration.get("upperCase");
         }
         // Add tabSize if set
         if (this.tabSize !== undefined) {
@@ -101,7 +103,9 @@ export class ConfigurationManager implements IConfigurationManager {
         }
         // Apply overrides if present
         if (this.overridingSettings) {
-            for (const [key, value] of Object.entries(this.overridingSettings)) {
+            for (const [key, value] of Object.entries(
+                this.overridingSettings
+            )) {
                 allSettings[key] = value;
             }
         }
