@@ -21,9 +21,6 @@ export class AblFormatterProvider
         document: vscode.TextDocument,
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log(
-            "[AblFormatterProvider] Starting async document formatting"
-        );
         Telemetry.increaseFormattingActions("Document");
         Telemetry.addLinesOfCodeFormatted(document.lineCount);
 
@@ -46,8 +43,6 @@ export class AblFormatterProvider
         debugManager: DebugManager
     ): Promise<vscode.TextEdit[]> {
         try {
-            console.log("[AblFormatterProvider] Starting async document formatting (worker-only)");
-
             const allSettings = configurationManager.getAll();
             allSettings.eol = new EOL(document.eol);
 
@@ -56,8 +51,6 @@ export class AblFormatterProvider
                 document.getText(),
                 allSettings
             );
-
-            console.log("[AblFormatterProvider] Formatting completed successfully");
 
             // Return the TextEdit for the whole document
             return [
@@ -70,7 +63,6 @@ export class AblFormatterProvider
                 ),
             ];
         } catch (error) {
-            console.error("[AblFormatterProvider] Formatting failed:", error);
             vscode.window.showErrorMessage(
                 `ABL Formatter: Failed to format document - ${
                     error instanceof Error ? error.message : String(error)
@@ -84,7 +76,6 @@ export class AblFormatterProvider
         document: vscode.TextDocument,
         range: vscode.Range
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log("[AblFormatterProvider] Starting async range formatting");
         Telemetry.increaseFormattingActions("Selection");
         Telemetry.addLinesOfCodeFormatted(range.end.line - range.start.line);
 
@@ -107,10 +98,6 @@ export class AblFormatterProvider
         debugManager: DebugManager
     ): Promise<vscode.TextEdit[]> {
         try {
-            console.log(
-                "[AblFormatterProvider] Starting async range formatting (worker-only)"
-            );
-
             const allSettings = configurationManager.getAll();
             allSettings.eol = new EOL(document.eol);
 
@@ -120,15 +107,10 @@ export class AblFormatterProvider
                 allSettings
             );
 
-            console.log(
-                "[AblFormatterProvider] Range formatting completed successfully"
-            );
-
             return [
                 vscode.TextEdit.replace(range, formattedText),
             ];
         } catch (error) {
-            console.error("[AblFormatterProvider] Range formatting failed:", error);
             vscode.window.showErrorMessage(
                 `ABL Formatter: Failed to format range - ${
                     error instanceof Error ? error.message : String(error)
@@ -143,11 +125,6 @@ export class AblFormatterProvider
         ranges: vscode.Range[],
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log(
-            "AblFormatterProvider.provideDocumentFormattingEdits2",
-            ranges
-        );
-
         switch (ranges.length) {
             case 0:
                 return [];

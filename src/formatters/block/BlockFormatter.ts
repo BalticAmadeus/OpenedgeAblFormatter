@@ -44,16 +44,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
         }
 
         let formattingOnStatement = false;
-        console.log(
-            `[BlockFormatter] About to access parent.previousNamedSibling for parent type: ${parent.type}`
-        );
         let sibling = parent.previousNamedSibling;
-        console.log(`[BlockFormatter] Sibling result:`, {
-            exists: !!sibling,
-            type: sibling?.type,
-            isUndefined: sibling === undefined,
-            isNull: sibling === null,
-        });
 
         if (parent.type === SyntaxNodeType.DoBlock) {
             /* Workaround until tree-sitter fixes this */

@@ -3,7 +3,6 @@ import {
     Hover,
     HoverProvider,
     Position,
-    ProviderResult,
     TextDocument,
 } from "vscode";
 import { Point, SyntaxNode } from "web-tree-sitter";
@@ -30,17 +29,9 @@ export class AblDebugHoverProvider implements HoverProvider {
         position: Position,
         token: CancellationToken
     ): Promise<Hover | undefined> {
-        console.log("[AblDebugHoverProvider] provideHover called");
         const showTreeOnHover = DebugManager.getInstance().isShowTreeOnHover();
-        console.log(
-            "[AblDebugHoverProvider] showTreeOnHover:",
-            showTreeOnHover
-        );
 
         if (!showTreeOnHover) {
-            console.log(
-                "[AblDebugHoverProvider] Hover disabled, returning undefined"
-            );
             return;
         }
 
@@ -50,15 +41,8 @@ export class AblDebugHoverProvider implements HoverProvider {
         };
 
         const node = await this.getNodeForPoint(document, point);
-        console.log(
-            "[AblDebugHoverProvider] Found node:",
-            node ? node.type : "null"
-        );
 
         if (!node) {
-            console.log(
-                "[AblDebugHoverProvider] No node found at position, returning undefined"
-            );
             return;
         }
 
@@ -66,10 +50,6 @@ export class AblDebugHoverProvider implements HoverProvider {
             "| ID | TYPE | START POS | END POS | INDEX | TEXT | \n | ---- | ---- | ---- | ---- | ---- | ---- | \n" +
             this.fillTreeWithAcendantsInfo(node);
 
-        console.log(
-            "[AblDebugHoverProvider] Hover text generated, length:",
-            hoverText.length
-        );
         return new Hover(hoverText);
     }
 
@@ -79,7 +59,6 @@ export class AblDebugHoverProvider implements HoverProvider {
     ): Promise<SyntaxNode | undefined> {
         if (!this.parserHelper.isParserAvailable()) {
             // Parser is not available (worker not started and no direct parser)
-            console.log("[AblDebugHoverProvider] Parser not available for hover");
             return undefined;
         }
         let result = this.getResultIfDocumentWasAlreadyParsed(document);
@@ -89,7 +68,6 @@ export class AblDebugHoverProvider implements HoverProvider {
                 result = await this.parseDocumentAndAddToInstances(document);
             } catch (err) {
                 // If parser fails, return undefined
-                console.warn("[AblDebugHoverProvider] parseAsync failed:", err);
                 return undefined;
             }
         }
@@ -119,9 +97,6 @@ export class AblDebugHoverProvider implements HoverProvider {
     private async parseDocumentAndAddToInstances(
         document: TextDocument
     ): Promise<ParseResult> {
-        console.log(
-            "[AblDebugHoverProvider] Parsing document for hover using worker"
-        );
         const parseResult = await this.parserHelper.parseAsync(
             new FileIdentifier(document.fileName, document.version),
             document.getText()
@@ -135,20 +110,10 @@ export class AblDebugHoverProvider implements HoverProvider {
             parseResult: parseResult,
         });
 
-        console.log(
-            "[AblDebugHoverProvider] Document parsed successfully for hover"
-        );
         return parseResult;
     }
 
     private fillTreeWithAcendantsInfo(node: SyntaxNode): string {
-        console.log(
-            "[AblDebugHoverProvider] Processing node for hover:",
-            node.type,
-            "id:",
-            node.id
-        );
-
         const str =
             "| " +
             (node.id || "N/A") +
@@ -175,12 +140,9 @@ export class AblDebugHoverProvider implements HoverProvider {
             " \n";
 
         if (node.parent === null) {
-            console.log(
-                "[AblDebugHoverProvider] Reached root node, stopping recursion"
-            );
             return str;
+        } else {
+            return str + this.fillTreeWithAcendantsInfo(node.parent);
         }
-
-        return str + this.fillTreeWithAcendantsInfo(node.parent);
     }
 }

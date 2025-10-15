@@ -12,19 +12,14 @@ class ParserWorker {
     private ablLanguage: Parser.Language | null = null;
 
     constructor() {
-        console.log("[ParserWorker] Starting parser worker process...");
         // Don't start initialization here, wait for start() to be called
     }
 
     private async initializeParser(): Promise<void> {
         try {
-            console.log("[ParserWorker] Initializing tree-sitter...");
-
             // Initialize tree-sitter first
             await Parser.init();
             this.parser = new Parser();
-
-            console.log("[ParserWorker] Loading tree-sitter ABL language...");
 
             // Get the extension path from command line arguments or environment
             const extensionPath =
@@ -34,12 +29,8 @@ class ParserWorker {
                 "resources/tree-sitter-abl.wasm"
             );
 
-            console.log(`[ParserWorker] WASM path: ${wasmPath}`);
-
             this.ablLanguage = await Parser.Language.load(wasmPath);
             this.parser.setLanguage(this.ablLanguage);
-
-            console.log("[ParserWorker] Parser initialized successfully");
         } catch (error) {
             console.error("[ParserWorker] Failed to initialize parser:", error);
             if (process.send) {
@@ -54,8 +45,6 @@ class ParserWorker {
     }
 
     private handleMessage(message: any): void {
-        console.log("[ParserWorker] Received message:", message.type);
-
         switch (message.type) {
             case "parse":
                 this.handleParseRequest(message);
@@ -64,16 +53,12 @@ class ParserWorker {
                 this.handlePingRequest(message);
                 break;
             case "shutdown":
-                console.log("[ParserWorker] Received shutdown request");
                 process.exit(0);
             case "format":
                 this.handleFormatRequest(message);
                 break;
             default:
-                console.log(
-                    "[ParserWorker] Unknown message type:",
-                    message.type
-                );
+                // Unknown message type, ignore
         }
     }
 
@@ -175,7 +160,6 @@ class ParserWorker {
     }
 
     private handlePingRequest(message: any): void {
-        console.log("[ParserWorker] Handling ping request");
         if (process.send) {
             process.send({
                 type: "pong",
@@ -186,11 +170,6 @@ class ParserWorker {
     }
 
     private handleParseRequest(message: any): void {
-        console.log(
-            "[ParserWorker] Handling parse request for text length:",
-            message.text?.length || 0
-        );
-
         try {
             if (!this.ablLanguage || !this.parser) {
                 throw new Error("Parser not initialized");
@@ -287,58 +266,31 @@ class ParserWorker {
         };
     }
 
-    private serializeNodeBasic(node: Parser.SyntaxNode): any {
-        // Serialize just basic info about sibling nodes to avoid deep recursion
-        return {
-            id: node.id,
-            type: node.type,
-            text: node.text,
-            startPosition: node.startPosition,
-            endPosition: node.endPosition,
-            startIndex: node.startIndex,
-            endIndex: node.endIndex,
-            isNamed: node.isNamed(),
-            isMissing: node.isMissing(),
-            hasError: node.hasError(),
-        };
-    }
-
     public async start(): Promise<void> {
-        console.log("[ParserWorker] Worker started, listening for messages...");
-
         // Listen for messages from parent process
         process.on("message", (message) => {
             this.handleMessage(message);
         });
 
-        // Keep the process alive - wait for messages
-        console.log("[ParserWorker] Ready and waiting for messages...");
-
         // Initialize the parser asynchronously
         await this.initializeParser();
 
         // Send ready signal to parent process after initialization
-        console.log("[ParserWorker] Sending ready signal to parent...");
         if (process.send) {
             process.send({ type: "ready" });
         }
 
         // Handle graceful shutdown
         process.on("SIGTERM", () => {
-            console.log("[ParserWorker] Received SIGTERM, shutting down...");
             process.exit(0);
         });
 
         process.on("SIGINT", () => {
-            console.log("[ParserWorker] Received SIGINT, shutting down...");
             process.exit(0);
         });
 
         // Handle parent process disconnect
         process.on("disconnect", () => {
-            console.log(
-                "[ParserWorker] Parent process disconnected, shutting down..."
-            );
             process.exit(0);
         });
 

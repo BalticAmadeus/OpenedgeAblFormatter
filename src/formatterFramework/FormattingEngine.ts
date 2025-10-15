@@ -22,7 +22,6 @@ export class FormattingEngine {
     ) {}
 
     public formatText(fulfullTextString: string, eol: EOL): string {
-        console.log('[FormattingEngine] formatText called with input:', JSON.stringify(fulfullTextString));
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
@@ -32,16 +31,13 @@ export class FormattingEngine {
             this.fileIdentifier,
             fulfullTextString
         );
-        console.log('[FormattingEngine] parseResult.tree.rootNode:', parseResult.tree.rootNode ? parseResult.tree.rootNode.toString() : 'NO TREE');
 
         this.settingsOverride(parseResult);
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
         );
-        console.log('[FormattingEngine] Formatter instances:', formatters.map(f => f.constructor.name));
 
         this.iterateTree(parseResult.tree, fullText, formatters);
-        console.log('[FormattingEngine] After iterateTree, text:', JSON.stringify(fullText.text));
 
         const newTree = this.parserHelper.parse(
             this.fileIdentifier,
@@ -50,7 +46,6 @@ export class FormattingEngine {
         ).tree;
 
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
-        console.log('[FormattingEngine] After iterateTreeFormatBlocks, text:', JSON.stringify(fullText.text));
 
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
 

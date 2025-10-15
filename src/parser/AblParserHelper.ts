@@ -10,8 +10,6 @@ import { ConfigurationManager } from "../utils/ConfigurationManager";
 
 export class AblParserHelper implements IParserHelper {
     private parser: Parser | null = null;
-    private trees = new Map<string, Parser.Tree>();
-    private ablLanguagePromise: Promise<Parser.Language> | null = null;
 
     private debugManager: IDebugManager;
     private workerProcess: ChildProcess | null = null;
@@ -36,33 +34,7 @@ export class AblParserHelper implements IParserHelper {
         this.isTestMode = testMode;
 
         // Use worker-based parsing for crash prevention, with NO main-thread parser fallback
-        console.log(
-            "[AblParserHelper] Using worker-based parsing ONLY (no main-thread parser)"
-        );
         this.useWorker = true;
-    }
-
-    public async awaitMainThreadParserReady(): Promise<void> {
-        // No-op: main-thread parser is never initialized
-        return;
-    }
-
-    private async initializeMainThreadParser(): Promise<Parser.Language> {
-        throw new Error("Main-thread parser initialization is disabled. All parsing/formatting must use the worker.");
-    }
-
-    public async awaitWorkerReady(): Promise<void> {
-        if (this.workerInitPromise) {
-            await this.workerInitPromise;
-        }
-    }
-
-    public async awaitLanguage(): Promise<void> {
-        await this.awaitWorkerReady();
-    }
-
-    private async initializeDirectParser(): Promise<void> {
-        throw new Error("Direct parser initialization is disabled. All parsing/formatting must use the worker.");
     }
 
     public parse(
@@ -79,7 +51,6 @@ export class AblParserHelper implements IParserHelper {
         previousTree?: Tree
     ): Promise<ParseResult> {
         if (this.useWorker && this.workerReady) {
-            console.log("[AblParserHelper] Using worker-based parsing");
             return this.parseWithWorker(fileIdentifier, text);
         } else {
             throw new Error("Worker not available for parsing");
@@ -133,18 +104,13 @@ export class AblParserHelper implements IParserHelper {
             })
             .catch((error: any) => {
                 this.useWorker = false;
-                return this.initializeDirectParser();
+                throw new Error("Direct parser initialization is disabled. All parsing/formatting must use the worker.");
             });
         await this.workerInitPromise;
     }
 
     private async initializeWorker(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            console.log(`[AblParserHelper] __dirname: ${__dirname}`);
-            console.log(
-                `[AblParserHelper] extensionPath: ${this.extensionPath}`
-            );
-
             // Try multiple possible locations for the bundled worker
             const possibleWorkerPaths = [
                 path.join(__dirname, "ParserWorker.js"), // Same directory as AblParserHelper
@@ -167,67 +133,32 @@ export class AblParserHelper implements IParserHelper {
 
             // Try to find the bundled JavaScript worker
             for (const candidatePath of possibleWorkerPaths) {
-                console.log(
-                    `[AblParserHelper] Checking worker path: ${candidatePath}`
-                );
                 const exists = require("fs").existsSync(candidatePath);
-                console.log(`[AblParserHelper] Path exists: ${exists}`);
                 if (exists) {
                     workerPath = candidatePath;
-                    console.log(
-                        `[AblParserHelper] Found bundled JS worker: ${workerPath}`
-                    );
                     break;
                 }
             }
 
-            // If no worker found, list directory contents for debugging
+            // If no worker found, list directory contents for debugging (removed logs)
             if (!workerPath) {
-                console.log(
-                    `[AblParserHelper] No worker found. Debugging directory contents:`
-                );
                 try {
                     const dirContents = require("fs").readdirSync(__dirname);
-                    console.log(
-                        `[AblParserHelper] __dirname contents:`,
-                        dirContents
-                    );
-
                     const parserDir = path.join(__dirname, "parser");
                     if (require("fs").existsSync(parserDir)) {
-                        const parserContents =
-                            require("fs").readdirSync(parserDir);
-                        console.log(
-                            `[AblParserHelper] parser directory contents:`,
-                            parserContents
-                        );
-                    } else {
-                        console.log(
-                            `[AblParserHelper] parser directory does not exist at:`,
-                            parserDir
-                        );
+                        require("fs").readdirSync(parserDir);
                     }
                 } catch (error) {
-                    console.log(
-                        `[AblParserHelper] Error reading directory:`,
-                        error
-                    );
+                    // ignore
                 }
             }
 
             if (workerPath) {
                 command = "node";
                 args = [workerPath, this.extensionPath];
-                console.log(
-                    `[AblParserHelper] Using compiled JS worker: ${workerPath}`
-                );
             } else {
                 // Fallback to TypeScript (development mode only)
                 const tsWorkerPath = path.join(__dirname, "ParserWorker.ts");
-                console.log(
-                    `[AblParserHelper] No JS worker found, checking TypeScript fallback: ${tsWorkerPath}`
-                );
-
                 if (require("fs").existsSync(tsWorkerPath)) {
                     workerPath = tsWorkerPath;
                     command = "node";
@@ -237,15 +168,7 @@ export class AblParserHelper implements IParserHelper {
                         workerPath,
                         this.extensionPath,
                     ];
-                    console.log(
-                        `[AblParserHelper] Using TypeScript worker: ${workerPath}`
-                    );
                 } else {
-                    console.error(
-                        `[AblParserHelper] No worker file found. Checked paths: ${possibleWorkerPaths.join(
-                            ", "
-                        )}, ${tsWorkerPath}`
-                    );
                     reject(
                         new Error(
                             `Neither JS nor TS worker found. Checked: ${possibleWorkerPaths.join(
@@ -257,32 +180,21 @@ export class AblParserHelper implements IParserHelper {
                 }
             }
 
-            console.log(
-                `[AblParserHelper] Spawning worker process with command: ${command} ${args.join(
-                    " "
-                )}`
-            );
-
             this.workerProcess = spawn(command, args, {
                 stdio: ["pipe", "pipe", "pipe", "ipc"],
             });
 
-            console.log(
-                `[AblParserHelper] Worker process spawned with PID: ${this.workerProcess.pid}`
-            );
-
             this.workerProcess.stdout?.on("data", (data) => {
-                console.log(`[Worker stdout]: ${data.toString().trim()}`);
+                // Optionally handle worker stdout
             });
 
             this.workerProcess.stderr?.on("data", (data) => {
-                console.error(`[Worker stderr]: ${data.toString().trim()}`);
+                // Optionally handle worker stderr
             });
 
             this.workerProcess.on("message", (message: any) => {
                 this.handleWorkerMessage(message);
                 if (message.type === "ready") {
-                    console.log("[AblParserHelper] Worker process ready");
                     this.workerReady = true;
                     resolve();
                 } else if (message.type === "error") {
@@ -291,29 +203,17 @@ export class AblParserHelper implements IParserHelper {
             });
 
             this.workerProcess.on("error", (error) => {
-                console.error("[AblParserHelper] Worker process error:", error);
-                console.error("[AblParserHelper] Command:", command);
-                console.error("[AblParserHelper] Args:", args);
                 reject(error);
             });
 
             this.workerProcess.on("exit", (code) => {
-                console.log(
-                    `[AblParserHelper] Worker process exited with code ${code}`
-                );
                 this.workerProcess = null;
                 this.workerReady = false;
             });
 
             setTimeout(() => {
                 if (!this.workerReady) {
-                    console.error(
-                        "[AblParserHelper] Worker initialization timeout - no ready message received"
-                    );
                     if (this.workerProcess && !this.workerProcess.killed) {
-                        console.error(
-                            "[AblParserHelper] Worker process still running but not ready"
-                        );
                         this.workerProcess.kill("SIGTERM");
                     }
                     reject(
@@ -359,26 +259,6 @@ export class AblParserHelper implements IParserHelper {
         }
     }
 
-    private extractErrorRanges(tree: Parser.Tree): Parser.Range[] {
-        const ranges: Parser.Range[] = [];
-        const collectErrors = (node: Parser.SyntaxNode) => {
-            if (node.hasError() || node.type === "ERROR") {
-                ranges.push({
-                    startPosition: node.startPosition,
-                    endPosition: node.endPosition,
-                    startIndex: node.startIndex,
-                    endIndex: node.endIndex,
-                });
-            }
-            for (let i = 0; i < node.childCount; i++) {
-                const child = node.child(i);
-                if (child) collectErrors(child);
-            }
-        };
-        collectErrors(tree.rootNode);
-        return ranges;
-    }
-
     private async parseWithWorker(
         fileIdentifier: FileIdentifier,
         text: string
@@ -407,29 +287,14 @@ export class AblParserHelper implements IParserHelper {
 
     public dispose(): void {
         if (this.workerProcess) {
-            console.log("[AblParserHelper] Disposing worker process");
             try {
                 this.workerProcess.send({ type: "shutdown" });
                 this.workerProcess.kill("SIGTERM");
-                console.log("[AblParserHelper] Worker process terminated");
             } catch (error) {
-                const errorMessage =
-                    error instanceof Error ? error.message : String(error);
-                console.log(
-                    "[AblParserHelper] Error sending shutdown message, force killing:",
-                    errorMessage
-                );
                 try {
                     this.workerProcess.kill("SIGKILL");
                 } catch (killError) {
-                    const killErrorMessage =
-                        killError instanceof Error
-                            ? killError.message
-                            : String(killError);
-                    console.log(
-                        "[AblParserHelper] Error killing worker process:",
-                        killErrorMessage
-                    );
+                    // ignore
                 }
             }
             this.workerProcess = null;
