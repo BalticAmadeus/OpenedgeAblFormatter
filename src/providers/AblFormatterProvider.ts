@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
-import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
@@ -47,25 +46,20 @@ export class AblFormatterProvider
         debugManager: DebugManager
     ): Promise<vscode.TextEdit[]> {
         try {
-            console.log("[AblFormatterProvider] Creating formatting engine");
-            const codeFormatter = new FormattingEngine(
-                this.parserHelper,
+            console.log("[AblFormatterProvider] Starting async document formatting (worker-only)");
+
+            const allSettings = configurationManager.getAll();
+            allSettings.eol = new EOL(document.eol);
+
+            const formattedText = await this.parserHelper.format(
                 new FileIdentifier(document.fileName, document.version),
-                configurationManager,
-                debugManager
-            );
-
-            console.log("[AblFormatterProvider] Starting async formatting");
-            const formattedText = await codeFormatter.formatText(
                 document.getText(),
-                new EOL(document.eol)
+                allSettings
             );
 
-            console.log(
-                "[AblFormatterProvider] Formatting completed successfully"
-            );
+            console.log("[AblFormatterProvider] Formatting completed successfully");
 
-            // Return the TextEdit instead of directly editing
+            // Return the TextEdit for the whole document
             return [
                 vscode.TextEdit.replace(
                     new vscode.Range(
@@ -114,36 +108,29 @@ export class AblFormatterProvider
     ): Promise<vscode.TextEdit[]> {
         try {
             console.log(
-                "[AblFormatterProvider] Creating formatting engine for range"
-            );
-            const codeFormatter = new FormattingEngine(
-                this.parserHelper,
-                new FileIdentifier(document.fileName, document.version),
-                configurationManager,
-                debugManager
+                "[AblFormatterProvider] Starting async range formatting (worker-only)"
             );
 
-            console.log(
-                "[AblFormatterProvider] Starting async range formatting"
-            );
-            const formattedText = await codeFormatter.formatText(
+            const allSettings = configurationManager.getAll();
+            allSettings.eol = new EOL(document.eol);
+
+            const formattedText = await this.parserHelper.format(
+                new FileIdentifier(document.fileName, document.version),
                 document.getText(range),
-                new EOL(document.eol)
+                allSettings
             );
 
             console.log(
                 "[AblFormatterProvider] Range formatting completed successfully"
             );
 
-            // Return the TextEdit for the range
-            return [vscode.TextEdit.replace(range, formattedText)];
+            return [
+                vscode.TextEdit.replace(range, formattedText),
+            ];
         } catch (error) {
-            console.error(
-                "[AblFormatterProvider] Range formatting failed:",
-                error
-            );
+            console.error("[AblFormatterProvider] Range formatting failed:", error);
             vscode.window.showErrorMessage(
-                `ABL Formatter: Failed to format selection - ${
+                `ABL Formatter: Failed to format range - ${
                     error instanceof Error ? error.message : String(error)
                 }`
             );

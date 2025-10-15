@@ -1,10 +1,12 @@
 import Parser, { Tree } from "web-tree-sitter";
 import path from "path";
+import { FormattingEngine } from "../formatterFramework/FormattingEngine";
+import { WorkerConfigurationManager } from "../utils/ConfigurationManagerWorker";
+import { enableFormatterDecorators } from "../formatterFramework/enableFormatterDecorators";
 
-/**
- * ParserWorker - A worker process for handling tree-sitter parsing operations
- * This runs in a separate process to avoid V8 heap limit issues in VS Code
- */
+// Register all formatters in the worker
+enableFormatterDecorators();
+
 class ParserWorker {
     private parser: Parser | null = null;
     private ablLanguage: Parser.Language | null = null;
@@ -64,12 +66,111 @@ class ParserWorker {
             case "shutdown":
                 console.log("[ParserWorker] Received shutdown request");
                 process.exit(0);
+            case "format":
+                this.handleFormatRequest(message);
                 break;
             default:
                 console.log(
                     "[ParserWorker] Unknown message type:",
                     message.type
                 );
+        }
+    }
+
+    private handleFormatRequest(message: any): void {
+        try {
+            if (!this.ablLanguage || !this.parser) {
+                throw new Error("Parser not initialized");
+            }
+
+            // Parse the text using the worker's parser
+            const tree = this.parser.parse(message.text);
+
+            // Accept settings from the main thread (message.options.settings)
+            const settings = { ...(message.options?.settings || {}) };
+            console.log('[Worker] Settings before override:', JSON.stringify(settings));
+
+            const fileIdentifier = {
+                name: message.fileId,
+                version: 1,
+                toKey: () => String(message.fileId),
+            };
+            // Use WorkerConfigurationManager in the worker
+            const configManager = new WorkerConfigurationManager();
+            configManager.setAll(settings);
+            console.log('[Worker] ConfigManager after setAll:', JSON.stringify(configManager.getAll()));
+
+            // Dummy debug manager
+            const debugManager = {
+                log: (..._args: any[]) => {},
+                isDebugEnabled: () => false,
+                handleErrors: () => {},
+                parserReady: () => {},
+                fileFormattedSuccessfully: () => {},
+                isInDebugMode: () => false,
+            };
+            // Dummy parser helper (implements IParserHelper signature, returns ParseResult)
+            const parserHelper = {
+                getParser: () => this.parser,
+                getLanguage: () => this.ablLanguage,
+                getTree: () => tree,
+                parse: (_fileIdentifier: any, text: string, _previousTree?: any) => {
+                    return { tree: this.parser!.parse(text), ranges: [] };
+                },
+                parseAsync: async (_fileIdentifier: any, text: string, _previousTree?: any) => {
+                    return { tree: this.parser!.parse(text), ranges: [] };
+                },
+                format: async () => { throw new Error("Not implemented in worker dummy parserHelper"); },
+            };
+
+            // Parse and apply settings override from comment block in the document
+            const overrideMatch = message.text.match(/\/\*+\s*formatterSettingsOverride\s*\*\/[\s\r\n]*\/\*+([\s\S]*?)\*\//i);
+            if (overrideMatch) {
+                try {
+                    const overrideJson = overrideMatch[1];
+                    const overrideSettings = JSON.parse(overrideJson);
+                    console.log('[Worker] Parsed settings override from comment:', overrideSettings);
+                    // Use setOverridingSettings so comment overrides take precedence
+                    configManager.setOverridingSettings(overrideSettings);
+                } catch (e) {
+                    console.error('[Worker] Failed to parse settings override from comment:', e);
+                }
+            }
+            console.log('[Worker] ConfigManager after comment override:', JSON.stringify(configManager.getAll()));
+
+            // --- Apply settings override from comments before formatting ---
+            // This matches the main-thread logic
+            const formattingEngine = new FormattingEngine(
+                parserHelper,
+                fileIdentifier,
+                configManager,
+                debugManager
+            );
+            // ParseResult for settingsOverride
+            const parseResult = { tree, ranges: [] };
+            formattingEngine["settingsOverride"](parseResult);
+            console.log('[Worker] ConfigManager after settingsOverride:', JSON.stringify(configManager.getAll()));
+            // Now format with updated configManager (only correct settings enabled)
+            const formattedText = formattingEngine.formatText(message.text, message.options?.eol);
+            console.log('[Worker] Formatted text output:', JSON.stringify(formattedText));
+
+            if (process.send) {
+                process.send({
+                    type: "formatResult",
+                    id: message.id,
+                    success: true,
+                    formattedText,
+                });
+            }
+        } catch (error) {
+            if (process.send) {
+                process.send({
+                    type: "formatResult",
+                    id: message.id,
+                    success: false,
+                    error: error instanceof Error ? error.message : String(error),
+                });
+            }
         }
     }
 
@@ -101,7 +202,7 @@ class ParserWorker {
             // Extract error ranges
             const errorRanges = this.extractErrorRanges(tree);
 
-            // Send back the serialized tree data with error ranges
+            // Send back the serialized tree data with error ranges and default EOL
             if (process.send) {
                 process.send({
                     type: "parseResult",
@@ -110,6 +211,7 @@ class ParserWorker {
                     success: true,
                     tree: serializedTree,
                     errorRanges: errorRanges,
+                    eol: message.options?.eol || "\n", // Add default EOL property
                 });
             }
         } catch (error) {
@@ -182,19 +284,6 @@ class ParserWorker {
             hasPreviousSibling: !!node.previousSibling,
             hasNextNamedSibling: !!node.nextNamedSibling,
             hasPreviousNamedSibling: !!node.previousNamedSibling,
-            // Serialize sibling nodes (but only basic info to avoid circular references)
-            nextSibling: node.nextSibling
-                ? this.serializeNodeBasic(node.nextSibling)
-                : null,
-            previousSibling: node.previousSibling
-                ? this.serializeNodeBasic(node.previousSibling)
-                : null,
-            nextNamedSibling: node.nextNamedSibling
-                ? this.serializeNodeBasic(node.nextNamedSibling)
-                : null,
-            previousNamedSibling: node.previousNamedSibling
-                ? this.serializeNodeBasic(node.previousNamedSibling)
-                : null,
         };
     }
 

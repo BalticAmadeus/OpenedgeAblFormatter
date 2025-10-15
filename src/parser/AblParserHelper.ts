@@ -6,10 +6,12 @@ import path from "path";
 import { IDebugManager } from "../providers/IDebugManager";
 import { spawn, ChildProcess } from "child_process";
 import { createTreeProxy } from "../utils/proxyTree";
+import { ConfigurationManager } from "../utils/ConfigurationManager";
 
 export class AblParserHelper implements IParserHelper {
     private parser: Parser | null = null;
     private trees = new Map<string, Parser.Tree>();
+    private ablLanguagePromise: Promise<Parser.Language> | null = null;
 
     private debugManager: IDebugManager;
     private workerProcess: ChildProcess | null = null;
@@ -33,48 +35,34 @@ export class AblParserHelper implements IParserHelper {
         this.debugManager = debugManager;
         this.isTestMode = testMode;
 
-        // Use worker-based parsing for crash prevention, but with a better architecture
+        // Use worker-based parsing for crash prevention, with NO main-thread parser fallback
         console.log(
-            "[AblParserHelper] Using worker-based parsing with query architecture"
+            "[AblParserHelper] Using worker-based parsing ONLY (no main-thread parser)"
         );
         this.useWorker = true;
-        // Worker is NOT initialized here anymore. Call startWorker() explicitly from UI controls.
+    }
+
+    public async awaitMainThreadParserReady(): Promise<void> {
+        // No-op: main-thread parser is never initialized
+        return;
+    }
+
+    private async initializeMainThreadParser(): Promise<Parser.Language> {
+        throw new Error("Main-thread parser initialization is disabled. All parsing/formatting must use the worker.");
+    }
+
+    public async awaitWorkerReady(): Promise<void> {
+        if (this.workerInitPromise) {
+            await this.workerInitPromise;
+        }
     }
 
     public async awaitLanguage(): Promise<void> {
-        if (this.workerInitPromise) {
-            await this.workerInitPromise;
-        }
+        await this.awaitWorkerReady();
     }
 
     private async initializeDirectParser(): Promise<void> {
-        try {
-            await Parser.init();
-            this.parser = new Parser();
-            const wasmPath = path.join(
-                this.extensionPath,
-                "resources",
-                "tree-sitter-abl.wasm"
-            );
-            const Language = await Parser.Language.load(wasmPath);
-            this.parser.setLanguage(Language);
-            console.log(
-                "[AblParserHelper] Direct parser initialized for testing"
-            );
-            this.debugManager.parserReady();
-        } catch (error) {
-            console.error(
-                "[AblParserHelper] Failed to initialize direct parser:",
-                error
-            );
-            throw error;
-        }
-    }
-
-    public async awaitWorker(): Promise<void> {
-        if (this.workerInitPromise) {
-            await this.workerInitPromise;
-        }
+        throw new Error("Direct parser initialization is disabled. All parsing/formatting must use the worker.");
     }
 
     public parse(
@@ -82,20 +70,7 @@ export class AblParserHelper implements IParserHelper {
         text: string,
         previousTree?: Tree
     ): ParseResult {
-        if (!this.parser) {
-            throw new Error(
-                "Parser not initialized. Call awaitLanguage() first."
-            );
-        }
-
-        console.log("[AblParserHelper] Using direct synchronous parsing");
-        const tree = this.parser.parse(text, previousTree);
-        this.trees.set(fileIdentifier.name, tree);
-
-        return {
-            tree,
-            ranges: this.extractErrorRanges(tree),
-        } as ParseResult;
+        throw new Error("Direct parse is disabled. Use parseAsync (worker) only.");
     }
 
     public async parseAsync(
@@ -106,17 +81,42 @@ export class AblParserHelper implements IParserHelper {
         if (this.useWorker && this.workerReady) {
             console.log("[AblParserHelper] Using worker-based parsing");
             return this.parseWithWorker(fileIdentifier, text);
-        } else if (this.parser) {
-            console.log("[AblParserHelper] Using direct parsing fallback");
-            const tree = this.parser.parse(text, previousTree);
-            this.trees.set(fileIdentifier.name, tree);
-            return {
-                tree,
-                ranges: this.extractErrorRanges(tree),
-            } as ParseResult;
         } else {
-            throw new Error("Neither worker nor direct parser available");
+            throw new Error("Worker not available for parsing");
         }
+    }
+
+    public async format(
+        fileIdentifier: FileIdentifier,
+        text: string,
+        options?: any
+    ): Promise<string> {
+        // Always send all relevant settings if not already provided
+        if (!options) options = {};
+        if (!options.settings) {
+            options.settings = ConfigurationManager.getInstance().getAll();
+        }
+        return new Promise<string>((resolve, reject) => {
+            if (!this.workerProcess) {
+                reject(new Error("Worker process not available"));
+                return;
+            }
+            const id = ++this.messageId;
+            this.pendingRequests.set(id, { resolve, reject });
+            this.workerProcess.send({
+                type: "format",
+                id,
+                fileId: fileIdentifier.name,
+                text,
+                options,
+            });
+            setTimeout(() => {
+                if (this.pendingRequests.has(id)) {
+                    this.pendingRequests.delete(id);
+                    reject(new Error("Format request timeout"));
+                }
+            }, 60000);
+        });
     }
 
     public async startWorker(): Promise<void> {
@@ -303,7 +303,6 @@ export class AblParserHelper implements IParserHelper {
                 );
                 this.workerProcess = null;
                 this.workerReady = false;
-                // Do NOT set this.useWorker = false here!
             });
 
             setTimeout(() => {
@@ -343,6 +342,16 @@ export class AblParserHelper implements IParserHelper {
                         ranges: message.errorRanges || [], // Get error ranges from worker
                     };
                     pendingRequest.resolve(parseResult);
+                } else {
+                    pendingRequest.reject(new Error(message.error));
+                }
+            }
+        } else if (message.type === "formatResult" && message.id) {
+            const pendingRequest = this.pendingRequests.get(message.id);
+            if (pendingRequest) {
+                this.pendingRequests.delete(message.id);
+                if (message.success) {
+                    pendingRequest.resolve(message.formattedText);
                 } else {
                     pendingRequest.reject(new Error(message.error));
                 }

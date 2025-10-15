@@ -6,7 +6,6 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
-import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
@@ -75,7 +74,7 @@ suite("Extension Test Suite", () => {
             extensionDevelopmentPath,
             new DebugManagerMock()
         );
-        await parserHelper.awaitLanguage();
+
         await parserHelper.startWorker();
 
         console.log(
@@ -108,7 +107,13 @@ async function functionalTest(name: string): Promise<void> {
     enableFormatterDecorators();
 
     const inputText = getInput(name);
-    const resultText = await format(inputText, name);
+
+    const resultText = await parserHelper.format(
+        new FileIdentifier(name, 1),
+        inputText,
+        { eol: new EOL(getFileEOL(inputText)) }
+    );
+    
     const targetText = getTarget(name);
     const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
 
@@ -183,24 +188,6 @@ function getTarget(fileName: string): string {
     );
 
     return readFile(filePath);
-}
-
-async function format(text: string, name: string): Promise<string> {
-    const configurationManager = ConfigurationManager.getInstance();
-
-    const codeFormatter = new FormattingEngine(
-        parserHelper,
-        new FileIdentifier(name, 1),
-        configurationManager,
-        new DebugManagerMock()
-    );
-
-    const result = await codeFormatter.formatText(
-        text,
-        new EOL(getFileEOL(text))
-    );
-
-    return result;
 }
 
 function readFile(fileUri: string): string {

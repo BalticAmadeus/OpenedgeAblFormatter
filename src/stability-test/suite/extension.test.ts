@@ -70,7 +70,7 @@ suite("Extension Test Suite", () => {
             extensionDevelopmentPath,
             new DebugManagerMock()
         );
-        await parserHelper.awaitLanguage();
+        await parserHelper.startWorker();
 
         console.log(
             "StabilityTests: ",
@@ -94,7 +94,13 @@ async function stabilityTest(name: string): Promise<void> {
 
     const beforeText = settingsOverride + getInput(name);
     const beforeCount = countActualSymbols(beforeText);
-    const afterText = await format(beforeText, name);
+
+    const afterText = await parserHelper.format(
+            new FileIdentifier(name, 1),
+            beforeText,
+            { eol: new EOL(getFileEOL(beforeText)) }
+        );
+
     const afterCount = countActualSymbols(afterText);
 
     const nameWithRelativePath = name.startsWith(stabilityTestDir)
@@ -139,24 +145,6 @@ async function stabilityTest(name: string): Promise<void> {
 
 function getInput(fileName: string): string {
     return readFile(fileName);
-}
-
-async function format(text: string, name: string): Promise<string> {
-    const configurationManager = ConfigurationManager.getInstance();
-
-    const codeFormatter = new FormattingEngine(
-        parserHelper,
-        new FileIdentifier(name, 1),
-        configurationManager,
-        new DebugManagerMock()
-    );
-
-    const result = await codeFormatter.formatText(
-        text,
-        new EOL(getFileEOL(text))
-    );
-
-    return result;
 }
 
 function readFile(fileUri: string): string {
@@ -220,11 +208,14 @@ function countActualSymbols(text: string): number {
     return count;
 }
 
-function parseAndCheckForErrors(
+async function parseAndCheckForErrors(
     text: string,
     name: string
-): Parser.SyntaxNode[] {
-    const parseResult = parserHelper.parse(new FileIdentifier(name, 1), text);
+): Promise<Parser.SyntaxNode[]> {
+    const parseResult = await parserHelper.parseAsync(
+        new FileIdentifier(name, 1),
+        text
+    );
 
     const rootNode = parseResult.tree.rootNode;
     const errors = getNodesWithErrors(rootNode);
@@ -232,15 +223,15 @@ function parseAndCheckForErrors(
     return errors;
 }
 
-function treeSitterTest(text: string, name: string): void {
+async function treeSitterTest(text: string, name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const errors = parseAndCheckForErrors(text, name);
 
-    const errorMessage = formatErrorMessage(errors, name);
+    const errorMessage = formatErrorMessage(await errors, name);
 
-    assert.strictEqual(errors.length, 0, errorMessage);
+    assert.strictEqual((await errors).length, 0, errorMessage);
 }
 
 function getNodesWithErrors(node: Parser.SyntaxNode): Parser.SyntaxNode[] {

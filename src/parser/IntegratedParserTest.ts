@@ -17,8 +17,7 @@ async function testIntegratedParser() {
     const parser = new AblParserHelper(extensionPath, mockDebugManager);
 
     try {
-        await parser.awaitLanguage();
-        await parser.awaitWorker();
+        await parser.startWorker();
 
         const testCode = `
 DEFINE VARIABLE x AS INTEGER.
@@ -29,7 +28,7 @@ MESSAGE "Hello World" VIEW-AS ALERT-BOX.
         const fileIdentifier = new FileIdentifier("test.p", 1);
 
         console.log("Parsing test code...");
-        const result = await parser.parse(fileIdentifier, testCode);
+        const result = await parser.parseAsync(fileIdentifier, testCode);
 
         console.log("Parse result:", {
             hasTree: !!result.tree,
