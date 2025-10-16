@@ -1,8 +1,10 @@
-import Parser, { Tree } from "web-tree-sitter";
+import Parser from "web-tree-sitter";
 import path from "path";
 import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { WorkerConfigurationManager } from "../utils/ConfigurationManagerWorker";
 import { enableFormatterDecorators } from "../formatterFramework/enableFormatterDecorators";
+import { DebugManagerMock } from "../test/suite/DebugManagerMock";
+import { FileIdentifier } from "../model/FileIdentifier";
 
 // Register all formatters in the worker
 enableFormatterDecorators();
@@ -32,7 +34,6 @@ class ParserWorker {
             this.ablLanguage = await Parser.Language.load(wasmPath);
             this.parser.setLanguage(this.ablLanguage);
         } catch (error) {
-            console.error("[ParserWorker] Failed to initialize parser:", error);
             if (process.send) {
                 process.send({
                     type: "error",
@@ -58,7 +59,7 @@ class ParserWorker {
                 this.handleFormatRequest(message);
                 break;
             default:
-                // Unknown message type, ignore
+            // Unknown message type, ignore
         }
     }
 
@@ -73,71 +74,57 @@ class ParserWorker {
 
             // Accept settings from the main thread (message.options.settings)
             const settings = { ...(message.options?.settings || {}) };
-            console.log('[Worker] Settings before override:', JSON.stringify(settings));
 
-            const fileIdentifier = {
-                name: message.fileId,
-                version: 1,
-                toKey: () => String(message.fileId),
-            };
             // Use WorkerConfigurationManager in the worker
             const configManager = new WorkerConfigurationManager();
             configManager.setAll(settings);
-            console.log('[Worker] ConfigManager after setAll:', JSON.stringify(configManager.getAll()));
 
-            // Dummy debug manager
-            const debugManager = {
-                log: (..._args: any[]) => {},
-                isDebugEnabled: () => false,
-                handleErrors: () => {},
-                parserReady: () => {},
-                fileFormattedSuccessfully: () => {},
-                isInDebugMode: () => false,
-            };
+            // Parse and apply settings override from comment block in the document
+            this.applySettingsOverrideFromComment(message.text, configManager);
+
             // Dummy parser helper (implements IParserHelper signature, returns ParseResult)
             const parserHelper = {
                 getParser: () => this.parser,
                 getLanguage: () => this.ablLanguage,
                 getTree: () => tree,
-                parse: (_fileIdentifier: any, text: string, _previousTree?: any) => {
+                parse: (
+                    _fileIdentifier: any,
+                    text: string,
+                    _previousTree?: any
+                ) => {
                     return { tree: this.parser!.parse(text), ranges: [] };
                 },
-                parseAsync: async (_fileIdentifier: any, text: string, _previousTree?: any) => {
+                parseAsync: async (
+                    _fileIdentifier: any,
+                    text: string,
+                    _previousTree?: any
+                ) => {
                     return { tree: this.parser!.parse(text), ranges: [] };
                 },
-                format: async () => { throw new Error("Not implemented in worker dummy parserHelper"); },
+                format: async () => {
+                    throw new Error(
+                        "Not implemented in worker dummy parserHelper"
+                    );
+                },
             };
-
-            // Parse and apply settings override from comment block in the document
-            const overrideMatch = message.text.match(/\/\*+\s*formatterSettingsOverride\s*\*\/[\s\r\n]*\/\*+([\s\S]*?)\*\//i);
-            if (overrideMatch) {
-                try {
-                    const overrideJson = overrideMatch[1];
-                    const overrideSettings = JSON.parse(overrideJson);
-                    console.log('[Worker] Parsed settings override from comment:', overrideSettings);
-                    // Use setOverridingSettings so comment overrides take precedence
-                    configManager.setOverridingSettings(overrideSettings);
-                } catch (e) {
-                    console.error('[Worker] Failed to parse settings override from comment:', e);
-                }
-            }
-            console.log('[Worker] ConfigManager after comment override:', JSON.stringify(configManager.getAll()));
 
             // --- Apply settings override from comments before formatting ---
             // This matches the main-thread logic
             const formattingEngine = new FormattingEngine(
                 parserHelper,
-                fileIdentifier,
+                new FileIdentifier(message.fileId || "worker", 1),
                 configManager,
-                debugManager
+                new DebugManagerMock()
             );
             // ParseResult for settingsOverride
             const parseResult = { tree, ranges: [] };
             formattingEngine["settingsOverride"](parseResult);
-            console.log('[Worker] ConfigManager after settingsOverride:', JSON.stringify(configManager.getAll()));
+
             // Now format with updated configManager (only correct settings enabled)
-            const formattedText = formattingEngine.formatText(message.text, message.options?.eol);
-            console.log('[Worker] Formatted text output:', JSON.stringify(formattedText));
+            const formattedText = formattingEngine.formatText(
+                message.text,
+                message.options?.eol
+            );
 
             if (process.send) {
                 process.send({
@@ -153,8 +140,27 @@ class ParserWorker {
                     type: "formatResult",
                     id: message.id,
                     success: false,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                        error instanceof Error ? error.message : String(error),
                 });
+            }
+        }
+    }
+
+    private applySettingsOverrideFromComment(text: string, configManager: WorkerConfigurationManager): void {
+        const overrideMatch = text.match(
+            /\/\*+\s*formatterSettingsOverride\s*\*\/[\s\r\n]*\/\*+([\s\S]*?)\*\//i
+        );
+        if (overrideMatch) {
+            try {
+                const overrideJson = overrideMatch[1];
+                const overrideSettings = JSON.parse(overrideJson);
+                configManager.setOverridingSettings(overrideSettings);
+            } catch (e) {
+                console.error(
+                    "[Worker] Failed to parse settings override from comment:",
+                    e
+                );
             }
         }
     }
