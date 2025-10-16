@@ -90,7 +90,6 @@ async function promptForProgressCfgPath(): Promise<string> {
         console.log("\n⚠️  Could not automatically find progress.cfg file.");
         console.log("Please provide the full path to your progress.cfg file:");
         console.log("Example: C:\\Progress\\OpenEdge\\progress.cfg");
-        console.log("Example: C:\\someFolder\\folder\\progress.cfg");
 
         rl.question("Enter full path to progress.cfg: ", (userPath) => {
             rl.close();
@@ -374,7 +373,7 @@ async function formatAdeSrc(): Promise<void> {
         // Initialize parser
         await Parser.init();
 
-        // Initialize configuration and parser helper (like in stability tests)
+        // Initialize configuration and parser helper
         const configurationManager = ConfigurationManager.getInstance();
         enableFormatterDecorators(); // This is crucial for formatter initialization!
 
@@ -384,7 +383,7 @@ async function formatAdeSrc(): Promise<void> {
             debugManager
         );
 
-        // Wait for parser to be fully loaded (like in stability tests)
+        // Wait for parser to be fully loaded
         await parserHelper.awaitLanguage();
 
         // ABL file extensions to format
@@ -433,7 +432,7 @@ async function formatAdeSrc(): Promise<void> {
                                     debugManager
                                 );
 
-                                // Format the content (using detected EOL like stability tests)
+                                // Format the content (using detected EOL)
                                 const detectedEOL = getFileEOL(content);
                                 const formattedContent = formatter.formatText(
                                     content,
@@ -489,18 +488,7 @@ async function createTempTxt(): Promise<void> {
         __dirname,
         "../../../resources/ade-sourceCode/pbuild.dir"
     );
-    const timestamp = new Date()
-        .toLocaleString("lt-LT", {
-            timeZone: "Europe/Vilnius",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false,
-        })
-        .replace(/[\/\s:]/g, "_");
+
     const outputFile = path.resolve(
         __dirname,
         `../../../resources/ade-sourceCode/_formattedCompFiles.txt`
