@@ -50,6 +50,7 @@ suite("Compilation Tests", function () {
         await checkDockerDesktopApp();
         await copyDockerImg();
         await cloneAdeSourceCode();
+        await copySrcBefor();
         await formatAdeSrc();
         await runPbuildDocker();
         testRunDir = await createResultsFolder();
@@ -73,8 +74,8 @@ suite("Compilation Tests", function () {
 
     // Generate individual test for each expected file
     testFiles.forEach((expectedFile) => {
-        test(`Compilation test: ${expectedFile}`, () => {
-            compilationTest(expectedFile, createdFiles);
+        test(`Compilation test: ${expectedFile}`, async () => {
+            await compilationTest(expectedFile, createdFiles);
         });
     });
 });
@@ -357,33 +358,6 @@ async function formatAdeSrc(): Promise<void> {
         return;
     }
 
-    // Create output directory and timestamped filename for format failures
-    const outputDir = path.join(
-        __dirname,
-        "../../../resources/testResults/compilationTests"
-    );
-    const timestamp = new Date()
-        .toISOString()
-        .replace(/[:.]/g, "-")
-        .replace("T", "_")
-        .split(".")[0];
-    const formatFailsPath = path.join(
-        outputDir,
-        `formatFails_${timestamp}.txt`
-    );
-
-    // Ensure output directory exists
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    // Initialize format failures log
-    let formatFailures: string[] = [];
-    formatFailures.push(`Format Failures Log - ${new Date().toISOString()}`);
-    formatFailures.push(
-        `=======================================================\n`
-    );
-
     try {
         // Function to detect EOL from file content (like in the test suites)
         function getFileEOL(fileText: string): string {
@@ -483,12 +457,10 @@ async function formatAdeSrc(): Promise<void> {
                                     adeSourcePath,
                                     fullPath
                                 );
-                                const failureEntry = `${relativePath}: ${errorMessage}`;
 
                                 console.warn(
                                     `Failed to format ${relativePath}: ${errorMessage}`
                                 );
-                                formatFailures.push(failureEntry);
                                 filesSkipped++;
                             }
                         }
@@ -502,23 +474,6 @@ async function formatAdeSrc(): Promise<void> {
         };
 
         await formatDirectory(adeSourcePath);
-
-        // Write format failures to file
-        if (formatFailures.length > 2) {
-            // More than just header lines
-            formatFailures.push(`\nSummary:`);
-            formatFailures.push(`Total files formatted: ${filesFormatted}`);
-            formatFailures.push(`Total files failed: ${filesSkipped}`);
-
-            fs.writeFileSync(
-                formatFailsPath,
-                formatFailures.join("\n"),
-                "utf-8"
-            );
-            console.log(`📄 Format failures logged to: ${formatFailsPath}`);
-        } else {
-            console.log("✓ No formatting failures to log");
-        }
 
         console.log(
             `✓ Formatting complete: ${filesFormatted} files formatted, ${filesSkipped} files skipped`
@@ -681,6 +636,143 @@ async function loadTestFiles(): Promise<void> {
     console.log(`Found ${createdFiles.size} files in created temp file`);
 }
 
+async function copySrcBefor(): Promise<void> {
+    const adeSourcePath = path.resolve(
+        __dirname,
+        "../../../resources/ade-sourceCode"
+    );
+    const srcPath = path.join(adeSourcePath, "src");
+    const srcBeforePath = path.join(adeSourcePath, "src_before");
+
+    console.log("Creating backup copy of ADE source files...");
+
+    if (!fs.existsSync(srcPath)) {
+        console.log("⚠ ADE source directory not found, skipping backup");
+        return;
+    }
+
+    try {
+        // Remove existing backup if it exists
+        if (fs.existsSync(srcBeforePath)) {
+            console.log("Removing existing src_before backup...");
+            fs.rmSync(srcBeforePath, { recursive: true, force: true });
+        }
+
+        // Use fs.cp for recursive copy (Node.js 16.7.0+)
+        await fs.promises.cp(srcPath, srcBeforePath, {
+            recursive: true,
+            preserveTimestamps: true,
+        });
+
+        console.log("✓ Successfully created backup of ADE source files");
+    } catch (error) {
+        console.error("Failed to create backup of ADE source files:", error);
+        throw error;
+    }
+}
+
+async function copyFailedFiles(failedRFile: string): Promise<void> {
+    const adeSourcePath = path.resolve(
+        __dirname,
+        "../../../resources/ade-sourceCode"
+    );
+    const srcPath = path.join(adeSourcePath, "src");
+    const srcBeforePath = path.join(adeSourcePath, "src_before");
+
+    try {
+        // Convert .r file path back to original source path
+        // Example: "folder_subfolder_abc.r" -> "folder/subfolder/abc" (without extension)
+        // Handle double underscores: "adedict_DB__connect.r" -> "adedict/DB/_connect"
+        const baseFileName = failedRFile.replace(/\.r$/, "");
+
+        // Split the filename into parts, handling double underscores correctly
+        // Double underscore __ represents a single underscore _ in the filename
+        const parts = baseFileName.split("_");
+        const processedParts: string[] = [];
+
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+
+            // Check if this is an empty part (happens with consecutive underscores)
+            if (part === "" && i < parts.length - 1) {
+                // This empty part is from double underscore __
+                // The next part should get a leading underscore
+                const nextPart = parts[i + 1];
+                if (nextPart !== undefined) {
+                    processedParts.push("_" + nextPart);
+                    i++; // Skip the next part since we processed it
+                }
+            } else if (part !== "") {
+                // Regular non-empty part
+                processedParts.push(part);
+            }
+        }
+
+        const baseSourcePath = processedParts.join(path.sep);
+
+        // Create normalized filename for test results (replace path separators with underscores)
+        const normalizedName = processedParts.join("_");
+
+        console.log(`📋 Copying failed file artifacts for: ${failedRFile}`);
+
+        // Try all common OpenEdge extensions
+        const extensions = [".p", ".w", ".i", ".cls"];
+        let found = false;
+
+        for (const ext of extensions) {
+            const afterFilePath = path.join(srcPath, baseSourcePath + ext);
+            const beforeFilePath = path.join(
+                srcBeforePath,
+                baseSourcePath + ext
+            );
+
+            // Check if this extension exists in either location
+            if (fs.existsSync(afterFilePath) || fs.existsSync(beforeFilePath)) {
+                console.log(`   🔍 Found files with extension: ${ext}`);
+
+                // Copy the "after" version (formatted file)
+                if (fs.existsSync(afterFilePath)) {
+                    const afterDestPath = path.join(
+                        testRunDir,
+                        `${normalizedName}_after${ext}`
+                    );
+                    await fs.promises.copyFile(afterFilePath, afterDestPath);
+                    console.log(`   ✓ Copied after: ${afterDestPath}`);
+                } else {
+                    console.warn(`   ⚠ After file not found: ${afterFilePath}`);
+                }
+
+                // Copy the "before" version (original file)
+                if (fs.existsSync(beforeFilePath)) {
+                    const beforeDestPath = path.join(
+                        testRunDir,
+                        `${normalizedName}_before${ext}`
+                    );
+                    await fs.promises.copyFile(beforeFilePath, beforeDestPath);
+                    console.log(`   ✓ Copied before: ${beforeDestPath}`);
+                } else {
+                    console.warn(
+                        `   ⚠ Before file not found: ${beforeFilePath}`
+                    );
+                }
+
+                found = true;
+                break; // Stop after finding the first matching extension
+            }
+        }
+
+        if (!found) {
+            console.warn(
+                `   ⚠ Could not find source files for: ${failedRFile}`
+            );
+            console.warn(`   ⚠ Tried extensions: ${extensions.join(", ")}`);
+            console.warn(`   ⚠ Base path: ${baseSourcePath}`);
+        }
+    } catch (error) {
+        console.error(`Failed to copy artifacts for ${failedRFile}:`, error);
+    }
+}
+
 function getFailedTestCases(filePath: string): string[] {
     const failedFilePath = path.join(filePath, "_failures.txt");
 
@@ -712,10 +804,10 @@ function addFailedTestCase(
     fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
 }
 
-function compilationTest(
+async function compilationTest(
     expectedFile: string,
     createdFiles: Set<string>
-): void {
+): Promise<void> {
     // Check if the expected file exists in the created files set
     if (!createdFiles.has(expectedFile)) {
         // Check if this is a known failure
@@ -726,6 +818,9 @@ function compilationTest(
 
         // This is a NEW failure - record it and fail the test
         addFailedTestCase(testRunDir, "_failures.txt", expectedFile);
+
+        // Copy before/after files for debugging
+        await copyFailedFiles(expectedFile);
 
         assert.fail(
             `Expected file not found in compiled results: ${expectedFile}`
