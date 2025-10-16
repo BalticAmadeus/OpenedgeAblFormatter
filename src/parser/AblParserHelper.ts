@@ -42,7 +42,16 @@ export class AblParserHelper implements IParserHelper {
         text: string,
         previousTree?: Tree
     ): ParseResult {
-        throw new Error("Direct parse is disabled. Use parseAsync (worker) only.");
+        throw new Error(
+            "Direct parse is disabled. Use parseAsync (worker) only."
+        );
+    }
+
+    // Patch: respawn worker automatically on next request if it crashed
+    private async ensureWorkerReady(): Promise<void> {
+        if (!this.workerProcess || !this.workerReady) {
+            await this.startWorker();
+        }
     }
 
     public async parseAsync(
@@ -50,6 +59,7 @@ export class AblParserHelper implements IParserHelper {
         text: string,
         previousTree?: Tree
     ): Promise<ParseResult> {
+        await this.ensureWorkerReady();
         if (this.useWorker && this.workerReady) {
             return this.parseWithWorker(fileIdentifier, text);
         } else {
@@ -62,6 +72,7 @@ export class AblParserHelper implements IParserHelper {
         text: string,
         options?: any
     ): Promise<string> {
+        await this.ensureWorkerReady();
         // Always send all relevant settings if not already provided
         if (!options) {
             options = {};
@@ -106,7 +117,9 @@ export class AblParserHelper implements IParserHelper {
             })
             .catch((error: any) => {
                 this.useWorker = false;
-                throw new Error("Direct parser initialization is disabled. All parsing/formatting must use the worker.");
+                throw new Error(
+                    "Direct parser initialization is disabled. All parsing/formatting must use the worker."
+                );
             });
         await this.workerInitPromise;
     }
@@ -208,9 +221,11 @@ export class AblParserHelper implements IParserHelper {
                 reject(error);
             });
 
-            this.workerProcess.on("exit", (code) => {
+            this.workerProcess.on("exit", (code, signal) => {
                 this.workerProcess = null;
                 this.workerReady = false;
+                // Optionally: log or notify about the crash
+                // Automatically respawn on next request
             });
 
             setTimeout(() => {
