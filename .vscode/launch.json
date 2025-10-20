@@ -5,6 +5,7 @@
 {
 	"version": "0.2.0",
 	"configurations": [
+
 		{
 			"name": "Run Extension",
 			"type": "extensionHost",
@@ -71,6 +72,19 @@
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/stability-test/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "Compilation Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-compilation/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-compilation/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		}
