@@ -46,6 +46,22 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
+			"name": "Extension Tests (Metamorphic)",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"TEST_MODE": "metamorphic"
+			}
+		},
+		{
 			"name": "Stability Tests",
 			"type": "extensionHost",
 			"request": "launch",
@@ -73,7 +89,6 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		}
 	],
-
 	"folders": [
 		{
 			"path": "${workspaceFolder}/resources/samples"

@@ -5,17 +5,24 @@ import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
+import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { Telemetry } from "../utils/Telemetry";
+import { BaseEngineOutput } from "../mtest/EngineParams";
 
 export class AblFormatterProvider
     implements
         vscode.DocumentRangeFormattingEditProvider,
         vscode.DocumentFormattingEditProvider
 {
-    private parserHelper: IParserHelper;
+    private readonly parserHelper: IParserHelper;
+    private readonly metamorphicTestingEngine: MetamorphicEngine<BaseEngineOutput>;
 
-    public constructor(parserHelper: IParserHelper) {
+    public constructor(
+        parserHelper: IParserHelper,
+        metamorphicTestingEngine: MetamorphicEngine<BaseEngineOutput>
+    ) {
         this.parserHelper = parserHelper;
+        this.metamorphicTestingEngine = metamorphicTestingEngine;
     }
 
     public provideDocumentFormattingEdits(
@@ -36,12 +43,15 @@ export class AblFormatterProvider
                 this.parserHelper,
                 new FileIdentifier(document.fileName, document.version),
                 configurationManager,
-                debugManager
+                debugManager,
+                this.metamorphicTestingEngine
             );
 
-            const str = codeFormatter.formatText(
-                document.getText(),
-                new EOL(document.eol)
+            const initialText = document.getText();
+            const outputText = codeFormatter.formatText(
+                initialText,
+                new EOL(document.eol),
+                true
             );
 
             const editor = vscode.window.activeTextEditor;
@@ -52,7 +62,7 @@ export class AblFormatterProvider
                             new vscode.Position(0, 0),
                             new vscode.Position(10000000, 10000000)
                         ),
-                        str
+                        outputText
                     );
                 },
                 { undoStopBefore: false, undoStopAfter: false }
@@ -79,7 +89,8 @@ export class AblFormatterProvider
                 this.parserHelper,
                 new FileIdentifier(document.fileName, document.version),
                 configurationManager,
-                debugManager
+                debugManager,
+                this.metamorphicTestingEngine
             );
 
             const str = codeFormatter.formatText(
