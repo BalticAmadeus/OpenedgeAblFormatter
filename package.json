@@ -382,6 +382,7 @@
     "copy-test-cases": "copyfiles -u 2 ./resources/samples/* .test_dir/samples",
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
     "test": "node ./out/test/runTest.js",
+    "test-w-metamorphic": "node ./out/test/runTest.js --metamorphic",
     "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
     "test-symbol": "node ./out/test-symbol/runTest.js",
     "test-ast": "node ./out/test-ast/runTest.js"
