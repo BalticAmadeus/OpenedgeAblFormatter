@@ -384,7 +384,8 @@
     "test": "node ./out/test/runTest.js",
     "test-w-metamorphic": "node ./out/test/runTest.js --metamorphic",
     "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
-    "stability-test": "node ./out/stability-test/runTest.js",
+    "test-symbol": "node ./out/test-symbol/runTest.js",
+    "test-ast": "node ./out/test-ast/runTest.js",
     "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js"
   },
   "devDependencies": {
@@ -410,6 +411,6 @@
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.9.8",
-    "web-tree-sitter": "0.20.8"
+    "web-tree-sitter": "^0.20.8"
   }
 }

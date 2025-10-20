@@ -286,4 +286,57 @@ export class FormattingEngine {
             secondChildNode.text.length - 2
         );
     }
+
+    private compare(
+        node1: SyntaxNode,
+        node2: SyntaxNode,
+        formatters: IFormatter[]
+    ): boolean {
+        const matchingFormatter = formatters.find((formatter) =>
+            formatter.match(node1)
+        );
+
+        let result: boolean;
+
+        if (matchingFormatter) {
+            result = matchingFormatter.compare(node1, node2);
+        } else {
+            // Select the default formatter if no match is found
+            const defaultFormatter = formatters.find(
+                (f) =>
+                    (f.constructor as any).formatterLabel ===
+                    "defaultFormatting"
+            );
+            if (defaultFormatter) {
+                result = defaultFormatter.compare(node1, node2);
+            } else {
+                result = false;
+            }
+        }
+
+        if (!result) {
+            return false;
+        }
+
+        if (node1.childCount > 0) {
+            for (let i = 0; i < node1.childCount; i++) {
+                const child1 = node1.child(i)!;
+                const child2 = node2.child(i)!;
+
+                if (!this.compare(child1, child2, formatters)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public isAstEqual(tree1: Tree, tree2: Tree): boolean | undefined {
+        const formatters = FormatterFactory.getFormatterInstances(
+            this.configurationManager
+        );
+
+        return this.compare(tree1.rootNode, tree2.rootNode, formatters);
+    }
 }
