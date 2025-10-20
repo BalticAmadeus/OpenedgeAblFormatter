@@ -384,7 +384,7 @@
     "test": "node ./out/test/runTest.js",
     "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
     "stability-test": "node ./out/stability-test/runTest.js",
-    "compilation-test": "npm run compile && node ./out/compilation-test/runTest.js"
+    "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
