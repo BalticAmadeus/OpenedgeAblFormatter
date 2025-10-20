@@ -23,10 +23,39 @@ import { EOL } from "../../model/EOL";
 
 const execAsync = promisify(exec);
 
+// Global path variables
+const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
+const adeSourceCodePath = path.resolve(
+    __dirname,
+    "../../../resources/ade-sourceCode"
+);
+const adeSourcePath = path.join(adeSourceCodePath, "src");
+const srcBeforePath = path.join(adeSourceCodePath, "src_before");
+const pbuildDirPath = path.join(adeSourceCodePath, "pbuild.dir");
+const pbuildPath = path.join(adeSourceCodePath, "src", "adebuild", "pbuild");
+const compilatedFilesPath = path.resolve(
+    __dirname,
+    "../../../resources/compilationTests/_compilatedFiles.txt"
+);
+const formattedCompFilesPath = path.resolve(
+    __dirname,
+    "../../../resources/ade-sourceCode/_formattedCompFiles.txt"
+);
+const testResultsDir = path.join(
+    extensionDevelopmentPath,
+    "resources/testResults/compilationTests"
+);
+const compilationTestsPath = path.join(
+    extensionDevelopmentPath,
+    "resources/compilationTests"
+);
+
+const knownFailures: string[] = getFailedTestCases(compilationTestsPath);
+console.log(`📋 Loaded ${knownFailures.length} known compilation failures`);
+
 let expectedFiles: string[] = [];
 let createdFiles: Set<string> = new Set();
 let testRunDir: string = "";
-let knownFailures: string[] = [];
 
 suite("Compilation Tests", function () {
     // Increase timeout for Docker operations
@@ -39,14 +68,6 @@ suite("Compilation Tests", function () {
     });
 
     suiteSetup(async () => {
-        const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
-        knownFailures = getFailedTestCases(
-            path.join(extensionDevelopmentPath, "resources/compilationTests")
-        );
-        console.log(
-            `📋 Loaded ${knownFailures.length} known compilation failures`
-        );
-
         await checkDockerDesktopApp();
         await copyDockerImg();
         await cloneAdeSourceCode();
@@ -54,16 +75,11 @@ suite("Compilation Tests", function () {
         await formatAdeSrc();
         await runPbuildDocker();
         testRunDir = await createResultsFolder();
-        await createTempTxt();
+        await createFormattedCompFilesTxt();
         await loadTestFiles();
     });
 
     // Load expected files to generate tests
-    const compilatedFilesPath = path.resolve(
-        __dirname,
-        "../../../resources/compilationTests/_compilatedFiles.txt"
-    );
-
     const expectedFilesContent = fs.readFileSync(compilatedFilesPath, "utf-8");
     const testFiles = expectedFilesContent
         .split("\n")
@@ -219,22 +235,17 @@ async function copyDockerImg(): Promise<void> {
 }
 
 async function cloneAdeSourceCode(): Promise<void> {
-    const targetPath = path.resolve(
-        __dirname,
-        "../../../resources/ade-sourceCode"
-    );
-
     console.log("Checking for ADE-Sourcecode repository...");
 
-    if (fs.existsSync(targetPath)) {
+    if (fs.existsSync(adeSourceCodePath)) {
         console.log("Removing existing ADE-Sourcecode directory...");
-        fs.rmSync(targetPath, { recursive: true, force: true });
+        fs.rmSync(adeSourceCodePath, { recursive: true, force: true });
     }
 
     console.log("Cloning ADE-Sourcecode repository...");
 
     try {
-        const cloneCommand = `git clone https://github.com/GytRag/ADE-Sourcecode "${targetPath}"`;
+        const cloneCommand = `git clone https://github.com/GytRag/ADE-Sourcecode "${adeSourceCodePath}"`;
         const { stdout, stderr } = await execAsync(cloneCommand);
 
         if (stderr && !stderr.includes("Cloning into")) {
@@ -261,22 +272,13 @@ async function runPbuildDocker(): Promise<void> {
         console.log("No existing container found, proceeding...");
     }
 
-    // Get dynamic project directory path
-    const projectRootDir = path.resolve(__dirname, "../../..");
-    const adeSourceDir = path.join(
-        projectRootDir,
-        "resources",
-        "ade-sourcecode"
-    );
-
-    console.log(`Project root: ${projectRootDir}`);
-    console.log(`ADE source directory: ${adeSourceDir}`);
+    console.log(`Project root: ${extensionDevelopmentPath}`);
+    console.log(`ADE source directory: ${adeSourceCodePath}`);
 
     // Find progress.cfg file automatically
     const progressCfgPath = await findProgressCfg();
 
     // Comment out the $RMDIR "$WORK" line in pbuild to preserve working directory
-    const pbuildPath = path.join(adeSourceDir, "src", "adebuild", "pbuild");
     try {
         console.log("Modifying pbuild script to preserve working directory...");
         let pbuildContent = fs.readFileSync(pbuildPath, "utf-8");
@@ -301,7 +303,7 @@ async function runPbuildDocker(): Promise<void> {
         "--name",
         "openedge-compiler",
         "-v",
-        `${adeSourceDir}:/app/src`,
+        `${adeSourceCodePath}:/app/src`,
         "-v",
         `${progressCfgPath}:/usr/dlc/progress.cfg`,
         "devbfvio/openedge-compiler:latest",
@@ -345,11 +347,6 @@ async function runPbuildDocker(): Promise<void> {
 }
 
 async function formatAdeSrc(): Promise<void> {
-    const adeSourcePath = path.resolve(
-        __dirname,
-        "../../../resources/ade-sourceCode/src"
-    );
-
     console.log("Formatting ADE source code files...");
 
     if (!fs.existsSync(adeSourcePath)) {
@@ -483,52 +480,47 @@ async function formatAdeSrc(): Promise<void> {
     }
 }
 
-async function createTempTxt(): Promise<void> {
-    const startDir = path.resolve(
-        __dirname,
-        "../../../resources/ade-sourceCode/pbuild.dir"
-    );
+async function collectRFilesFromPath(
+    currentDir: string,
+    results: string[],
+    baseDir: string = currentDir
+): Promise<void> {
+    try {
+        const list = await fs.promises.readdir(currentDir);
 
-    const outputFile = path.resolve(
-        __dirname,
-        `../../../resources/ade-sourceCode/_formattedCompFiles.txt`
-    );
+        for (const file of list) {
+            const fullPath = path.join(currentDir, file);
+            const relPath = path.relative(baseDir, fullPath);
+
+            try {
+                const stat = await fs.promises.stat(fullPath);
+
+                if (stat.isDirectory()) {
+                    await collectRFilesFromPath(fullPath, results, baseDir);
+                } else if (stat.isFile()) {
+                    // Only process files ending with '.r'
+                    if (file.endsWith(".r")) {
+                        // Normalize path separators to underscore
+                        const normalized = relPath
+                            .replace(/\\/g, "_")
+                            .replace(/\//g, "_");
+                        results.push(normalized);
+                    }
+                }
+            } catch (statError) {
+                console.warn(`Could not stat file ${fullPath}: ${statError}`);
+            }
+        }
+    } catch (error) {
+        console.warn(`Could not read directory ${currentDir}: ${error}`);
+    }
+}
+
+async function createFormattedCompFilesTxt(): Promise<void> {
+    const startDir = pbuildDirPath;
+    const outputFile = formattedCompFilesPath;
 
     let results: string[] = [];
-
-    async function walk(dir: string): Promise<void> {
-        try {
-            const list = await fs.promises.readdir(dir);
-
-            for (const file of list) {
-                const fullPath = path.join(dir, file);
-                const relPath = path.relative(startDir, fullPath);
-
-                try {
-                    const stat = await fs.promises.stat(fullPath);
-
-                    if (stat.isDirectory()) {
-                        await walk(fullPath);
-                    } else if (stat.isFile()) {
-                        // Only process files ending with '.r'
-                        if (file.endsWith(".r")) {
-                            // Normalize path separators to underscore
-                            const normalized = relPath
-                                .replace(/\\/g, "_")
-                                .replace(/\//g, "_");
-                            results.push(normalized);
-                        }
-                    }
-                } catch (statError) {
-                    console.warn(
-                        `Could not stat file ${fullPath}: ${statError}`
-                    );
-                }
-            }
-        } catch (error) {
-            console.warn(`Could not read directory ${dir}: ${error}`);
-        }
-    }
 
     try {
         // Check if source directory exists
@@ -543,8 +535,8 @@ async function createTempTxt(): Promise<void> {
             await fs.promises.mkdir(outputDir, { recursive: true });
         }
 
-        // Start walking
-        await walk(startDir);
+        // Start collecting .r files
+        await collectRFilesFromPath(startDir, results);
 
         // Write to file asynchronously
         await fs.promises.writeFile(outputFile, results.join("\n"), "utf-8");
@@ -556,12 +548,6 @@ async function createTempTxt(): Promise<void> {
 }
 
 async function createResultsFolder(): Promise<string> {
-    const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
-    const testResultsDir = path.join(
-        extensionDevelopmentPath,
-        "resources/testResults/compilationTests"
-    );
-
     const testRunTimestamp = new Date()
         .toLocaleString("lt-LT", {
             timeZone: "Europe/Vilnius",
@@ -582,11 +568,6 @@ async function createResultsFolder(): Promise<string> {
 
 async function loadTestFiles(): Promise<void> {
     // Load expected files after setup is complete
-    const compilatedFilesPath = path.resolve(
-        __dirname,
-        "../../../resources/compilationTests/_compilatedFiles.txt"
-    );
-
     if (!fs.existsSync(compilatedFilesPath)) {
         throw new Error("_compilatedFiles.txt should exist");
     }
@@ -602,18 +583,17 @@ async function loadTestFiles(): Promise<void> {
     );
 
     // Load created temp files after setup is complete
-    const createdTempFilePath = path.resolve(
-        __dirname,
-        "../../../resources/ade-sourceCode/_formattedCompFiles.txt"
-    );
 
-    if (!fs.existsSync(createdTempFilePath)) {
+    if (!fs.existsSync(formattedCompFilesPath)) {
         throw new Error(
-            `Created temp file should exist at ${createdTempFilePath}`
+            `Created temp file should exist at ${formattedCompFilesPath}`
         );
     }
 
-    const createdFilesContent = fs.readFileSync(createdTempFilePath, "utf-8");
+    const createdFilesContent = fs.readFileSync(
+        formattedCompFilesPath,
+        "utf-8"
+    );
     createdFiles = new Set(
         createdFilesContent
             .split("\n")
@@ -625,16 +605,9 @@ async function loadTestFiles(): Promise<void> {
 }
 
 async function copySrcBefor(): Promise<void> {
-    const adeSourcePath = path.resolve(
-        __dirname,
-        "../../../resources/ade-sourceCode"
-    );
-    const srcPath = path.join(adeSourcePath, "src");
-    const srcBeforePath = path.join(adeSourcePath, "src_before");
-
     console.log("Creating backup copy of ADE source files...");
 
-    if (!fs.existsSync(srcPath)) {
+    if (!fs.existsSync(adeSourcePath)) {
         console.log("⚠ ADE source directory not found, skipping backup");
         return;
     }
@@ -647,7 +620,7 @@ async function copySrcBefor(): Promise<void> {
         }
 
         // Use fs.cp for recursive copy (Node.js 16.7.0+)
-        await fs.promises.cp(srcPath, srcBeforePath, {
+        await fs.promises.cp(adeSourcePath, srcBeforePath, {
             recursive: true,
             preserveTimestamps: true,
         });
@@ -660,13 +633,6 @@ async function copySrcBefor(): Promise<void> {
 }
 
 async function copyFailedFiles(failedRFile: string): Promise<void> {
-    const adeSourcePath = path.resolve(
-        __dirname,
-        "../../../resources/ade-sourceCode"
-    );
-    const srcPath = path.join(adeSourcePath, "src");
-    const srcBeforePath = path.join(adeSourcePath, "src_before");
-
     try {
         // Convert .r file path back to original source path
         // Example: "folder_subfolder_abc.r" -> "folder/subfolder/abc" (without extension)
@@ -708,7 +674,10 @@ async function copyFailedFiles(failedRFile: string): Promise<void> {
         let found = false;
 
         for (const ext of extensions) {
-            const afterFilePath = path.join(srcPath, baseSourcePath + ext);
+            const afterFilePath = path.join(
+                adeSourcePath,
+                baseSourcePath + ext
+            );
             const beforeFilePath = path.join(
                 srcBeforePath,
                 baseSourcePath + ext

@@ -3,6 +3,7 @@ dist
 .ext_dir/
 .test_dir/
 node_modules
+.vscode-test/
 *.vsix
 resources/ade
 resources/ade-sourceCode
