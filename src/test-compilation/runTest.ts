@@ -1,5 +1,4 @@
 import * as path from "path";
-
 import { runTests } from "@vscode/test-electron";
 
 async function main() {
@@ -13,13 +12,14 @@ async function main() {
         const extensionTestsPath = path.resolve(__dirname, "./suite/index");
 
         // Download VS Code, unzip it and run the integration test
-        await runTests({
-            extensionDevelopmentPath,
-            extensionTestsPath: extensionTestsPath,
-            version: process.env.VSCODE_VERSION || "1.97.2", //TODO: change to 'stable'. this is workaround for the pipeline issue, probably at some point MS will fix it and we'll be able to switch back to the latest
-        });
+        console.log("Running Compilation Tests...");
+        console.log(`Extension Development Path: ${extensionDevelopmentPath}`);
+        console.log(`Extension Tests Path: ${extensionTestsPath}`);
+
+        await runTests({ extensionDevelopmentPath, extensionTestsPath });
+        console.log("✓ All compilation tests completed successfully");
     } catch (err) {
-        console.error("Failed to run tests", err);
+        console.error("❌ Failed to run compilation tests:", err);
         process.exit(1);
     }
 }

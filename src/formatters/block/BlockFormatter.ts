@@ -31,6 +31,11 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         return true;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     public parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>

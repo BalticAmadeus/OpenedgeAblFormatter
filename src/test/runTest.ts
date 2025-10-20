@@ -8,12 +8,28 @@ async function main() {
         // Passed to `--extensionDevelopmentPath`
         const extensionDevelopmentPath = path.resolve(__dirname, "../../");
 
+        // Check for `--metamorphic` flag
+        const isMetamorphic = process.argv.includes("--metamorphic");
+
+        // Optional: Pass this flag to your extension via env var or launchArgs
+        const launchArgs = ["--disable-extensions"];
+
+        if (isMetamorphic) {
+            console.log("DEBUG");
+            launchArgs.push("--metamorphic");
+            process.env.TEST_MODE = "metamorphic";
+        }
+
         // The path to test runner
         // Passed to --extensionTestsPath
         const extensionTestsPath = path.resolve(__dirname, "./suite/index");
 
         // Download VS Code, unzip it and run the integration test
-        await runTests({ extensionDevelopmentPath, extensionTestsPath });
+        await runTests({
+            extensionDevelopmentPath,
+            extensionTestsPath,
+            launchArgs,
+        });
     } catch (err) {
         console.error("Failed to run tests", err);
         process.exit(1);

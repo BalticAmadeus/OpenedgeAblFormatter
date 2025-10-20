@@ -12,6 +12,11 @@ import { enableFormatterDecorators } from "../../formatterFramework/enableFormat
 import path from "path";
 import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
+import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
+import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
+import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
+import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
+import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { join } from "path";
 
 let parserHelper: AblParserHelper;
@@ -43,6 +48,20 @@ const treeSitterErrorTestDirs = getDirs(
     path.join(extensionDevelopmentPath, treeSitterErrorTestDir)
 );
 let treeSitterTestCases: string[] = [];
+
+const isMetamorphicEnabled =
+    process.argv.includes("--metamorphic") ||
+    process.env.TEST_MODE === "metamorphic";
+
+console.log("Is Metamorphic Enabled:", isMetamorphicEnabled);
+
+const metamorphicEngine = isMetamorphicEnabled
+    ? new MetamorphicEngine<DebugTestingEngineOutput>(console)
+          .addMR(new ReplaceEQ())
+          .addMR(new ReplaceForEachToForLast())
+          .addMR(new RemoveNoError())
+    : undefined;
+
 treeSitterErrorTestDirs.forEach((dir) => {
     const testsInsideDir = getDirs(
         path.join(extensionDevelopmentPath, treeSitterErrorTestDir + "/" + dir)
@@ -100,6 +119,68 @@ suite("Extension Test Suite", () => {
             await treeSitterTest(cases);
         });
     });
+
+    suiteTeardown(() => {
+        if (metamorphicEngine === undefined) {
+            return;
+        }
+
+        const metamorphicTestCases = metamorphicEngine.getMatrix();
+        console.log(
+            "Running Metamorphic Tests:",
+            metamorphicTestCases
+                .map((item) => `${item.fileName}:${item.mrName}`)
+                .join(",")
+        );
+
+        suite("Metamorphic Tests", () => {
+            metamorphicTestCases.forEach((cases) => {
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, () => {
+                    const result = metamorphicEngine.runOne(
+                        cases.fileName,
+                        cases.mrName
+                    );
+
+                    assert.equal(
+                        result,
+                        undefined,
+                        result?.actual + "\r\n" + result?.expected
+                    );
+                });
+            });
+        });
+    });
+
+    suiteTeardown(() => {
+        if (metamorphicEngine === undefined) {
+            return;
+        }
+
+        const metamorphicTestCases = metamorphicEngine.getMatrix();
+        console.log(
+            "Running Metamorphic Tests:",
+            metamorphicTestCases
+                .map((item) => `${item.fileName}:${item.mrName}`)
+                .join(",")
+        );
+
+        suite("Metamorphic Tests", () => {
+            metamorphicTestCases.forEach((cases) => {
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, () => {
+                    const result = metamorphicEngine.runOne(
+                        cases.fileName,
+                        cases.mrName
+                    );
+
+                    assert.equal(
+                        result,
+                        undefined,
+                        result?.actual + "\r\n" + result?.expected
+                    );
+                });
+            });
+        });
+    });
 });
 
 async function functionalTest(name: string): Promise<void> {
@@ -113,7 +194,7 @@ async function functionalTest(name: string): Promise<void> {
         inputText,
         { eol: new EOL(getFileEOL(inputText)) }
     );
-    
+
     const targetText = getTarget(name);
     const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
 
@@ -188,6 +269,26 @@ function getTarget(fileName: string): string {
     );
 
     return readFile(filePath);
+}
+
+function format(text: string, name: string): string {
+    const configurationManager = ConfigurationManager.getInstance();
+
+    const codeFormatter = new FormattingEngine(
+        parserHelper,
+        new FileIdentifier(name, 1),
+        configurationManager,
+        new DebugManagerMock(),
+        metamorphicEngine
+    );
+
+    const result = codeFormatter.formatText(
+        text,
+        new EOL(getFileEOL(text)),
+        true
+    );
+
+    return result;
 }
 
 function readFile(fileUri: string): string {
