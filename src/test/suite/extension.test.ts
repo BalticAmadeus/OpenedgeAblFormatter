@@ -13,6 +13,11 @@ import { enableFormatterDecorators } from "../../formatterFramework/enableFormat
 import path from "path";
 import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
+import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
+import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
+import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
+import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
+import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { join } from "path";
 
 let parserHelper: AblParserHelper;
@@ -44,6 +49,20 @@ const treeSitterErrorTestDirs = getDirs(
     path.join(extensionDevelopmentPath, treeSitterErrorTestDir)
 );
 let treeSitterTestCases: string[] = [];
+
+const isMetamorphicEnabled =
+    process.argv.includes("--metamorphic") ||
+    process.env.TEST_MODE === "metamorphic";
+
+console.log("Is Metamorphic Enabled:", isMetamorphicEnabled);
+
+const metamorphicEngine = isMetamorphicEnabled
+    ? new MetamorphicEngine<DebugTestingEngineOutput>(console)
+          .addMR(new ReplaceEQ())
+          .addMR(new ReplaceForEachToForLast())
+          .addMR(new RemoveNoError())
+    : undefined;
+
 treeSitterErrorTestDirs.forEach((dir) => {
     const testsInsideDir = getDirs(
         path.join(extensionDevelopmentPath, treeSitterErrorTestDir + "/" + dir)
@@ -98,6 +117,37 @@ suite("Extension Test Suite", () => {
     treeSitterTestCases.forEach((cases) => {
         test(`Tree Sitter Error test: ${cases}`, () => {
             treeSitterTest(cases);
+        });
+    });
+
+    suiteTeardown(() => {
+        if (metamorphicEngine === undefined) {
+            return;
+        }
+
+        const metamorphicTestCases = metamorphicEngine.getMatrix();
+        console.log(
+            "Running Metamorphic Tests:",
+            metamorphicTestCases
+                .map((item) => `${item.fileName}:${item.mrName}`)
+                .join(",")
+        );
+
+        suite("Metamorphic Tests", () => {
+            metamorphicTestCases.forEach((cases) => {
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, () => {
+                    const result = metamorphicEngine.runOne(
+                        cases.fileName,
+                        cases.mrName
+                    );
+
+                    assert.equal(
+                        result,
+                        undefined,
+                        result?.actual + "\r\n" + result?.expected
+                    );
+                });
+            });
         });
     });
 });
@@ -191,10 +241,15 @@ function format(text: string, name: string): string {
         parserHelper,
         new FileIdentifier(name, 1),
         configurationManager,
-        new DebugManagerMock()
+        new DebugManagerMock(),
+        metamorphicEngine
     );
 
-    const result = codeFormatter.formatText(text, new EOL(getFileEOL(text)));
+    const result = codeFormatter.formatText(
+        text,
+        new EOL(getFileEOL(text)),
+        true
+    );
 
     return result;
 }
