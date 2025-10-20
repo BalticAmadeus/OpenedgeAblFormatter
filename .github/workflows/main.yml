@@ -65,7 +65,12 @@ jobs:
               run: xvfb-run -a npm run stability-test
               if: runner.os == 'Linux'
 
-            - name: Save Stability Test Results as Artifact
+            - name: Run AST Test (Metamorphic)
+              run: xvfb-run -a npm run test-ast-metamorphic
+              continue-on-error: true
+              if: runner.os == 'Linux'
+
+            - name: Save Symbol Test Results as Artifact
               if: always()
               uses: actions/upload-artifact@v4
               with:

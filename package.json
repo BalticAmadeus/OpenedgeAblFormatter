@@ -384,8 +384,9 @@
     "test": "node ./out/test/runTest.js",
     "test-w-metamorphic": "node ./out/test/runTest.js --metamorphic",
     "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
-    "stability-test": "node ./out/stability-test/runTest.js",
-    "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js"
+    "test-symbol": "node ./out/test-symbol/runTest.js",
+    "test-ast": "node ./out/test-ast/runTest.js",
+    "ast-w-metamorphic": "node ./out/test-ast/runTest.js --metamorphic"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
