@@ -56,7 +56,40 @@ export class AblParserHelper implements IParserHelper {
             this.workerRequestCount >= this.workerRestartThreshold
         ) {
             if (this.workerProcess) {
-                this.workerProcess.kill();
+                // Try graceful shutdown
+                let exited = false;
+                const proc = this.workerProcess;
+                const exitPromise = new Promise<void>((resolve) => {
+                    const cleanup = () => {
+                        exited = true;
+                        resolve();
+                    };
+                    proc.once("exit", cleanup);
+                    proc.once("close", cleanup);
+                });
+                try {
+                    proc.send && proc.send({ type: "shutdown" });
+                } catch {}
+                // Wait up to 2 seconds for graceful exit
+                await Promise.race([
+                    exitPromise,
+                    new Promise((res) => setTimeout(res, 2000)),
+                ]);
+                if (!exited) {
+                    try {
+                        proc.kill("SIGTERM");
+                    } catch {}
+                    // Wait a bit more for forced exit
+                    await Promise.race([
+                        exitPromise,
+                        new Promise((res) => setTimeout(res, 1000)),
+                    ]);
+                    if (!exited) {
+                        try {
+                            proc.kill("SIGKILL");
+                        } catch {}
+                    }
+                }
                 this.workerProcess = null;
                 this.workerReady = false;
             }
