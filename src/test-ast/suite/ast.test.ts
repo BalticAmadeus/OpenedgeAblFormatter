@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { join } from "path";
 import { Tree, SyntaxNode } from "web-tree-sitter";
-import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import {
     setupParserHelper,
@@ -14,8 +13,7 @@ import {
 } from "../../utils/suitesUtils";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
-import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
-import { DebugManagerMock } from "./DebugManagerMock";
+import { ConfigurationManager } from "../../utils/ConfigurationManager";
 
 let parserHelper: AblParserHelper;
 
@@ -44,62 +42,112 @@ suite("AST Stability Test Suite", () => {
     });
 
     stabilityTestCases.forEach((cases) => {
-        test(`AST test: ${cases}`, () => {
-            astTest(cases, parserHelper);
+        test(`AST test: ${cases}`, async () => {
+            await astTest(cases, parserHelper);
         }).timeout(10000);
     });
 });
 
-function astTest(name: string, parserHelper: AblParserHelper): void {
+async function astTest(
+    name: string,
+    parserHelper: AblParserHelper
+): Promise<void> {
     enableFormatterDecorators();
 
-    const config: TestConfig<Tree | undefined> = {
+    const config: TestConfig<{ tree: Tree | undefined; text: string }> = {
         testType: "ast",
         knownFailuresFile: "_ast_failures.txt",
         resultFailuresFile: "_ast_failures.txt",
-        processBeforeText: (text: string) => generateAst(text),
-        processAfterText: (text: string) => generateAst(text),
-        compareResults: (
-            before: Tree | undefined,
-            after: Tree | undefined,
-            parserHelper?: AblParserHelper
+        processBeforeText: async (
+            text: string,
+            parserHelper: AblParserHelper
         ) => {
-            if (!before || !after || !parserHelper) return false;
-            return compareAst(before, after);
+            const tree = await generateAst(text, parserHelper);
+            return { tree, text };
         },
-        onMismatch: (
-            before: Tree | undefined,
-            after: Tree | undefined,
-            fileName: string
+        processAfterText: async (
+            text: string,
+            parserHelper: AblParserHelper
         ) => {
-            if (before && after) {
-                analyzeAstDifferences(before, after, fileName);
+            const tree = await generateAst(text, parserHelper);
+            return { tree, text };
+        },
+        compareResults: async (
+            before: { tree: Tree | undefined; text: string },
+            after: { tree: Tree | undefined; text: string },
+            _parserHelper?: AblParserHelper
+        ) => {
+            if (!before.tree || !after.tree) return false;
+            const options = ConfigurationManager.getInstance().getAll();
+
+            try {
+                const areEqual = await (_parserHelper || parserHelper).compare(
+                    before.text,
+                    after.text,
+                    { settings: options }
+                );
+                return !areEqual;
+            } catch (err) {
+                console.error("Worker compare failed:", err);
+                return true; // treat error as mismatch
             }
         },
-        cleanup: (before: Tree | undefined, after: Tree | undefined) => {
-            before?.delete();
-            after?.delete();
+        onMismatch: (
+            before: { tree: Tree | undefined; text: string },
+            after: { tree: Tree | undefined; text: string },
+            fileName: string
+        ) => {
+            if (
+                before &&
+                after &&
+                before.tree !== undefined &&
+                after.tree !== undefined
+            ) {
+                analyzeAstDifferences(before.tree, after.tree, fileName);
+            }
+        },
+        cleanup: (
+            before: {
+                [x: string]: any;
+                tree: Tree | undefined;
+                text: string;
+            },
+            after: {
+                [x: string]: any;
+                tree: Tree | undefined;
+                text: string;
+            }
+        ) => {
+            if (
+                before &&
+                before.tree &&
+                typeof before.tree.delete === "function"
+            ) {
+                before.tree.delete();
+            }
+            if (
+                after &&
+                after.tree &&
+                typeof after.tree.delete === "function"
+            ) {
+                after.tree.delete();
+            }
         },
     };
 
-    runGenericTest(name, parserHelper, config);
+    await runGenericTest(name, parserHelper, config);
 }
 
-function generateAst(text: string): Tree | undefined {
-    const tree = parserHelper.parse(new FileIdentifier("test", 1), text).tree;
-    return tree;
-}
-
-function compareAst(ast1: Tree, ast2: Tree): boolean {
-    const configurationManager = ConfigurationManager.getInstance();
-    const formattingEngine = new FormattingEngine(
-        parserHelper,
-        new FileIdentifier("comparison", 1),
-        configurationManager,
-        new DebugManagerMock()
+async function generateAst(
+    text: string,
+    parserHelper: AblParserHelper
+): Promise<Tree | undefined> {
+    const startParse = Date.now();
+    const result = await parserHelper.parseAsync(
+        new FileIdentifier("test", 1),
+        text
     );
-
-    return !formattingEngine.isAstEqual(ast1, ast2);
+    return result.tree;
 }
 
 function analyzeAstDifferences(

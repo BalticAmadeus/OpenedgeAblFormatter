@@ -32,9 +32,12 @@ const functionalTestDirs = getDirs(
 );
 let functionalTestCases: string[] = [];
 functionalTestDirs.forEach((dir) => {
-    const testsInsideDir = getDirs(
-        path.join(extensionDevelopmentPath, functionalTestDir + "/" + dir)
-    );
+    const dirPath = path.join(extensionDevelopmentPath, functionalTestDir, dir);
+    // Only process if it's a directory
+    if (!fs.statSync(dirPath).isDirectory()) {
+        return;
+    }
+    const testsInsideDir = getDirs(dirPath);
     testsInsideDir.forEach((test) => {
         functionalTestCases.push(dir + "/" + test);
     });
@@ -269,26 +272,6 @@ function getTarget(fileName: string): string {
     );
 
     return readFile(filePath);
-}
-
-function format(text: string, name: string): string {
-    const configurationManager = ConfigurationManager.getInstance();
-
-    const codeFormatter = new FormattingEngine(
-        parserHelper,
-        new FileIdentifier(name, 1),
-        configurationManager,
-        new DebugManagerMock(),
-        metamorphicEngine
-    );
-
-    const result = codeFormatter.formatText(
-        text,
-        new EOL(getFileEOL(text)),
-        true
-    );
-
-    return result;
 }
 
 function readFile(fileUri: string): string {

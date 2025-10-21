@@ -23,6 +23,8 @@ export class AblParserHelper implements IParserHelper {
     private extensionPath: string;
     private workerInitPromise: Promise<void> | null = null;
     private isTestMode: boolean = false;
+    private workerRequestCount = 0;
+    private readonly workerRestartThreshold = 1000;
 
     public constructor(
         extensionPath: string,
@@ -49,9 +51,19 @@ export class AblParserHelper implements IParserHelper {
 
     // Patch: respawn worker automatically on next request if it crashed
     private async ensureWorkerReady(): Promise<void> {
-        if (!this.workerProcess || !this.workerReady) {
-            await this.startWorker();
+        if (
+            !this.workerProcess ||
+            this.workerRequestCount >= this.workerRestartThreshold
+        ) {
+            if (this.workerProcess) {
+                this.workerProcess.kill();
+                this.workerProcess = null;
+                this.workerReady = false;
+            }
+            await this.initializeWorker();
+            this.workerRequestCount = 0;
         }
+        this.workerRequestCount++;
     }
 
     public async parseAsync(
@@ -100,6 +112,35 @@ export class AblParserHelper implements IParserHelper {
                     reject(new Error("Format request timeout"));
                 }
             }, 60000);
+        });
+    }
+
+    public async compare(
+        text1: string,
+        text2: string,
+        options?: any
+    ): Promise<boolean> {
+        await this.ensureWorkerReady();
+        return new Promise<boolean>((resolve, reject) => {
+            if (!this.workerProcess) {
+                reject(new Error("Worker process not available"));
+                return;
+            }
+            const id = ++this.messageId;
+            this.pendingRequests.set(id, { resolve, reject });
+            this.workerProcess.send({
+                type: "compare",
+                id,
+                text1,
+                text2,
+                options,
+            });
+            setTimeout(() => {
+                if (this.pendingRequests.has(id)) {
+                    this.pendingRequests.delete(id);
+                    reject(new Error("Compare request timeout"));
+                }
+            }, 30000);
         });
     }
 
@@ -218,6 +259,8 @@ export class AblParserHelper implements IParserHelper {
             });
 
             this.workerProcess.on("error", (error) => {
+                this.workerProcess = null;
+                this.workerReady = false;
                 reject(error);
             });
 
@@ -260,7 +303,12 @@ export class AblParserHelper implements IParserHelper {
                     };
                     pendingRequest.resolve(parseResult);
                 } else {
-                    pendingRequest.reject(new Error(message.error));
+                    // Ensure error is a string
+                    const errorMsg =
+                        typeof message.error === "object"
+                            ? JSON.stringify(message.error)
+                            : String(message.error);
+                    pendingRequest.reject(new Error(errorMsg));
                 }
             }
         } else if (message.type === "formatResult" && message.id) {
@@ -270,7 +318,26 @@ export class AblParserHelper implements IParserHelper {
                 if (message.success) {
                     pendingRequest.resolve(message.formattedText);
                 } else {
-                    pendingRequest.reject(new Error(message.error));
+                    // Ensure error is a string
+                    const errorMsg =
+                        typeof message.error === "object"
+                            ? JSON.stringify(message.error)
+                            : String(message.error);
+                    pendingRequest.reject(new Error(errorMsg));
+                }
+            }
+        } else if (message.type === "compareResult" && message.id) {
+            const pendingRequest = this.pendingRequests.get(message.id);
+            if (pendingRequest) {
+                this.pendingRequests.delete(message.id);
+                if (message.success) {
+                    pendingRequest.resolve(message.result);
+                } else {
+                    const errorMsg =
+                        typeof message.error === "object"
+                            ? JSON.stringify(message.error)
+                            : String(message.error);
+                    pendingRequest.reject(new Error(errorMsg));
                 }
             }
         }

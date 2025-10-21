@@ -58,8 +58,87 @@ class ParserWorker {
             case "format":
                 this.handleFormatRequest(message);
                 break;
+            case "compare":
+                this.handleCompareRequest(message);
+                break;
             default:
             // Unknown message type, ignore
+        }
+    }
+
+    private handleCompareRequest(message: any): void {
+        try {
+            if (!this.ablLanguage || !this.parser) {
+                throw new Error("Parser not initialized");
+            }
+
+            // Parse both texts
+            const tree1 = this.parser.parse(message.text1);
+            const tree2 = this.parser.parse(message.text2);
+
+            // Accept settings from the main thread (message.options.settings)
+            const settings = { ...(message.options?.settings || {}) };
+
+            // Use WorkerConfigurationManager in the worker
+            const configManager = new WorkerConfigurationManager();
+            configManager.setAll(settings);
+
+            // Dummy parserHelper for FormattingEngine
+            const parserHelper = {
+                getParser: () => this.parser,
+                getLanguage: () => this.ablLanguage,
+                getTree: () => tree1, // Not used in isAstEqual
+                parse: (
+                    _fileIdentifier: any,
+                    text: string,
+                    _previousTree?: any
+                ) => {
+                    return { tree: this.parser!.parse(text), ranges: [] };
+                },
+                parseAsync: async (
+                    _fileIdentifier: any,
+                    text: string,
+                    _previousTree?: any
+                ) => {
+                    return { tree: this.parser!.parse(text), ranges: [] };
+                },
+                format: async () => {
+                    throw new Error(
+                        "Not implemented in worker dummy parserHelper"
+                    );
+                },
+            };
+
+            const formattingEngine = new FormattingEngine(
+                parserHelper,
+                new FileIdentifier("worker", 1),
+                configManager,
+                new DebugManagerMock()
+            );
+
+            // Use formatter-specific AST comparison
+            const result = formattingEngine.isAstEqual(tree1, tree2);
+            if (process.send) {
+                process.send({
+                    type: "compareResult",
+                    id: message.id,
+                    success: true,
+                    result,
+                });
+            }
+
+            tree1.delete();
+            tree2.delete();
+        } catch (error) {
+            if (process.send) {
+                process.send({
+                    type: "compareResult",
+                    id: message.id,
+                    success: false,
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                });
+            }
         }
     }
 
@@ -147,7 +226,10 @@ class ParserWorker {
         }
     }
 
-    private applySettingsOverrideFromComment(text: string, configManager: WorkerConfigurationManager): void {
+    private applySettingsOverrideFromComment(
+        text: string,
+        configManager: WorkerConfigurationManager
+    ): void {
         const overrideMatch = text.match(
             /\/\*+\s*formatterSettingsOverride\s*\*\/[\s\r\n]*\/\*+([\s\S]*?)\*\//i
         );
