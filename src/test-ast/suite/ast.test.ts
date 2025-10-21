@@ -77,7 +77,9 @@ async function astTest(
             after: { tree: Tree | undefined; text: string },
             _parserHelper?: AblParserHelper
         ) => {
-            if (!before.tree || !after.tree) return false;
+            if (!before.tree || !after.tree) {
+                return false;
+            }
             const options = ConfigurationManager.getInstance().getAll();
 
             try {

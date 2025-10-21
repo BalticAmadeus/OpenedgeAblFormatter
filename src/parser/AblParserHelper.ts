@@ -60,10 +60,33 @@ export class AblParserHelper implements IParserHelper {
                 this.workerProcess = null;
                 this.workerReady = false;
             }
-            await this.initializeWorker();
+            // Start worker and always await readiness
+            this.workerInitPromise = this.initializeWorker()
+                .then(() => {
+                    this.workerReady = true;
+                    this.debugManager.parserReady();
+                })
+                .catch((error: any) => {
+                    this.useWorker = false;
+                    throw new Error(
+                        "Direct parser initialization is disabled. All parsing/formatting must use the worker."
+                    );
+                });
+            await this.workerInitPromise;
+            // Defensive: wait until workerReady is true
+            if (!this.workerReady) {
+                throw new Error("Worker not ready after initialization");
+            }
             this.workerRequestCount = 0;
         }
         this.workerRequestCount++;
+        // Defensive: if worker is not ready, wait for workerInitPromise
+        if (!this.workerReady && this.workerInitPromise) {
+            await this.workerInitPromise;
+        }
+        if (!this.workerReady) {
+            throw new Error("Worker not ready");
+        }
     }
 
     public async parseAsync(
@@ -72,10 +95,16 @@ export class AblParserHelper implements IParserHelper {
         previousTree?: Tree
     ): Promise<ParseResult> {
         await this.ensureWorkerReady();
-        if (this.useWorker && this.workerReady) {
+        if (this.useWorker && this.workerReady && this.workerProcess) {
             return this.parseWithWorker(fileIdentifier, text);
         } else {
-            throw new Error("Worker not available for parsing");
+            // Retry once after a short delay
+            await new Promise((res) => setTimeout(res, 50));
+            await this.ensureWorkerReady();
+            if (this.useWorker && this.workerReady && this.workerProcess) {
+                return this.parseWithWorker(fileIdentifier, text);
+            }
+            throw new Error("Worker not available for parsing (after retry)");
         }
     }
 
@@ -92,27 +121,35 @@ export class AblParserHelper implements IParserHelper {
         if (!options.settings) {
             options.settings = ConfigurationManager.getInstance().getAll();
         }
-        return new Promise<string>((resolve, reject) => {
-            if (!this.workerProcess) {
-                reject(new Error("Worker process not available"));
-                return;
+        // Retry logic if workerProcess is not available
+        let attempt = 0;
+        while (attempt < 2) {
+            if (this.workerProcess) {
+                return new Promise<string>((resolve, reject) => {
+                    const id = ++this.messageId;
+                    this.pendingRequests.set(id, { resolve, reject });
+                    this.workerProcess!.send({
+                        type: "format",
+                        id,
+                        fileId: fileIdentifier.name,
+                        text,
+                        options,
+                    });
+                    setTimeout(() => {
+                        if (this.pendingRequests.has(id)) {
+                            this.pendingRequests.delete(id);
+                            reject(new Error("Format request timeout"));
+                        }
+                    }, 60000);
+                });
+            } else {
+                // Wait a bit and retry ensureWorkerReady
+                await new Promise((res) => setTimeout(res, 50));
+                await this.ensureWorkerReady();
+                attempt++;
             }
-            const id = ++this.messageId;
-            this.pendingRequests.set(id, { resolve, reject });
-            this.workerProcess.send({
-                type: "format",
-                id,
-                fileId: fileIdentifier.name,
-                text,
-                options,
-            });
-            setTimeout(() => {
-                if (this.pendingRequests.has(id)) {
-                    this.pendingRequests.delete(id);
-                    reject(new Error("Format request timeout"));
-                }
-            }, 60000);
-        });
+        }
+        throw new Error("Worker process not available (after retry)");
     }
 
     public async compare(

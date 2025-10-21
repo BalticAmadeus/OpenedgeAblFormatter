@@ -50,7 +50,10 @@ export async function runGenericTest<
         : name;
 
     const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
-    const knownFailures = getKnownFailures(config.knownFailuresFile);
+    const fileNameNorm = fileName.trim().toLowerCase();
+    const knownFailures = getKnownFailures(config.knownFailuresFile).map((f) =>
+        f.trim().toLowerCase()
+    );
     const currentTestRunDir = getTestRunDir(config.testType + "Tests");
 
     const hasMismatch = await config.compareResults(
@@ -60,7 +63,7 @@ export async function runGenericTest<
     );
 
     if (hasMismatch) {
-        if (knownFailures.includes(fileName)) {
+        if (knownFailures.includes(fileNameNorm)) {
             console.log("Known issue");
             return;
         }
@@ -87,13 +90,12 @@ export async function runGenericTest<
         fs.writeFileSync(beforeFilePath, beforeText);
         fs.writeFileSync(afterFilePath, afterText);
 
-        assert.fail(`${config.testType} mismatch
-        Before: ${beforeFilePath}
-        After: ${afterFilePath}
-        `);
+        assert.fail(
+            `${config.testType} mismatch\n        Before: ${beforeFilePath}\n        After: ${afterFilePath}\n        `
+        );
     }
 
-    if (knownFailures.includes(fileName)) {
+    if (knownFailures.includes(fileNameNorm)) {
         addFailedTestCase(currentTestRunDir, "_new_passes.txt", fileName);
         config.cleanup?.(beforeResult, afterResult);
         assert.fail(`File should fail ${fileName}`);
