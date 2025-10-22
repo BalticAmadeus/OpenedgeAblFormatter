@@ -786,7 +786,6 @@ adm_samples_v-cuscdt.w
 adm_samples_v-cuscom.w
 adm_samples_v-cusord.w
 adm_samples_v-itminf.w
-adm_samples_v-shpinf.w
 adm_samples_v-spin.w
 adm_template_browser.w
 adm_template_query.w
