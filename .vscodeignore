@@ -17,3 +17,5 @@ resources/treeSitterErrorTests/**
 resources/ade
 resources/stabilityTests/**
 resources/testResults/**
+resources/compilationTests/**
+resources/ade-sourceCode/**
