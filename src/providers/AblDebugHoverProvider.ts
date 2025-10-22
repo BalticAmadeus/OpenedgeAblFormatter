@@ -3,7 +3,6 @@ import {
     Hover,
     HoverProvider,
     Position,
-    ProviderResult,
     TextDocument,
 } from "vscode";
 import { Point, SyntaxNode } from "web-tree-sitter";
@@ -25,12 +24,14 @@ export class AblDebugHoverProvider implements HoverProvider {
         this.parserHelper = parserHelper;
     }
 
-    provideHover(
+    async provideHover(
         document: TextDocument,
         position: Position,
         token: CancellationToken
-    ): ProviderResult<Hover> {
-        if (!DebugManager.getInstance().isShowTreeOnHover()) {
+    ): Promise<Hover | undefined> {
+        const showTreeOnHover = DebugManager.getInstance().isShowTreeOnHover();
+
+        if (!showTreeOnHover) {
             return;
         }
 
@@ -39,19 +40,40 @@ export class AblDebugHoverProvider implements HoverProvider {
             column: position.character,
         };
 
-        const node = this.getNodeForPoint(document, point);
+        const node = await this.getNodeForPoint(document, point);
 
-        return new Hover(
+        if (!node) {
+            return;
+        }
+
+        const hoverText =
             "| ID | TYPE | START POS | END POS | INDEX | TEXT | \n | ---- | ---- | ---- | ---- | ---- | ---- | \n" +
-                this.fillTreeWithAcendantsInfo(node)
-        );
+            this.fillTreeWithAcendantsInfo(node);
+
+        return new Hover(hoverText);
     }
 
-    private getNodeForPoint(document: TextDocument, point: Point): SyntaxNode {
+    private async getNodeForPoint(
+        document: TextDocument,
+        point: Point
+    ): Promise<SyntaxNode | undefined> {
+        if (!this.parserHelper.isParserAvailable()) {
+            // Parser is not available (worker not started and no direct parser)
+            return undefined;
+        }
         let result = this.getResultIfDocumentWasAlreadyParsed(document);
 
         if (result === undefined) {
-            result = this.parseDocumentAndAddToInstances(document);
+            try {
+                result = await this.parseDocumentAndAddToInstances(document);
+            } catch (err) {
+                // If parser fails, return undefined
+                return undefined;
+            }
+        }
+
+        if (!result) {
+            return undefined;
         }
 
         return result.tree.rootNode.descendantForPosition(point);
@@ -72,10 +94,10 @@ export class AblDebugHoverProvider implements HoverProvider {
         return instance?.parseResult;
     }
 
-    private parseDocumentAndAddToInstances(
+    private async parseDocumentAndAddToInstances(
         document: TextDocument
-    ): ParseResult {
-        const parseResult = this.parserHelper.parse(
+    ): Promise<ParseResult> {
+        const parseResult = await this.parserHelper.parseAsync(
             new FileIdentifier(document.fileName, document.version),
             document.getText()
         );
@@ -94,7 +116,7 @@ export class AblDebugHoverProvider implements HoverProvider {
     private fillTreeWithAcendantsInfo(node: SyntaxNode): string {
         const str =
             "| " +
-            node.id +
+            (node.id || "N/A") +
             " | " +
             node.type +
             " | " +
@@ -118,9 +140,9 @@ export class AblDebugHoverProvider implements HoverProvider {
             " \n";
 
         if (node.parent === null) {
-            return "";
+            return str;
+        } else {
+            return str + this.fillTreeWithAcendantsInfo(node.parent);
         }
-
-        return str + this.fillTreeWithAcendantsInfo(node.parent);
     }
 }
