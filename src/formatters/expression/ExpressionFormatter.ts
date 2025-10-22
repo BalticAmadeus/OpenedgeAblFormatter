@@ -36,9 +36,10 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
             (node.type === SyntaxNodeType.UnaryExpression &&
                 node.child(0)?.type === SyntaxNodeType.Not)
         ) {
-            if (this.hasWhilePhraseParent(node)) {
-                return false;
-            }
+            //Comment solve issue 499
+            // if (this.hasWhilePhraseParent(node)) {
+            //     return false;
+            // }
             return true;
         }
         return false;

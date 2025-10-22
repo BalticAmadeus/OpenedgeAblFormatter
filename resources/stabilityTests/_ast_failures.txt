@@ -772,7 +772,6 @@ webutil_e4gl-gen.p
 workshop__file.w
 workshop__gendefs.p
 workshop__procset.w
-workshop__rddefs.p
 workshop__secomm.w
 workshop__seinfo.w
 wrappers__resconv.p
