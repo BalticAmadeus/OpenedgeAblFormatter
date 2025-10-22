@@ -11,7 +11,7 @@ import { EOL } from "../model/EOL";
 import { IDebugManager } from "../providers/IDebugManager";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { BaseEngineOutput } from "../mtest/EngineParams";
-import { bodyBlockKeywords } from "../model/SyntaxNodeType";
+import { bodyBlockKeywords, SyntaxNodeType } from "../model/SyntaxNodeType";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
