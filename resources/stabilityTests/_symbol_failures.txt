@@ -19,7 +19,6 @@ prodict_aud__aud-pol.p
 prodict_misc__cdc-pol.p
 prodict_misc__db-id-hst.p
 prodict_misc__db-id-mnt.p
-prodict__dctgues.p
 //0046 issues <--
 //0047 issues -->
 adm2_logic.i
@@ -52,3 +51,5 @@ protools__prospy.w
 //0050 issues -->
 prodict_dump__dmpsec.p
 //0050 issues <--
+protools__dblist.w
+prodict__dctgues.p

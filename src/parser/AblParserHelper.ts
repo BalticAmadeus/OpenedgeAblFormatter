@@ -3,29 +3,40 @@ import { IParserHelper } from "./IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { ParseResult } from "../model/ParseResult";
 import path from "path";
-import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { IDebugManager } from "../providers/IDebugManager";
+import { spawn, ChildProcess } from "child_process";
+import { createTreeProxy } from "../utils/proxyTree";
+import { ConfigurationManager } from "../utils/ConfigurationManager";
 
 export class AblParserHelper implements IParserHelper {
-    private parser = new Parser();
-    private trees = new Map<string, Parser.Tree>();
-    private ablLanguagePromise: Promise<Parser.Language>;
+    private parser: Parser | null = null;
+
     private debugManager: IDebugManager;
+    private workerProcess: ChildProcess | null = null;
+    private useWorker: boolean = true;
+    private workerReady: boolean = false;
+    private messageId = 0;
+    private pendingRequests = new Map<
+        number,
+        { resolve: Function; reject: Function }
+    >();
+    private extensionPath: string;
+    private workerInitPromise: Promise<void> | null = null;
+    private isTestMode: boolean = false;
+    private workerRequestCount = 0;
+    private readonly workerRestartThreshold = 1000;
 
-    public constructor(extensionPath: string, debugManager: IDebugManager) {
+    public constructor(
+        extensionPath: string,
+        debugManager: IDebugManager,
+        testMode: boolean = false
+    ) {
+        this.extensionPath = extensionPath;
         this.debugManager = debugManager;
-        this.ablLanguagePromise = Parser.Language.load(
-            path.join(extensionPath, "resources/tree-sitter-abl.wasm")
-        );
+        this.isTestMode = testMode;
 
-        this.ablLanguagePromise.then((abl) => {
-            this.parser.setLanguage(abl);
-            this.debugManager.parserReady();
-        });
-    }
-
-    public async awaitLanguage(): Promise<void> {
-        await this.ablLanguagePromise;
+        // Use worker-based parsing for crash prevention, with NO main-thread parser fallback
+        this.useWorker = true;
     }
 
     public parse(
@@ -33,43 +44,422 @@ export class AblParserHelper implements IParserHelper {
         text: string,
         previousTree?: Tree
     ): ParseResult {
-        const newTree = this.parser.parse(text, previousTree);
-        let ranges: Parser.Range[];
+        throw new Error(
+            "Direct parse is disabled. Use parseAsync (worker) only."
+        );
+    }
 
-        if (previousTree !== undefined) {
-            ranges = previousTree.getChangedRanges(newTree);
-        } else {
-            ranges = []; // TODO
+    // Patch: respawn worker automatically on next request if it crashed
+    private async ensureWorkerReady(): Promise<void> {
+        if (
+            !this.workerProcess ||
+            this.workerRequestCount >= this.workerRestartThreshold
+        ) {
+            if (this.workerProcess) {
+                // Try graceful shutdown
+                let exited = false;
+                const proc = this.workerProcess;
+                const exitPromise = new Promise<void>((resolve) => {
+                    const cleanup = () => {
+                        exited = true;
+                        resolve();
+                    };
+                    proc.once("exit", cleanup);
+                    proc.once("close", cleanup);
+                });
+                try {
+                    proc.send && proc.send({ type: "shutdown" });
+                } catch {}
+                // Wait up to 2 seconds for graceful exit
+                await Promise.race([
+                    exitPromise,
+                    new Promise((res) => setTimeout(res, 2000)),
+                ]);
+                if (!exited) {
+                    try {
+                        proc.kill("SIGTERM");
+                    } catch {}
+                    // Wait a bit more for forced exit
+                    await Promise.race([
+                        exitPromise,
+                        new Promise((res) => setTimeout(res, 1000)),
+                    ]);
+                    if (!exited) {
+                        try {
+                            proc.kill("SIGKILL");
+                        } catch {}
+                    }
+                }
+                this.workerProcess = null;
+                this.workerReady = false;
+            }
+            // Start worker and always await readiness
+            this.workerInitPromise = this.initializeWorker()
+                .then(() => {
+                    this.workerReady = true;
+                    this.debugManager.parserReady();
+                })
+                .catch((error: any) => {
+                    this.useWorker = false;
+                    throw new Error(
+                        "Direct parser initialization is disabled. All parsing/formatting must use the worker."
+                    );
+                });
+            await this.workerInitPromise;
+            // Defensive: wait until workerReady is true
+            if (!this.workerReady) {
+                throw new Error("Worker not ready after initialization");
+            }
+            this.workerRequestCount = 0;
         }
-
-        const result: ParseResult = {
-            tree: newTree,
-            ranges: ranges,
-        };
-
-        this.debugManager.handleErrors(newTree);
-
-        return result;
-    }
-}
-
-function getNodesWithErrors(
-    node: Parser.SyntaxNode,
-    isRoot: boolean
-): Parser.SyntaxNode[] {
-    let errorNodes: Parser.SyntaxNode[] = [];
-
-    if (
-        node.type === SyntaxNodeType.Error &&
-        node.text.trim() !== "ERROR" &&
-        !isRoot
-    ) {
-        errorNodes.push(node);
+        this.workerRequestCount++;
+        // Defensive: if worker is not ready, wait for workerInitPromise
+        if (!this.workerReady && this.workerInitPromise) {
+            await this.workerInitPromise;
+        }
+        if (!this.workerReady) {
+            throw new Error("Worker not ready");
+        }
     }
 
-    node.children.forEach((child) => {
-        errorNodes = errorNodes.concat(getNodesWithErrors(child, false));
-    });
+    public async parseAsync(
+        fileIdentifier: FileIdentifier,
+        text: string,
+        previousTree?: Tree
+    ): Promise<ParseResult> {
+        await this.ensureWorkerReady();
+        if (this.useWorker && this.workerReady && this.workerProcess) {
+            return this.parseWithWorker(fileIdentifier, text);
+        } else {
+            // Retry once after a short delay
+            await new Promise((res) => setTimeout(res, 50));
+            await this.ensureWorkerReady();
+            if (this.useWorker && this.workerReady && this.workerProcess) {
+                return this.parseWithWorker(fileIdentifier, text);
+            }
+            throw new Error("Worker not available for parsing (after retry)");
+        }
+    }
 
-    return errorNodes;
+    public async format(
+        fileIdentifier: FileIdentifier,
+        text: string,
+        options?: any
+    ): Promise<string> {
+        await this.ensureWorkerReady();
+        // Always send all relevant settings if not already provided
+        if (!options) {
+            options = {};
+        }
+        if (!options.settings) {
+            options.settings = ConfigurationManager.getInstance().getAll();
+        }
+        // Retry logic if workerProcess is not available
+        let attempt = 0;
+        while (attempt < 2) {
+            if (this.workerProcess) {
+                return new Promise<string>((resolve, reject) => {
+                    const id = ++this.messageId;
+                    this.pendingRequests.set(id, { resolve, reject });
+                    this.workerProcess!.send({
+                        type: "format",
+                        id,
+                        fileId: fileIdentifier.name,
+                        text,
+                        options,
+                    });
+                    setTimeout(() => {
+                        if (this.pendingRequests.has(id)) {
+                            this.pendingRequests.delete(id);
+                            reject(new Error("Format request timeout"));
+                        }
+                    }, 60000);
+                });
+            } else {
+                // Wait a bit and retry ensureWorkerReady
+                await new Promise((res) => setTimeout(res, 50));
+                await this.ensureWorkerReady();
+                attempt++;
+            }
+        }
+        throw new Error("Worker process not available (after retry)");
+    }
+
+    public async compare(
+        text1: string,
+        text2: string,
+        options?: any
+    ): Promise<boolean> {
+        await this.ensureWorkerReady();
+        return new Promise<boolean>((resolve, reject) => {
+            if (!this.workerProcess) {
+                reject(new Error("Worker process not available"));
+                return;
+            }
+            const id = ++this.messageId;
+            this.pendingRequests.set(id, { resolve, reject });
+            this.workerProcess.send({
+                type: "compare",
+                id,
+                text1,
+                text2,
+                options,
+            });
+            setTimeout(() => {
+                if (this.pendingRequests.has(id)) {
+                    this.pendingRequests.delete(id);
+                    reject(new Error("Compare request timeout"));
+                }
+            }, 30000);
+        });
+    }
+
+    public async startWorker(): Promise<void> {
+        if (this.workerProcess) {
+            // Already running, do nothing
+            return;
+        }
+        this.workerReady = false;
+        this.useWorker = true; // Always allow worker usage on restart
+        this.workerInitPromise = this.initializeWorker()
+            .then(() => {
+                this.workerReady = true;
+                this.debugManager.parserReady();
+            })
+            .catch((error: any) => {
+                this.useWorker = false;
+                throw new Error(
+                    "Direct parser initialization is disabled. All parsing/formatting must use the worker."
+                );
+            });
+        await this.workerInitPromise;
+    }
+
+    private async initializeWorker(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            // Try multiple possible locations for the bundled worker
+            const possibleWorkerPaths = [
+                path.join(__dirname, "ParserWorker.js"), // Same directory as AblParserHelper
+                path.join(__dirname, "parser", "ParserWorker.js"), // __dirname + parser subdirectory
+                path.join(
+                    this.extensionPath,
+                    "out",
+                    "parser",
+                    "ParserWorker.js"
+                ), // Extension path + out/parser
+                path.join(this.extensionPath, "out", "ParserWorker.js"), // Extension path + out
+                // Additional paths for packaged extension
+                path.resolve(__dirname, "..", "parser", "ParserWorker.js"), // Go up one level then parser
+                path.resolve(__dirname, "ParserWorker.js"), // Direct resolve
+            ];
+
+            let workerPath: string | null = null;
+            let command: string;
+            let args: string[];
+
+            // Try to find the bundled JavaScript worker
+            for (const candidatePath of possibleWorkerPaths) {
+                const exists = require("fs").existsSync(candidatePath);
+                if (exists) {
+                    workerPath = candidatePath;
+                    break;
+                }
+            }
+
+            // If no worker found, list directory contents for debugging (removed logs)
+            if (!workerPath) {
+                try {
+                    const dirContents = require("fs").readdirSync(__dirname);
+                    const parserDir = path.join(__dirname, "parser");
+                    if (require("fs").existsSync(parserDir)) {
+                        require("fs").readdirSync(parserDir);
+                    }
+                } catch (error) {
+                    // ignore
+                }
+            }
+
+            if (workerPath) {
+                command = "node";
+                args = [workerPath, this.extensionPath];
+            } else {
+                // Fallback to TypeScript (development mode only)
+                const tsWorkerPath = path.join(__dirname, "ParserWorker.ts");
+                if (require("fs").existsSync(tsWorkerPath)) {
+                    workerPath = tsWorkerPath;
+                    command = "node";
+                    args = [
+                        "-r",
+                        "ts-node/register",
+                        workerPath,
+                        this.extensionPath,
+                    ];
+                } else {
+                    reject(
+                        new Error(
+                            `Neither JS nor TS worker found. Checked: ${possibleWorkerPaths.join(
+                                ", "
+                            )}, ${tsWorkerPath}`
+                        )
+                    );
+                    return;
+                }
+            }
+
+            this.workerProcess = spawn(command, args, {
+                stdio: ["pipe", "pipe", "pipe", "ipc"],
+            });
+
+            this.workerProcess.stdout?.on("data", (data) => {
+                // Optionally handle worker stdout
+            });
+
+            this.workerProcess.stderr?.on("data", (data) => {
+                // Optionally handle worker stderr
+            });
+
+            this.workerProcess.on("message", (message: any) => {
+                this.handleWorkerMessage(message);
+                if (message.type === "ready") {
+                    this.workerReady = true;
+                    resolve();
+                } else if (message.type === "error") {
+                    reject(new Error(message.error));
+                }
+            });
+
+            this.workerProcess.on("error", (error) => {
+                this.workerProcess = null;
+                this.workerReady = false;
+                reject(error);
+            });
+
+            this.workerProcess.on("exit", (code, signal) => {
+                this.workerProcess = null;
+                this.workerReady = false;
+                // Optionally: log or notify about the crash
+                // Automatically respawn on next request
+            });
+
+            setTimeout(() => {
+                if (!this.workerReady) {
+                    if (this.workerProcess && !this.workerProcess.killed) {
+                        this.workerProcess.kill("SIGTERM");
+                    }
+                    reject(
+                        new Error(
+                            "Worker initialization timeout - no ready message received within 15 seconds"
+                        )
+                    );
+                }
+            }, 15000);
+        });
+    }
+
+    private handleWorkerMessage(message: any): void {
+        if (message.type === "parseResult" && message.id) {
+            const pendingRequest = this.pendingRequests.get(message.id);
+            if (pendingRequest) {
+                this.pendingRequests.delete(message.id);
+                if (message.success) {
+                    // Create a lightweight tree proxy that delegates operations to the worker
+                    const treeProxy = createTreeProxy(
+                        message.fileId,
+                        message.tree
+                    );
+                    const parseResult: ParseResult = {
+                        tree: treeProxy,
+                        ranges: message.errorRanges || [], // Get error ranges from worker
+                    };
+                    pendingRequest.resolve(parseResult);
+                } else {
+                    // Ensure error is a string
+                    const errorMsg =
+                        typeof message.error === "object"
+                            ? JSON.stringify(message.error)
+                            : String(message.error);
+                    pendingRequest.reject(new Error(errorMsg));
+                }
+            }
+        } else if (message.type === "formatResult" && message.id) {
+            const pendingRequest = this.pendingRequests.get(message.id);
+            if (pendingRequest) {
+                this.pendingRequests.delete(message.id);
+                if (message.success) {
+                    pendingRequest.resolve(message.formattedText);
+                } else {
+                    // Ensure error is a string
+                    const errorMsg =
+                        typeof message.error === "object"
+                            ? JSON.stringify(message.error)
+                            : String(message.error);
+                    pendingRequest.reject(new Error(errorMsg));
+                }
+            }
+        } else if (message.type === "compareResult" && message.id) {
+            const pendingRequest = this.pendingRequests.get(message.id);
+            if (pendingRequest) {
+                this.pendingRequests.delete(message.id);
+                if (message.success) {
+                    pendingRequest.resolve(message.result);
+                } else {
+                    const errorMsg =
+                        typeof message.error === "object"
+                            ? JSON.stringify(message.error)
+                            : String(message.error);
+                    pendingRequest.reject(new Error(errorMsg));
+                }
+            }
+        }
+    }
+
+    private async parseWithWorker(
+        fileIdentifier: FileIdentifier,
+        text: string
+    ): Promise<ParseResult> {
+        return new Promise<ParseResult>((resolve, reject) => {
+            if (!this.workerProcess) {
+                reject(new Error("Worker process not available"));
+                return;
+            }
+            const id = ++this.messageId;
+            this.pendingRequests.set(id, { resolve, reject });
+            this.workerProcess.send({
+                type: "parse",
+                id,
+                fileId: fileIdentifier.name,
+                text,
+            });
+            setTimeout(() => {
+                if (this.pendingRequests.has(id)) {
+                    this.pendingRequests.delete(id);
+                    reject(new Error("Parse request timeout"));
+                }
+            }, 30000);
+        });
+    }
+
+    public dispose(): void {
+        if (this.workerProcess) {
+            try {
+                this.workerProcess.send({ type: "shutdown" });
+                this.workerProcess.kill("SIGTERM");
+            } catch (error) {
+                try {
+                    this.workerProcess.kill("SIGKILL");
+                } catch (killError) {
+                    // ignore
+                }
+            }
+            this.workerProcess = null;
+        }
+        this.workerReady = false;
+        this.workerInitPromise = null;
+        this.useWorker = true; // Always allow retrying worker startup
+        this.pendingRequests.clear();
+    }
+
+    public isParserAvailable(): boolean {
+        return (this.useWorker && this.workerReady) || !!this.parser;
+    }
 }

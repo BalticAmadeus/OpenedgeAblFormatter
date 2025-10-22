@@ -5,9 +5,7 @@ import { join } from "path";
 import Parser from "web-tree-sitter";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
-import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "./ConfigurationManager";
-import { EOL } from "../model/EOL";
 import { DebugManagerMock } from "../test-ast/suite/DebugManagerMock";
 
 // Shared constants
@@ -24,20 +22,25 @@ export const stabilityTestCases = getFilesWithExtensions(
     extensionsToFind
 );
 
-export function runGenericTest<TResult>(
+export async function runGenericTest<
+    TResult extends { tree: any; text: string }
+>(
     name: string,
     parserHelper: AblParserHelper,
     config: TestConfig<TResult>
-): void {
+): Promise<void> {
     ConfigurationManager.getInstance();
-    // Note: enableFormatterDecorators should be called in the specific test function
 
     const beforeText = settingsOverride + getInput(name);
-    const beforeResult = config.processBeforeText(beforeText);
-    const afterText = format(beforeText, name, parserHelper);
-    const afterResult = config.processAfterText(afterText, parserHelper);
+    const beforeResult = await config.processBeforeText(
+        beforeText,
+        parserHelper
+    );
 
-    // Handle undefined results
+    // Await the async format function
+    const afterText = await format(beforeText, name, parserHelper);
+    const afterResult = await config.processAfterText(afterText, parserHelper);
+
     if (beforeResult === undefined || afterResult === undefined) {
         return;
     }
@@ -47,22 +50,24 @@ export function runGenericTest<TResult>(
         : name;
 
     const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
-    const knownFailures = getKnownFailures(config.knownFailuresFile);
+    const fileNameNorm = fileName.trim().toLowerCase();
+    const knownFailures = getKnownFailures(config.knownFailuresFile).map((f) =>
+        f.trim().toLowerCase()
+    );
     const currentTestRunDir = getTestRunDir(config.testType + "Tests");
 
-    const hasMismatch = config.compareResults(
+    const hasMismatch = await config.compareResults(
         beforeResult,
         afterResult,
         parserHelper
     );
 
     if (hasMismatch) {
-        if (knownFailures.includes(fileName)) {
+        if (knownFailures.includes(fileNameNorm)) {
             console.log("Known issue");
             return;
         }
 
-        // Call custom mismatch handler if provided
         config.onMismatch?.(beforeResult, afterResult, fileName);
 
         addFailedTestCase(
@@ -85,14 +90,12 @@ export function runGenericTest<TResult>(
         fs.writeFileSync(beforeFilePath, beforeText);
         fs.writeFileSync(afterFilePath, afterText);
 
-        assert.fail(`${config.testType} mismatch
-        Before: ${beforeFilePath}
-        After: ${afterFilePath}
-        `);
+        assert.fail(
+            `${config.testType} mismatch\n        Before: ${beforeFilePath}\n        After: ${afterFilePath}\n        `
+        );
     }
 
-    // if test passes but file is in error list
-    if (knownFailures.includes(fileName)) {
+    if (knownFailures.includes(fileNameNorm)) {
         addFailedTestCase(currentTestRunDir, "_new_passes.txt", fileName);
         config.cleanup?.(beforeResult, afterResult);
         assert.fail(`File should fail ${fileName}`);
@@ -147,7 +150,7 @@ export async function setupParserHelper(): Promise<AblParserHelper> {
         extensionDevelopmentPath,
         new DebugManagerMock()
     );
-    await parserHelper.awaitLanguage();
+    await parserHelper.startWorker();
     return parserHelper;
 }
 
@@ -156,22 +159,17 @@ export function getInput(fileName: string): string {
     return readFile(fileName);
 }
 
-export function format(
+export async function format(
     text: string,
     name: string,
     parserHelper: AblParserHelper
-): string {
-    const configurationManager = ConfigurationManager.getInstance();
-
-    const codeFormatter = new FormattingEngine(
-        parserHelper,
+): Promise<string> {
+    // Use the worker-based format method
+    const result = await parserHelper.format(
         new FileIdentifier(name, 1),
-        configurationManager,
-        new DebugManagerMock()
+        text,
+        { eol: { eolDel: getFileEOL(text) } }
     );
-
-    const result = codeFormatter.formatText(text, new EOL(getFileEOL(text)));
-
     return result;
 }
 
@@ -251,18 +249,23 @@ export function addFailedTestCase(
     fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
 }
 
-// Generic test abstraction
-export interface TestConfig<TResult> {
+export interface TestConfig<TResult extends { tree: any; text: string }> {
     testType: string;
     knownFailuresFile: string;
     resultFailuresFile: string;
-    processBeforeText: (text: string) => TResult;
-    processAfterText: (text: string, parserHelper: AblParserHelper) => TResult;
+    processBeforeText: (
+        text: string,
+        parserHelper: AblParserHelper
+    ) => Promise<TResult>;
+    processAfterText: (
+        text: string,
+        parserHelper: AblParserHelper
+    ) => Promise<TResult>;
     compareResults: (
         before: TResult,
         after: TResult,
         parserHelper?: AblParserHelper
-    ) => boolean;
+    ) => Promise<boolean>;
     onMismatch?: (before: TResult, after: TResult, fileName: string) => void;
     cleanup?: (before: TResult, after: TResult) => void;
 }

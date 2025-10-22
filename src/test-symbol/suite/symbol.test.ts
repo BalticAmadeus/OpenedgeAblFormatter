@@ -38,25 +38,34 @@ suite("Symbol Stability Test Suite", () => {
     });
 
     stabilityTestCases.forEach((cases) => {
-        test(`Symbol test: ${cases}`, () => {
-            symbolTest(cases, parserHelper);
+        test(`Symbol test: ${cases}`, async () => {
+            await symbolTest(cases, parserHelper);
         }).timeout(10000);
     });
 });
 
-function symbolTest(name: string, parserHelper: AblParserHelper): void {
+async function symbolTest(
+    name: string,
+    parserHelper: AblParserHelper
+): Promise<void> {
     enableFormatterDecorators();
 
-    const config: TestConfig<number> = {
+    const config: TestConfig<{ tree: any; text: string }> = {
         testType: "symbol",
         knownFailuresFile: "_symbol_failures.txt",
         resultFailuresFile: "_symbol_failures.txt",
-        processBeforeText: (text: string) => countActualSymbols(text),
-        processAfterText: (text: string) => countActualSymbols(text),
-        compareResults: (before: number, after: number) => before !== after,
+        processBeforeText: async (text: string) => ({
+            tree: null,
+            text: countActualSymbols(text).toString(),
+        }),
+        processAfterText: async (text: string) => ({
+            tree: null,
+            text: countActualSymbols(text).toString(),
+        }),
+        compareResults: async (before, after) => before.text !== after.text,
     };
 
-    runGenericTest(name, parserHelper, config);
+    await runGenericTest(name, parserHelper, config);
 }
 
 function countActualSymbols(text: string): number {

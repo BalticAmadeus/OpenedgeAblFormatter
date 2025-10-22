@@ -40,6 +40,10 @@ export async function activate(context: vscode.ExtensionContext) {
     ];
     metamorphicTestingEngine.addMRs(metamorphicRelationsList);
 
+    debugManager.setParserHelper(parserHelper);
+    // Start the parser worker ONCE when the extension is enabled
+    await parserHelper.startWorker();
+
     const formatter = new AblFormatterProvider(
         parserHelper,
         metamorphicTestingEngine
@@ -60,7 +64,7 @@ export async function activate(context: vscode.ExtensionContext) {
     Telemetry.sendExtensionSettings();
 
     setInterval(runPeriodicTask, 20_000);
-  
+
     const reportBugCommand = vscode.commands.registerCommand(
         "openedgeAblFormatter.reportBug",
         () => {
@@ -77,14 +81,13 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.StatusBarAlignment.Right,
         99
     );
-  
+
     bugStatusBarItem.text = "$(bug) ABL Formatter: Report Bug";
     bugStatusBarItem.command = "openedgeAblFormatter.reportBug";
     bugStatusBarItem.tooltip =
         "Report a bug or issue for OpenEdge ABL Formatter";
     bugStatusBarItem.show();
     context.subscriptions.push(bugStatusBarItem);
-
 }
 
 function runPeriodicTask() {
@@ -109,7 +112,6 @@ function runPeriodicTask() {
         console.log("Nothing to test");
     }
 }
-
 
 // This method is called when your extension is deactivated
 export function deactivate() {

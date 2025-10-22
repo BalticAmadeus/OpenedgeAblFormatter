@@ -40,7 +40,6 @@ export class FormattingEngine {
         );
 
         this.settingsOverride(parseResult);
-
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
         );
@@ -88,11 +87,9 @@ export class FormattingEngine {
         let lastVisitedNode: SyntaxNode | null = null;
 
         while (true) {
-            // Try to go as deep as possible
             if (cursor.gotoFirstChild()) {
-                continue; // Move to the first child if possible
+                continue;
             }
-
             // Process the current node (this is a leaf node or a node with no unvisited children)
             while (true) {
                 const node = cursor.currentNode();
@@ -124,7 +121,6 @@ export class FormattingEngine {
                 if (cursor.gotoNextSibling()) {
                     break; // Move to the next sibling if it exists
                 }
-
                 // If no more siblings, move up to the parent node
                 if (!cursor.gotoParent()) {
                     cursor.delete(); // Clean up the cursor
@@ -166,7 +162,6 @@ export class FormattingEngine {
 
                 if (bodyBlockKeywords.hasFancy(node.type, "")) {
                     const codeEdit = this.parse(node, fullText, formatters);
-
                     if (codeEdit !== undefined) {
                         this.insertChangeIntoTree(tree, codeEdit);
                         this.insertChangeIntoFullText(codeEdit, fullText);
@@ -246,7 +241,6 @@ export class FormattingEngine {
 
                 return true;
             }
-
             return false;
         });
 
