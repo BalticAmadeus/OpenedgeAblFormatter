@@ -7,14 +7,6 @@ protools__scrcap.w
 adexml__xmlview.w
 //0046 issues -->
 adecomm__auddfilt.p
-aderes_j-both.p
-aderes_j-field1.p
-aderes_j-field2.p
-aderes_j-table1.p
-aderes_j-table2.p
-aderes_y-total.p
-adeshar__qenable.p
-adeuib__chkrlnk.i
 prodict_aud__aud-pol.p
 prodict_misc__cdc-pol.p
 prodict_misc__db-id-hst.p
@@ -23,18 +15,11 @@ prodict_misc__db-id-mnt.p
 //0047 issues -->
 adm2_logic.i
 auditing_src_adm2_logic.i
-web_examples_w-custdir.w
 //0047 issues <--
 //0048pre issues -->
 //0048pre issues <--
 //0049 issues (reduced functionality) -->
-adeuib__calcself.w
-adeuib__newcalcv.w
 adeuib__tview.w
-auditing_ui__audevpolicyviewv.w
-auditing_ui__audfieldpolicyviewv.w
-auditing_ui__audfilepolicyviewv.w
-auditing_ui__audpolicyviewv.w
 //0049 issues (reduced functionality) <--
 //0049 issues -->
 adecomm_dswid.i
@@ -51,5 +36,16 @@ protools__prospy.w
 //0050 issues -->
 prodict_dump__dmpsec.p
 //0050 issues <--
-protools__dblist.w
-prodict__dctgues.p
+adecomm_psearch.i
+adecomp__fspec.p
+adedict_FLD__newfld.p
+adedict_FLD__savedom.p
+adedict_FLD__savefld.p
+adedict_IDX__newidx.p
+adedict_TBL__newtbl.p
+adedict_TBL__savetbl.p
+aderes_l-layout.p
+aderes_r-layout.p
+aderes_r-short.p
+adeuib__mlref.p
+prodict_pro__pro_fld.p
