@@ -204,7 +204,6 @@ adeuib__qikcomp.p
 adeuib__qssuckr.p
 adeuib__rdbrow.p
 adeuib__rdcomb.p
-adeuib__rdedit.p
 adeuib__rdfill.p
 adeuib__rdfram.i
 adeuib__rdqury.p
@@ -233,11 +232,9 @@ adeuib__undbutt.p
 adeuib__undcomb.p
 adeuib__undcont.p
 adeuib__unddv.p
-adeuib__undedit.p
 adeuib__undfill.p
 adeuib__undo.p
 adeuib__undqry.p
-adeuib__undradi.p
 adeuib__undrect.p
 adeuib__undsdo.p
 adeuib__undsele.p
@@ -341,7 +338,6 @@ corelib_OpenEdge_Core_Collections_StringStringMap.cls
 corelib_OpenEdge_Core_DateHolder.cls
 corelib_OpenEdge_Core_DateTimeHolder.cls
 corelib_OpenEdge_Core_DateTimeTzHolder.cls
-corelib_OpenEdge_Core_EncodedString.cls
 corelib_OpenEdge_Core_File.cls
 corelib_OpenEdge_Core_FileInfo.cls
 corelib_OpenEdge_Core_IOModeEnum.cls
@@ -475,15 +471,12 @@ OpenEdge_DataAdmin_DataSource_RoleDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserFieldPermissionDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserTablePermissionDataSource.cls
-OpenEdge_DataAdmin_Entity.cls
 OpenEdge_DataAdmin_Extent.cls
 OpenEdge_DataAdmin_Lang_QueryString.cls
 OpenEdge_DataAdmin_PartitionPolicy.cls
 OpenEdge_DataAdmin_PartitionPolicyDetailSet.cls
 OpenEdge_DataAdmin_PartitionPolicySet.cls
 OpenEdge_DataAdmin_ServerCommand_TableDataCommand.cls
-OpenEdge_DataAdmin_Support_TenantGroupTenantSet.cls
-OpenEdge_DataAdmin_Support_TenantTenantGroupSet.cls
 OpenEdge_DataAdmin_TenantGroupSet.cls
 OpenEdge_DataAdmin_TenantSet.cls
 OpenEdge_DataAdmin_Util_dbCanMigrate.p
@@ -522,9 +515,7 @@ prodict_dump_inc.p
 prodict_gate__gat_cmp.p
 prodict_gate__gat_cp.p
 prodict_gate__gat_cro.p
-prodict_gate__gat_fnm.p
 prodict_gate__gat_ini.p
-prodict_gate__gat_nam.p
 prodict_gate__gat_row.p
 prodict_gate__gat_xlt.p
 prodict_gate__snd_sql.i
@@ -638,7 +629,6 @@ prores_a-perm.p
 prores_a-print.p
 prores_a-user.p
 prores_b-again.p
-prores_b-build.p
 prores_b-init.p
 prores_c-cache.p
 prores_c-cache1.i
@@ -728,3 +718,9 @@ workshop__procset.w
 workshop__secomm.w
 workshop__seinfo.w
 wrappers__resconv.p
+darest_delete_tenants.p
+darest_get_tenants.p
+prodict_dump__dmpdefs.p
+prodict_dump__lodsdbf.p
+prores_q-main.p
+workshop__gen4gl.p

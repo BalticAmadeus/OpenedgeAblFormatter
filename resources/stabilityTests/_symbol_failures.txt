@@ -22,11 +22,9 @@ auditing_src_adm2_logic.i
 adeuib__tview.w
 //0049 issues (reduced functionality) <--
 //0049 issues -->
-adecomm_dswid.i
 aderes_e-type.p
 aderes_l-type.p
 aderes_p-type.p
-adm2_exportdata.p
 //0049 issues <--
 //0050-pre issues -->
 unique.i
