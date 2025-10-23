@@ -26,7 +26,10 @@ export class DebugManager implements IDebugManager {
             backgroundColor: "rgba(255, 238, 0, 0.25)",
         });
 
-    private parserHelper?: { startWorker: () => Promise<void>; dispose: () => void };
+    private parserHelper?: {
+        startWorker: () => Promise<void>;
+        dispose: () => void;
+    };
 
     public static getInstance(
         extensionContext?: ExtensionContext
@@ -48,7 +51,8 @@ export class DebugManager implements IDebugManager {
         );
         this.statusBarItem.text = "ABL Formatter • Ready";
         this.statusBarItem.show();
-        this.statusBarItem.tooltip = "No parser errors. Click to ENABLE debug mode.";
+        this.statusBarItem.tooltip =
+            "No parser errors. Click to ENABLE debug mode.";
         this.statusBarItem.command = this.debugModeCommandName;
         extensionContext.subscriptions.push(this.statusBarItem);
 
@@ -93,14 +97,35 @@ export class DebugManager implements IDebugManager {
         }
     }
 
+    public handleErrorRanges(ranges: Range[]): void {
+        this.errorRanges = ranges;
+        this.updateStatusBar();
+        // Show decorations according to debug mode
+        if (this.isInDebugMode()) {
+            window.activeTextEditor?.setDecorations(
+                this.parserErrorTextDecorationType,
+                this.errorRanges
+            );
+        } else {
+            window.activeTextEditor?.setDecorations(
+                this.parserErrorTextDecorationType,
+                []
+            );
+        }
+    }
+
     private updateStatusBar(): void {
         if (this.errorRanges.length > 0) {
             // There are parser errors
             if (this.isInDebugMode()) {
-                this.statusBarItem.backgroundColor = new ThemeColor("statusBarItem.errorBackground");
+                this.statusBarItem.backgroundColor = new ThemeColor(
+                    "statusBarItem.errorBackground"
+                );
                 this.statusBarItem.tooltip = `${this.errorRanges.length} parser error(s) detected.\nClick to DISABLE debug mode.`;
             } else {
-                this.statusBarItem.backgroundColor = new ThemeColor("statusBarItem.warningBackground");
+                this.statusBarItem.backgroundColor = new ThemeColor(
+                    "statusBarItem.warningBackground"
+                );
                 this.statusBarItem.tooltip = `${this.errorRanges.length} parser error(s) detected.\nClick to ENABLE debug mode.`;
             }
             this.statusBarItem.text = `Abl Formatter • ${this.errorRanges.length} parser Error(s)`;
@@ -108,7 +133,9 @@ export class DebugManager implements IDebugManager {
             // No errors
             this.statusBarItem.backgroundColor = undefined;
             this.statusBarItem.text = "Abl Formatter • Ready";
-            this.statusBarItem.tooltip = `No parser errors.\nClick to ${this.isInDebugMode() ? "DISABLE" : "ENABLE"} debug mode.`;
+            this.statusBarItem.tooltip = `No parser errors.\nClick to ${
+                this.isInDebugMode() ? "DISABLE" : "ENABLE"
+            } debug mode.`;
         }
         this.statusBarItem.command = this.debugModeCommandName;
         this.statusBarItem.show();
@@ -175,14 +202,15 @@ export class DebugManager implements IDebugManager {
         this.updateStatusBar();
     }
 
-    public setParserHelper(parserHelper: { startWorker: () => Promise<void>; dispose: () => void }) {
+    public setParserHelper(parserHelper: {
+        startWorker: () => Promise<void>;
+        dispose: () => void;
+    }) {
         this.parserHelper = parserHelper;
     }
 
     public isInDebugMode(): boolean {
-        return (
-            this.debugModeOverride
-        );
+        return this.debugModeOverride;
     }
 
     public isShowTreeOnHover(): boolean {
@@ -193,7 +221,6 @@ export class DebugManager implements IDebugManager {
     }
 
     public disableExtension(): void {
-
         this.statusBarItem.text = "ABL Formatter • Disabled";
         this.statusBarItem.backgroundColor = new ThemeColor(
             "statusBarItem.warningBackground"
