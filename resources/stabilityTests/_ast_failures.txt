@@ -79,6 +79,7 @@ adedict__openwin.p
 adedict_brwtrig.i
 adedict_capab.i
 adedict_edittrig.i
+adedict_FLD__domprop.p
 adedict_FLD__fldgate.p
 adedict_FLD__newfld.p
 adedict_FLD__savedom.p
