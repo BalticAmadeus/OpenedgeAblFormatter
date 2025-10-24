@@ -6,9 +6,12 @@ issuesGithub_163_4
 issuesGithub_196_1
 issuesGithub_196_2
 issuesGithub_226 - fixed
+issuesGithub_291 - fixed
 issuesGithub_338 - fixed
 issuesGithub_353
-issuesGithub_433_1
-issuesGithub_433_2
+issuesGithub_433_1 - fixed
+issuesGithub_433_2 - fixed
 issuesGithub_452
 issuesGithub_453
+issuesGithub_464 - fixed
+issuesGithub_544
