@@ -1,0 +1,1 @@
+btn_Save_Sel:SENSITIVE IN FRAME FRAME-A = FALSE.
