@@ -31,6 +31,11 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         return true;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     public parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -45,6 +50,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         let formattingOnStatement = false;
         let sibling = parent.previousNamedSibling;
+
         if (parent.type === SyntaxNodeType.DoBlock) {
             /* Workaround until tree-sitter fixes this */
             for (let i = 0; i < 5 && sibling !== null; i++) {

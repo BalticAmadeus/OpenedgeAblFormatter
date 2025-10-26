@@ -26,6 +26,8 @@ export class DebugManager implements IDebugManager {
             backgroundColor: "rgba(255, 238, 0, 0.25)",
         });
 
+    private parserHelper?: { startWorker: () => Promise<void>; dispose: () => void };
+
     public static getInstance(
         extensionContext?: ExtensionContext
     ): DebugManager {
@@ -44,13 +46,13 @@ export class DebugManager implements IDebugManager {
             StatusBarAlignment.Right,
             101
         );
-        this.statusBarItem.text = "ABL Formatter • Loading.....";
+        this.statusBarItem.text = "ABL Formatter • Ready";
         this.statusBarItem.show();
-        this.statusBarItem.tooltip = "Loading";
+        this.statusBarItem.tooltip = "No parser errors. Click to ENABLE debug mode.";
         this.statusBarItem.command = this.debugModeCommandName;
         extensionContext.subscriptions.push(this.statusBarItem);
 
-        const commandHandler = () => {
+        const commandHandler = async () => {
             this.enableDebugModeOverride(!this.debugModeOverride);
         };
 
@@ -171,6 +173,10 @@ export class DebugManager implements IDebugManager {
         }
 
         this.updateStatusBar();
+    }
+
+    public setParserHelper(parserHelper: { startWorker: () => Promise<void>; dispose: () => void }) {
+        this.parserHelper = parserHelper;
     }
 
     public isInDebugMode(): boolean {

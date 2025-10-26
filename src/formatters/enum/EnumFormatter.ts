@@ -23,6 +23,11 @@ export class EnumFormatter extends AFormatter implements IFormatter {
     match(node: Readonly<SyntaxNode>): boolean {
         return node.type === SyntaxNodeType.EnumDefinition;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>

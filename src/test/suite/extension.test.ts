@@ -6,7 +6,6 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
-import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
@@ -33,9 +32,12 @@ const functionalTestDirs = getDirs(
 );
 let functionalTestCases: string[] = [];
 functionalTestDirs.forEach((dir) => {
-    const testsInsideDir = getDirs(
-        path.join(extensionDevelopmentPath, functionalTestDir + "/" + dir)
-    );
+    const dirPath = path.join(extensionDevelopmentPath, functionalTestDir, dir);
+    // Only process if it's a directory
+    if (!fs.statSync(dirPath).isDirectory()) {
+        return;
+    }
+    const testsInsideDir = getDirs(dirPath);
     testsInsideDir.forEach((test) => {
         functionalTestCases.push(dir + "/" + test);
     });
@@ -94,7 +96,8 @@ suite("Extension Test Suite", () => {
             extensionDevelopmentPath,
             new DebugManagerMock()
         );
-        await parserHelper.awaitLanguage();
+
+        await parserHelper.startWorker();
 
         console.log(
             "FunctionalTests: ",
@@ -109,14 +112,45 @@ suite("Extension Test Suite", () => {
     });
 
     functionalTestCases.forEach((cases) => {
-        test(`Functional test: ${cases}`, () => {
-            functionalTest(cases);
+        test(`Functional test: ${cases}`, async () => {
+            await functionalTest(cases);
         });
     });
 
     treeSitterTestCases.forEach((cases) => {
-        test(`Tree Sitter Error test: ${cases}`, () => {
-            treeSitterTest(cases);
+        test(`Tree Sitter Error test: ${cases}`, async () => {
+            await treeSitterTest(cases);
+        });
+    });
+
+    suiteTeardown(() => {
+        if (metamorphicEngine === undefined) {
+            return;
+        }
+
+        const metamorphicTestCases = metamorphicEngine.getMatrix();
+        console.log(
+            "Running Metamorphic Tests:",
+            metamorphicTestCases
+                .map((item) => `${item.fileName}:${item.mrName}`)
+                .join(",")
+        );
+
+        suite("Metamorphic Tests", () => {
+            metamorphicTestCases.forEach((cases) => {
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, () => {
+                    const result = metamorphicEngine.runOne(
+                        cases.fileName,
+                        cases.mrName
+                    );
+
+                    assert.equal(
+                        result,
+                        undefined,
+                        result?.actual + "\r\n" + result?.expected
+                    );
+                });
+            });
         });
     });
 
@@ -152,12 +186,18 @@ suite("Extension Test Suite", () => {
     });
 });
 
-function functionalTest(name: string): void {
+async function functionalTest(name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const inputText = getInput(name);
-    const resultText = format(inputText, name);
+
+    const resultText = await parserHelper.format(
+        new FileIdentifier(name, 1),
+        inputText,
+        { eol: new EOL(getFileEOL(inputText)) }
+    );
+
     const targetText = getTarget(name);
     const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
 
@@ -234,26 +274,6 @@ function getTarget(fileName: string): string {
     return readFile(filePath);
 }
 
-function format(text: string, name: string): string {
-    const configurationManager = ConfigurationManager.getInstance();
-
-    const codeFormatter = new FormattingEngine(
-        parserHelper,
-        new FileIdentifier(name, 1),
-        configurationManager,
-        new DebugManagerMock(),
-        metamorphicEngine
-    );
-
-    const result = codeFormatter.formatText(
-        text,
-        new EOL(getFileEOL(text)),
-        true
-    );
-
-    return result;
-}
-
 function readFile(fileUri: string): string {
     return fs.readFileSync(fileUri, "utf-8");
 }
@@ -277,23 +297,26 @@ function getFileEOL(fileText: string): string {
     }
 }
 
-function treeSitterTest(name: string): void {
+async function treeSitterTest(name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const errorText = getError(name);
-    const errors = parseAndCheckForErrors(errorText as string, name);
+    const errors = await parseAndCheckForErrors(errorText as string, name);
 
     const errorMessage = formatErrorMessage(errors, name);
 
     assert.strictEqual(errors.length, 0, errorMessage);
 }
 
-function parseAndCheckForErrors(
+async function parseAndCheckForErrors(
     text: string,
     name: string
-): Parser.SyntaxNode[] {
-    const parseResult = parserHelper.parse(new FileIdentifier(name, 1), text);
+): Promise<Parser.SyntaxNode[]> {
+    const parseResult = await parserHelper.parseAsync(
+        new FileIdentifier(name, 1),
+        text
+    );
 
     const rootNode = parseResult.tree.rootNode;
     const errors = getNodesWithErrors(rootNode);
