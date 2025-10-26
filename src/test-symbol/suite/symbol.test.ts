@@ -6,9 +6,9 @@ import {
     stabilityTestCases,
     getTestRunDir,
     runGenericTest,
-    TestConfig,
     logKnownFailures,
 } from "../../utils/suitesUtils";
+import { TestConfig } from "../../utils/iTestConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 
 let parserHelper: AblParserHelper;

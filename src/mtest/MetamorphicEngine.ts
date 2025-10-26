@@ -29,7 +29,6 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         input: TextTree,
         output: TextTree
     ): this {
-        this.engineConsole?.log("Added test case:", name);
         this.inputAndOutputPairs.push({
             name: name,
             eol: eol,
@@ -40,7 +39,6 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     }
 
     public addMR(mr: MR): this {
-        this.engineConsole?.log("Added mr:", mr.mrName);
         this.metamorphicRelations.push(mr);
         return this;
     }

@@ -7,6 +7,11 @@ import { AblParserHelper } from "../parser/AblParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { ConfigurationManager } from "./ConfigurationManager";
 import { DebugManagerMock } from "../test-ast/suite/DebugManagerMock";
+import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
+import { MR } from "../mtest/MR";
+import { BaseEngineOutput } from "../mtest/EngineParams";
+import { FormattingEngineMock } from "../formatterFramework/FormattingEngineMock";
+import { TestConfig } from "./iTestConfig";
 
 // Shared constants
 export const extensionDevelopmentPath = path.resolve(__dirname, "../../");
@@ -27,7 +32,8 @@ export async function runGenericTest<
 >(
     name: string,
     parserHelper: AblParserHelper,
-    config: TestConfig<TResult>
+    config: TestConfig<TResult>,
+    metamorphicEngine?: MetamorphicEngine<any>
 ): Promise<void> {
     ConfigurationManager.getInstance();
 
@@ -102,6 +108,16 @@ export async function runGenericTest<
     }
 
     config.cleanup?.(beforeResult, afterResult);
+
+    if (metamorphicEngine) {
+        registerMetamorphicPair(
+            metamorphicEngine,
+            fileName,
+            beforeResult,
+            afterResult,
+            getFileEOL(beforeText)
+        );
+    }
 }
 
 export const testRunTimestamp = new Date()
@@ -249,23 +265,68 @@ export function addFailedTestCase(
     fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
 }
 
-export interface TestConfig<TResult extends { tree: any; text: string }> {
-    testType: string;
-    knownFailuresFile: string;
-    resultFailuresFile: string;
-    processBeforeText: (
-        text: string,
-        parserHelper: AblParserHelper
-    ) => Promise<TResult>;
-    processAfterText: (
-        text: string,
-        parserHelper: AblParserHelper
-    ) => Promise<TResult>;
-    compareResults: (
-        before: TResult,
-        after: TResult,
-        parserHelper?: AblParserHelper
-    ) => Promise<boolean>;
-    onMismatch?: (before: TResult, after: TResult, fileName: string) => void;
-    cleanup?: (before: TResult, after: TResult) => void;
+export function setupMetamorphicEngine<T extends BaseEngineOutput>(
+    isEnabled: boolean,
+    mrs: MR[]
+): MetamorphicEngine<T> | undefined {
+    if (!isEnabled) {
+        return undefined;
+    }
+    const engine = new MetamorphicEngine<T>(console);
+    mrs.forEach((mr) => engine.addMR(mr));
+    return engine;
+}
+
+export function registerMetamorphicPair(
+    metamorphicEngine: MetamorphicEngine<any> | undefined,
+    name: string,
+    input: { text: string; tree?: any },
+    output: { text: string; tree?: any },
+    eol: string
+) {
+    if (metamorphicEngine) {
+        metamorphicEngine.addNameInputAndOutputPair(
+            name,
+            { eolDel: eol },
+            { text: input.text, tree: input.tree ?? undefined },
+            { text: output.text, tree: output.tree ?? undefined }
+        );
+    }
+}
+
+export function runMetamorphicSuite(
+    metamorphicEngine: MetamorphicEngine<any> | undefined,
+    suiteName = "Metamorphic Tests"
+) {
+    if (!metamorphicEngine) {
+        return;
+    }
+    const testCases = metamorphicEngine.getMatrix();
+    suite(suiteName, function () {
+        this.timeout(10000);
+        testCases.forEach((cases) => {
+            test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
+                const result = await metamorphicEngine.runOne(
+                    cases.fileName,
+                    cases.mrName
+                );
+                assert.equal(
+                    result,
+                    undefined,
+                    result?.actual + "\r\n" + result?.expected
+                );
+            });
+        });
+    });
+}
+
+export function setMetamorphicFormattingEngine(
+    metamorphicEngine: MetamorphicEngine<any> | undefined,
+    parserHelper: AblParserHelper
+) {
+    if (metamorphicEngine) {
+        metamorphicEngine.setFormattingEngine(
+            new FormattingEngineMock(parserHelper)
+        );
+    }
 }

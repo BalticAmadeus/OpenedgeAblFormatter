@@ -8,21 +8,42 @@ import {
     stabilityTestCases,
     getTestRunDir,
     runGenericTest,
-    TestConfig,
     logKnownFailures,
+    setupMetamorphicEngine,
+    setMetamorphicFormattingEngine,
+    runMetamorphicSuite,
 } from "../../utils/suitesUtils";
+import { TestConfig } from "../../utils/iTestConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
+import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
+import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
+import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 
 let parserHelper: AblParserHelper;
+
+const isMetamorphicEnabled =
+    process.argv.includes("--metamorphic") ||
+    process.env.TEST_MODE === "metamorphic";
+
+const metamorphicEngine = setupMetamorphicEngine(isMetamorphicEnabled, [
+    /* your MR instances here, e.g. new ReplaceEQ(), ... */
+    new ReplaceEQ(),
+    new ReplaceForEachToForLast(),
+    new RemoveNoError(),
+]);
 
 suite("AST Stability Test Suite", () => {
     suiteSetup(async () => {
         console.log("AST Test Suite setup");
+
         const astTestRunDir = getTestRunDir("astTests");
         fs.mkdirSync(astTestRunDir, { recursive: true });
+
         parserHelper = await setupParserHelper();
+        setMetamorphicFormattingEngine(metamorphicEngine, parserHelper);
+
         console.log(
             "AST StabilityTests: ",
             stabilityTestCases.length,
@@ -34,6 +55,8 @@ suite("AST Stability Test Suite", () => {
     });
 
     suiteTeardown(() => {
+        runMetamorphicSuite(metamorphicEngine, "Metamorphic AST Tests");
+
         if (parserHelper) {
             // Clean up parser resources if needed
             parserHelper = null as any;
@@ -137,7 +160,7 @@ async function astTest(
         },
     };
 
-    await runGenericTest(name, parserHelper, config);
+    await runGenericTest(name, parserHelper, config, metamorphicEngine);
 }
 
 async function generateAst(
