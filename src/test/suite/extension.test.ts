@@ -18,6 +18,7 @@ import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { join } from "path";
+import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
 
 let parserHelper: AblParserHelper;
 
@@ -99,6 +100,12 @@ suite("Extension Test Suite", () => {
 
         await parserHelper.startWorker();
 
+        if (metamorphicEngine) {
+            metamorphicEngine.setFormattingEngine(
+                new FormattingEngineMock(parserHelper)
+            );
+        }
+
         console.log(
             "FunctionalTests: ",
             extensionDevelopmentPath,
@@ -114,13 +121,13 @@ suite("Extension Test Suite", () => {
     functionalTestCases.forEach((cases) => {
         test(`Functional test: ${cases}`, async () => {
             await functionalTest(cases);
-        });
+        }).timeout(10000);
     });
 
     treeSitterTestCases.forEach((cases) => {
         test(`Tree Sitter Error test: ${cases}`, async () => {
             await treeSitterTest(cases);
-        });
+        }).timeout(10000);
     });
 
     suiteTeardown(() => {
@@ -138,8 +145,8 @@ suite("Extension Test Suite", () => {
 
         suite("Metamorphic Tests", () => {
             metamorphicTestCases.forEach((cases) => {
-                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, () => {
-                    const result = metamorphicEngine.runOne(
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
+                    const result = await metamorphicEngine.runOne(
                         cases.fileName,
                         cases.mrName
                     );
@@ -149,38 +156,7 @@ suite("Extension Test Suite", () => {
                         undefined,
                         result?.actual + "\r\n" + result?.expected
                     );
-                });
-            });
-        });
-    });
-
-    suiteTeardown(() => {
-        if (metamorphicEngine === undefined) {
-            return;
-        }
-
-        const metamorphicTestCases = metamorphicEngine.getMatrix();
-        console.log(
-            "Running Metamorphic Tests:",
-            metamorphicTestCases
-                .map((item) => `${item.fileName}:${item.mrName}`)
-                .join(",")
-        );
-
-        suite("Metamorphic Tests", () => {
-            metamorphicTestCases.forEach((cases) => {
-                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, () => {
-                    const result = metamorphicEngine.runOne(
-                        cases.fileName,
-                        cases.mrName
-                    );
-
-                    assert.equal(
-                        result,
-                        undefined,
-                        result?.actual + "\r\n" + result?.expected
-                    );
-                });
+                }).timeout(10000);
             });
         });
     });
@@ -197,6 +173,15 @@ async function functionalTest(name: string): Promise<void> {
         inputText,
         { eol: new EOL(getFileEOL(inputText)) }
     );
+
+    if (metamorphicEngine) {
+        metamorphicEngine.addNameInputAndOutputPair(
+            name,
+            new EOL(getFileEOL(inputText)),
+            { text: inputText, tree: undefined },
+            { text: resultText, tree: undefined }
+        );
+    }
 
     const targetText = getTarget(name);
     const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");

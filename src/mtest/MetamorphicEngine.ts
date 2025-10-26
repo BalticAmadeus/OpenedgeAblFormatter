@@ -3,33 +3,24 @@ import { EOL } from "../model/EOL";
 import { BaseEngineOutput, DebugTestingEngineOutput } from "./EngineParams";
 import { OriginalTestCase, TextTree } from "./OriginalTestCase";
 import { MR } from "./MR";
+import { FormattingEngineMock } from "../formatterFramework/FormattingEngineMock";
 
-type FormatFunction<T> = (input: string, eol: EOL) => T;
-
-export class MetamorphicEngine<T> {
+export class MetamorphicEngine<T extends BaseEngineOutput> {
     private formattingEngine: FormattingEngine | undefined = undefined;
-    private customFormatFunction: FormatFunction<T> | undefined = undefined;
-    private resultsList: (
-        | T
-        | boolean
-        | { actual: T; expected: T; fileName: string; mrName: string }
-    )[] = [];
+    private proxyFormattingEngine: FormattingEngineMock | undefined = undefined;
+    private resultsList: (T | boolean)[] = [];
 
     private readonly metamorphicRelations: MR[] = [];
     private inputAndOutputPairs: OriginalTestCase[] = [];
+
+    public setFormattingEngine(proxyFormattingEngine: FormattingEngineMock) {
+        this.proxyFormattingEngine = proxyFormattingEngine;
+    }
 
     private readonly engineConsole: Console | undefined;
 
     public constructor(engineConsole: Console | undefined) {
         this.engineConsole = engineConsole;
-    }
-
-    public setFormattingEngine(formattingEngine: FormattingEngine) {
-        this.formattingEngine = formattingEngine;
-    }
-
-    public setFormatFunction(formatFunction: FormatFunction<T>) {
-        this.customFormatFunction = formatFunction;
     }
 
     public addNameInputAndOutputPair(
@@ -60,81 +51,34 @@ export class MetamorphicEngine<T> {
         });
     }
 
-    private test(
+    private async test(
         mr: MR,
         pair: OriginalTestCase
-    ):
-        | undefined
-        | DebugTestingEngineOutput
-        | { actual: T; expected: T; fileName: string; mrName: string } {
-        let actualFolowUpOutput: T;
-        let expectedFolowUpOutput: T;
+    ): Promise<undefined | DebugTestingEngineOutput> {
+        if (this.proxyFormattingEngine === undefined) {
+            throw new Error(
+                `Missing ProxyFormattingEngine in Metamorphic test engine.`
+            );
+        }
 
         const folowUpInput = mr.inputFunction(pair.input);
-        const expectedOutput = mr.outputFunction(pair.output);
+        const actualFolowUpOutput = await this.proxyFormattingEngine.formatText(
+            folowUpInput,
+            pair.eol,
+            false
+        );
+        const expectedFolowUpOutput = mr.outputFunction(pair.output);
 
-        if (this.customFormatFunction) {
-            // AST or custom output
-            actualFolowUpOutput = this.customFormatFunction(
-                folowUpInput,
-                pair.eol
-            );
-            expectedFolowUpOutput = this.customFormatFunction(
-                expectedOutput,
-                pair.eol
-            );
-        } else if (this.formattingEngine) {
-            // Text-based (legacy)
-            const actualText = this.formattingEngine.formatText(
-                folowUpInput,
-                pair.eol,
-                false
-            );
-            const expectedText = this.formattingEngine.formatText(
-                expectedOutput,
-                pair.eol,
-                false
-            );
-            // @ts-ignore
-            actualFolowUpOutput = actualText;
-            // @ts-ignore
-            expectedFolowUpOutput = expectedText;
-        } else {
-            throw new Error(
-                `No formatting engine or custom format function set in MetamorphicEngine.`
-            );
-        }
+        const pass = actualFolowUpOutput === expectedFolowUpOutput;
 
-        // For AST, you should compare using your own compareAst function in your test suite.
-        // Here, just return both for the test to handle.
-        if (
-            actualFolowUpOutput !== undefined &&
-            expectedFolowUpOutput !== undefined
-        ) {
-            // For text: compare directly
-            if (
-                typeof actualFolowUpOutput === "string" &&
-                typeof expectedFolowUpOutput === "string"
-            ) {
-                const pass = actualFolowUpOutput === expectedFolowUpOutput;
-                return !pass
-                    ? {
-                          fileName: pair.name,
-                          mrName: mr.mrName,
-                          actual: actualFolowUpOutput,
-                          expected: expectedFolowUpOutput,
-                      }
-                    : undefined;
-            }
-            // For AST: always return for external comparison
-            return {
-                fileName: pair.name,
-                mrName: mr.mrName,
-                actual: actualFolowUpOutput,
-                expected: expectedFolowUpOutput,
-            };
-        }
-        return undefined;
+        return !pass
+            ? {
+                  fileName: pair.name,
+                  mrName: mr.mrName,
+                  actual: actualFolowUpOutput,
+                  expected: expectedFolowUpOutput,
+              }
+            : undefined;
     }
 
     public getMatrix(): { fileName: string; mrName: string }[] {
@@ -149,7 +93,10 @@ export class MetamorphicEngine<T> {
         return matrix;
     }
 
-    public runOne(fileName: string, mrName: string): T | undefined {
+    public async runOne(
+        fileName: string,
+        mrName: string
+    ): Promise<T | undefined> {
         const pair = this.inputAndOutputPairs.find(
             (pair) => pair.name === fileName
         );
@@ -169,27 +116,17 @@ export class MetamorphicEngine<T> {
             );
         }
 
-        const result = this.test(mr, pair);
-
-        return result as T | undefined;
+        return (await this.test(mr, pair)) as T | undefined;
     }
 
-    public runAll(): (
-        | T
-        | boolean
-        | { actual: T; expected: T; fileName: string; mrName: string }
-    )[] {
-        let results: (
-            | T
-            | boolean
-            | { actual: T; expected: T; fileName: string; mrName: string }
-        )[] = [];
+    public runAll(): (T | boolean)[] {
+        let results: (T | boolean)[] = [];
 
         this.inputAndOutputPairs.forEach((pair) => {
             this.metamorphicRelations.forEach((mr) => {
                 const result = this.test(mr, pair);
                 if (result !== undefined) {
-                    results.push(result as any);
+                    results.push(result as unknown as T);
                 } else {
                     results.push(true);
                 }
@@ -203,11 +140,7 @@ export class MetamorphicEngine<T> {
         return results;
     }
 
-    public getResults(): (
-        | T
-        | boolean
-        | { actual: T; expected: T; fileName: string; mrName: string }
-    )[] {
+    public getResults(): (T | boolean)[] {
         return this.resultsList;
     }
 }

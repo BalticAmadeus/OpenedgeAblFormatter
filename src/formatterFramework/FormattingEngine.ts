@@ -12,6 +12,7 @@ import { IDebugManager } from "../providers/IDebugManager";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { BaseEngineOutput } from "../mtest/EngineParams";
 import { bodyBlockKeywords } from "../model/SyntaxNodeType";
+import { FormattingEngineMock } from "./FormattingEngineMock";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -60,7 +61,9 @@ export class FormattingEngine {
             metemorphicEngineIsEnabled &&
             this.metamorphicTestingEngine !== undefined
         ) {
-            this.metamorphicTestingEngine.setFormattingEngine(this);
+            this.metamorphicTestingEngine.setFormattingEngine(
+                new FormattingEngineMock(this.parserHelper)
+            );
 
             const parseResult2 = this.parserHelper.parse(
                 this.fileIdentifier,
