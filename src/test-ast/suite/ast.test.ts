@@ -28,7 +28,6 @@ const isMetamorphicEnabled =
     process.env.TEST_MODE === "metamorphic";
 
 const metamorphicEngine = setupMetamorphicEngine(isMetamorphicEnabled, [
-    /* your MR instances here, e.g. new ReplaceEQ(), ... */
     new ReplaceEQ(),
     new ReplaceForEachToForLast(),
     new RemoveNoError(),

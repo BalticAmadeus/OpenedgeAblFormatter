@@ -804,7 +804,6 @@ adeuib__newobject.w
 adeuib__rdqury.p
 adm_template_qstates.i
 adm_template_snd-end.i
-adm_template_vstates.i
 adm2_support_u-paneld.w
 adm2_support__wizbkgr.w
 adm2_support__wizdfld.w

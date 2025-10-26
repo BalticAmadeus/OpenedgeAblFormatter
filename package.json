@@ -384,11 +384,12 @@
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
     "test": "node ./out/test/runTest.js",
     "test-w-metamorphic": "node ./out/test/runTest.js --metamorphic",
-    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
     "test-symbol": "node ./out/test-symbol/runTest.js",
+    "test-symbol-metamorphic": "node ./out/test-symbol/runTest.js --metamorphic",
     "test-ast": "node ./out/test-ast/runTest.js",
+    "test-ast-metamorphic": "node ./out/test-ast/runTest.js --metamorphic",
     "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js",
-    "ast-w-metamorphic": "node ./out/test-ast/runTest.js --metamorphic"
+    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
