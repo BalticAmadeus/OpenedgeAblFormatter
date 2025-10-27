@@ -1,0 +1,3 @@
+ASSIGN
+    fTitle& = "Test Title"
+    .
