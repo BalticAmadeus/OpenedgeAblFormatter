@@ -4,6 +4,13 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.4.0 (2025-10-27)
+
+- Improved processing of WASM file to avoid memory limitations in VS Code
+- Added Bug reporting from VS Code
+- Added Compilation and AST testing
+- **tree-sitter-abl** version bump and other Improvements [See all](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/13?closed=1)
+
 ## 0.3.0 (2025-07-30)
 
 - Improved ASSIGN formatting
@@ -28,7 +35,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 0.1.4 (2025-05-13)
 
 - Improved Debbuger Appearance
-- __tree-sitter-abl__ version bump and other small fixes. [See fixed issues](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/10?closed=1)
+- **tree-sitter-abl** version bump and other small fixes. [See fixed issues](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/10?closed=1)
 
 ## 0.1.3 (2025-04-11)
 
@@ -36,12 +43,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 0.1.2 (2025-04-02)
 
-- __tree-sitter-abl__ version bump and other small fixes. [See fixed issues](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/5?closed=1)
+- **tree-sitter-abl** version bump and other small fixes. [See fixed issues](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/5?closed=1)
 
 ## 0.1.1 (2025-03-14)
 
 - Disabled formatting for VS Code 1.98 and newer, until the correct solution is found. [See](https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/358)
-- __tree-sitter-abl__ version bump and other small fixes. [See fixed issues](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/8?closed=1)
+- **tree-sitter-abl** version bump and other small fixes. [See fixed issues](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/8?closed=1)
 
 ## 0.1.0 (2025-02-28)
 
