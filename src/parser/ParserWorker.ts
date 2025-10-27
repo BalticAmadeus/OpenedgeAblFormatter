@@ -300,7 +300,8 @@ class ParserWorker {
         const ranges: Parser.Range[] = [];
 
         const collectErrors = (node: Parser.SyntaxNode) => {
-            if (node.hasError() || node.type === "ERROR") {
+            // Only add the node if it is an error node itself
+            if (node.type === "ERROR") {
                 ranges.push({
                     startPosition: node.startPosition,
                     endPosition: node.endPosition,
@@ -308,7 +309,6 @@ class ParserWorker {
                     endIndex: node.endIndex,
                 });
             }
-
             // Recursively check children
             for (let i = 0; i < node.childCount; i++) {
                 const child = node.child(i);

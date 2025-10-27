@@ -114,6 +114,10 @@ export class AblDebugHoverProvider implements HoverProvider {
     }
 
     private fillTreeWithAcendantsInfo(node: SyntaxNode): string {
+        if (node.parent === null) {
+            // This is the root node, skip it
+            return "";
+        }
         const str =
             "| " +
             (node.id || "N/A") +
