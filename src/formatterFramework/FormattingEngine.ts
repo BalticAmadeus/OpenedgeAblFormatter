@@ -12,6 +12,7 @@ import { IDebugManager } from "../providers/IDebugManager";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { BaseEngineOutput } from "../mtest/EngineParams";
 import { bodyBlockKeywords, SyntaxNodeType } from "../model/SyntaxNodeType";
+import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -109,12 +110,18 @@ export class FormattingEngine {
                     const keywordNode = children[1];
                     const annotationName = keywordNode?.toString();
 
-                    if (annotationName === '("ABLFORMATTEREXCLUDESTART")') {
+
+                    if (annotationName === '("' + ExcludeAnnotationType.excludeStartAnnotation + '")') {
                         this.skipFormatting = true;
                     } else if (
-                        annotationName === '("ABLFORMATTEREXCLUDEEND")'
+                        annotationName === '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
                     ) {
                         this.skipFormatting = false;
+
+                        const parent = cursor.currentNode().parent;
+                        if(parent && cursor.gotoParent()){
+                            cursor.gotoNextSibling();
+                        }
                     }
 
                     lastVisitedNode = node;
@@ -196,10 +203,11 @@ export class FormattingEngine {
                     const keywordNode = children[1];
                     const annotationName = keywordNode?.toString();
 
-                    if (annotationName === '("ABLFORMATTEREXCLUDESTART")') {
+
+                    if (annotationName === '("' + ExcludeAnnotationType.excludeStartAnnotation + '")') {
                         this.skipFormatting = true;
                     } else if (
-                        annotationName === '("ABLFORMATTEREXCLUDEEND")'
+                        annotationName === '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
                     ) {
                         this.skipFormatting = false;
                     }

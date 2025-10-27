@@ -9,6 +9,7 @@ import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IConfigurationManager } from "../../utils/IConfigurationManager";
 import { BlockSettings } from "./BlockSettings";
 
+
 @RegisterFormatter
 export class BlockFormater extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "blockFormatting";
@@ -16,6 +17,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
+        console.log("Wir sind");
         this.settings = new BlockSettings(configurationManager);
     }
 
@@ -183,12 +185,14 @@ export class BlockFormater extends AFormatter implements IFormatter {
         let n = 0;
         let lineChangeDelta = 0;
 
-        const NonRelatviveexcludedRanges = this.getExcludedRanges(parent);
+        const nonRelatviveExcludedRanges = FormatterHelper.getExcludedRanges(parent);
 
-        const excludedRanges = NonRelatviveexcludedRanges.map((range) => ({
+        const excludedRanges = nonRelatviveExcludedRanges.map((range) => ({
             start: range.start - parent.startPosition.row,
             end: range.end - parent.startPosition.row,
         }));
+
+        console.log("[Extension Host] Excluded ranges:", excludedRanges);
 
         codeLines.forEach((codeLine, index) => {
             const lineNumber = parent.startPosition.row + index;
@@ -389,50 +393,6 @@ export class BlockFormater extends AFormatter implements IFormatter {
         return pattern.test(str);
     }
 
-    private getExcludedRanges(
-        node: SyntaxNode
-    ): { start: number; end: number }[] {
-        const ranges: { start: number; end: number }[] = [];
-        let excludeStart: number | null = null;
-
-        const visit = (n: SyntaxNode) => {
-            const nodeType = n.text;
-
-            if (n.type === SyntaxNodeType.Annotation) {
-                const keywordNode = n.children[1];
-                const text = keywordNode?.toString();
-
-                if (text.includes("ABLFORMATTEREXCLUDESTART")) {
-                    excludeStart = n.startPosition.row;
-                } else if (text.includes("ABLFORMATTEREXCLUDEEND")) {
-                    if (excludeStart !== null) {
-                        ranges.push({
-                            start: excludeStart,
-                            end: n.endPosition.row,
-                        });
-
-                        excludeStart = null;
-                    } else {
-                        ranges.push({
-                            start: n.startPosition.row,
-                            end: n.endPosition.row,
-                        });
-                    }
-                }
-            }
-
-            n.children.forEach(visit);
-        };
-
-        visit(node);
-
-        const uniqueRanges = ranges.filter(
-            (v, i, a) =>
-                i === a.findIndex((t) => t.start === v.start && t.end === v.end)
-        );
-
-        return uniqueRanges;
-    }
 }
 
 interface IndentationEdits {

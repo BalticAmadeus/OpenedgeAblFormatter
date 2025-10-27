@@ -8,6 +8,7 @@ import { BodySettings } from "./BodySettings";
 import { IConfigurationManager } from "../../utils/IConfigurationManager";
 import { bodyBlockKeywords, SyntaxNodeType } from "../../model/SyntaxNodeType";
 import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
+import { ExcludeAnnotationType } from "../../model/ExcludeAnnotationType";
 
 @RegisterFormatter
 export class BodyFormatter extends AFormatter implements IFormatter {
@@ -88,7 +89,14 @@ export class BodyFormatter extends AFormatter implements IFormatter {
 
         let n = 0;
         let lineChangeDelta = 0;
-        const excludedRanges = this.getExcludedRanges(parent);
+
+        const nonRelatviveExcludedRanges = FormatterHelper.getExcludedRanges(parent);
+
+        const excludedRanges = nonRelatviveExcludedRanges.map((range) => ({
+            start: range.start - parent.startPosition.row,
+            end: range.end - parent.startPosition.row,
+        }));
+
         codeLines.forEach((codeLine, index) => {
             const lineNumber = node.startPosition.row + index;
 
@@ -218,47 +226,6 @@ export class BodyFormatter extends AFormatter implements IFormatter {
         return node;
     }
 
-    private getExcludedRanges(
-        node: SyntaxNode
-    ): { start: number; end: number }[] {
-        const ranges: { start: number; end: number }[] = [];
-        let excludeStart: number | null = null;
-
-        const visit = (n: SyntaxNode) => {
-            if (n.type === SyntaxNodeType.Annotation) {
-                const text = n.text.replace(/[\s.@"]/g, "").toUpperCase();
-
-                if (text.includes("ABLFORMATTEREXCLUDESTART")) {
-                    excludeStart = n.startPosition.row;
-                } else if (text.includes("ABLFORMATTEREXCLUDEEND")) {
-                    if (excludeStart !== null) {
-                        ranges.push({
-                            start: excludeStart,
-                            end: n.endPosition.row,
-                        });
-
-                        excludeStart = null;
-                    } else {
-                        ranges.push({
-                            start: n.startPosition.row,
-                            end: n.endPosition.row,
-                        });
-                    }
-                }
-            }
-
-            n.children.forEach(visit);
-        };
-
-        visit(node);
-
-        const uniqueRanges = ranges.filter(
-            (v, i, a) =>
-                i === a.findIndex((t) => t.start === v.start && t.end === v.end)
-        );
-
-        return uniqueRanges;
-    }
 }
 
 interface IndentationEdits {
