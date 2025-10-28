@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
 import * as vscode from "vscode";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import {
@@ -50,7 +50,7 @@ suite("Symbol Stability Test Suite", () => {
     });
 
     suiteTeardown(() => {
-        runMetamorphicSuite(metamorphicEngine, "Metamorphic AST Tests");
+        runMetamorphicSuite(metamorphicEngine, "Metamorphic Symbol Tests");
 
         if (parserHelper) {
             // Clean up parser resources if needed
@@ -59,11 +59,11 @@ suite("Symbol Stability Test Suite", () => {
         vscode.window.showInformationMessage("Symbol tests done!");
     });
 
-    stabilityTestCases.forEach((cases) => {
+    for (const cases of stabilityTestCases) {
         test(`Symbol test: ${cases}`, async () => {
             await symbolTest(cases, parserHelper);
         }).timeout(10000);
-    });
+    }
 });
 
 async function symbolTest(

@@ -1,4 +1,3 @@
-import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { EOL } from "../model/EOL";
 import { BaseEngineOutput, DebugTestingEngineOutput } from "./EngineParams";
 import { OriginalTestCase, TextTree } from "./OriginalTestCase";
@@ -6,7 +5,6 @@ import { MR } from "./MR";
 import { FormattingEngineMock } from "../formatterFramework/FormattingEngineMock";
 
 export class MetamorphicEngine<T extends BaseEngineOutput> {
-    private formattingEngine: FormattingEngine | undefined = undefined;
     private proxyFormattingEngine: FormattingEngineMock | undefined = undefined;
     private resultsList: (T | boolean)[] = [];
 
@@ -44,9 +42,9 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     }
 
     public addMRs(mrs: MR[]): void {
-        mrs.forEach((mr) => {
+        for (const mr of mrs) {
             this.addMR(mr);
-        });
+        }
     }
 
     private async test(
@@ -69,24 +67,24 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
 
         const pass = actualFolowUpOutput === expectedFolowUpOutput;
 
-        return !pass
-            ? {
+        return pass
+            ? undefined
+            : {
                   fileName: pair.name,
                   mrName: mr.mrName,
                   actual: actualFolowUpOutput,
                   expected: expectedFolowUpOutput,
-              }
-            : undefined;
+              };
     }
 
     public getMatrix(): { fileName: string; mrName: string }[] {
         const matrix: { fileName: string; mrName: string }[] = [];
 
-        this.inputAndOutputPairs.forEach((pair) => {
-            this.metamorphicRelations.forEach((mr) => {
+        for (const pair of this.inputAndOutputPairs) {
+            for (const mr of this.metamorphicRelations) {
                 matrix.push({ fileName: pair.name, mrName: mr.mrName });
-            });
-        });
+            }
+        }
 
         return matrix;
     }
@@ -120,16 +118,16 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     public runAll(): (T | boolean)[] {
         let results: (T | boolean)[] = [];
 
-        this.inputAndOutputPairs.forEach((pair) => {
-            this.metamorphicRelations.forEach((mr) => {
+        for (const pair of this.inputAndOutputPairs) {
+            for (const mr of this.metamorphicRelations) {
                 const result = this.test(mr, pair);
-                if (result !== undefined) {
-                    results.push(result as unknown as T);
-                } else {
+                if (result === undefined) {
                     results.push(true);
+                } else {
+                    results.push(result as unknown as T);
                 }
-            });
-        });
+            }
+        }
 
         // Clear
         this.inputAndOutputPairs = [];

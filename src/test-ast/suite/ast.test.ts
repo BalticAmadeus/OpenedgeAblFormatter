@@ -1,6 +1,6 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
 import * as vscode from "vscode";
-import { join } from "path";
+import { join } from "node:path";
 import { Tree, SyntaxNode } from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import {
@@ -63,11 +63,11 @@ suite("AST Stability Test Suite", () => {
         vscode.window.showInformationMessage("AST tests done!");
     });
 
-    stabilityTestCases.forEach((cases) => {
+    for (const cases of stabilityTestCases) {
         test(`AST test: ${cases}`, async () => {
             await astTest(cases, parserHelper);
         }).timeout(10000);
-    });
+    }
 });
 
 async function astTest(
@@ -142,17 +142,11 @@ async function astTest(
                 text: string;
             }
         ) => {
-            if (
-                before &&
-                before.tree &&
-                typeof before.tree.delete === "function"
-            ) {
+            if (typeof before?.tree?.delete === "function") {
                 before.tree.delete();
             }
             if (
-                after &&
-                after.tree &&
-                typeof after.tree.delete === "function"
+                typeof after?.tree?.delete === "function"
             ) {
                 after.tree.delete();
             }
@@ -166,7 +160,6 @@ async function generateAst(
     text: string,
     parserHelper: AblParserHelper
 ): Promise<Tree | undefined> {
-    const startParse = Date.now();
     const result = await parserHelper.parseAsync(
         new FileIdentifier("test", 1),
         text
@@ -203,9 +196,11 @@ function analyzeAstDifferences(
         analysisContent +=
             "No differences found (this shouldn't happen if the test failed)\n";
     } else {
-        differences.forEach((diff: string, index: number) => {
+        let index = 0;
+        for (const diff of differences) {
             analysisContent += `${index + 1}. ${diff}\n`;
-        });
+            index++;
+        }
     }
 
     analysisContent += `\n${"=".repeat(50)}\n`;
@@ -239,8 +234,8 @@ function findAllDifferences(
     }
 
     if (node1.childCount === 0) {
-        const text1 = node1.text.replace(/\s+/g, " ").trim().toLowerCase();
-        const text2 = node2.text.replace(/\s+/g, " ").trim().toLowerCase();
+        const text1 = node1.text.replaceAll(/\s+/g, " ").trim().toLowerCase();
+        const text2 = node2.text.replaceAll(/\s+/g, " ").trim().toLowerCase();
         if (text1 !== text2) {
             differences.push(
                 `Path: ${currentPath} - Terminal text mismatch: "${text1}" vs "${text2}"\n

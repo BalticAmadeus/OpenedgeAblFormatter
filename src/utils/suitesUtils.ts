@@ -273,7 +273,9 @@ export function setupMetamorphicEngine<T extends BaseEngineOutput>(
         return undefined;
     }
     const engine = new MetamorphicEngine<T>(console);
-    mrs.forEach((mr) => engine.addMR(mr));
+    for (const mr of mrs) {
+        engine.addMR(mr);
+    }
     return engine;
 }
 
@@ -304,7 +306,7 @@ export function runMetamorphicSuite(
     const testCases = metamorphicEngine.getMatrix();
     suite(suiteName, function () {
         this.timeout(10000);
-        testCases.forEach((cases) => {
+        for (const cases of testCases) {
             test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
                 const result = await metamorphicEngine.runOne(
                     cases.fileName,
@@ -316,7 +318,7 @@ export function runMetamorphicSuite(
                     result?.actual + "\r\n" + result?.expected
                 );
             });
-        });
+        }
     });
 }
 
