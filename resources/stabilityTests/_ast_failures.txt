@@ -275,6 +275,8 @@ adm_support__tagdat.p
 adm_support__wizard.w
 adm_template_bstates.i
 adm_template_pustates.i
+adm_template_qstates.i
+adm_template_snd-end.i
 adm2_admmsgs.i
 adm2_cobuildp.p
 adm2_dyncontainer.w

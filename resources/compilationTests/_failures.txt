@@ -50,8 +50,6 @@ aderes__atalias.r
 aderes__atool.r
 aderes__awhere.r
 aderes__awrite.r
-aderes__conndb.r
-aderes__dspfunc.r
 aderes__fbprop.r
 aderes__fbquery.r
 aderes__fbresiz.r
@@ -64,7 +62,6 @@ aderes__renfld.r
 aderes__scompil.r
 aderes__wcompil.r
 aderes_aderes.r
-aderes_af-init.r
 aderes_b-write.r
 aderes_c-ask.r
 aderes_c-for.r
@@ -151,8 +148,6 @@ adeuib__autofld.r
 adeuib__c64tv.r
 adeuib__calcselb.r
 adeuib__calcself.r
-adeuib__callqry.r
-adeuib__callsrt.r
 adeuib__chsxprt.r
 adeuib__closeup.r
 adeuib__coderefs.r
@@ -174,10 +169,8 @@ adeuib__dynsckr.r
 adeuib__editdecl.r
 adeuib__edtdflt.r
 adeuib__edtgrid.r
-adeuib__edtpage.r
 adeuib__fldinfo.r
 adeuib__genmult.r
-adeuib__getcust.r
 adeuib__getpref.r
 adeuib__initpal.r
 adeuib__inscal8.r
@@ -405,7 +398,6 @@ auditing__exp-audevent.r
 auditing__exp-policies-db.r
 auditing__exp-policies.r
 auditing__get-db-list.r
-auditing__get-table-list.r
 auditing__imp-audevent.r
 auditing__imp-policies.r
 auditing__wrtev.r
@@ -1400,7 +1392,6 @@ protools__smoupg.r
 protools__tbldetl.r
 protools__walker.r
 protools__widgetidassign.r
-protools_addpart.r
 protools_dappsrv_cl.r
 protools_dappsrv.r
 protools_sort-dia.r
@@ -1477,3 +1468,6 @@ workshop_wizards__detlsav.r
 workshop_wizards__dirlist.r
 wrappers__passphrase.r
 wrappers__resconv.r
+adecomm_pcmpcls.r
+aderes__fbframe.r
+adeuib__mldlg.r
