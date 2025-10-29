@@ -275,12 +275,8 @@ adeuib_ide__dialog_attredt.r
 adeuib_ide__dialog_chsxprt.r
 adeuib_ide__dialog_coledit.r
 adeuib_ide__dialog_dirname.r
-adeuib_ide__dialog_editdecl.r
-adeuib_ide__dialog_edtpage.r
 adeuib_ide__dialog_filname.r
-adeuib_ide__dialog_getcust.r
 adeuib_ide__dialog_intpxpt.r
-adeuib_ide__dialog_layout.r
 adeuib_ide__dialog_linkadd.r
 adeuib_ide__dialog_prpobj.r
 adeuib_ide__dialog_prpsdo.r
@@ -288,15 +284,8 @@ adeuib_ide__dialog_prpsmar.r
 adeuib_ide__dialog_qenable.r
 adeuib_ide__dialog_saveasdynobject.r
 adeuib_ide__dialog_saveaswizd.r
-adeuib_ide__dialog_tabedit.r
 adeuib_ide__dialog_ttmaint.r
-adeuib_ide_request__designrequest.r
-adeuib_ide_request__registerinrepository.r
-adeuib_ide_request__request.r
 adeuib_ide_request__requestmanager.r
-adeuib_ide_request__saveasreposrequest.r
-adeuib_ide_request__saveasrequest.r
-adeuib_ide_request__saverequest.r
 adeuib_peditor.r
 adeuib_vabattraction.r
 adeuib_vabattribute.r
@@ -1450,3 +1439,8 @@ wrappers__resconv.r
 adecomm_pcmpcls.r
 aderes__fbframe.r
 adeuib__mldlg.r
+adeuib_ide__dialog_mldlg.r
+adm2_support__wizds.r
+adm2_support__wizmap.r
+adm2_support__wizntro.r
+adm2_support__wizqry.r
