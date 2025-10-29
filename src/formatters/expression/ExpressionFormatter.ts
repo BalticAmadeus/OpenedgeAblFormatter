@@ -36,13 +36,19 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
             (node.type === SyntaxNodeType.UnaryExpression &&
                 node.child(0)?.type === SyntaxNodeType.Not)
         ) {
-            if (this.hasWhilePhraseParent(node)) {
-                return false;
-            }
+            //Comment solve issue 499
+            // if (this.hasWhilePhraseParent(node)) {
+            //     return false;
+            // }
             return true;
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>

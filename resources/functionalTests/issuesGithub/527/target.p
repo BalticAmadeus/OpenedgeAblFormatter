@@ -1,0 +1,2 @@
+DEFINE FRAME {&FRAME_NAME} bPolicy AT 
+    COLUMN 2 ROW 2.
