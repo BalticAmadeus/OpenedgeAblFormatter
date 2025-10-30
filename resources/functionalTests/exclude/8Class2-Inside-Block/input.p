@@ -10,4 +10,4 @@ class Cosmos.DataAdmin.DataSource.GalaxyUserPermissionDataSource inherits Galaxy
        init  "NebulaConstellation".
      no-undo.
 @AblFormatterExcludeEnd.
-    end class.
+end class.
