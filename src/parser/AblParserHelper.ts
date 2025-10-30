@@ -311,11 +311,11 @@ export class AblParserHelper implements IParserHelper {
             });
 
             this.workerProcess.stdout?.on("data", (data) => {
-                // Optionally handle worker stdout
+                console.log(`[Worker]: ${data.toString().trim()}`);
             });
 
             this.workerProcess.stderr?.on("data", (data) => {
-                // Optionally handle worker stderr
+                console.log(`[Worker]: ${data.toString().trim()}`);
             });
 
             this.workerProcess.on("message", (message: any) => {
@@ -410,6 +410,8 @@ export class AblParserHelper implements IParserHelper {
                     pendingRequest.reject(new Error(errorMsg));
                 }
             }
+        } else if (message.type === "log") {
+            console.log(`[Worker]: ${message.message}`);
         }
     }
 

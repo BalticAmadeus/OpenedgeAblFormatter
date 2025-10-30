@@ -308,7 +308,6 @@ export class FormatterHelper {
                 )
         );
 
-        console.log("ranges: ", uniqueRanges);
         return uniqueRanges;
     }
 }
