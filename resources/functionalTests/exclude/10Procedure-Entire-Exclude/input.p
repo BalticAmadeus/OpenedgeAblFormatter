@@ -1,9 +1,9 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.findFormatting": true,
     "abl.completion.upperCase": false}*/
+@AblFormatterExcludeStart.
 procedure myProc:
 
-@AblFormatterExcludeStart.
     DEFINE buffer b_vac for Vacation.
 
     find first b_vac  
@@ -12,5 +12,6 @@ procedure myProc:
     if available b_vac
     then message b_vac.
     else message "Error".
-@AblFormatterExcludeEnd.
+
     end procedure.
+@AblFormatterExcludeEnd.

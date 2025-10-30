@@ -2,15 +2,13 @@
 /*  { "AblFormatter.assignFormatting": true,
 "abl.completion.upperCase": true,
 "AblFormatter.assignFormattingAssignLocation": "New",
-"AblFormatter.assignFormattingAlignRightExpression": "Yes",
+"AblFormatter.assignFormattingAlignRightExpression": "No",
 "AblFormatter.assignFormattingEndDotLocation": "New",
 "AblFormatter.expressionFormatting": false}*/
 
-PROCEDURE sumNumbers:
 @AblFormatterExcludeStart.
 ASSIGN
-                    number11 = number3
-        number2  = number4
-                    .
+               number11 = 2
 @AblFormatterExcludeEnd.
-END PROCEDURE.
+    number2   = 33333
+   .

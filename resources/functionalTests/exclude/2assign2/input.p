@@ -6,9 +6,9 @@
 "AblFormatter.assignFormattingEndDotLocation": "New",
 "AblFormatter.expressionFormatting": false}*/
 
-ASSIGN
 @AblFormatterExcludeStart.
+ASSIGN
                number11 = 2
-@AblFormatterExcludeEnd.
     number2   = 33333
    .
+@AblFormatterExcludeEnd.

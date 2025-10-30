@@ -5,9 +5,11 @@
 "AblFormatter.caseFormattingStatementLocation": "New",
 "AblFormatter.expressionFormatting": false}*/
 
-case weekday():
 @AblFormatterExcludeStart.
+case weekday():
     when "SATURDAY" then iValue = iValue + 1.
-@AblFormatterExcludeEnd.
-    otherwise undo, throw new AppException("It is not SATURDAY").
+    when "SUNDAY" then iValue = iValue + 2.
+    when "MONDAY" then iValue = iValue + 3.
+    otherwise undo, throw new AppException("It is not a weekday").
 end case.
+@AblFormatterExcludeEnd.
