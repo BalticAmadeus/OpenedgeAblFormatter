@@ -9,6 +9,8 @@ issuesGithub_226 - fixed
 issuesGithub_291 - fixed
 issuesGithub_338 - fixed
 issuesGithub_353
+issuesGithub_414
+issuesGithub_416
 issuesGithub_417 - fixed
 issuesGithub_433_1 - fixed
 issuesGithub_433_2 - fixed
@@ -16,27 +18,51 @@ issuesGithub_439 - fixed
 issuesGithub_452
 issuesGithub_453
 issuesGithub_464 - fixed
+issuesGithub_482
 issuesGithub_483 - fixed
+issuesGithub_487
+issuesGithub_488
+issuesGithub_490
 issuesGithub_491 - fixed
+issuesGithub_492
+issuesGithub_493
+issuesGithub_494
 issuesGithub_495 - fixed
+issuesGithub_497
+issuesGithub_498
 issuesGithub_499 - fixed
 issuesGithub_500 - fixed
 issuesGithub_501 - fixed
+issuesGithub_502
 issuesGithub_504 - fixed
 issuesGithub_505 - fixed
 issuesGithub_506 - fixed
+issuesGithub_507
 issuesGithub_508 - fixed
 issuesGithub_509 - fixed
+issuesGithub_510
 issuesGithub_511 - fixed
+issuesGithub_512
+issuesGithub_513
+issuesGithub_514
 issuesGithub_522 - fixed
 issuesGithub_523 - fixed
-issuesGithub_524 - fixed
+//issuesGithub_524 - fixed
 issuesGithub_516 - fixed
 issuesGithub_517 - fixed
+issuesGithub_520
+issuesGithub_521
 issuesGithub_523 - fixed
+issuesGithub_524
+issuesGithub_525
+issuesGithub_528
+issuesGithub_529
 issuesGithub_531 - fixed
 issuesGithub_532 - fixed
 issuesGithub_533 - fixed
 issuesGithub_535 - fixed
 issuesGithub_538 - fixed
 issuesGithub_544
+issuesGithub_556
+issuesGithub_557
+issuesGithub_558

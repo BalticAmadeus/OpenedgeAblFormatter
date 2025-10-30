@@ -1,0 +1,1 @@
+RUN SomeProcedure.p(arg1, arg2, TRUE).

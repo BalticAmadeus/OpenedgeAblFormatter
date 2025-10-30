@@ -1,0 +1,1 @@
+RUN prodict/dump/_lod_raw.i 256.
