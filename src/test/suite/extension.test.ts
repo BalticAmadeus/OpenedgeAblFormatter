@@ -1,5 +1,5 @@
-import * as assert from "assert";
-import * as fs from "fs";
+import * as assert from "node:assert";
+import * as fs from "node:fs";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -9,7 +9,7 @@ import { FileIdentifier } from "../../model/FileIdentifier";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
-import path from "path";
+import path, { join } from "node:path";
 import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
@@ -17,7 +17,6 @@ import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
-import { join } from "path";
 import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
 
 let parserHelper: AblParserHelper;
@@ -66,14 +65,14 @@ const metamorphicEngine = isMetamorphicEnabled
           .addMR(new RemoveNoError())
     : undefined;
 
-treeSitterErrorTestDirs.forEach((dir) => {
+for (const dir of treeSitterErrorTestDirs) {
     const testsInsideDir = getDirs(
         path.join(extensionDevelopmentPath, treeSitterErrorTestDir + "/" + dir)
     );
-    testsInsideDir.forEach((test) => {
+    for (const test of testsInsideDir) {
         treeSitterTestCases.push(dir + "/" + test);
-    });
-});
+    }
+}
 
 // example for running single test case;
 // testCases = ["assign/1formattingFalse"];
@@ -118,17 +117,17 @@ suite("Extension Test Suite", () => {
         );
     });
 
-    functionalTestCases.forEach((cases) => {
+    for (const cases of functionalTestCases) {
         test(`Functional test: ${cases}`, async () => {
             await functionalTest(cases);
         }).timeout(10000);
-    });
+    }
 
-    treeSitterTestCases.forEach((cases) => {
+    for (const cases of treeSitterTestCases) {
         test(`Tree Sitter Error test: ${cases}`, async () => {
             await treeSitterTest(cases);
         }).timeout(10000);
-    });
+    }
 
     suiteTeardown(() => {
         if (metamorphicEngine === undefined) {
@@ -184,7 +183,7 @@ async function functionalTest(name: string): Promise<void> {
     }
 
     const targetText = getTarget(name);
-    const fileName = name.replace(/[\s\/\\:*?"<>|]+/g, "_");
+    const fileName = name.replaceAll(/[\s/\\:*?"<>|]+/g, "_");
 
     try {
         if (knownFailures.includes(fileName)) {
@@ -287,7 +286,7 @@ async function treeSitterTest(name: string): Promise<void> {
     enableFormatterDecorators();
 
     const errorText = getError(name);
-    const errors = await parseAndCheckForErrors(errorText as string, name);
+    const errors = await parseAndCheckForErrors(errorText, name);
 
     const errorMessage = formatErrorMessage(errors, name);
 
