@@ -129,7 +129,31 @@ export class AblParserHelper implements IParserHelper {
     ): Promise<ParseResult> {
         await this.ensureWorkerReady();
         if (this.useWorker && this.workerReady && this.workerProcess) {
-            return this.parseWithWorker(fileIdentifier, text);
+            // Get result from worker
+            const result = await this.parseWithWorker(fileIdentifier, text);
+            // NEW: Notify DebugManager with error ranges
+            if (
+                this.debugManager &&
+                typeof this.debugManager.handleErrorRanges === "function"
+            ) {
+                // Convert web-tree-sitter ranges to VSCode Range objects
+                const vscode = require("vscode");
+                const convertedRanges = (result.ranges || []).map(
+                    (r: any) =>
+                        new vscode.Range(
+                            new vscode.Position(
+                                r.startPosition.row,
+                                r.startPosition.column
+                            ),
+                            new vscode.Position(
+                                r.endPosition.row,
+                                r.endPosition.column
+                            )
+                        )
+                );
+                this.debugManager.handleErrorRanges(convertedRanges);
+            }
+            return result;
         } else {
             // Retry once after a short delay
             await new Promise((res) => setTimeout(res, 50));

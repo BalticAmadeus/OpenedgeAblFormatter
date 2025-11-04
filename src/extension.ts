@@ -44,6 +44,12 @@ export async function activate(context: vscode.ExtensionContext) {
     // Start the parser worker ONCE when the extension is enabled
     await parserHelper.startWorker();
 
+    vscode.window.onDidChangeActiveTextEditor(() => {
+        if (debugManager) {
+            debugManager.handleErrorRanges([]);
+        }
+    });
+
     const formatter = new AblFormatterProvider(
         parserHelper,
         metamorphicTestingEngine

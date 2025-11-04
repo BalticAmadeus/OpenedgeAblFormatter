@@ -1,0 +1,3 @@
+define FRAME SplashFrame
+  SplashImage
+  WITH SIZE-PIXELS 432 BY 266 NO-BOX FONT 4 BGCOLOR 8.

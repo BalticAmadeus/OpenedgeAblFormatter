@@ -1,0 +1,2 @@
+DEFINE RECTANGLE rect_btns
+    SIZE 1 BY 2.
