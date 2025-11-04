@@ -17,7 +17,6 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
-        console.log("Wir sind");
         this.settings = new BlockSettings(configurationManager);
     }
 
