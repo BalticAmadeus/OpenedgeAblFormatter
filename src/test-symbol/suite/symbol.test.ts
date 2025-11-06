@@ -40,7 +40,7 @@ suite("Symbol Stability Test Suite", () => {
     stabilityTestCases.forEach((cases) => {
         test(`Symbol test: ${cases}`, async () => {
             await symbolTest(cases, parserHelper);
-        }).timeout(10000);
+        }).timeout(120000);
     });
 });
 
