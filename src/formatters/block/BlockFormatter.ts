@@ -193,13 +193,13 @@ export class BlockFormater extends AFormatter implements IFormatter {
             codeLines = codeLines.slice(deltaBetweenStartAndColon);
         }
 
-        let firstLine = codeLines[0];
-
         // Do not do any changes for one-liner blocks
         if (codeLines.length <= 1) {
             const text = FormatterHelper.getCurrentText(node, fullText);
             return this.getCodeEdit(node, text, text, fullText);
         }
+
+        const firstLine = codeLines[0];
 
         const lastLine = codeLines[codeLines.length - 1];
 
