@@ -278,7 +278,6 @@ export class AblParserHelper implements IParserHelper {
             ];
 
             let workerPath: string | null = null;
-            let command: string;
             let args: string[];
 
             // Try to find the bundled JavaScript worker
@@ -298,20 +297,21 @@ export class AblParserHelper implements IParserHelper {
                     if (require("fs").existsSync(parserDir)) {
                         require("fs").readdirSync(parserDir);
                     }
+                    console.log("Parser directory", parserDir);
+                    console.log("Directory contens", dirContents);
                 } catch (error) {
-                    // ignore
+                    console.log("Error while reading directories", error);
                 }
             }
 
             if (workerPath) {
-                command = "node";
                 args = [workerPath, this.extensionPath];
             } else {
                 // Fallback to TypeScript (development mode only)
                 const tsWorkerPath = path.join(__dirname, "ParserWorker.ts");
+                console.log("Ts worker path", tsWorkerPath);
                 if (require("fs").existsSync(tsWorkerPath)) {
                     workerPath = tsWorkerPath;
-                    command = "node";
                     args = [
                         "-r",
                         "ts-node/register",
@@ -330,16 +330,17 @@ export class AblParserHelper implements IParserHelper {
                 }
             }
 
-            this.workerProcess = spawn(command, args, {
+            const nodePath = process.execPath;
+            this.workerProcess = spawn(nodePath, args, {
                 stdio: ["pipe", "pipe", "pipe", "ipc"],
             });
 
             this.workerProcess.stdout?.on("data", (data) => {
-                // Optionally handle worker stdout
+                console.log("stdout", data);
             });
 
             this.workerProcess.stderr?.on("data", (data) => {
-                // Optionally handle worker stderr
+                console.log("stderr", data);
             });
 
             this.workerProcess.on("message", (message: any) => {
@@ -353,12 +354,14 @@ export class AblParserHelper implements IParserHelper {
             });
 
             this.workerProcess.on("error", (error) => {
+                console.log("error", error);
                 this.workerProcess = null;
                 this.workerReady = false;
                 reject(error);
             });
 
             this.workerProcess.on("exit", (code, signal) => {
+                console.log("exit", code, signal);
                 this.workerProcess = null;
                 this.workerReady = false;
                 // Optionally: log or notify about the crash
@@ -472,7 +475,7 @@ export class AblParserHelper implements IParserHelper {
                 try {
                     this.workerProcess.kill("SIGKILL");
                 } catch (killError) {
-                    // ignore
+                    console.log("killError", killError);
                 }
             }
             this.workerProcess = null;
