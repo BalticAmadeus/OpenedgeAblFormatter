@@ -4,7 +4,7 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## 0.4.4 (2025-10-07)
+## 0.4.4 (2025-11-07)
 
 - Fixed a startup issue
 
