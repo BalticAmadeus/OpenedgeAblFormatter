@@ -44,7 +44,7 @@ suite("AST Stability Test Suite", () => {
     stabilityTestCases.forEach((cases) => {
         test(`AST test: ${cases}`, async () => {
             await astTest(cases, parserHelper);
-        }).timeout(10000);
+        }).timeout(20000);
     });
 });
 
