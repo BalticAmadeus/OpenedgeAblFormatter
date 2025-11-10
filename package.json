@@ -2,7 +2,7 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.4.0",
+  "version": "0.4.4",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
