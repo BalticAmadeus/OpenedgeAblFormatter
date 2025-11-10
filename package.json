@@ -19,6 +19,26 @@
   "main": "./out/extension.js",
   "publisher": "BalticAmadeus",
   "contributes": {
+    "commands": [
+    {
+      "command": "openedgeAblFormatter.excludeCode",
+      "title": "Exclude from formatting",
+      "category": "OpenEdge ABL Formatter"
+    },
+    {
+      "command": "openedgeAblFormatter.reportBug",
+      "title": "Report Bug",
+      "category": "OpenEdge ABL Formatter"
+    }
+  ],
+  "menus": {
+    "editor/context": [
+      {
+        "command": "openedgeAblFormatter.excludeCode",
+        "group": "navigation"
+      }
+    ]
+  },
     "languages": [
       {
         "id": "abl",
@@ -354,15 +374,9 @@
           ]
         }
       }
-    },
-    "commands": [
-      {
-        "command": "openedgeAblFormatter.reportBug",
-        "title": "Report Bug",
-        "category": "OpenEdge ABL Formatter"
-      }
-    ]
-  },
+    }
+    
+  },  
   "scripts": {
     "inject-telemetry-key": "replace-in-file \"__TELEMETRY_KEY__\"  \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" ./out/extension.js",
     "reset-telemetry-key": "replace-in-file \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" \"__TELEMETRY_KEY__\" ./out/extension.js",

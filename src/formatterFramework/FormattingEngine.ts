@@ -11,10 +11,12 @@ import { EOL } from "../model/EOL";
 import { IDebugManager } from "../providers/IDebugManager";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { BaseEngineOutput } from "../mtest/EngineParams";
-import { bodyBlockKeywords } from "../model/SyntaxNodeType";
+import { bodyBlockKeywords, SyntaxNodeType } from "../model/SyntaxNodeType";
+import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
+    private skipFormatting = false;
 
     constructor(
         private parserHelper: IParserHelper,
@@ -103,8 +105,44 @@ export class FormattingEngine {
                     continue; // Continue with the parent node
                 }
 
+                if (node.type === SyntaxNodeType.Annotation) {
+                    const children = node.children;
+                    const keywordNode = children[1];
+                    const annotationName = keywordNode?.toString();
+
+
+                    if (annotationName === '("' + ExcludeAnnotationType.excludeStartAnnotation + '")') {
+                        this.skipFormatting = true;
+                    } else if (
+                        annotationName === '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
+                    ) {
+                        this.skipFormatting = false;
+
+                        const parent = cursor.currentNode().parent;
+                        if(parent && cursor.gotoParent()){
+                            cursor.gotoNextSibling();
+                        }
+                    }
+
+                    lastVisitedNode = node;
+
+                    if (cursor.gotoNextSibling()) {
+                        break;
+                    }
+
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        return;
+                    }
+
+                    continue;
+                }
+
                 // Parse and process the current node
-                if (!bodyBlockKeywords.hasFancy(node.type, "")) {
+                if (
+                    !this.skipFormatting &&
+                    !bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
@@ -160,7 +198,40 @@ export class FormattingEngine {
                     continue; // Continue with the parent node
                 }
 
-                if (bodyBlockKeywords.hasFancy(node.type, "")) {
+                if (node.type === SyntaxNodeType.Annotation) {
+                    const children = node.children;
+                    const keywordNode = children[1];
+                    const annotationName = keywordNode?.toString();
+
+
+                    if (annotationName === '("' + ExcludeAnnotationType.excludeStartAnnotation + '")') {
+                        this.skipFormatting = true;
+                    } else if (
+                        annotationName === '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
+                    ) {
+                        this.skipFormatting = false;
+                    }
+
+                    lastVisitedNode = node;
+
+                    // Try to move to the next sibling
+                    if (cursor.gotoNextSibling()) {
+                        break; // Move to the next sibling if it exists
+                    }
+
+                    // If no more siblings, move up to the parent node
+                    if (!cursor.gotoParent()) {
+                        cursor.delete(); // Clean up the cursor
+                        return; // Exit if there are no more nodes to visit
+                    }
+
+                    continue;
+                }
+
+                if (
+                    !this.skipFormatting &&
+                    bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
                     const codeEdit = this.parse(node, fullText, formatters);
                     if (codeEdit !== undefined) {
                         this.insertChangeIntoTree(tree, codeEdit);

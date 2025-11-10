@@ -437,6 +437,8 @@ export class AblParserHelper implements IParserHelper {
                     pendingRequest.reject(new Error(errorMsg));
                 }
             }
+        } else if (message.type === "log") {
+            console.log(`[Worker]: ${message.message}`);
         }
     }
 
