@@ -4,6 +4,7 @@ export enum SyntaxNodeType {
     Error = "ERROR",
 
     AvailableExpression = "available_expression",
+    Annotation = "annotation",
     CaseStatement = "case_statement",
     CaseCondition = "case_condition",
     CaseBody = "case_body",
