@@ -11,13 +11,14 @@ import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import path, { join } from "node:path";
 import { EOL } from "../../model/EOL";
-import { setupParserHelper } from "../../utils/suitesUtils";
+import { DebugManagerMock } from "./DebugManagerMock";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
 import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
+import { setupParserHelper } from "../../utils/suitesUtils";
 import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
 
 let parserHelper: AblParserHelper;
@@ -80,6 +81,10 @@ for (const dir of treeSitterErrorTestDirs) {
 // testCases = ["assign/1formattingFalse"];
 
 suite("Extension Test Suite", () => {
+    suiteTeardown(() => {
+        vscode.window.showInformationMessage("All tests done!");
+    });
+
     suiteSetup(async () => {
         await Parser.init().then(() => {
             console.log("Parser initialized");
@@ -90,17 +95,18 @@ suite("Extension Test Suite", () => {
         }
         fs.mkdirSync(testResultsDir, { recursive: true });
 
-        parserHelper = await setupParserHelper();
+        parserHelper = new AblParserHelper(
+            extensionDevelopmentPath,
+            new DebugManagerMock()
+        );
 
-        // Set parser helper for IdempotenceMR
         if (metamorphicEngine) {
+            // Set parser helper for IdempotenceMR
             const idempotenceMR = metamorphicEngine.getMR(
                 "Idempotence"
             ) as IdempotenceMR;
             idempotenceMR.setParserHelper(parserHelper);
-        }
 
-        if (metamorphicEngine) {
             metamorphicEngine.setFormattingEngine(
                 new FormattingEngineMock(parserHelper)
             );
@@ -159,8 +165,6 @@ suite("Extension Test Suite", () => {
                 }).timeout(10000);
             });
         });
-
-        vscode.window.showInformationMessage("All tests done!");
     });
 });
 
