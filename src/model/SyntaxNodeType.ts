@@ -57,6 +57,7 @@ export enum SyntaxNodeType {
     BooleanLiteral = "boolean_literal",
     ElseIfStatement = "else_if_statement",
     ReturnStatement = "return_statement",
+    MessageStatement = "message_statement",
     ReleaseStatement = "release_statement",
     FunctionCallStatement = "function_call_statement",
     FunctionCallArgument = "function_call_argument",
@@ -160,6 +161,7 @@ export enum SyntaxNodeType {
 export const afterThenStatements = new MyFancySet<string>([
     SyntaxNodeType.ReturnStatement,
     SyntaxNodeType.AblStatement,
+    SyntaxNodeType.MessageStatement,
     SyntaxNodeType.FunctionCallStatement,
     SyntaxNodeType.AssignStatement,
     SyntaxNodeType.VariableAssignment,
