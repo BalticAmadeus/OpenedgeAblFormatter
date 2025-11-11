@@ -86,7 +86,7 @@ suite("AST Stability Test Suite", () => {
                     assert.equal(
                         result,
                         undefined,
-                        result?.actual + "\r\n" + result?.expected
+                        `Metamorphic test failed: ${cases.fileName} (${cases.mrName}) - Output mismatch`
                     );
                 }).timeout(10000);
             });
@@ -99,7 +99,7 @@ suite("AST Stability Test Suite", () => {
         test(`AST test: ${cases}`, async () => {
             await astTest(cases, parserHelper);
         }).timeout(20000);
-    });
+    }
 });
 
 async function astTest(

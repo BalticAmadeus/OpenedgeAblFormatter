@@ -336,11 +336,13 @@ export class AblParserHelper implements IParserHelper {
             });
 
             this.workerProcess.stdout?.on("data", (data) => {
-                console.log("stdout", data);
+                // Use for debbugging worker process issues
+                // console.log("stdout", data);
             });
 
             this.workerProcess.stderr?.on("data", (data) => {
-                console.log("stderr", data);
+                // Use for debbugging worker process issues
+                // console.log("stderr", data);
             });
 
             this.workerProcess.on("message", (message: any) => {
