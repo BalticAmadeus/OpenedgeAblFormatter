@@ -11,13 +11,14 @@ import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import path, { join } from "node:path";
 import { EOL } from "../../model/EOL";
-import { DebugManagerMock } from "./DebugManagerMock";
+import { setupParserHelper } from "../../utils/suitesUtils";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
 import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
+import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
 
 let parserHelper: AblParserHelper;
 
@@ -63,6 +64,7 @@ const metamorphicEngine = isMetamorphicEnabled
           .addMR(new ReplaceEQ())
           .addMR(new ReplaceForEachToForLast())
           .addMR(new RemoveNoError())
+          .addMR(new IdempotenceMR(null as any))
     : undefined;
 
 for (const dir of treeSitterErrorTestDirs) {
@@ -92,10 +94,15 @@ suite("Extension Test Suite", () => {
         }
         fs.mkdirSync(testResultsDir, { recursive: true });
 
-        parserHelper = new AblParserHelper(
-            extensionDevelopmentPath,
-            new DebugManagerMock()
-        );
+        parserHelper = await setupParserHelper();
+
+        // Set parser helper for IdempotenceMR
+        if (metamorphicEngine) {
+            const idempotenceMR = metamorphicEngine.getMR(
+                "Idempotence"
+            ) as IdempotenceMR;
+            idempotenceMR.setParserHelper(parserHelper);
+        }
 
         await parserHelper.startWorker();
 
@@ -173,12 +180,22 @@ async function functionalTest(name: string): Promise<void> {
         { eol: new EOL(getFileEOL(inputText)) }
     );
 
+    const inputTree = await parserHelper.parseAsync(
+        new FileIdentifier(name, 1),
+        inputText
+    );
+
+    const resultTree = await parserHelper.parseAsync(
+        new FileIdentifier(name, 1),
+        resultText
+    );
+
     if (metamorphicEngine) {
         metamorphicEngine.addNameInputAndOutputPair(
             name,
             new EOL(getFileEOL(inputText)),
-            { text: inputText, tree: undefined },
-            { text: resultText, tree: undefined }
+            { text: inputText, tree: inputTree.tree },
+            { text: resultText, tree: resultTree.tree }
         );
     }
 

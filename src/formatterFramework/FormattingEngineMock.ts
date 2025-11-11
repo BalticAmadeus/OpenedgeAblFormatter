@@ -3,7 +3,7 @@ import { FileIdentifier } from "../model/FileIdentifier";
 import { EOL } from "../model/EOL";
 
 export class FormattingEngineMock {
-    constructor(private parserHelper: IParserHelper) {}
+    constructor(readonly parserHelper: IParserHelper) {}
 
     public async formatText(
         text: string,

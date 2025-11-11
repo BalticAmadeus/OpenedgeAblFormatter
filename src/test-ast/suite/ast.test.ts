@@ -9,10 +9,11 @@ import {
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
-    setupMetamorphicEngine,
     setMetamorphicFormattingEngine,
     runMetamorphicSuite,
 } from "../../utils/suitesUtils";
+import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
+import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { TestConfig } from "../../utils/iTestConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
@@ -20,6 +21,7 @@ import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
+import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
 
 let parserHelper: AblParserHelper;
 
@@ -27,11 +29,13 @@ const isMetamorphicEnabled =
     process.argv.includes("--metamorphic") ||
     process.env.TEST_MODE === "metamorphic";
 
-const metamorphicEngine = setupMetamorphicEngine(isMetamorphicEnabled, [
-    new ReplaceEQ(),
-    new ReplaceForEachToForLast(),
-    new RemoveNoError(),
-]);
+const metamorphicEngine = isMetamorphicEnabled
+    ? new MetamorphicEngine<DebugTestingEngineOutput>(console)
+          .addMR(new ReplaceEQ())
+          .addMR(new ReplaceForEachToForLast())
+          .addMR(new RemoveNoError())
+          .addMR(new IdempotenceMR(null as any))
+    : undefined;
 
 suite("AST Stability Test Suite", () => {
     suiteSetup(async () => {
@@ -41,6 +45,15 @@ suite("AST Stability Test Suite", () => {
         fs.mkdirSync(astTestRunDir, { recursive: true });
 
         parserHelper = await setupParserHelper();
+
+        // Set parser helper for IdempotenceMR
+        if (metamorphicEngine) {
+            const idempotenceMR = metamorphicEngine.getMR(
+                "Idempotence"
+            ) as IdempotenceMR;
+            idempotenceMR.setParserHelper(parserHelper);
+        }
+
         setMetamorphicFormattingEngine(metamorphicEngine, parserHelper);
 
         console.log(
@@ -145,9 +158,7 @@ async function astTest(
             if (typeof before?.tree?.delete === "function") {
                 before.tree.delete();
             }
-            if (
-                typeof after?.tree?.delete === "function"
-            ) {
+            if (typeof after?.tree?.delete === "function") {
                 after.tree.delete();
             }
         },

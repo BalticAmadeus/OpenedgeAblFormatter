@@ -107,17 +107,16 @@ export async function runGenericTest<
         assert.fail(`File should fail ${fileName}`);
     }
 
-    config.cleanup?.(beforeResult, afterResult);
-
     if (metamorphicEngine) {
-        registerMetamorphicPair(
-            metamorphicEngine,
-            fileName,
+        metamorphicEngine.addNameInputAndOutputPair(
+            name,
+            { eolDel: getFileEOL(beforeText) },
             beforeResult,
-            afterResult,
-            getFileEOL(beforeText)
+            afterResult
         );
     }
+
+    config.cleanup?.(beforeResult, afterResult);
 }
 
 export const testRunTimestamp = new Date()
@@ -279,22 +278,22 @@ export function setupMetamorphicEngine<T extends BaseEngineOutput>(
     return engine;
 }
 
-export function registerMetamorphicPair(
-    metamorphicEngine: MetamorphicEngine<any> | undefined,
-    name: string,
-    input: { text: string; tree?: any },
-    output: { text: string; tree?: any },
-    eol: string
-) {
-    if (metamorphicEngine) {
-        metamorphicEngine.addNameInputAndOutputPair(
-            name,
-            { eolDel: eol },
-            { text: input.text, tree: input.tree ?? undefined },
-            { text: output.text, tree: output.tree ?? undefined }
-        );
-    }
-}
+// export function registerMetamorphicPair(
+//     metamorphicEngine: MetamorphicEngine<any> | undefined,
+//     name: string,
+//     input: { text: string; tree?: any },
+//     output: { text: string; tree?: any },
+//     eol: string
+// ) {
+//     if (metamorphicEngine) {
+//         metamorphicEngine.addNameInputAndOutputPair(
+//             name,
+//             { eolDel: eol },
+//             { text: input.text, tree: input.tree ?? undefined },
+//             { text: output.text, tree: output.tree ?? undefined }
+//         );
+//     }
+// }
 
 export function runMetamorphicSuite(
     metamorphicEngine: MetamorphicEngine<any> | undefined,
@@ -315,7 +314,7 @@ export function runMetamorphicSuite(
                 assert.equal(
                     result,
                     undefined,
-                    result?.actual + "\r\n" + result?.expected
+                    `Metamorphic test failed: ${cases.fileName} (${cases.mrName}) - Output mismatch`
                 );
             });
         }

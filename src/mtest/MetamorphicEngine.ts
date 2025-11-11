@@ -5,20 +5,20 @@ import { MR } from "./MR";
 import { FormattingEngineMock } from "../formatterFramework/FormattingEngineMock";
 
 export class MetamorphicEngine<T extends BaseEngineOutput> {
-    private proxyFormattingEngine: FormattingEngineMock | undefined = undefined;
+    private formattingEngineMock: FormattingEngineMock | undefined = undefined;
     private resultsList: (T | boolean)[] = [];
 
     private readonly metamorphicRelations: MR[] = [];
     private inputAndOutputPairs: OriginalTestCase[] = [];
 
-    public setFormattingEngine(proxyFormattingEngine: FormattingEngineMock) {
-        this.proxyFormattingEngine = proxyFormattingEngine;
-    }
-
     private readonly engineConsole: Console | undefined;
 
     public constructor(engineConsole: Console | undefined) {
         this.engineConsole = engineConsole;
+    }
+
+    public setFormattingEngine(formattingEngineMock: FormattingEngineMock) {
+        this.formattingEngineMock = formattingEngineMock;
     }
 
     public addNameInputAndOutputPair(
@@ -47,23 +47,31 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         }
     }
 
+    public getMR(mrName: string): MR {
+        const mr = this.metamorphicRelations.find((mr) => mr.mrName === mrName);
+        if (!mr) {
+            throw new Error(`MR with name "${mrName}" not found`);
+        }
+        return mr;
+    }
+
     private async test(
         mr: MR,
         pair: OriginalTestCase
     ): Promise<undefined | DebugTestingEngineOutput> {
-        if (this.proxyFormattingEngine === undefined) {
+        if (this.formattingEngineMock === undefined) {
             throw new Error(
-                `Missing ProxyFormattingEngine in Metamorphic test engine.`
+                `Missing FormattingEngineMock in Metamorphic test engine.`
             );
         }
 
-        const folowUpInput = mr.inputFunction(pair.input);
-        const actualFolowUpOutput = await this.proxyFormattingEngine.formatText(
+        const folowUpInput = await mr.inputFunction(pair.input);
+        const actualFolowUpOutput = await this.formattingEngineMock.formatText(
             folowUpInput,
             pair.eol,
             false
         );
-        const expectedFolowUpOutput = mr.outputFunction(pair.output);
+        const expectedFolowUpOutput = await mr.outputFunction(pair.output);
 
         const pass = actualFolowUpOutput === expectedFolowUpOutput;
 

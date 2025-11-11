@@ -8,4 +8,4 @@ export interface OriginalTestCase {
     output: TextTree;
 }
 
-export type TextTree = { text: string; tree: Tree | undefined };
+export type TextTree = { text: string; tree: Tree };
