@@ -1,6 +1,8 @@
 import { SyntaxNode } from "web-tree-sitter";
+import { Position } from "vscode";
 import { FullText } from "../model/FullText";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
+import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 
 export class FormatterHelper {
     public static getActualTextIndentation(
@@ -259,5 +261,53 @@ export class FormatterHelper {
             newString = FormatterHelper.getCurrentText(node, fullText);
         }
         return newString;
+    }
+
+    public static getExcludedRanges(
+        node: SyntaxNode
+    ): { start: number; end: number }[] {
+        const ranges: { start: number; end: number }[] = [];
+        let excludeStart: number | null = null;
+
+        const visit = (n: SyntaxNode) => {
+            if (n.type === SyntaxNodeType.Annotation) {
+                const text = n.text.replace(/[\s.@"]/g, "").toUpperCase();
+
+                if (text === ExcludeAnnotationType.excludeStartAnnotation) {
+                    excludeStart = n.startPosition.row;
+                } else if (
+                    text === ExcludeAnnotationType.excludeEndAnnotation
+                ) {
+                    if (excludeStart !== null) {
+                        ranges.push({
+                            start: excludeStart,
+                            end: n.endPosition.row,
+                        });
+                        excludeStart = null;
+                    } else {
+                        ranges.push({
+                            start: n.startPosition.row,
+                            end: n.endPosition.row,
+                        });
+                    }
+                }
+            }
+
+            n.children.forEach(visit);
+        };
+
+        visit(node);
+
+        const uniqueRanges = ranges.filter(
+            (currentRange, currentIndex, allRanges) =>
+                currentIndex ===
+                allRanges.findIndex(
+                    (otherRange) =>
+                        otherRange.start === currentRange.start &&
+                        otherRange.end === currentRange.end
+                )
+        );
+
+        return uniqueRanges;
     }
 }

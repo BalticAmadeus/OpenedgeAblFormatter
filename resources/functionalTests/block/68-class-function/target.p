@@ -40,7 +40,7 @@ _request implements iGalacticDesign   :
     (piHwnd                  as int,
      pcConstellationFileName as char) in ContextHandle. 
     function 
-    setGalacticFileName returns logical (piHwnd                  as integer,
-                                         pcFilename              as char) in    ContextHandle.
+    setGalacticFileName returns logical (piHwnd     as integer,
+                                         pcFilename as char) in    ContextHandle.
         
 end class.

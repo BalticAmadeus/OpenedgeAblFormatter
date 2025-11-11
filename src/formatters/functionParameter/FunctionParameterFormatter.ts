@@ -70,6 +70,7 @@ export class FunctionParameterFormatter
 
         this.collectStructure(node, fullText);
         const newText = this.collectString(node, fullText);
+        this.resetAlignmentValues();
         return this.getCodeEdit(node, oldText, newText, fullText);
     }
 
@@ -287,5 +288,12 @@ export class FunctionParameterFormatter
                 break;
         }
         return newString;
+    }
+
+    private resetAlignmentValues(): void {
+        this.alignType = 0;
+        this.alignParameterType = 0;
+        this.alignParameterMode = 0;
+        this.alignParameters = 0;
     }
 }

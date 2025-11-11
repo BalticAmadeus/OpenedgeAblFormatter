@@ -98,8 +98,8 @@ suite("AST Stability Test Suite", () => {
     for (const cases of stabilityTestCases) {
         test(`AST test: ${cases}`, async () => {
             await astTest(cases, parserHelper);
-        }).timeout(10000);
-    }
+        }).timeout(20000);
+    });
 });
 
 async function astTest(

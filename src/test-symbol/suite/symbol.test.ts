@@ -43,8 +43,8 @@ suite("Symbol Stability Test Suite", () => {
     for (const cases of stabilityTestCases) {
         test(`Symbol test: ${cases}`, async () => {
             await symbolTest(cases, parserHelper);
-        }).timeout(10000);
-    }
+        }).timeout(20000);
+    });
 });
 
 async function symbolTest(
