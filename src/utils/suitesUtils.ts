@@ -8,9 +8,6 @@ import { FileIdentifier } from "../model/FileIdentifier";
 import { ConfigurationManager } from "./ConfigurationManager";
 import { DebugManagerMock } from "../test-ast/suite/DebugManagerMock";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
-import { MR } from "../mtest/MR";
-import { BaseEngineOutput } from "../mtest/EngineParams";
-import { FormattingEngineMock } from "../formatterFramework/FormattingEngineMock";
 import { TestConfig } from "./iTestConfig";
 
 // Shared constants
@@ -262,72 +259,4 @@ export function addFailedTestCase(
 
     // Append the failed test case to the file with a newline
     fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
-}
-
-export function setupMetamorphicEngine<T extends BaseEngineOutput>(
-    isEnabled: boolean,
-    mrs: MR[]
-): MetamorphicEngine<T> | undefined {
-    if (!isEnabled) {
-        return undefined;
-    }
-    const engine = new MetamorphicEngine<T>(console);
-    for (const mr of mrs) {
-        engine.addMR(mr);
-    }
-    return engine;
-}
-
-// export function registerMetamorphicPair(
-//     metamorphicEngine: MetamorphicEngine<any> | undefined,
-//     name: string,
-//     input: { text: string; tree?: any },
-//     output: { text: string; tree?: any },
-//     eol: string
-// ) {
-//     if (metamorphicEngine) {
-//         metamorphicEngine.addNameInputAndOutputPair(
-//             name,
-//             { eolDel: eol },
-//             { text: input.text, tree: input.tree ?? undefined },
-//             { text: output.text, tree: output.tree ?? undefined }
-//         );
-//     }
-// }
-
-export function runMetamorphicSuite(
-    metamorphicEngine: MetamorphicEngine<any> | undefined,
-    suiteName = "Metamorphic Tests"
-) {
-    if (!metamorphicEngine) {
-        return;
-    }
-    const testCases = metamorphicEngine.getMatrix();
-    suite(suiteName, function () {
-        this.timeout(10000);
-        for (const cases of testCases) {
-            test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
-                const result = await metamorphicEngine.runOne(
-                    cases.fileName,
-                    cases.mrName
-                );
-                assert.equal(
-                    result,
-                    undefined,
-                    `Metamorphic test failed: ${cases.fileName} (${cases.mrName}) - Output mismatch`
-                );
-            });
-        }
-    });
-}
-
-export function setMetamorphicFormattingEngine(
-    metamorphicEngine: MetamorphicEngine<any> | undefined,
-    parserHelper: AblParserHelper
-) {
-    if (metamorphicEngine) {
-        metamorphicEngine.setFormattingEngine(
-            new FormattingEngineMock(parserHelper)
-        );
-    }
 }

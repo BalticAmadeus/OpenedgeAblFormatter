@@ -80,10 +80,6 @@ for (const dir of treeSitterErrorTestDirs) {
 // testCases = ["assign/1formattingFalse"];
 
 suite("Extension Test Suite", () => {
-    suiteTeardown(() => {
-        vscode.window.showInformationMessage("All tests done!");
-    });
-
     suiteSetup(async () => {
         await Parser.init().then(() => {
             console.log("Parser initialized");
@@ -103,8 +99,6 @@ suite("Extension Test Suite", () => {
             ) as IdempotenceMR;
             idempotenceMR.setParserHelper(parserHelper);
         }
-
-        await parserHelper.startWorker();
 
         if (metamorphicEngine) {
             metamorphicEngine.setFormattingEngine(
@@ -165,6 +159,8 @@ suite("Extension Test Suite", () => {
                 }).timeout(10000);
             });
         });
+
+        vscode.window.showInformationMessage("All tests done!");
     });
 });
 

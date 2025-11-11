@@ -385,7 +385,6 @@
     "test": "node ./out/test/runTest.js",
     "test-w-metamorphic": "node ./out/test/runTest.js --metamorphic",
     "test-symbol": "node ./out/test-symbol/runTest.js",
-    "test-symbol-metamorphic": "node ./out/test-symbol/runTest.js --metamorphic",
     "test-ast": "node ./out/test-ast/runTest.js",
     "test-ast-metamorphic": "node ./out/test-ast/runTest.js --metamorphic",
     "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js",

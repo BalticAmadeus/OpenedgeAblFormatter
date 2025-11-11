@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as vscode from "vscode";
+import assert from "node:assert";
 import { join } from "node:path";
 import { Tree, SyntaxNode } from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
@@ -9,8 +10,6 @@ import {
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
-    setMetamorphicFormattingEngine,
-    runMetamorphicSuite,
 } from "../../utils/suitesUtils";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
@@ -22,6 +21,7 @@ import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
+import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
 
 let parserHelper: AblParserHelper;
 
@@ -52,9 +52,11 @@ suite("AST Stability Test Suite", () => {
                 "Idempotence"
             ) as IdempotenceMR;
             idempotenceMR.setParserHelper(parserHelper);
-        }
 
-        setMetamorphicFormattingEngine(metamorphicEngine, parserHelper);
+            metamorphicEngine.setFormattingEngine(
+                new FormattingEngineMock(parserHelper)
+            );
+        }
 
         console.log(
             "AST StabilityTests: ",
@@ -67,13 +69,30 @@ suite("AST Stability Test Suite", () => {
     });
 
     suiteTeardown(() => {
-        runMetamorphicSuite(metamorphicEngine, "Metamorphic AST Tests");
-
-        if (parserHelper) {
-            // Clean up parser resources if needed
-            parserHelper = null as any;
+        if (metamorphicEngine === undefined) {
+            return;
         }
-        vscode.window.showInformationMessage("AST tests done!");
+
+        const metamorphicTestCases = metamorphicEngine.getMatrix();
+
+        suite("Metamorphic Tests", () => {
+            metamorphicTestCases.forEach((cases) => {
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
+                    const result = await metamorphicEngine.runOne(
+                        cases.fileName,
+                        cases.mrName
+                    );
+
+                    assert.equal(
+                        result,
+                        undefined,
+                        result?.actual + "\r\n" + result?.expected
+                    );
+                }).timeout(10000);
+            });
+        });
+
+        vscode.window.showInformationMessage("All tests done!");
     });
 
     for (const cases of stabilityTestCases) {

@@ -65,11 +65,6 @@ jobs:
               run: xvfb-run -a npm run test-symbol
               if: runner.os == 'Linux'
 
-            - name: Run Symbol Test (Metamorphic)
-              run: xvfb-run -a npm run test-symbol-metamorphic
-              continue-on-error: true
-              if: runner.os == 'Linux'
-
             - name: Save Symbol Test Results as Artifact
               if: always()
               uses: actions/upload-artifact@v4

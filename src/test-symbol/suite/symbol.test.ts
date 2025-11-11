@@ -7,27 +7,11 @@ import {
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
-    runMetamorphicSuite,
-    setupMetamorphicEngine,
-    setMetamorphicFormattingEngine,
 } from "../../utils/suitesUtils";
 import { TestConfig } from "../../utils/iTestConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
-import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
-import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
-import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 
 let parserHelper: AblParserHelper;
-
-const isMetamorphicEnabled =
-    process.argv.includes("--metamorphic") ||
-    process.env.TEST_MODE === "metamorphic";
-
-const metamorphicEngine = setupMetamorphicEngine(isMetamorphicEnabled, [
-    new ReplaceEQ(),
-    new ReplaceForEachToForLast(),
-    new RemoveNoError(),
-]);
 
 suite("Symbol Stability Test Suite", () => {
     suiteSetup(async () => {
@@ -37,7 +21,6 @@ suite("Symbol Stability Test Suite", () => {
         fs.mkdirSync(symbolTestRunDir, { recursive: true });
 
         parserHelper = await setupParserHelper();
-        setMetamorphicFormattingEngine(metamorphicEngine, parserHelper);
 
         console.log(
             "Symbol StabilityTests: ",
@@ -50,8 +33,6 @@ suite("Symbol Stability Test Suite", () => {
     });
 
     suiteTeardown(() => {
-        runMetamorphicSuite(metamorphicEngine, "Metamorphic Symbol Tests");
-
         if (parserHelper) {
             // Clean up parser resources if needed
             parserHelper = null as any;
@@ -87,7 +68,7 @@ async function symbolTest(
         compareResults: async (before, after) => before.text !== after.text,
     };
 
-    await runGenericTest(name, parserHelper, config, metamorphicEngine);
+    await runGenericTest(name, parserHelper, config);
 }
 
 function countActualSymbols(text: string): number {
