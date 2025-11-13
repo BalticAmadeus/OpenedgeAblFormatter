@@ -109,6 +109,7 @@ export enum SyntaxNodeType {
     AssignmentOperator = "assignment_operator",
 
     // keywords
+    SkipKeyword = "SKIP",
     WhenKeyword = "WHEN",
     ByKeyword = "BY",
     ThenKeyword = "THEN",
@@ -148,6 +149,7 @@ export enum SyntaxNodeType {
     OutputKeyword = "OUTPUT",
     InputOutputKeyword = "INPUT-OUTPUT",
     ReturnKeyword = "RETURN",
+    MessageKeyword = "MESSAGE",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
     VarKeyword = "VAR",
