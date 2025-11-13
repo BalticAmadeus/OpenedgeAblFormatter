@@ -336,7 +336,7 @@ export class AblParserHelper implements IParserHelper {
             });
 
             this.workerProcess.stdout?.on("data", (data) => {
-                console.log("stdout", data);
+                // console.log("stdout", data);
             });
 
             this.workerProcess.stderr?.on("data", (data) => {

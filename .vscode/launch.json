@@ -5,7 +5,6 @@
 {
 	"version": "0.2.0",
 	"configurations": [
-
 		{
 			"name": "Run Extension",
 			"type": "extensionHost",
@@ -33,7 +32,7 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
-			"name": "Extension Tests",
+			"name": "Extension Tests (func)",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -45,7 +44,7 @@
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
-        {
+		{
 			"name": "Extension Tests (Metamorphic)",
 			"type": "extensionHost",
 			"request": "launch",
