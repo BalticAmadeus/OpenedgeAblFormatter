@@ -69,6 +69,7 @@ export enum SyntaxNodeType {
     ProcedureStatement = "procedure_statement",
     RepeatStatement = "repeat_statement",
     OnStatement = "on_statement",
+    FormStatement = "form_statement",
     EnumStatement = "enum_statement",
     EnumMember = "enum_member",
     EnumDefinition = "enum_definition",

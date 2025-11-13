@@ -345,6 +345,32 @@
           ],
           "description": "Should logical operators be on a new line or the same line as the expression?"
         },
+                "AblFormatter.formFormatting": {
+          "order": 2100,
+          "type": "boolean",
+          "default": "true",
+          "description": "Enable FORM statement formatting"
+        },
+        "AblFormatter.formFormattingStartOnNewLine": {
+          "order": 2102,
+          "type": "string",
+          "default": "Yes",
+          "enum": [
+            "Yes",
+            "No"
+          ],
+          "description": "Should FORM items start on a new line after FORM keyword?"
+        },
+        "AblFormatter.formFormattingEndDotLocation": {
+          "order": 2103,
+          "type": "string",
+          "default": "Same",
+          "enum": [
+            "New",
+            "Same"
+          ],
+          "description": "Should the ending period be on a new line or same line as last item?"
+        },
         "AblFormatter.statementFormatting": {
           "order": 1900,
           "type": "boolean",
