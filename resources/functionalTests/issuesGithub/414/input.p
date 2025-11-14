@@ -1,0 +1,1 @@
+cTempActions = DYNAMIC-FUNCTION('actions':U IN phInstance, INPUT "toolbar":U).

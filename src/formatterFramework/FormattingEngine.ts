@@ -2,7 +2,6 @@ import { SyntaxNode, Tree } from "web-tree-sitter";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { IFormatter } from "./IFormatter";
-import { BlockFormater } from "../formatters/block/BlockFormatter";
 import { CodeEdit } from "../model/CodeEdit";
 import { FullText } from "../model/FullText";
 import { IConfigurationManager } from "../utils/IConfigurationManager";
@@ -10,19 +9,28 @@ import { ParseResult } from "../model/ParseResult";
 import { FormatterFactory } from "./FormatterFactory";
 import { EOL } from "../model/EOL";
 import { IDebugManager } from "../providers/IDebugManager";
+import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
+import { BaseEngineOutput } from "../mtest/EngineParams";
 import { bodyBlockKeywords, SyntaxNodeType } from "../model/SyntaxNodeType";
+import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
+    private skipFormatting = false;
 
     constructor(
         private parserHelper: IParserHelper,
         private fileIdentifier: FileIdentifier,
         private configurationManager: IConfigurationManager,
-        private debugManager: IDebugManager
+        private debugManager: IDebugManager,
+        private metamorphicTestingEngine?: MetamorphicEngine<BaseEngineOutput>
     ) {}
 
-    public formatText(fulfullTextString: string, eol: EOL): string {
+    public formatText(
+        fulfullTextString: string,
+        eol: EOL,
+        metemorphicEngineIsEnabled: boolean = false
+    ): string {
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
@@ -34,7 +42,6 @@ export class FormattingEngine {
         );
 
         this.settingsOverride(parseResult);
-
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
         );
@@ -51,6 +58,25 @@ export class FormattingEngine {
 
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
 
+        if (
+            metemorphicEngineIsEnabled &&
+            this.metamorphicTestingEngine !== undefined
+        ) {
+            this.metamorphicTestingEngine.setFormattingEngine(this);
+
+            const parseResult2 = this.parserHelper.parse(
+                this.fileIdentifier,
+                fullText.text
+            );
+
+            this.metamorphicTestingEngine.addNameInputAndOutputPair(
+                this.fileIdentifier.name,
+                eol,
+                { text: fulfullTextString, tree: parseResult.tree },
+                { text: fullText.text, tree: parseResult2.tree }
+            );
+        }
+
         return fullText.text;
     }
 
@@ -63,11 +89,9 @@ export class FormattingEngine {
         let lastVisitedNode: SyntaxNode | null = null;
 
         while (true) {
-            // Try to go as deep as possible
             if (cursor.gotoFirstChild()) {
-                continue; // Move to the first child if possible
+                continue;
             }
-
             // Process the current node (this is a leaf node or a node with no unvisited children)
             while (true) {
                 const node = cursor.currentNode();
@@ -81,8 +105,44 @@ export class FormattingEngine {
                     continue; // Continue with the parent node
                 }
 
+                if (node.type === SyntaxNodeType.Annotation) {
+                    const children = node.children;
+                    const keywordNode = children[1];
+                    const annotationName = keywordNode?.toString();
+
+
+                    if (annotationName === '("' + ExcludeAnnotationType.excludeStartAnnotation + '")') {
+                        this.skipFormatting = true;
+                    } else if (
+                        annotationName === '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
+                    ) {
+                        this.skipFormatting = false;
+
+                        const parent = cursor.currentNode().parent;
+                        if(parent && cursor.gotoParent()){
+                            cursor.gotoNextSibling();
+                        }
+                    }
+
+                    lastVisitedNode = node;
+
+                    if (cursor.gotoNextSibling()) {
+                        break;
+                    }
+
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        return;
+                    }
+
+                    continue;
+                }
+
                 // Parse and process the current node
-                if (!bodyBlockKeywords.hasFancy(node.type, "")) {
+                if (
+                    !this.skipFormatting &&
+                    !bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
@@ -99,7 +159,6 @@ export class FormattingEngine {
                 if (cursor.gotoNextSibling()) {
                     break; // Move to the next sibling if it exists
                 }
-
                 // If no more siblings, move up to the parent node
                 if (!cursor.gotoParent()) {
                     cursor.delete(); // Clean up the cursor
@@ -139,9 +198,41 @@ export class FormattingEngine {
                     continue; // Continue with the parent node
                 }
 
-                if (bodyBlockKeywords.hasFancy(node.type, "")) {
-                    const codeEdit = this.parse(node, fullText, formatters);
+                if (node.type === SyntaxNodeType.Annotation) {
+                    const children = node.children;
+                    const keywordNode = children[1];
+                    const annotationName = keywordNode?.toString();
 
+
+                    if (annotationName === '("' + ExcludeAnnotationType.excludeStartAnnotation + '")') {
+                        this.skipFormatting = true;
+                    } else if (
+                        annotationName === '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
+                    ) {
+                        this.skipFormatting = false;
+                    }
+
+                    lastVisitedNode = node;
+
+                    // Try to move to the next sibling
+                    if (cursor.gotoNextSibling()) {
+                        break; // Move to the next sibling if it exists
+                    }
+
+                    // If no more siblings, move up to the parent node
+                    if (!cursor.gotoParent()) {
+                        cursor.delete(); // Clean up the cursor
+                        return; // Exit if there are no more nodes to visit
+                    }
+
+                    continue;
+                }
+
+                if (
+                    !this.skipFormatting &&
+                    bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
+                    const codeEdit = this.parse(node, fullText, formatters);
                     if (codeEdit !== undefined) {
                         this.insertChangeIntoTree(tree, codeEdit);
                         this.insertChangeIntoFullText(codeEdit, fullText);
@@ -221,7 +312,6 @@ export class FormattingEngine {
 
                 return true;
             }
-
             return false;
         });
 
@@ -260,5 +350,58 @@ export class FormattingEngine {
             2,
             secondChildNode.text.length - 2
         );
+    }
+
+    private compare(
+        node1: SyntaxNode,
+        node2: SyntaxNode,
+        formatters: IFormatter[]
+    ): boolean {
+        const matchingFormatter = formatters.find((formatter) =>
+            formatter.match(node1)
+        );
+
+        let result: boolean;
+
+        if (matchingFormatter) {
+            result = matchingFormatter.compare(node1, node2);
+        } else {
+            // Select the default formatter if no match is found
+            const defaultFormatter = formatters.find(
+                (f) =>
+                    (f.constructor as any).formatterLabel ===
+                    "defaultFormatting"
+            );
+            if (defaultFormatter) {
+                result = defaultFormatter.compare(node1, node2);
+            } else {
+                result = false;
+            }
+        }
+
+        if (!result) {
+            return false;
+        }
+
+        if (node1.childCount > 0) {
+            for (let i = 0; i < node1.childCount; i++) {
+                const child1 = node1.child(i)!;
+                const child2 = node2.child(i)!;
+
+                if (!this.compare(child1, child2, formatters)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public isAstEqual(tree1: Tree, tree2: Tree): boolean | undefined {
+        const formatters = FormatterFactory.getFormatterInstances(
+            this.configurationManager
+        );
+
+        return this.compare(tree1.rootNode, tree2.rootNode, formatters);
     }
 }

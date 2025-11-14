@@ -9,6 +9,7 @@ import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IConfigurationManager } from "../../utils/IConfigurationManager";
 import { BlockSettings } from "./BlockSettings";
 
+
 @RegisterFormatter
 export class BlockFormater extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "blockFormatting";
@@ -31,6 +32,11 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         return true;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     public parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -45,6 +51,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         let formattingOnStatement = false;
         let sibling = parent.previousNamedSibling;
+
         if (parent.type === SyntaxNodeType.DoBlock) {
             /* Workaround until tree-sitter fixes this */
             for (let i = 0; i < 5 && sibling !== null; i++) {
@@ -176,8 +183,26 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         let n = 0;
         let lineChangeDelta = 0;
+
+        const nonRelatviveExcludedRanges = FormatterHelper.getExcludedRanges(parent);
+
+        const excludedRanges = nonRelatviveExcludedRanges.map((range) => ({
+            start: range.start - parent.startPosition.row,
+            end: range.end - parent.startPosition.row,
+        }));
+
+        console.log("[Extension Host] Excluded ranges:", excludedRanges);
+
         codeLines.forEach((codeLine, index) => {
             const lineNumber = parent.startPosition.row + index;
+
+            if (
+                excludedRanges.some(
+                    (r) => lineNumber >= r.start && lineNumber <= r.end
+                )
+            ) {
+                return;
+            }
 
             // adjust delta
             if (blockStatementsStartRows[n] === lineNumber) {
@@ -192,7 +217,6 @@ export class BlockFormater extends AFormatter implements IFormatter {
                             fullText
                         );
                 }
-
                 n++;
             }
 
@@ -265,7 +289,8 @@ export class BlockFormater extends AFormatter implements IFormatter {
             parent,
             fullText,
             indentationEdits,
-            codeLines
+            codeLines,
+            excludedRanges
         );
     }
 
@@ -273,13 +298,16 @@ export class BlockFormater extends AFormatter implements IFormatter {
         node: SyntaxNode,
         fullText: FullText,
         indentationEdits: IndentationEdits[],
-        codeLines: string[]
+        codeLines: string[],
+        excludedRanges: { start: number; end: number }[]
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
+
         const newText = this.applyIndentationEdits(
             indentationEdits,
             fullText,
-            codeLines
+            codeLines,
+            excludedRanges
         );
 
         return this.getCodeEdit(node, text, newText, fullText);
@@ -288,13 +316,22 @@ export class BlockFormater extends AFormatter implements IFormatter {
     private applyIndentationEdits(
         edits: IndentationEdits[],
         fullText: FullText,
-        lines: string[]
+        lines: string[],
+        excludedRanges: { start: number; end: number }[]
     ): string {
         // Split the code into lines
 
         // Apply each edit
         edits.forEach((edit) => {
             const { line, lineChangeDelta } = edit;
+
+            const isExcluded = excludedRanges.some(
+                (r) => line >= r.start && line <= r.end
+            );
+
+            if (isExcluded) {
+                return;
+            }
 
             // Ensure the line number is within the range
             if (line >= 0 && line < lines.length) {
@@ -354,6 +391,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
         const pattern = /^[^.]*end[^.]*\.[^.]*$/i;
         return pattern.test(str);
     }
+
 }
 
 interface IndentationEdits {

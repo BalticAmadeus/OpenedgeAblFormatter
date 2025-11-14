@@ -2,7 +2,7 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.3.0",
+  "version": "0.4.4",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
@@ -19,6 +19,26 @@
   "main": "./out/extension.js",
   "publisher": "BalticAmadeus",
   "contributes": {
+    "commands": [
+    {
+      "command": "openedgeAblFormatter.excludeCode",
+      "title": "Exclude from formatting",
+      "category": "OpenEdge ABL Formatter"
+    },
+    {
+      "command": "openedgeAblFormatter.reportBug",
+      "title": "Report Bug",
+      "category": "OpenEdge ABL Formatter"
+    }
+  ],
+  "menus": {
+    "editor/context": [
+      {
+        "command": "openedgeAblFormatter.excludeCode",
+        "group": "navigation"
+      }
+    ]
+  },
     "languages": [
       {
         "id": "abl",
@@ -354,22 +374,17 @@
           ]
         }
       }
-    },
-    "commands": [
-      {
-        "command": "openedgeAblFormatter.reportBug",
-        "title": "Report Bug",
-        "category": "OpenEdge ABL Formatter"
-      }
-    ]
-  },
+    }
+    
+  },  
   "scripts": {
     "inject-telemetry-key": "replace-in-file \"__TELEMETRY_KEY__\"  \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" ./out/extension.js",
     "reset-telemetry-key": "replace-in-file \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" \"__TELEMETRY_KEY__\" ./out/extension.js",
     "copy-wasm": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out",
+    "copy-wasm-parser": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out/parser",
     "package": "npx vsce package && npm run reset-telemetry-key",
     "delete-out": "rimraf out",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && npm run copy-wasm && npm run inject-telemetry-key",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && esbuild ./src/parser/ParserWorker.ts --bundle --outfile=out/parser/ParserWorker.js --format=cjs --platform=node && npm run copy-wasm && npm run copy-wasm-parser && npm run inject-telemetry-key",
     "build": "npm run esbuild",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
@@ -382,8 +397,11 @@
     "copy-test-cases": "copyfiles -u 2 ./resources/samples/* .test_dir/samples",
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
     "test": "node ./out/test/runTest.js",
+    "test-w-metamorphic": "node ./out/test/runTest.js --metamorphic",
     "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
-    "stability-test": "node ./out/stability-test/runTest.js"
+    "test-symbol": "node ./out/test-symbol/runTest.js",
+    "test-ast": "node ./out/test-ast/runTest.js",
+    "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
@@ -394,6 +412,7 @@
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.3.2",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
     "esbuild": "^0.25.2",
@@ -402,12 +421,12 @@
     "mocha": "^10.8.2",
     "replace-in-file": "^8.3.0",
     "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.2.2",
-    "vscode-extension-tester": "^8.13.0",
-    "@vscode/vsce": "^3.3.2"
+    "vscode-extension-tester": "^8.13.0"
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.9.8",
-    "web-tree-sitter": "0.20.8"
+    "web-tree-sitter": "^0.20.8"
   }
 }
