@@ -40,9 +40,9 @@ issuesGithub_506 - fixed
 issuesGithub_507
 issuesGithub_508 - fixed
 issuesGithub_509 - fixed
-issuesGithub_510
+issuesGithub_510 - fixed
 issuesGithub_511 - fixed
-issuesGithub_512
+issuesGithub_512 - fixed
 issuesGithub_513
 issuesGithub_514
 issuesGithub_522 - fixed
@@ -63,6 +63,6 @@ issuesGithub_533 - fixed
 issuesGithub_535 - fixed
 issuesGithub_538 - fixed
 issuesGithub_544
-issuesGithub_556
+issuesGithub_556 - fixed
 issuesGithub_557
 issuesGithub_558

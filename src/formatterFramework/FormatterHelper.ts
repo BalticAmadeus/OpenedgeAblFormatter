@@ -246,8 +246,10 @@ export class FormatterHelper {
     ) {
         let newString = "";
         if (node.type === SyntaxNodeType.LeftParenthesis) {
+            const skipBefore = FormatterHelper.hasSkipKeyword(node);
             newString =
-                " " + FormatterHelper.getCurrentText(node, fullText).trim();
+                (skipBefore ? "" : " ") +
+                FormatterHelper.getCurrentText(node, fullText).trim();
         } else if (
             node.type === SyntaxNodeType.RightParenthesis ||
             (node.previousSibling !== null &&
@@ -261,6 +263,14 @@ export class FormatterHelper {
             newString = FormatterHelper.getCurrentText(node, fullText);
         }
         return newString;
+    }
+
+    public static hasSkipKeyword(node: SyntaxNode): boolean | null {
+        return (
+            !!node.parent &&
+            !!node.parent.previousSibling &&
+            node.parent.previousSibling.type === SyntaxNodeType.SkipKeyword
+        );
     }
 
     public static getExcludedRanges(

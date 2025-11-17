@@ -40,10 +40,16 @@ adedict_FLD__newfld.p
 adedict_FLD__savedom.p
 adedict_FLD__savefld.p
 adedict_IDX__newidx.p
-adedict_TBL__newtbl.p
 adedict_TBL__savetbl.p
 aderes_l-layout.p
 aderes_r-layout.p
 aderes_r-short.p
 adeuib__mlref.p
 prodict_pro__pro_fld.p
+//010 issues -->
+auditing__auditmainw.w
+OpenEdge_DataAdmin_DataSource_IndexDataSource.cls
+prodict_gui__guiuchg.p
+prodict_misc_osappend.p
+prodict_sec__sec-perm.p
+//010 issues <--
