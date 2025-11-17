@@ -13,7 +13,7 @@ import {
 } from "../../utils/suitesUtils";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
-import { TestConfig } from "../../utils/iTestConfig";
+import { ITestConfig } from "../../utils/ITestConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
@@ -24,18 +24,11 @@ import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
 import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
 
 let parserHelper: AblParserHelper;
+let metamorphicEngine: MetamorphicEngine<DebugTestingEngineOutput> | undefined;
 
 const isMetamorphicEnabled =
     process.argv.includes("--metamorphic") ||
     process.env.TEST_MODE === "metamorphic";
-
-const metamorphicEngine = isMetamorphicEnabled
-    ? new MetamorphicEngine<DebugTestingEngineOutput>(console)
-          .addMR(new ReplaceEQ())
-          .addMR(new ReplaceForEachToForLast())
-          .addMR(new RemoveNoError())
-          .addMR(new IdempotenceMR(null as any))
-    : undefined;
 
 suite("AST Stability Test Suite", () => {
     suiteSetup(async () => {
@@ -46,12 +39,15 @@ suite("AST Stability Test Suite", () => {
 
         parserHelper = await setupParserHelper();
 
-        // Set parser helper for IdempotenceMR
-        if (metamorphicEngine) {
-            const idempotenceMR = metamorphicEngine.getMR(
-                "Idempotence"
-            ) as IdempotenceMR;
-            idempotenceMR.setParserHelper(parserHelper);
+        // Create metamorphic engine AFTER parserHelper is available
+        if (isMetamorphicEnabled) {
+            metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>(
+                console
+            )
+                .addMR(new ReplaceEQ())
+                .addMR(new ReplaceForEachToForLast())
+                .addMR(new RemoveNoError())
+                .addMR(new IdempotenceMR(parserHelper));
 
             metamorphicEngine.setFormattingEngine(
                 new FormattingEngineMock(parserHelper)
@@ -78,6 +74,9 @@ suite("AST Stability Test Suite", () => {
         suite("Metamorphic Tests", () => {
             metamorphicTestCases.forEach((cases) => {
                 test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
+                    if (!metamorphicEngine) {
+                        throw new Error("metamorphicEngine is undefined");
+                    }
                     const result = await metamorphicEngine.runOne(
                         cases.fileName,
                         cases.mrName
@@ -108,7 +107,7 @@ async function astTest(
 ): Promise<void> {
     enableFormatterDecorators();
 
-    const config: TestConfig<{ tree: Tree | undefined; text: string }> = {
+    const config: ITestConfig<{ tree: Tree | undefined; text: string }> = {
         testType: "ast",
         knownFailuresFile: "_ast_failures.txt",
         resultFailuresFile: "_ast_failures.txt",

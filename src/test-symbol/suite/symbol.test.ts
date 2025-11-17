@@ -8,7 +8,7 @@ import {
     runGenericTest,
     logKnownFailures,
 } from "../../utils/suitesUtils";
-import { TestConfig } from "../../utils/iTestConfig";
+import { ITestConfig } from "../../utils/ITestConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 
 let parserHelper: AblParserHelper;
@@ -53,7 +53,7 @@ async function symbolTest(
 ): Promise<void> {
     enableFormatterDecorators();
 
-    const config: TestConfig<{ tree: any; text: string }> = {
+    const config: ITestConfig<{ tree: any; text: string }> = {
         testType: "symbol",
         knownFailuresFile: "_symbol_failures.txt",
         resultFailuresFile: "_symbol_failures.txt",

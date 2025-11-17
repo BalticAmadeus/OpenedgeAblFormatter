@@ -18,10 +18,10 @@ import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
-import { setupParserHelper } from "../../utils/suitesUtils";
 import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
 
 let parserHelper: AblParserHelper;
+let metamorphicEngine: MetamorphicEngine<DebugTestingEngineOutput> | undefined;
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
 const functionalTestDir = "resources/functionalTests";
@@ -58,16 +58,6 @@ const isMetamorphicEnabled =
     process.argv.includes("--metamorphic") ||
     process.env.TEST_MODE === "metamorphic";
 
-console.log("Is Metamorphic Enabled:", isMetamorphicEnabled);
-
-const metamorphicEngine = isMetamorphicEnabled
-    ? new MetamorphicEngine<DebugTestingEngineOutput>(console)
-          .addMR(new ReplaceEQ())
-          .addMR(new ReplaceForEachToForLast())
-          .addMR(new RemoveNoError())
-          .addMR(new IdempotenceMR(null as any))
-    : undefined;
-
 for (const dir of treeSitterErrorTestDirs) {
     const testsInsideDir = getDirs(
         path.join(extensionDevelopmentPath, treeSitterErrorTestDir + "/" + dir)
@@ -100,12 +90,14 @@ suite("Extension Test Suite", () => {
             new DebugManagerMock()
         );
 
-        if (metamorphicEngine) {
-            // Set parser helper for IdempotenceMR
-            const idempotenceMR = metamorphicEngine.getMR(
-                "Idempotence"
-            ) as IdempotenceMR;
-            idempotenceMR.setParserHelper(parserHelper);
+        if (isMetamorphicEnabled) {
+            metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>(
+                console
+            )
+                .addMR(new ReplaceEQ())
+                .addMR(new ReplaceForEachToForLast())
+                .addMR(new RemoveNoError())
+                .addMR(new IdempotenceMR(parserHelper));
 
             metamorphicEngine.setFormattingEngine(
                 new FormattingEngineMock(parserHelper)
@@ -152,6 +144,9 @@ suite("Extension Test Suite", () => {
         suite("Metamorphic Tests", () => {
             metamorphicTestCases.forEach((cases) => {
                 test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
+                    if (!metamorphicEngine) {
+                        throw new Error("metamorphicEngine is undefined");
+                    }
                     const result = await metamorphicEngine.runOne(
                         cases.fileName,
                         cases.mrName

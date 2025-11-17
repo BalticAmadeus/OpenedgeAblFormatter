@@ -6,7 +6,7 @@ import { FileIdentifier } from "../../model/FileIdentifier";
 export class IdempotenceMR implements MR {
     mrName: string = "Idempotence";
 
-    constructor(private parserHelper: AblParserHelper | null) {}
+    constructor(readonly parserHelper: AblParserHelper | null) {}
 
     async inputFunction(input: TextTree): Promise<string> {
         if (!this.parserHelper) {
@@ -28,10 +28,6 @@ export class IdempotenceMR implements MR {
 
     checkIfApplicable(input: TextTree): boolean {
         return true;
-    }
-
-    public setParserHelper(parserHelper: AblParserHelper): void {
-        this.parserHelper = parserHelper;
     }
 
     private getEOL(text: string): string {

@@ -8,7 +8,7 @@ import { FileIdentifier } from "../model/FileIdentifier";
 import { ConfigurationManager } from "./ConfigurationManager";
 import { DebugManagerMock } from "../test-ast/suite/DebugManagerMock";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
-import { TestConfig } from "./iTestConfig";
+import { ITestConfig } from "./ITestConfig";
 
 // Shared constants
 export const extensionDevelopmentPath = path.resolve(__dirname, "../../");
@@ -29,7 +29,7 @@ export async function runGenericTest<
 >(
     name: string,
     parserHelper: AblParserHelper,
-    config: TestConfig<TResult>,
+    config: ITestConfig<TResult>,
     metamorphicEngine?: MetamorphicEngine<any>
 ): Promise<void> {
     ConfigurationManager.getInstance();

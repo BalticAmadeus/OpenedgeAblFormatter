@@ -47,14 +47,6 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         }
     }
 
-    public getMR(mrName: string): MR {
-        const mr = this.metamorphicRelations.find((mr) => mr.mrName === mrName);
-        if (!mr) {
-            throw new Error(`MR with name "${mrName}" not found`);
-        }
-        return mr;
-    }
-
     private async test(
         mr: MR,
         pair: OriginalTestCase
