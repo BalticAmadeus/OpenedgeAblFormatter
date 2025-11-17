@@ -67,7 +67,7 @@ All test suites are automatically run when you create a pull request (PR). To ru
 3. Click the green Start button (▶) or press F5 to start debugging.
 4. See whether the tests pass or not live in the Debug console.
 
-![](resources\tests_run.png)
+![Running Tests](./resources/tests_run.png)
 
 ## Additional notes regarding development
 
