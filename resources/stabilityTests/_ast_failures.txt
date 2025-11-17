@@ -646,7 +646,6 @@ adm2_support__wizdo.w
 adm2_support__wizetbl.w
 adm2_support__wizhref.w
 auditing_ui__audeventmaintw.w
-prodict_user__usriact.p
 prores_s-calc.p
 protools_widattrs.w
 protools__dblist.w
