@@ -13,7 +13,7 @@ import {
 } from "../../utils/suitesUtils";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
-import { ITestConfig } from "../../utils/ITestConfig";
+import { ISuiteConfig } from "../../utils/ISuiteConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
@@ -107,7 +107,7 @@ async function astTest(
 ): Promise<void> {
     enableFormatterDecorators();
 
-    const config: ITestConfig<{ tree: Tree | undefined; text: string }> = {
+    const config: ISuiteConfig<{ tree: Tree | undefined; text: string }> = {
         testType: "ast",
         knownFailuresFile: "_ast_failures.txt",
         resultFailuresFile: "_ast_failures.txt",

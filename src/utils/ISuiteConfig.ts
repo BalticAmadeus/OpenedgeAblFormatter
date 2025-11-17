@@ -1,6 +1,6 @@
 import { AblParserHelper } from "../parser/AblParserHelper";
 
-export interface ITestConfig<TResult extends { tree: any; text: string }> {
+export interface ISuiteConfig<TResult extends { tree: any; text: string }> {
     testType: string;
     knownFailuresFile: string;
     resultFailuresFile: string;
