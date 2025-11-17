@@ -15,6 +15,12 @@ class ParserWorker {
 
     constructor() {
         // Don't start initialization here, wait for start() to be called
+        if (process.send) {
+            process.send({
+                type: "log",
+                message: "Worker started...",
+            });
+        }
     }
 
     private async initializeParser(): Promise<void> {

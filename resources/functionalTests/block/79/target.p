@@ -8,6 +8,6 @@ interface adeuib.ide.request.irequest :
     
     method public logical Execute(UIBHandle     as handle,
                                   ContextHandle as handle).
-    method public character GetResponse(MyHandle      as handle).
+    method public character GetResponse(MyHandle as handle).
    
 end interface.

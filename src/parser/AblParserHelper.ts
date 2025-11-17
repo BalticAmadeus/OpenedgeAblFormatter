@@ -335,9 +335,7 @@ export class AblParserHelper implements IParserHelper {
                 stdio: ["pipe", "pipe", "pipe", "ipc"],
             });
 
-            this.workerProcess.stdout?.on("data", (data) => {
-                console.log("stdout", data);
-            });
+            this.workerProcess.stdout?.on("data", (data) => {});
 
             this.workerProcess.stderr?.on("data", (data) => {
                 console.log("stderr", data);
@@ -437,6 +435,8 @@ export class AblParserHelper implements IParserHelper {
                     pendingRequest.reject(new Error(errorMsg));
                 }
             }
+        } else if (message.type === "log") {
+            console.log(`[Worker]: ${message.message}`);
         }
     }
 
