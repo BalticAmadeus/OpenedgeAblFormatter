@@ -3,11 +3,14 @@
 
 name: Node.js CI
 
+permissions:
+    contents: read
+
 on:
     push:
-        branches: ["develop"]
+        branches: ["develop", "main"]
     pull_request:
-        branches: ["develop"]
+        branches: ["develop", "main"]
 
 jobs:
     test:
@@ -30,11 +33,16 @@ jobs:
               run: xvfb-run -a npm test
               if: runner.os == 'Linux'
 
+            - name: Run Tests w Metamorphic
+              run: xvfb-run -a npm run test-w-metamorphic
+              continue-on-error: true
+              if: runner.os == 'Linux'
+
             - name: Run Tests (Non-Linux)
               run: npm test
               if: runner.os != 'Linux'
 
-    stability-test:
+    symbol-test:
         needs: test # Runs only if 'test' job is successful
         runs-on: ubuntu-latest
         steps:
@@ -56,14 +64,48 @@ jobs:
               run: xvfb-run -a npm run get-ade-test
               if: runner.os == 'Linux'
 
-            - name: Run Stability Test
-              run: xvfb-run -a npm run stability-test
+            - name: Run Symbol Test
+              run: xvfb-run -a npm run test-symbol
               if: runner.os == 'Linux'
 
-            - name: Save Stability Test Results as Artifact
+            - name: Save Symbol Test Results as Artifact
               if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: results
-                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults
+                  name: symbol-test-results
+                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults/symbolTests
+                  retention-days: 7
+
+    ast-test:
+        needs: test # Runs only if 'test' job is successful
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20.x
+
+            - run: npm install
+
+            - name: Compile
+              run: xvfb-run -a npm run compile
+              if: runner.os == 'Linux'
+
+            - name: Get ADE Repo
+              run: xvfb-run -a npm run get-ade-test
+              if: runner.os == 'Linux'
+
+            - name: Run AST Test
+              run: xvfb-run -a npm run test-ast
+              if: runner.os == 'Linux'
+
+            - name: Save AST Test Results as Artifact
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ast-test-results
+                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults/astTests
                   retention-days: 7

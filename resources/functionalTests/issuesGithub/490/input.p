@@ -1,0 +1,1 @@
+iarg = SUBSTRING(iarg, 1 , (LENGTH(iarg) - 1)).

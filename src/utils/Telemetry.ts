@@ -1,5 +1,6 @@
 import TelemetryReporter from "@vscode/extension-telemetry";
 import * as vscode from "vscode";
+import { BaseEngineOutput } from "../mtest/EngineParams";
 
 export class Telemetry {
     private static instance: TelemetryReporter;
@@ -8,8 +9,7 @@ export class Telemetry {
     private static fullFormattingActions: number = 0;
     private static selectionFormattingActions: number = 0;
     private static sendThreshold: number = 5;
-    private static readonly TELEMETRY_KEY =
-        "__TELEMETRY_KEY__"; // Replace with your actual telemetry key
+    private static readonly TELEMETRY_KEY = "__TELEMETRY_KEY__"; // Replace with your actual telemetry key
     private constructor() {}
 
     public static getInstance(): TelemetryReporter {
@@ -24,7 +24,9 @@ export class Telemetry {
             .getConfiguration("Telemetry")
             .get("ablFormatterTelemetry") as boolean;
         const isGlobalTelemetryOn = vscode.env.isTelemetryEnabled;
-        const isKeyInjected = this.TELEMETRY_KEY.startsWith("InstrumentationKey=");
+        const isKeyInjected = this.TELEMETRY_KEY.startsWith(
+            "InstrumentationKey="
+        );
 
         return isKeyInjected && isFormatterTelemetryOn && isGlobalTelemetryOn;
     }
@@ -116,6 +118,10 @@ export class Telemetry {
             );
         }
     }
+
+    public static sendMetamorphicTestResults(
+        resultsList: BaseEngineOutput[]
+    ): void {}
 
     private static totalFormattingActions(): number {
         return this.fullFormattingActions + this.selectionFormattingActions;

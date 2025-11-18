@@ -1,5 +1,6 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.blockFormatting": true}*/
+/*  { "AblFormatter.blockFormatting": true,
+"AblFormatter.expressionFormattingLogicalLocation": "Same"}*/
 
 repeat while a < abc and true:
     assign

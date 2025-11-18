@@ -1,14 +1,16 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.blockFormatting": true}*/
-CLASS Nebula.Galactic.CosmicService.StarHandler.GalaxyMethodNotAllowedException
+CLASS Nebula.Galactic.ModelFilter.StarModelFilter
     INHERITS Supernova
     IMPLEMENTS IAstro405Error
     SERIALIZABLE  :
-
-    /** Default constructor
-     */
-    CONSTRUCTOR PUBLIC GalaxyMethodNotAllowedException():
+    
+              CONSTRUCTOR PUBLIC StarModelFilter(poStarModel AS StarModel):
         SUPER("Did you know? A day on Venus is longer than a year on Venus!":u, 0).
-    END CONSTRUCTOR.
 
+        ASSIGN
+            oStarModel = poStarModel
+            .
+
+        END CONSTRUCTOR.
 END CLASS.

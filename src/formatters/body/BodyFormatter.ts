@@ -8,6 +8,7 @@ import { BodySettings } from "./BodySettings";
 import { IConfigurationManager } from "../../utils/IConfigurationManager";
 import { bodyBlockKeywords, SyntaxNodeType } from "../../model/SyntaxNodeType";
 import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
+import { ExcludeAnnotationType } from "../../model/ExcludeAnnotationType";
 
 @RegisterFormatter
 export class BodyFormatter extends AFormatter implements IFormatter {
@@ -31,6 +32,11 @@ export class BodyFormatter extends AFormatter implements IFormatter {
 
         return true;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     public parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -83,8 +89,24 @@ export class BodyFormatter extends AFormatter implements IFormatter {
 
         let n = 0;
         let lineChangeDelta = 0;
+
+        const nonRelatviveExcludedRanges = FormatterHelper.getExcludedRanges(parent);
+
+        const excludedRanges = nonRelatviveExcludedRanges.map((range) => ({
+            start: range.start - parent.startPosition.row,
+            end: range.end - parent.startPosition.row,
+        }));
+
         codeLines.forEach((codeLine, index) => {
             const lineNumber = node.startPosition.row + index;
+
+            if (
+                excludedRanges.some(
+                    (r) => lineNumber >= r.start && lineNumber <= r.end
+                )
+            ) {
+                return;
+            }
 
             // adjust delta
             if (blockStatementsStartRows[n] === lineNumber) {
@@ -110,20 +132,23 @@ export class BodyFormatter extends AFormatter implements IFormatter {
         return this.getCodeEditsFromIndentationEdits(
             node,
             fullText,
-            indentationEdits
+            indentationEdits,
+            excludedRanges
         );
     }
 
     private getCodeEditsFromIndentationEdits(
         node: SyntaxNode,
         fullText: FullText,
-        indentationEdits: IndentationEdits[]
+        indentationEdits: IndentationEdits[],
+        excludedRanges: { start: number; end: number }[]
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
         const newText = this.applyIndentationEdits(
             text,
             indentationEdits,
-            fullText
+            fullText,
+            excludedRanges
         );
 
         return this.getCodeEdit(node, text, newText, fullText);
@@ -132,7 +157,8 @@ export class BodyFormatter extends AFormatter implements IFormatter {
     private applyIndentationEdits(
         code: string,
         edits: IndentationEdits[],
-        fullText: FullText
+        fullText: FullText,
+        excludedRanges: { start: number; end: number }[]
     ): string {
         // Split the code into lines
         const lines = code.split(fullText.eolDelimiter);
@@ -140,6 +166,14 @@ export class BodyFormatter extends AFormatter implements IFormatter {
         // Apply each edit
         edits.forEach((edit) => {
             const { line, lineChangeDelta } = edit;
+
+            const isExcluded = excludedRanges.some(
+                (r) => line >= r.start && line <= r.end
+            );
+
+            if (isExcluded) {
+                return;
+            }
 
             // Ensure the line number is within the range
             if (line >= 0 && line < lines.length) {
@@ -191,6 +225,7 @@ export class BodyFormatter extends AFormatter implements IFormatter {
         }
         return node;
     }
+
 }
 
 interface IndentationEdits {

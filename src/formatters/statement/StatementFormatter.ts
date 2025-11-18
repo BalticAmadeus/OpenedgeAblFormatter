@@ -23,6 +23,7 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         if (
             node.type === SyntaxNodeType.AblStatement ||
             node.type === SyntaxNodeType.ReturnStatement ||
+            node.type === SyntaxNodeType.MessageStatement ||
             node.type === SyntaxNodeType.InputOutputStatement ||
             node.type === SyntaxNodeType.ReleaseStatement
         ) {
@@ -30,6 +31,11 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>

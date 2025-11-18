@@ -1,0 +1,55 @@
+adecomm_peditor.i
+adecomm__dswidfunc.p
+adecomm__pweditor.i
+adeshar__mchgi.i
+adeuib__ttyss.i
+protools__scrcap.w
+adexml__xmlview.w
+//0046 issues -->
+adecomm__auddfilt.p
+prodict_aud__aud-pol.p
+prodict_misc__cdc-pol.p
+prodict_misc__db-id-hst.p
+prodict_misc__db-id-mnt.p
+//0046 issues <--
+//0047 issues -->
+adm2_logic.i
+auditing_src_adm2_logic.i
+//0047 issues <--
+//0048pre issues -->
+//0048pre issues <--
+//0049 issues (reduced functionality) -->
+adeuib__tview.w
+//0049 issues (reduced functionality) <--
+//0049 issues -->
+aderes_e-type.p
+aderes_l-type.p
+aderes_p-type.p
+//0049 issues <--
+//0050-pre issues -->
+unique.i
+prores_c-cache1.i
+protools__prospy.w
+//0050-pre issues <--
+//0050 issues -->
+prodict_dump__dmpsec.p
+//0050 issues <--
+adecomm_psearch.i
+adecomp__fspec.p
+adedict_FLD__newfld.p
+adedict_FLD__savedom.p
+adedict_FLD__savefld.p
+adedict_IDX__newidx.p
+adedict_TBL__savetbl.p
+aderes_l-layout.p
+aderes_r-layout.p
+aderes_r-short.p
+adeuib__mlref.p
+prodict_pro__pro_fld.p
+//010 issues -->
+auditing__auditmainw.w
+OpenEdge_DataAdmin_DataSource_IndexDataSource.cls
+prodict_gui__guiuchg.p
+prodict_misc_osappend.p
+prodict_sec__sec-perm.p
+//010 issues <--
