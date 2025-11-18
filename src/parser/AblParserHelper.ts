@@ -335,9 +335,7 @@ export class AblParserHelper implements IParserHelper {
                 stdio: ["pipe", "pipe", "pipe", "ipc"],
             });
 
-            this.workerProcess.stdout?.on("data", (data) => {
-                console.log("stdout", data);
-            });
+            this.workerProcess.stdout?.on("data", (data) => {});
 
             this.workerProcess.stderr?.on("data", (data) => {
                 console.log("stderr", data);
