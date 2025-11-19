@@ -1,24 +1,24 @@
-import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { EOL } from "../model/EOL";
 import { BaseEngineOutput, DebugTestingEngineOutput } from "./EngineParams";
 import { OriginalTestCase, TextTree } from "./OriginalTestCase";
 import { MR } from "./MR";
+import { FormattingEngineMock } from "../formatterFramework/FormattingEngineMock";
 
 export class MetamorphicEngine<T extends BaseEngineOutput> {
-    private formattingEngine: FormattingEngine | undefined = undefined;
+    private formattingEngineMock: FormattingEngineMock | undefined = undefined;
     private resultsList: (T | boolean)[] = [];
 
     private readonly metamorphicRelations: MR[] = [];
     private inputAndOutputPairs: OriginalTestCase[] = [];
 
-    public setFormattingEngine(formattingEngine: FormattingEngine) {
-        this.formattingEngine = formattingEngine;
-    }
-
     private readonly engineConsole: Console | undefined;
 
     public constructor(engineConsole: Console | undefined) {
         this.engineConsole = engineConsole;
+    }
+
+    public setFormattingEngine(formattingEngineMock: FormattingEngineMock) {
+        this.formattingEngineMock = formattingEngineMock;
     }
 
     public addNameInputAndOutputPair(
@@ -27,7 +27,6 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         input: TextTree,
         output: TextTree
     ): this {
-        this.engineConsole?.log("Added test case:", name);
         this.inputAndOutputPairs.push({
             name: name,
             eol: eol,
@@ -38,62 +37,62 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     }
 
     public addMR(mr: MR): this {
-        this.engineConsole?.log("Added mr:", mr.mrName);
         this.metamorphicRelations.push(mr);
         return this;
     }
 
     public addMRs(mrs: MR[]): void {
-        mrs.forEach((mr) => {
+        for (const mr of mrs) {
             this.addMR(mr);
-        });
+        }
     }
 
-    private test(
+    private async test(
         mr: MR,
         pair: OriginalTestCase
-    ): undefined | DebugTestingEngineOutput {
-        if (this.formattingEngine === undefined) {
+    ): Promise<undefined | DebugTestingEngineOutput> {
+        if (this.formattingEngineMock === undefined) {
             throw new Error(
-                `Missing Formatting engine in Metamorphic test engine.`
+                `Missing FormattingEngineMock in Metamorphic test engine.`
             );
         }
 
-        const folowUpInput = mr.inputFunction(pair.input);
-        const actualFolowUpOutput = this.formattingEngine.formatText(
+        const folowUpInput = await mr.inputFunction(pair.input);
+        const actualFolowUpOutput = await this.formattingEngineMock.formatText(
             folowUpInput,
             pair.eol,
             false
         );
-        const expectedFolowUpOutput = mr.outputFunction(pair.output);
+        const expectedFolowUpOutput = await mr.outputFunction(pair.output);
 
         const pass = actualFolowUpOutput === expectedFolowUpOutput;
 
-        // console.log(pass ? "PASS -" : "FAIL -", mr.mrName, pair.name);
-
-        return !pass
-            ? {
+        return pass
+            ? undefined
+            : {
                   fileName: pair.name,
                   mrName: mr.mrName,
                   actual: actualFolowUpOutput,
                   expected: expectedFolowUpOutput,
-              }
-            : undefined;
+              };
     }
 
     public getMatrix(): { fileName: string; mrName: string }[] {
         const matrix: { fileName: string; mrName: string }[] = [];
 
-        this.inputAndOutputPairs.forEach((pair) => {
-            this.metamorphicRelations.forEach((mr) => {
+        for (const pair of this.inputAndOutputPairs) {
+            for (const mr of this.metamorphicRelations) {
                 matrix.push({ fileName: pair.name, mrName: mr.mrName });
-            });
-        });
+            }
+        }
 
         return matrix;
     }
 
-    public runOne(fileName: string, mrName: string): T | undefined {
+    public async runOne(
+        fileName: string,
+        mrName: string
+    ): Promise<T | undefined> {
         const pair = this.inputAndOutputPairs.find(
             (pair) => pair.name === fileName
         );
@@ -113,24 +112,22 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
             );
         }
 
-        const result = this.test(mr, pair);
-
-        return result as T | undefined;
+        return (await this.test(mr, pair)) as T | undefined;
     }
 
     public runAll(): (T | boolean)[] {
         let results: (T | boolean)[] = [];
 
-        this.inputAndOutputPairs.forEach((pair) => {
-            this.metamorphicRelations.forEach((mr) => {
+        for (const pair of this.inputAndOutputPairs) {
+            for (const mr of this.metamorphicRelations) {
                 const result = this.test(mr, pair);
-                if (result !== undefined) {
-                    results.push(result as unknown as T);
-                } else {
+                if (result === undefined) {
                     results.push(true);
+                } else {
+                    results.push(result as unknown as T);
                 }
-            });
-        });
+            }
+        }
 
         // Clear
         this.inputAndOutputPairs = [];

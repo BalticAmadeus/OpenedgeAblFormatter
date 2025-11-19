@@ -7,6 +7,8 @@ import { AblParserHelper } from "../parser/AblParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { ConfigurationManager } from "./ConfigurationManager";
 import { DebugManagerMock } from "../test-ast/suite/DebugManagerMock";
+import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
+import { ISuiteConfig } from "./ISuiteConfig";
 
 // Shared constants
 export const extensionDevelopmentPath = path.resolve(__dirname, "../../");
@@ -27,7 +29,8 @@ export async function runGenericTest<
 >(
     name: string,
     parserHelper: AblParserHelper,
-    config: TestConfig<TResult>
+    config: ISuiteConfig<TResult>,
+    metamorphicEngine?: MetamorphicEngine<any>
 ): Promise<void> {
     ConfigurationManager.getInstance();
 
@@ -99,6 +102,15 @@ export async function runGenericTest<
         addFailedTestCase(currentTestRunDir, "_new_passes.txt", fileName);
         config.cleanup?.(beforeResult, afterResult);
         assert.fail(`File should fail ${fileName}`);
+    }
+
+    if (metamorphicEngine) {
+        metamorphicEngine.addNameInputAndOutputPair(
+            name,
+            { eolDel: getFileEOL(beforeText) },
+            beforeResult,
+            afterResult
+        );
     }
 
     config.cleanup?.(beforeResult, afterResult);
@@ -247,25 +259,4 @@ export function addFailedTestCase(
 
     // Append the failed test case to the file with a newline
     fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
-}
-
-export interface TestConfig<TResult extends { tree: any; text: string }> {
-    testType: string;
-    knownFailuresFile: string;
-    resultFailuresFile: string;
-    processBeforeText: (
-        text: string,
-        parserHelper: AblParserHelper
-    ) => Promise<TResult>;
-    processAfterText: (
-        text: string,
-        parserHelper: AblParserHelper
-    ) => Promise<TResult>;
-    compareResults: (
-        before: TResult,
-        after: TResult,
-        parserHelper?: AblParserHelper
-    ) => Promise<boolean>;
-    onMismatch?: (before: TResult, after: TResult, fileName: string) => void;
-    cleanup?: (before: TResult, after: TResult) => void;
 }

@@ -1,21 +1,18 @@
 // OpenEdge ABL Formatter - Compilation Tests
 // This test suite validates that the formatter doesn't break OpenEdge compilation
 
-import * as assert from "assert";
-import * as fs from "fs";
-import * as path from "path";
-import { exec } from "child_process";
-import { spawn } from "child_process";
-import { promisify } from "util";
-import * as readline from "readline";
+import * as assert from "node:assert";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { exec, spawn } from "node:child_process";
+import { promisify } from "node:util";
+import * as readline from "node:readline";
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
-import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import { DebugManagerMock } from "./DebugManagerMock";
-import { EOL } from "../../model/EOL";
 
 const execAsync = promisify(exec);
 
@@ -87,11 +84,11 @@ suite("Compilation Tests", function () {
     console.log(`Generating ${testFiles.length} individual compilation tests`);
 
     // Generate individual test for each expected file
-    testFiles.forEach((expectedFile) => {
+    for (const expectedFile of testFiles) {
         test(`Compilation test: ${expectedFile}`, async () => {
             await compilationTest(expectedFile, createdFiles);
         });
-    });
+    }
 });
 
 async function promptForProgressCfgPath(): Promise<string> {
@@ -103,7 +100,7 @@ async function promptForProgressCfgPath(): Promise<string> {
 
         console.log("\n⚠️  Could not automatically find progress.cfg file.");
         console.log("Please provide the full path to your progress.cfg file:");
-        console.log("Example: C:\\Progress\\OpenEdge\\progress.cfg");
+        console.log(String.raw`Example: C:\Progress\OpenEdge\progress.cfg`);
 
         rl.question("Enter full path to progress.cfg: ", (userPath) => {
             rl.close();
@@ -147,20 +144,20 @@ async function promptForProgressCfgPath(): Promise<string> {
 
 async function findProgressCfg(): Promise<string> {
     const commonPaths = [
-        "C:\\Progress\\OpenEdge\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.8\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.7\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.6\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.5\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.4\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.3\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.2\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.1\\progress.cfg",
-        "C:\\Progress\\OpenEdge 12.0\\progress.cfg",
-        "C:\\Progress\\OpenEdge 11.7\\progress.cfg",
-        "C:\\Progress\\OpenEdge 11.6\\progress.cfg",
-        "C:\\OpenEdge\\progress.cfg",
-        "C:\\dlc\\progress.cfg",
+        String.raw`C:\Progress\OpenEdge\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.8\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.7\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.6\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.5\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.4\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.3\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.2\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.1\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 12.0\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 11.7\progress.cfg`,
+        String.raw`C:\Progress\OpenEdge 11.6\progress.cfg`,
+        String.raw`C:\OpenEdge\progress.cfg`,
+        String.raw`C:\dlc\progress.cfg`,
     ];
 
     console.log("Searching for progress.cfg file...");
@@ -186,7 +183,9 @@ async function findProgressCfg(): Promise<string> {
 
     // If not found anywhere, prompt user for manual input
     console.log("❌ Could not find progress.cfg in any standard locations:");
-    commonPaths.forEach((p) => console.log(`   - ${p}`));
+    for (const p of commonPaths) {
+        console.log(`   - ${p}`);
+    }
     console.log(`   - DLC environment variable (${dlcPath || "not set"})`);
 
     try {
@@ -208,7 +207,8 @@ async function checkDockerDesktopApp(): Promise<void> {
     } catch (error) {
         console.error("❌ Docker Desktop is not running or not accessible");
         throw new Error(
-            "Docker Desktop is not available. Please start Docker Desktop and ensure it's running properly."
+            `Docker Desktop is not available. Please start Docker Desktop and ensure it's running properly:
+            ${error instanceof Error ? error.message : error}`
         );
     }
 }
@@ -221,7 +221,10 @@ async function copyDockerImg(): Promise<void> {
         await execAsync(`docker image inspect ${imageName}`);
         console.log("✓ Docker image already exists, skipping pull");
     } catch (error) {
-        console.log("Docker image not found, pulling from registry...");
+        console.error(
+            "Docker image not found, pulling from registry...",
+            error
+        );
         try {
             await execAsync(`docker pull ${imageName}`);
             console.log("✓ Docker image pulled successfully");
@@ -246,7 +249,7 @@ async function cloneAdeSourceCode(): Promise<void> {
         const cloneCommand = `git clone https://github.com/GytRag/ADE-Sourcecode "${adeSourceCodePath}"`;
         const { stdout, stderr } = await execAsync(cloneCommand);
 
-        if (stderr && !stderr.includes("Cloning into")) {
+        if (stdout && stderr && !stderr.includes("Cloning into")) {
             throw new Error(`Git clone failed: ${stderr}`);
         }
 
@@ -268,6 +271,7 @@ async function runPbuildDocker(): Promise<void> {
     } catch (error) {
         // Container doesn't exist, which is fine
         console.log("No existing container found, proceeding...");
+        console.log(error);
     }
 
     console.log(`Project root: ${extensionDevelopmentPath}`);
@@ -368,8 +372,6 @@ async function formatAdeSrc(): Promise<void> {
         // Initialize parser
         await Parser.init();
 
-        // Initialize configuration and parser helper
-        const configurationManager = ConfigurationManager.getInstance();
         enableFormatterDecorators(); // This is crucial for formatter initialization!
 
         const debugManager = new DebugManagerMock();
@@ -382,11 +384,46 @@ async function formatAdeSrc(): Promise<void> {
         await parserHelper.startWorker();
 
         // ABL file extensions to format
-        const ablExtensions = [".p", ".i", ".cls", ".w"];
+        const ablExtensions = new Set([".p", ".i", ".cls", ".w"]);
         let filesFormatted = 0;
         let filesSkipped = 0;
 
         // Recursive function to find and format ABL files
+        // Helper function to format a single file
+        const formatFile = async (fullPath: string, extension: string) => {
+            if (ablExtensions.has(extension)) {
+                try {
+                    console.log(
+                        `Formatting: ${path.relative(adeSourcePath, fullPath)}`
+                    );
+
+                    // Read file content
+                    const content = fs.readFileSync(fullPath, "utf-8");
+
+                    // Format the content using parserHelper (worker-based)
+                    const formattedContent = await parserHelper.format(
+                        new FileIdentifier(fullPath, 1),
+                        content,
+                        { eol: { eolDel: getFileEOL(content) } }
+                    );
+
+                    // Write formatted content back to file
+                    fs.writeFileSync(fullPath, formattedContent, "utf-8");
+
+                    filesFormatted++;
+                } catch (error) {
+                    const errorMessage =
+                        error instanceof Error ? error.message : String(error);
+                    const relativePath = path.relative(adeSourcePath, fullPath);
+
+                    console.warn(
+                        `Failed to format ${relativePath}: ${errorMessage}`
+                    );
+                    filesSkipped++;
+                }
+            }
+        };
+
         const formatDirectory = async (dirPath: string): Promise<void> => {
             try {
                 const entries = fs.readdirSync(dirPath, {
@@ -403,54 +440,7 @@ async function formatAdeSrc(): Promise<void> {
                         const extension = path
                             .extname(entry.name)
                             .toLowerCase();
-
-                        if (ablExtensions.includes(extension)) {
-                            try {
-                                console.log(
-                                    `Formatting: ${path.relative(
-                                        adeSourcePath,
-                                        fullPath
-                                    )}`
-                                );
-
-                                // Read file content
-                                const content = fs.readFileSync(
-                                    fullPath,
-                                    "utf-8"
-                                );
-
-                                // Format the content using parserHelper (worker-based)
-                                const formattedContent =
-                                    await parserHelper.format(
-                                        new FileIdentifier(fullPath, 1),
-                                        content,
-                                        { eol: { eolDel: getFileEOL(content) } }
-                                    );
-
-                                // Write formatted content back to file
-                                fs.writeFileSync(
-                                    fullPath,
-                                    formattedContent,
-                                    "utf-8"
-                                );
-
-                                filesFormatted++;
-                            } catch (error) {
-                                const errorMessage =
-                                    error instanceof Error
-                                        ? error.message
-                                        : String(error);
-                                const relativePath = path.relative(
-                                    adeSourcePath,
-                                    fullPath
-                                );
-
-                                console.warn(
-                                    `Failed to format ${relativePath}: ${errorMessage}`
-                                );
-                                filesSkipped++;
-                            }
-                        }
+                        await formatFile(fullPath, extension);
                     }
                 }
             } catch (error) {
@@ -493,8 +483,8 @@ async function collectRFilesFromPath(
                     if (file.endsWith(".r")) {
                         // Normalize path separators to underscore
                         const normalized = relPath
-                            .replace(/\\/g, "_")
-                            .replace(/\//g, "_");
+                            .replaceAll("\\", "_")
+                            .replaceAll("/", "_");
                         results.push(normalized);
                     }
                 }
@@ -549,7 +539,7 @@ async function createResultsFolder(): Promise<string> {
             minute: "2-digit",
             second: "2-digit",
         })
-        .replace(/[\/\s:]/g, "_");
+        .replaceAll(/[/\s:]/g, "_");
 
     const testRunDir = path.join(testResultsDir, testRunTimestamp);
 
@@ -626,88 +616,19 @@ async function copySrcBefor(): Promise<void> {
 async function copyFailedFiles(failedRFile: string): Promise<void> {
     try {
         // Convert .r file path back to original source path
-        // Example: "folder_subfolder_abc.r" -> "folder/subfolder/abc" (without extension)
-        // Handle double underscores: "adedict_DB__connect.r" -> "adedict/DB/_connect"
         const baseFileName = failedRFile.replace(/\.r$/, "");
-
-        // Split the filename into parts, handling double underscores correctly
-        // Double underscore __ represents a single underscore _ in the filename
-        const parts = baseFileName.split("_");
-        const processedParts: string[] = [];
-
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-
-            // Check if this is an empty part (happens with consecutive underscores)
-            if (part === "" && i < parts.length - 1) {
-                // This empty part is from double underscore __
-                // The next part should get a leading underscore
-                const nextPart = parts[i + 1];
-                if (nextPart !== undefined) {
-                    processedParts.push("_" + nextPart);
-                    i++; // Skip the next part since we processed it
-                }
-            } else if (part !== "") {
-                // Regular non-empty part
-                processedParts.push(part);
-            }
-        }
-
+        const processedParts = processDoubleUnderscores(baseFileName);
         const baseSourcePath = processedParts.join(path.sep);
-
-        // Create normalized filename for test results (replace path separators with underscores)
         const normalizedName = processedParts.join("_");
 
         console.log(`📋 Copying failed file artifacts for: ${failedRFile}`);
 
-        // Try all common OpenEdge extensions
         const extensions = [".p", ".w", ".i", ".cls"];
-        let found = false;
-
-        for (const ext of extensions) {
-            const afterFilePath = path.join(
-                adeSourcePath,
-                baseSourcePath + ext
-            );
-            const beforeFilePath = path.join(
-                srcBeforePath,
-                baseSourcePath + ext
-            );
-
-            // Check if this extension exists in either location
-            if (fs.existsSync(afterFilePath) || fs.existsSync(beforeFilePath)) {
-                console.log(`   🔍 Found files with extension: ${ext}`);
-
-                // Copy the "after" version (formatted file)
-                if (fs.existsSync(afterFilePath)) {
-                    const afterDestPath = path.join(
-                        testRunDir,
-                        `${normalizedName}_after${ext}`
-                    );
-                    await fs.promises.copyFile(afterFilePath, afterDestPath);
-                    console.log(`   ✓ Copied after: ${afterDestPath}`);
-                } else {
-                    console.warn(`   ⚠ After file not found: ${afterFilePath}`);
-                }
-
-                // Copy the "before" version (original file)
-                if (fs.existsSync(beforeFilePath)) {
-                    const beforeDestPath = path.join(
-                        testRunDir,
-                        `${normalizedName}_before${ext}`
-                    );
-                    await fs.promises.copyFile(beforeFilePath, beforeDestPath);
-                    console.log(`   ✓ Copied before: ${beforeDestPath}`);
-                } else {
-                    console.warn(
-                        `   ⚠ Before file not found: ${beforeFilePath}`
-                    );
-                }
-
-                found = true;
-                break; // Stop after finding the first matching extension
-            }
-        }
+        const found = await tryCopyExtensions(
+            extensions,
+            baseSourcePath,
+            normalizedName
+        );
 
         if (!found) {
             console.warn(
@@ -719,6 +640,71 @@ async function copyFailedFiles(failedRFile: string): Promise<void> {
     } catch (error) {
         console.error(`Failed to copy artifacts for ${failedRFile}:`, error);
     }
+}
+
+function processDoubleUnderscores(baseFileName: string): string[] {
+    // Handles double underscores as single underscores in the filename
+    const parts: string[] = [];
+    let buffer = "";
+    for (let i = 0; i < baseFileName.length; i++) {
+        if (baseFileName[i] === "_") {
+            if (baseFileName[i + 1] === "_") {
+                buffer += "_";
+            } else if (buffer.length > 0) {
+                parts.push(buffer);
+                buffer = "";
+            }
+        } else {
+            buffer += baseFileName[i];
+        }
+    }
+    if (buffer.length > 0) {
+        parts.push(buffer);
+    }
+    return parts;
+}
+
+async function tryCopyExtensions(
+    extensions: string[],
+    baseSourcePath: string,
+    normalizedName: string
+): Promise<boolean> {
+    for (const ext of extensions) {
+        const afterFilePath = path.join(adeSourcePath, baseSourcePath + ext);
+        const beforeFilePath = path.join(srcBeforePath, baseSourcePath + ext);
+
+        const afterExists = fs.existsSync(afterFilePath);
+        const beforeExists = fs.existsSync(beforeFilePath);
+
+        if (afterExists || beforeExists) {
+            console.log(`   🔍 Found files with extension: ${ext}`);
+
+            if (afterExists) {
+                const afterDestPath = path.join(
+                    testRunDir,
+                    `${normalizedName}_after${ext}`
+                );
+                await fs.promises.copyFile(afterFilePath, afterDestPath);
+                console.log(`   ✓ Copied after: ${afterDestPath}`);
+            } else {
+                console.warn(`   ⚠ After file not found: ${afterFilePath}`);
+            }
+
+            if (beforeExists) {
+                const beforeDestPath = path.join(
+                    testRunDir,
+                    `${normalizedName}_before${ext}`
+                );
+                await fs.promises.copyFile(beforeFilePath, beforeDestPath);
+                console.log(`   ✓ Copied before: ${beforeDestPath}`);
+            } else {
+                console.warn(`   ⚠ Before file not found: ${beforeFilePath}`);
+            }
+
+            return true;
+        }
+    }
+    return false;
 }
 
 function getFailedTestCases(filePath: string): string[] {
