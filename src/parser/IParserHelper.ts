@@ -20,4 +20,5 @@ export interface IParserHelper {
         text: string,
         options?: any
     ): Promise<string>;
+    startWorker(): Promise<void>;
 }

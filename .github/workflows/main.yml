@@ -102,6 +102,11 @@ jobs:
               run: xvfb-run -a npm run test-ast
               if: runner.os == 'Linux'
 
+            - name: Run AST Test (Metamorphic)
+              run: xvfb-run -a npm run test-ast-metamorphic
+              continue-on-error: true
+              if: runner.os == 'Linux'
+
             - name: Save AST Test Results as Artifact
               if: always()
               uses: actions/upload-artifact@v4

@@ -13,6 +13,7 @@ import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { BaseEngineOutput } from "../mtest/EngineParams";
 import { bodyBlockKeywords, SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
+import { FormattingEngineMock } from "./FormattingEngineMock";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -62,7 +63,9 @@ export class FormattingEngine {
             metemorphicEngineIsEnabled &&
             this.metamorphicTestingEngine !== undefined
         ) {
-            this.metamorphicTestingEngine.setFormattingEngine(this);
+            this.metamorphicTestingEngine.setFormattingEngine(
+                new FormattingEngineMock(this.parserHelper)
+            );
 
             const parseResult2 = this.parserHelper.parse(
                 this.fileIdentifier,
@@ -110,16 +113,21 @@ export class FormattingEngine {
                     const keywordNode = children[1];
                     const annotationName = keywordNode?.toString();
 
-
-                    if (annotationName === '("' + ExcludeAnnotationType.excludeStartAnnotation + '")') {
+                    if (
+                        annotationName ===
+                        '("' +
+                            ExcludeAnnotationType.excludeStartAnnotation +
+                            '")'
+                    ) {
                         this.skipFormatting = true;
                     } else if (
-                        annotationName === '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
+                        annotationName ===
+                        '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
                     ) {
                         this.skipFormatting = false;
 
                         const parent = cursor.currentNode().parent;
-                        if(parent && cursor.gotoParent()){
+                        if (parent && cursor.gotoParent()) {
                             cursor.gotoNextSibling();
                         }
                     }
@@ -203,11 +211,16 @@ export class FormattingEngine {
                     const keywordNode = children[1];
                     const annotationName = keywordNode?.toString();
 
-
-                    if (annotationName === '("' + ExcludeAnnotationType.excludeStartAnnotation + '")') {
+                    if (
+                        annotationName ===
+                        '("' +
+                            ExcludeAnnotationType.excludeStartAnnotation +
+                            '")'
+                    ) {
                         this.skipFormatting = true;
                     } else if (
-                        annotationName === '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
+                        annotationName ===
+                        '("' + ExcludeAnnotationType.excludeEndAnnotation + '")'
                     ) {
                         this.skipFormatting = false;
                     }

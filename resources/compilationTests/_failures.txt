@@ -1,6 +1,5 @@
 ablunit_ABLUnitCore.r
 adecomm__getdbs.r
-adecomm_pcmpcls.r
 adedict__brwadj.r
 adedict__brwgray.r
 adedict__brwlist.r
@@ -52,7 +51,6 @@ aderes__atalias.r
 aderes__atool.r
 aderes__awhere.r
 aderes__awrite.r
-aderes__fbframe.r
 aderes__fbprop.r
 aderes__fbresiz.r
 aderes__gotopag.r
@@ -156,7 +154,6 @@ adeuib__initpal.r
 adeuib__inscal8.r
 adeuib__intpxpt.r
 adeuib__linkadd.r
-adeuib__mldlg.r
 adeuib__newcalcv.r
 adeuib__newfunc.r
 adeuib__newobj.r
@@ -257,7 +254,6 @@ adeuib_ide__dialog_dirname.r
 adeuib_ide__dialog_filname.r
 adeuib_ide__dialog_intpxpt.r
 adeuib_ide__dialog_linkadd.r
-adeuib_ide__dialog_mldlg.r
 adeuib_ide__dialog_prpobj.r
 adeuib_ide__dialog_prpsdo.r
 adeuib_ide__dialog_prpsmar.r
@@ -303,16 +299,12 @@ adm2_support__wizard.r
 adm2_support__wizbkgr.r
 adm2_support__wizdfld.r
 adm2_support__wizdo.r
-adm2_support__wizds.r
 adm2_support__wizend.r
 adm2_support__wizetbl.r
 adm2_support__wizfld.r
 adm2_support__wizhref.r
 adm2_support__wizhtml.r
 adm2_support__wizlog.r
-adm2_support__wizmap.r
-adm2_support__wizntro.r
-adm2_support__wizqry.r
 adm2_support__wizstyl.r
 adm2_support_brouter.r
 adm2_support_browsed.r
