@@ -105,7 +105,12 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
         let newString = "";
         switch (node.type) {
             case SyntaxNodeType.TernaryExpression:
-                newString = FormatterHelper.getCurrentText(node, fullText);
+                // Recursively process nested ternary expressions
+                node.children.forEach((child) => {
+                    newString = newString.concat(
+                        this.getIfExpressionString(child, fullText)
+                    );
+                });
                 break;
             case SyntaxNodeType.ParenthesizedExpression:
                 node.children.forEach((child) => {
