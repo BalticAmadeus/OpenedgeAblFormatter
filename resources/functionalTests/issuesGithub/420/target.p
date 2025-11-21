@@ -1,8 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.ifFunctionFormatting": true,
-      "AblFormatter.ifFunctionFormattingAddParentheses": "No",
-      "AblFormatter.ifFunctionFormattingElseLocation": "Same",
-      "AblFormatter.assignFormatting": true}*/
+/*  {"AblFormatter.ifFunctionFormattingElseLocation": "Same"}*/
 
 /* Test case: IF function inside ASSIGN with extra whitespace */
 ASSIGN
