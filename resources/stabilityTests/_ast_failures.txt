@@ -200,11 +200,8 @@ adeuib__rdsele.p
 adeuib__rdtext.p
 adeuib__rdwind.p
 adeuib__recreat.p
-adeuib__saveasdynobject.w
-adeuib__saveaswizd.w
 adeuib__seprocs.i
 adeuib__setdesignwin.p
-adeuib__setsize.p
 adeuib__showlbl.p
 adeuib__smoupg.w
 adeuib__so-prvw.w
@@ -268,7 +265,6 @@ adm2_cobuildp.p
 adm2_exportdata.p
 adm2_support__wizard.w
 adm2_support__wizbkgr.w
-adm2_support__wizdfld.w
 adm2_support__wizdo.w
 adm2_support__wizetbl.w
 adm2_support__wizhref.w
@@ -511,7 +507,6 @@ prodict_odb__odb_pul.p
 prodict_odb__odb_typ.p
 prodict_ora__gendsql.p
 prodict_ora__ora_fld.p
-prodict_ora__ora_lkg.p
 prodict_ora__ora_lkl.p
 prodict_ora__ora_typ.p
 prodict_ora__runload.i
@@ -641,7 +636,6 @@ adm_template_qstates.i
 adm_template_snd-end.i
 adm2_support_u-paneld.w
 adm2_support__wizbkgr.w
-adm2_support__wizdfld.w
 adm2_support__wizdo.w
 adm2_support__wizetbl.w
 adm2_support__wizhref.w
@@ -668,14 +662,12 @@ workshop__gen4gl.p
 //010 issues -->
 aderes_y-run.p
 adeuib_usrlistl.i
-adeuib__semain.w
 adm2_support__wizlog.w
 OpenEdge_DataAdmin_Support_TenantGroupTenantSet.cls
 OpenEdge_DataAdmin_Support_TenantTenantGroupSet.cls
 prodict_dump_copy_dbs.i
 prodict_dump_copy_idx.i
 prodict_dump_copy_seq.i
-prodict_dump__loddata.p
 prodict_dump__lodsec.p
 prodict_user__usrfcpy.p
 prores_b-build.p
