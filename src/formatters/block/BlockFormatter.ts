@@ -143,9 +143,6 @@ export class BlockFormater extends AFormatter implements IFormatter {
                         .substring(colonPos + 1)
                         .trimStart();
 
-                    // Only split if there's actual statement content (not empty or just whitespace)
-                    // and it looks like a statement (starts with a keyword like define, return, etc.)
-                    // and it's NOT a true one-liner (doesn't have "end" on the same line)
                     const startsWithStatement =
                         /^(define|def|defi|var|return|if|for|do|assign|create|find|message)/i.test(
                             bodyPart
