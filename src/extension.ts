@@ -108,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext) {
         () => {
             vscode.env.openExternal(
                 vscode.Uri.parse(
-                    "https://github.com/BalticAmadeus/AblFormatter/issues/new"
+                    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/new?template=formatter-bug-report.md"
                 )
             );
         }
