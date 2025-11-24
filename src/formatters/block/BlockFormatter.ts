@@ -113,17 +113,13 @@ export class BlockFormater extends AFormatter implements IFormatter {
             fullText.eolDelimiter
         );
 
-        // Check if body starts on same line as current node (method signature: body content)
-        // Only split for method/function/procedure/constructor/destructor, not for class/do/repeat/etc
-        // Detect and split inline statements after colon BEFORE slicing
-        // Note: node is a 'body' type, parent is the actual statement type (method_statement, etc.)
         const shouldSplitInlineStatements =
             parent &&
-            (parent.type === "method_statement" ||
-                parent.type === "function_statement" ||
-                parent.type === "procedure_statement" ||
-                parent.type === "constructor_statement" ||
-                parent.type === "destructor_statement");
+            (parent.type === SyntaxNodeType.MethodStatement ||
+                parent.type === SyntaxNodeType.FunctionStatement ||
+                parent.type === SyntaxNodeType.ProcedureStatement ||
+                parent.type === SyntaxNodeType.ConstructorDefinition ||
+                parent.type === SyntaxNodeType.DestructorDefinition);
 
         if (
             shouldSplitInlineStatements &&
