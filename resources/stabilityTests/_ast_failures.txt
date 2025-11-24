@@ -625,6 +625,7 @@ darest_get_tenants.p
 prodict_dump__dmpdefs.p
 prores_q-main.p
 adedict_FLD_lob-misc.i
+adeedit_pcompile.i
 aderes_e-table.p
 aderes_s-exp.p
 aderes_s-join.p
