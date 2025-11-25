@@ -18,7 +18,7 @@ export class ProcedureParameterFormatter
     extends AFormatter
     implements IFormatter
 {
-    public static readonly formatterLabel = "procedureParamaterFormatting";
+    public static readonly formatterLabel = "procedureParameterFormatting";
     private readonly settings: ProcedureParameterSettings;
     private static visitedNodes: Set<number> = new Set();
     private static alignType = 0;
