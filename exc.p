@@ -15,8 +15,8 @@ define temp-table ttInfo //sdfsd
     field price as decimal   serialize-name "Price"
     index id.
 
-assign
-    /* Assign Values */
+assign // sfsdf
+      /* Assign Values */
     ttInfo.id    = 1
     ttInfo.text  = "Sample"
     ttInfo.price = 99.99.

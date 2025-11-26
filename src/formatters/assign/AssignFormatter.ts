@@ -56,17 +56,91 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
-        let longestLeft = this.getLongestLeft(node.children, fullText);
+        const longestLeft = this.getLongestLeft(node.children, fullText);
+        
+        const children: SyntaxNode[] = [];
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child) {
+                children.push(child);
+            }
+        }
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getAssignStatementString(child, fullText, longestLeft)
-            );
-        });
+        let currentPosition = node.startIndex;
+
+        for (const child of children) {
+            // Add any text (including comments) between current position and this child
+            if (currentPosition < child.startIndex) {
+                const between = fullText.text.substring(currentPosition, child.startIndex);
+                
+                // If it contains comments, preserve them
+                if (between.includes("/*") || between.includes("//")) {
+                    resultString += this.preserveComments(between, fullText);
+                }
+                // Otherwise skip - formatter adds proper spacing
+            }
+
+            // Format the non-comment child, or preserve comment as-is
+            if (child.type === "comment") {
+                // Preserve comment exactly as-is
+                resultString += FormatterHelper.getCurrentText(child, fullText);
+            } else {
+                // Format the assignment
+                resultString += this.getAssignStatementString(child, fullText, longestLeft);
+            }
+
+            currentPosition = child.endIndex;
+        }
+
+        // Add any remaining text after last child
+        if (currentPosition < node.endIndex) {
+            const remaining = fullText.text.substring(currentPosition, node.endIndex);
+            if (remaining.includes("/*") || remaining.includes("//")) {
+                resultString += this.preserveComments(remaining, fullText);
+            }
+        }
 
         resultString += this.getFormattedEndDot(fullText);
-
         return resultString;
+    }
+
+    private preserveComments(text: string, fullText: FullText): string {
+        let result = "";
+        const lines = text.split(/\r?\n/);
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmedLine = line.trim();
+            
+            if (i === 0) {
+                // First line - might be inline comment
+                if (trimmedLine.startsWith("//")) {
+                    // Inline single-line comment - keep on same line with space
+                    result += " " + trimmedLine;
+                } else if (trimmedLine.startsWith("/*")) {
+                    // Inline block comment
+                    result += " " + trimmedLine;
+                }
+                // else: whitespace or other content - skip
+            } else {
+                // Not first line
+                if (trimmedLine.length === 0) {
+                    // Blank line - skip (formatter handles spacing)
+                } else if (trimmedLine.startsWith("/*") || trimmedLine.startsWith("//")) {
+                    // Comment on its own line - preserve with indentation
+                    const indent = this.settings.newLineAfterAssign()
+                        ? this.startColumn + this.settings.tabSize()
+                        : this.startColumn + SyntaxNodeType.AssignKeyword.length + 1;
+                    
+                    result += fullText.eolDelimiter + 
+                        " ".repeat(indent) + 
+                        trimmedLine;
+                }
+                // else: other content - skip
+            }
+        }
+        
+        return result;
     }
 
     private getFormattedEndDot(fullText: Readonly<FullText>): string {
@@ -101,8 +175,9 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText
                 ).trim();
+                break;
             case SyntaxNodeType.Assignment:
-                assignString += this.getAssignmentString(
+                assignString = this.getAssignmentString(
                     node,
                     fullText,
                     longestLeft
