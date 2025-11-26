@@ -58,22 +58,93 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     private getTemptableBlock(node: SyntaxNode, fullText: FullText): string {
         let resultString = "";
+        const children: SyntaxNode[] = [];
+        
+        // Collect all children
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child) {
+                children.push(child);
+            }
+        }
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getTemptableExpressionString(
+        let currentPosition = node.startIndex;
+
+        for (const child of children) {
+            // Check text between nodes
+            if (currentPosition < child.startIndex) {
+                const between = fullText.text.substring(currentPosition, child.startIndex);
+                
+                // If it contains comments, preserve them
+                if (between.includes("/*") || between.includes("//")) {
+                    resultString += this.preserveCommentsInline(between, fullText);
+                }
+                // Otherwise skip - formatter adds proper spacing
+            }
+
+            // Format the child
+            if (child.type === "comment") {
+                // Direct child comment
+                resultString += FormatterHelper.getCurrentText(child, fullText);
+            } else {
+                // Format the non-comment child
+                resultString += this.getTemptableExpressionString(
                     child,
-                    fullText.eolDelimiter.concat(
-                        " ".repeat(this.temptableValueColumn)
-                    ),
+                    fullText.eolDelimiter.concat(" ".repeat(this.temptableValueColumn)),
                     fullText
-                )
-            );
-        });
+                );
+            }
+
+            currentPosition = child.endIndex;
+        }
+
+        // Handle any remaining text
+        if (currentPosition < node.endIndex) {
+            const remaining = fullText.text.substring(currentPosition, node.endIndex);
+            if (!remaining.trim().startsWith(".") && (remaining.includes("/*") || remaining.includes("//"))) {
+                resultString += this.preserveCommentsInline(remaining, fullText);
+            }
+        }
 
         resultString += ".";
-
         return resultString;
+    }
+
+    private preserveCommentsInline(text: string, fullText: FullText): string {
+        let result = "";
+        
+        // Check if comment is inline (same line as code) or on its own line
+        const firstNewline = text.search(/[\r\n]/);
+        
+        if (firstNewline === -1) {
+            // No newline - comment is inline, keep it inline
+            return text;
+        }
+        
+        // Has newlines - analyze line by line
+        const lines = text.split(/\r?\n/);
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmedLine = line.trim();
+
+            if (trimmedLine.length === 0) {
+                // Skip blank lines (formatter will add proper spacing)
+                continue;
+            }
+            
+            if (trimmedLine.startsWith("/*") || trimmedLine.startsWith("//")) {
+                // It's a comment on its own line
+                result += fullText.eolDelimiter + 
+                    " ".repeat(this.temptableValueColumn) + 
+                    trimmedLine;
+            } else {
+                // Not a comment - preserve inline position
+                result += line;
+            }
+        }
+
+        return result;
     }
 
     private collectTemptableStructure(
