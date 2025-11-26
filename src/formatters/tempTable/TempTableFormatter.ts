@@ -57,95 +57,62 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     private getTemptableBlock(node: SyntaxNode, fullText: FullText): string {
-        let resultString = "";
-        const children: SyntaxNode[] = [];
-        
-        // Collect all children
-        for (let i = 0; i < node.childCount; i++) {
-            const child = node.child(i);
-            if (child) {
-                children.push(child);
-            }
+    let resultString = "";
+    const children: SyntaxNode[] = [];
+    
+    // Collect all children
+    for (let i = 0; i < node.childCount; i++) {
+        const child = node.child(i);
+        if (child) {
+            children.push(child);
         }
-
-        let currentPosition = node.startIndex;
-
-        for (const child of children) {
-            // Check text between nodes
-            if (currentPosition < child.startIndex) {
-                const between = fullText.text.substring(currentPosition, child.startIndex);
-                
-                // If it contains comments, preserve them
-                if (between.includes("/*") || between.includes("//")) {
-                    resultString += this.preserveCommentsInline(between, fullText);
-                }
-                // Otherwise skip - formatter adds proper spacing
-            }
-
-            // Format the child
-            if (child.type === "comment") {
-                // Direct child comment
-                resultString += FormatterHelper.getCurrentText(child, fullText);
-            } else {
-                // Format the non-comment child
-                resultString += this.getTemptableExpressionString(
-                    child,
-                    fullText.eolDelimiter.concat(" ".repeat(this.temptableValueColumn)),
-                    fullText
-                );
-            }
-
-            currentPosition = child.endIndex;
-        }
-
-        // Handle any remaining text
-        if (currentPosition < node.endIndex) {
-            const remaining = fullText.text.substring(currentPosition, node.endIndex);
-            if (!remaining.trim().startsWith(".") && (remaining.includes("/*") || remaining.includes("//"))) {
-                resultString += this.preserveCommentsInline(remaining, fullText);
-            }
-        }
-
-        resultString += ".";
-        return resultString;
     }
 
-    private preserveCommentsInline(text: string, fullText: FullText): string {
-        let result = "";
-        
-        // Check if comment is inline (same line as code) or on its own line
-        const firstNewline = text.search(/[\r\n]/);
-        
-        if (firstNewline === -1) {
-            // No newline - comment is inline, keep it inline
-            return text;
-        }
-        
-        // Has newlines - analyze line by line
-        const lines = text.split(/\r?\n/);
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const trimmedLine = line.trim();
-
-            if (trimmedLine.length === 0) {
-                // Skip blank lines (formatter will add proper spacing)
-                continue;
-            }
+    for (const child of children) {
+        // Format the child
+        if (child.type === "comment") {
+            // Direct child comment
+            const commentText = FormatterHelper.getCurrentText(child, fullText);
             
-            if (trimmedLine.startsWith("/*") || trimmedLine.startsWith("//")) {
-                // It's a comment on its own line
-                result += fullText.eolDelimiter + 
-                    " ".repeat(this.temptableValueColumn) + 
-                    trimmedLine;
+            // Check if comment contains newlines (block comment on own line)
+            // Note: it might start with spaces/trailing whitespace before the newline
+            if (commentText.includes("\n") || commentText.includes("\r")) {
+                // Comment was on its own line (or has newlines in it)
+                // Split by lines and find the actual comment line
+                const lines = commentText.split(/\r?\n/);
+                
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    
+                    // Skip empty lines
+                    if (trimmedLine.length === 0) {
+                        continue;
+                    }
+                    
+                    // Check if this line is actually a comment
+                    if (trimmedLine.startsWith("/*") || trimmedLine.startsWith("//")) {
+                        // Found the comment line - preserve it with its indentation
+                        resultString += fullText.eolDelimiter + line;
+                        break; // Only take the first comment line
+                    }
+                }
             } else {
-                // Not a comment - preserve inline position
-                result += line;
+                // Comment was inline (no newlines) - keep it inline
+                resultString += commentText;
             }
+        } else {
+            // Format the non-comment child
+            resultString += this.getTemptableExpressionString(
+                child,
+                fullText.eolDelimiter.concat(" ".repeat(this.temptableValueColumn)),
+                fullText
+            );
         }
-
-        return result;
     }
+
+    resultString += ".";
+    return resultString;
+}
 
     private collectTemptableStructure(
         node: SyntaxNode,
