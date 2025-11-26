@@ -6,5 +6,5 @@ function InvokeInvoluntaryMemory returns int64 (input        oPetiteMadeleine as
                                                 input        cLimeBlossomTea  as character,
                                                 input-output mSensoryDetail   as memptr,
                                                 output       cCombrayVisage   as longchar):
-       return 0.
+    return 0.
 end function.
