@@ -208,13 +208,13 @@ export class FunctionParameterFormatter
                 newString = text;
 
                 // Add a space because the structure is, for example, "INPUT identifier AS TypeTuning", so we need a space before the identifier.
-                if (this.typeTuningInCurrentParameter) {
-                    newString += " ".repeat(
+                newString = newString.concat(
+                    " ".repeat(
                         this.settings.alignTypes()
                             ? this.alignParameterMode - text.length + 1
                             : 1
-                    );
-                }
+                    )
+                );
                 break;
             case SyntaxNodeType.Identifier: {
                 const text = FormatterHelper.getCurrentText(
@@ -228,6 +228,14 @@ export class FunctionParameterFormatter
                     newString = this.settings.alignTypes()
                         ? text + " ".repeat(this.alignType - text.length)
                         : text;
+                    if (
+                        this.settings.alignTypes() &&
+                        node.previousSibling?.type !==
+                            SyntaxNodeType.ArgumentMode
+                    ) {
+                        newString =
+                            " ".repeat(this.alignParameterMode + 1) + newString;
+                    }
                 }
                 break;
             }
