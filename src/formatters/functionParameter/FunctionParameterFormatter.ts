@@ -235,6 +235,7 @@ export class FunctionParameterFormatter
 
                 const needsModePadding =
                     this.settings.alignTypes() &&
+                    this.alignParameterMode > 0 &&
                     node.previousSibling?.type !== SyntaxNodeType.ArgumentMode;
 
                 if (needsModePadding) {
