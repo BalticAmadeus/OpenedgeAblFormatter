@@ -65,10 +65,47 @@ export class IfFormatter extends AFormatter implements IFormatter {
     ): string {
         let resultString = "";
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getIfExpressionString(child, fullText)
-            );
+        node.children.forEach((child, index) => {
+            // Handle comments specially
+            if (child.type === "comment") {
+                const commentText = FormatterHelper.getCurrentText(child, fullText);
+                const prevSibling = index > 0 ? node.children[index - 1] : null;
+                
+                if (prevSibling) {
+                    // Get the original text between previous node and this comment
+                    const betweenText = fullText.text.substring(
+                        prevSibling.endIndex,
+                        child.startIndex
+                    );
+                    
+                    // Check if there's a newline before the comment
+                    if (betweenText.includes("\n") || betweenText.includes("\r")) {
+                        // Comment is on its own line
+                        // Look at the actual source line to get full context including indentation
+                        const lines = fullText.text.substring(0, child.endIndex).split(/\r?\n/);
+                        const commentLine = lines[lines.length - 1]; // Last line contains the comment
+                        
+                        // Extract everything before the comment text on that line (the indentation)
+                        const commentTextTrimmed = commentText.trim();
+                        const indentEndIndex = commentLine.indexOf(commentTextTrimmed);
+                        const indent = indentEndIndex >= 0 ? commentLine.substring(0, indentEndIndex) : "";
+                        
+                        // Add comment with preserved indentation
+                        resultString += fullText.eolDelimiter + indent + commentTextTrimmed;
+                    } else {
+                        // Comment is inline (no newline before it)
+                        resultString += " " + commentText.trim();
+                    }
+                } else {
+                    // No previous sibling - treat as inline
+                    resultString += " " + commentText.trim();
+                }
+            } else {
+                // Regular node - use existing logic
+                resultString = resultString.concat(
+                    this.getIfExpressionString(child, fullText)
+                );
+            }
         });
 
         return resultString.trim();
