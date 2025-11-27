@@ -155,8 +155,7 @@ export class FormattingEngine {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
-                        // Only update the tree structure, don't modify fullText yet
-                        this.insertChangeIntoTree(tree, codeEdit);
+                        // Collect edit without modifying tree or fullText yet
                         editsToApply.push({
                             edit: codeEdit,
                             startIndex: node.startIndex,
@@ -206,7 +205,9 @@ export class FormattingEngine {
                     // Now sort by position (reverse) for safe application
                     nonOverlappingEdits.sort((a, b) => b.startIndex - a.startIndex);
                     
+                    // Apply edits to tree and fullText in reverse order
                     for (const { edit } of nonOverlappingEdits) {
+                        this.insertChangeIntoTree(tree, edit);
                         this.insertChangeIntoFullText(edit, fullText);
                     }
                     
