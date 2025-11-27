@@ -11,6 +11,7 @@ import {
     SyntaxNodeType,
 } from "../../model/SyntaxNodeType";
 import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
+import { ExpressionFormatter } from "../expression/ExpressionFormatter";
 
 @RegisterFormatter
 export class IfFormatter extends AFormatter implements IFormatter {
@@ -136,11 +137,25 @@ export class IfFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
                 break;
-            default:
-                const text = FormatterHelper.getCurrentTextFormatted(
-                    node, fullText, this.expressionFormattingEnabled).trim();
-                newString = text.length === 0 ? "" : " " + text;
+            default: {
+                // If this is a LogicalExpression and expression formatting is enabled,
+                // use ExpressionFormatter to handle it properly
+                if (this.expressionFormattingEnabled && node.type === SyntaxNodeType.LogicalExpression) {
+                    const expressionFormatter = new ExpressionFormatter(this.configurationManager);
+                    const formattedExpression = expressionFormatter.parse(node, fullText);
+                    if (formattedExpression && !Array.isArray(formattedExpression)) {
+                        newString = formattedExpression.text.trimEnd();
+                    } else {
+                        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+                        newString = text.length === 0 ? "" : " " + text;
+                    }
+                } else {
+                    const text = FormatterHelper.getCurrentTextFormatted(
+                        node, fullText, this.expressionFormattingEnabled).trim();
+                    newString = text.length === 0 ? "" : " " + text;
+                }
                 break;
+            }
         }
 
         return newString;
@@ -185,11 +200,25 @@ export class IfFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
                 break;
-            default:
-                const text = FormatterHelper.getCurrentTextFormatted(
-                    node, fullText, this.expressionFormattingEnabled).trim();
-                newString = text.length === 0 ? "" : " " + text;
+            default: {
+                // If this is a LogicalExpression and expression formatting is enabled,
+                // use ExpressionFormatter to handle it properly
+                if (this.expressionFormattingEnabled && node.type === SyntaxNodeType.LogicalExpression) {
+                    const expressionFormatter = new ExpressionFormatter(this.configurationManager);
+                    const formattedExpression = expressionFormatter.parse(node, fullText);
+                    if (formattedExpression && !Array.isArray(formattedExpression)) {
+                        newString = formattedExpression.text.trimEnd();
+                    } else {
+                        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+                        newString = text.length === 0 ? "" : " " + text;
+                    }
+                } else {
+                    const text = FormatterHelper.getCurrentTextFormatted(
+                        node, fullText, this.expressionFormattingEnabled).trim();
+                    newString = text.length === 0 ? "" : " " + text;
+                }
                 break;
+            }
         }
 
         return newString;
@@ -220,11 +249,25 @@ export class IfFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
                 break;
-            default:
-                const text = FormatterHelper.getCurrentTextFormatted(
-                    node, fullText, this.expressionFormattingEnabled).trim();
-                newString = text.length === 0 ? "" : " " + text;
+            default: {
+                // If this is a LogicalExpression and expression formatting is enabled,
+                // use ExpressionFormatter to handle it properly
+                if (this.expressionFormattingEnabled && node.type === SyntaxNodeType.LogicalExpression) {
+                    const expressionFormatter = new ExpressionFormatter(this.configurationManager);
+                    const formattedExpression = expressionFormatter.parse(node, fullText);
+                    if (formattedExpression && !Array.isArray(formattedExpression)) {
+                        newString = formattedExpression.text.trimEnd();
+                    } else {
+                        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+                        newString = text.length === 0 ? "" : " " + text;
+                    }
+                } else {
+                    const text = FormatterHelper.getCurrentTextFormatted(
+                        node, fullText, this.expressionFormattingEnabled).trim();
+                    newString = text.length === 0 ? "" : " " + text;
+                }
                 break;
+            }
         }
 
         return newString;

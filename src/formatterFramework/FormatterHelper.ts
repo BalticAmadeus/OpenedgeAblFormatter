@@ -92,25 +92,18 @@ export class FormatterHelper {
     /**
      * Get formatted text for a node, with special handling for LogicalExpression nodes.
      * If the node is a LogicalExpression and expression formatting is enabled,
-     * it will format it by adding line breaks after AND/OR operators.
+     * the caller should use ExpressionFormatter to format it properly.
+     * This method just returns the original text - formatting logic is delegated
+     * to ExpressionFormatter.
      */
     public static getCurrentTextFormatted(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>,
         expressionFormattingEnabled: boolean = false
     ): string {
-        const text = this.getCurrentText(node, fullText);
-        
-        // If this is a LogicalExpression and expression formatting is enabled,
-        // format it by splitting at AND/OR operators
-        if (expressionFormattingEnabled && node.type === SyntaxNodeType.LogicalExpression) {
-            // Simple regex-based formatting: add newline after AND/OR followed by space
-            return text.replaceAll(/\s+(AND|OR)\s+/gi, (match, operator) => {
-                return ` ${operator}${fullText.eolDelimiter}`;
-            }).trim();
-        }
-        
-        return text;
+        // Note: Formatting of LogicalExpression nodes should be handled by ExpressionFormatter
+        // This method signature is kept for backwards compatibility but delegates to getCurrentText
+        return this.getCurrentText(node, fullText);
     }
 
     public static getBodyText(
