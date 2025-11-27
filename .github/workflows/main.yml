@@ -21,9 +21,9 @@ jobs:
               run: |
                   echo "Checking PR description for required checkbox..."
                   PR_BODY="${{ github.event.pull_request.body }}"
-    
+
                   REQUIRED_TEXT="- [x] I have run the Compilation tests (or no code changes were made)"
-    
+
                   if [[ "$PR_BODY" == *"$REQUIRED_TEXT"* ]]; then
                       echo "✔ Compilation tests confirmation detected."
                       exit 0
@@ -40,7 +40,6 @@ jobs:
     # MAIN TEST JOB
     # -------------------------
     test:
-        needs: local-test-confirmation
         strategy:
             matrix:
                 os: [ubuntu-latest, windows-latest, macos-latest]
