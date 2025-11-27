@@ -66,48 +66,60 @@ export class IfFormatter extends AFormatter implements IFormatter {
         let resultString = "";
 
         node.children.forEach((child, index) => {
-            // Handle comments specially
             if (child.type === "comment") {
                 const commentText = FormatterHelper.getCurrentText(child, fullText);
-                const prevSibling = index > 0 ? node.children[index - 1] : null;
-                
-                if (prevSibling) {
-                    // Get the original text between previous node and this comment
-                    const betweenText = fullText.text.substring(
-                        prevSibling.endIndex,
-                        child.startIndex
-                    );
-                    
-                    // Check if there's a newline before the comment
-                    if (betweenText.includes("\n") || betweenText.includes("\r")) {
-                        // Comment is on its own line
-                        // Look at the actual source line to get full context including indentation
-                        const lines = fullText.text.substring(0, child.endIndex).split(/\r?\n/);
-                        const commentLine = lines[lines.length - 1]; // Last line contains the comment
-                        
-                        // Extract everything before the comment text on that line (the indentation)
-                        const commentTextTrimmed = commentText.trim();
-                        const indentEndIndex = commentLine.indexOf(commentTextTrimmed);
-                        const indent = indentEndIndex >= 0 ? commentLine.substring(0, indentEndIndex) : "";
-                        
-                        // Add comment with preserved indentation
-                        resultString += fullText.eolDelimiter + indent + commentTextTrimmed;
-                    } else {
-                        // Comment is inline (no newline before it)
-                        resultString += " " + commentText.trim();
+
+                // Check if this comment is inline with the previous node
+                let isInline = false;
+                if (index > 0) {
+                    const prev = node.children[index - 1];
+                    if (prev) {
+                        const between = fullText.text.substring(prev.endIndex, child.startIndex);
+                        if (!between.includes("\n")) {
+                            isInline = true;
+                        }
+                    }
+                }
+
+                if (isInline) {
+                    resultString += " " + commentText.trim();
+                    if (process.send) {
+                        process.send({ type: "log", message: `[IfFormatter] Adding inline comment at index ${index}: ${JSON.stringify(commentText)}` });
                     }
                 } else {
-                    // No previous sibling - treat as inline
-                    resultString += " " + commentText.trim();
+                    // Get the original indentation from the first line of the comment in the source
+                    const commentStart = child.startIndex;
+                    const lineStart = fullText.text.lastIndexOf('\n', commentStart - 1) + 1;
+                    const indentMatch = fullText.text.substring(lineStart, commentStart).match(/^\s*/);
+                    const baseIndent = indentMatch ? indentMatch[0] : "";
+
+                    const lines = commentText.split(/\r?\n/);
+                    lines.forEach((line, idx) => {
+                        // Only add baseIndent if the line does not already start with it (or is empty)
+                        let outLine = line;
+                        if (line.trim().length > 0 && !line.startsWith(baseIndent)) {
+                            outLine = baseIndent + line.trimStart();
+                        }
+                        resultString += fullText.eolDelimiter + outLine.trimEnd();
+                    });
+
+                    if (process.send) {
+                        process.send({ type: "log", message: `[IfFormatter] Adding block comment node at index ${index} with indent "${baseIndent.replace(/ /g, ".")}": ${JSON.stringify(commentText)}` });
+                    }
                 }
             } else {
-                // Regular node - use existing logic
+                if (process.send) {
+                    process.send({ type: "log", message: `[IfFormatter] Non-comment node, calling getIfExpressionString.` });
+                }
                 resultString = resultString.concat(
                     this.getIfExpressionString(child, fullText)
                 );
             }
         });
 
+        if (process.send) {
+            process.send({ type: "log", message: `[IfFormatter] getCaseBodyBranchBlock result (first 300): ${JSON.stringify(resultString.substring(0, 300))}` });
+        }
         return resultString.trim();
     }
 

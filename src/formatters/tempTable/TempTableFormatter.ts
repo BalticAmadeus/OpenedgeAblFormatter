@@ -57,63 +57,64 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     private getTemptableBlock(node: SyntaxNode, fullText: FullText): string {
-    let resultString = "";
-    const children: SyntaxNode[] = [];
-    
-    // Collect all children
-    for (let i = 0; i < node.childCount; i++) {
-        const child = node.child(i);
-        if (child) {
-            children.push(child);
+        let resultString = "";
+        const children: SyntaxNode[] = [];
+        
+        // Collect all children
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child) {
+                children.push(child);
+            }
         }
-    }
 
-    for (const child of children) {
-        // Format the child
-        if (child.type === "comment") {
-            // Direct child comment
-            const commentText = FormatterHelper.getCurrentText(child, fullText);
-            
-            // Check if comment contains newlines (block comment on own line)
-            // Note: it might start with spaces/trailing whitespace before the newline
-            if (commentText.includes("\n") || commentText.includes("\r")) {
-                // Comment was on its own line (or has newlines in it)
-                // Split by lines and find the actual comment line
-                const lines = commentText.split(/\r?\n/);
+        for (const child of children) {
+            if (child.type === "comment") {
+                const commentText = FormatterHelper.getCurrentText(child, fullText);
                 
-                for (const line of lines) {
-                    const trimmedLine = line.trim();
+                // Check if comment contains newlines (block comment on own line)
+                if (commentText.includes("\n") || commentText.includes("\r")) {
+                    const lines = commentText.split(/\r?\n/);
+                    let foundFirstCommentLine = false;
                     
-                    // Skip empty lines
-                    if (trimmedLine.length === 0) {
-                        continue;
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        
+                        // Skip empty lines at the beginning
+                        if (trimmedLine.length === 0 && !foundFirstCommentLine) {
+                            continue;
+                        }
+                        
+                        // Once we find a non-empty line, add this and all subsequent lines
+                        if (trimmedLine.length > 0) {
+                            if (!foundFirstCommentLine) {
+                                // First line - add with newline prefix
+                                foundFirstCommentLine = true;
+                                resultString += fullText.eolDelimiter + line;
+                            } else {
+                                // Continuation lines - add with newline
+                                resultString += fullText.eolDelimiter + line;
+                            }
+                        }
                     }
-                    
-                    // Check if this line is actually a comment
-                    if (trimmedLine.startsWith("/*") || trimmedLine.startsWith("//")) {
-                        // Found the comment line - preserve it with its indentation
-                        resultString += fullText.eolDelimiter + line;
-                        break; // Only take the first comment line
-                    }
+                } else {
+                    // Comment was inline (no newlines) - keep it inline
+                    resultString += commentText;
                 }
             } else {
-                // Comment was inline (no newlines) - keep it inline
-                resultString += commentText;
+                // Format the non-comment child
+                resultString += this.getTemptableExpressionString(
+                    child,
+                    fullText.eolDelimiter.concat(" ".repeat(this.temptableValueColumn)),
+                    fullText
+                );
             }
-        } else {
-            // Format the non-comment child
-            resultString += this.getTemptableExpressionString(
-                child,
-                fullText.eolDelimiter.concat(" ".repeat(this.temptableValueColumn)),
-                fullText
-            );
         }
+
+        resultString += ".";
+        return resultString;
     }
-
-    resultString += ".";
-    return resultString;
-}
-
+    
     private collectTemptableStructure(
         node: SyntaxNode,
         fullText: Readonly<FullText>
