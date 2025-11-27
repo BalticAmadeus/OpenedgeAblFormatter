@@ -13,6 +13,7 @@ import { IConfigurationManager } from "../../utils/IConfigurationManager";
 export class FindFormatter extends AFormatter implements IFormatter {
     private startColumn = 0;
     private findBodyValue = "";
+    private readonly expressionFormattingEnabled: boolean;
 
     public static readonly formatterLabel = "findFormatting";
     private readonly settings: FindSettings;
@@ -20,6 +21,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new FindSettings(configurationManager);
+        this.expressionFormattingEnabled = !!configurationManager.get("expressionFormatting");
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
@@ -37,7 +39,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
         this.collectCaseStructure(node, fullText);
         return this.getCodeEdit(
             node,
-            FormatterHelper.getCurrentText(node, fullText),
+            FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled),
             this.findBodyValue,
             fullText
         );
@@ -79,10 +81,8 @@ export class FindFormatter extends AFormatter implements IFormatter {
 
         switch (node.type) {
             case SyntaxNodeType.FindKeyword:
-                newString = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+                newString = FormatterHelper.getCurrentTextFormatted(
+                    node, fullText, this.expressionFormattingEnabled).trim();
                 break;
             case SyntaxNodeType.WhereClause:
                 newString = this.getWhereClauseBlock(
@@ -97,13 +97,11 @@ export class FindFormatter extends AFormatter implements IFormatter {
                 );
                 break;
             case SyntaxNodeType.Error:
-                newString = FormatterHelper.getCurrentText(node, fullText);
+                newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
                 break;
             default:
-                const text = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+                const text = FormatterHelper.getCurrentTextFormatted(
+                    node, fullText, this.expressionFormattingEnabled).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
         }
@@ -123,21 +121,19 @@ export class FindFormatter extends AFormatter implements IFormatter {
                 case SyntaxNodeType.WhereKeyword:
                     resultString = resultString.concat(
                         " ",
-                        FormatterHelper.getCurrentText(child, fullText).trim(),
+                        FormatterHelper.getCurrentTextFormatted(child, fullText, this.expressionFormattingEnabled).trim(),
                         fullText.eolDelimiter,
                         " ".repeat(alignColumn)
                     );
                     break;
                 case SyntaxNodeType.Error:
                     resultString = resultString.concat(
-                        FormatterHelper.getCurrentText(node, fullText)
+                        FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled)
                     );
                     break;
                 default:
-                    const text = FormatterHelper.getCurrentText(
-                        child,
-                        fullText
-                    ).trim();
+                    const text = FormatterHelper.getCurrentTextFormatted(
+                        child, fullText, this.expressionFormattingEnabled).trim();
                     resultString = resultString.concat(
                         text.length === 0 ? "" : " " + text
                     );
@@ -148,3 +144,4 @@ export class FindFormatter extends AFormatter implements IFormatter {
         return resultString;
     }
 }
+

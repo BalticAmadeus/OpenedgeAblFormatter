@@ -14,10 +14,12 @@ import { BlockSettings } from "./BlockSettings";
 export class BlockFormater extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "blockFormatting";
     private readonly settings: BlockSettings;
+    private readonly expressionFormattingEnabled: boolean;
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new BlockSettings(configurationManager);
+        this.expressionFormattingEnabled = !!configurationManager.get("expressionFormatting");
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
@@ -98,7 +100,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
                 (child) =>
                     child.startPosition.row +
                     FormatterHelper.getActualTextRow(
-                        FormatterHelper.getCurrentText(child, fullText),
+                        FormatterHelper.getCurrentTextFormatted(child, fullText, this.expressionFormattingEnabled),
                         fullText
                     )
             );
@@ -119,7 +121,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
         // Do not do any changes for one-liner blocks
         if (codeLines.length <= 1) {
-            const text = FormatterHelper.getCurrentText(node, fullText);
+            const text = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
             return this.getCodeEdit(node, text, text, fullText);
         }
         const firstLine = codeLines[0];
@@ -301,7 +303,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
         codeLines: string[],
         excludedRanges: { start: number; end: number }[]
     ): CodeEdit | CodeEdit[] | undefined {
-        const text = FormatterHelper.getCurrentText(node, fullText);
+        const text = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
 
         const newText = this.applyIndentationEdits(
             indentationEdits,
@@ -398,3 +400,4 @@ interface IndentationEdits {
     line: number;
     lineChangeDelta: number;
 }
+

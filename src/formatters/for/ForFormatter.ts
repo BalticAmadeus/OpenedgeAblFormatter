@@ -14,6 +14,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     private startColumn = 0;
     private forBodyValue = "";
     private eachStatementsFound = 0;
+    private readonly expressionFormattingEnabled: boolean;
 
     public static readonly formatterLabel = "forFormatting";
     private readonly settings: ForSettings;
@@ -21,6 +22,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new ForSettings(configurationManager);
+        this.expressionFormattingEnabled = !!configurationManager.get("expressionFormatting");
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
@@ -44,7 +46,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
 
         return this.getCodeEdit(
             node,
-            FormatterHelper.getCurrentText(node, fullText),
+            FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled),
             this.forBodyValue,
             fullText
         );
@@ -93,14 +95,12 @@ export class ForFormatter extends AFormatter implements IFormatter {
         switch (node.type) {
             case SyntaxNodeType.Label:
                 newString =
-                    FormatterHelper.getCurrentText(node, fullText).trimStart() +
+                    FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trimStart() +
                     fullText.eolDelimiter;
                 break;
             case SyntaxNodeType.ForKeyword:
-                newString = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trimEnd();
+                newString = FormatterHelper.getCurrentTextFormatted(
+                    node, fullText, this.expressionFormattingEnabled).trimEnd();
                 break;
             case SyntaxNodeType.EachKeyword:
                 this.eachStatementsFound++;
@@ -108,12 +108,12 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     newString = newString.concat(
                         fullText.eolDelimiter,
                         " ".repeat(this.startColumn + this.settings.tabSize()),
-                        FormatterHelper.getCurrentText(node, fullText).trim()
+                        FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim()
                     );
                 } else {
                     newString =
                         " " +
-                        FormatterHelper.getCurrentText(node, fullText).trim();
+                        FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
                 }
                 break;
             case SyntaxNodeType.DotKeyword:
@@ -121,10 +121,8 @@ export class ForFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.CommaKeyword:
             case SyntaxNodeType.Body:
             case SyntaxNodeType.Label:
-                newString = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+                newString = FormatterHelper.getCurrentTextFormatted(
+                    node, fullText, this.expressionFormattingEnabled).trim();
                 break;
             case SyntaxNodeType.WhereClause:
                 newString = this.getWhereClauseBlock(
@@ -142,7 +140,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
                 newString =
                     fullText.eolDelimiter +
                     " ".repeat(this.startColumn) +
-                    FormatterHelper.getCurrentText(node, fullText).trim();
+                    FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
                 break;
             case SyntaxNodeType.SortClause:
                 newString =
@@ -158,13 +156,11 @@ export class ForFormatter extends AFormatter implements IFormatter {
                 );
                 break;
             case SyntaxNodeType.Error:
-                newString = FormatterHelper.getCurrentText(node, fullText);
+                newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
                 break;
             default:
-                const text = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+                const text = FormatterHelper.getCurrentTextFormatted(
+                    node, fullText, this.expressionFormattingEnabled).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
         }
@@ -184,16 +180,14 @@ export class ForFormatter extends AFormatter implements IFormatter {
                 case SyntaxNodeType.WhereKeyword:
                     resultString = resultString.concat(
                         " ",
-                        FormatterHelper.getCurrentText(child, fullText).trim(),
+                        FormatterHelper.getCurrentTextFormatted(child, fullText, this.expressionFormattingEnabled).trim(),
                         fullText.eolDelimiter,
                         " ".repeat(alignColumn)
                     );
                     break;
                 default:
-                    const text = FormatterHelper.getCurrentText(
-                        child,
-                        fullText
-                    ).trim();
+                    const text = FormatterHelper.getCurrentTextFormatted(
+                        child, fullText, this.expressionFormattingEnabled).trim();
                     resultString = resultString.concat(
                         text.length === 0 ? "" : " " + text
                     );
@@ -241,10 +235,8 @@ export class ForFormatter extends AFormatter implements IFormatter {
                 });
                 break;
             default:
-                const text = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+                const text = FormatterHelper.getCurrentTextFormatted(
+                    node, fullText, this.expressionFormattingEnabled).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
         }
@@ -264,16 +256,14 @@ export class ForFormatter extends AFormatter implements IFormatter {
                 newString =
                     " " +
                     FormatterHelper.addIndentation(
-                        FormatterHelper.getCurrentText(node, fullText).trim(),
+                        FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim(),
                         -node.startPosition.column + alignColumn + 3, // this assumes that if the sort column contains a ternary expression, then it does not contain anything else
                         fullText.eolDelimiter
                     ).trim();
                 break;
             default:
-                const text = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+                const text = FormatterHelper.getCurrentTextFormatted(
+                    node, fullText, this.expressionFormattingEnabled).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
         }
@@ -294,7 +284,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     resultString = resultString.concat(
                         fullText.eolDelimiter,
                         " ".repeat(this.startColumn + this.settings.tabSize()),
-                        FormatterHelper.getCurrentText(child, fullText).trim()
+                        FormatterHelper.getCurrentTextFormatted(child, fullText, this.expressionFormattingEnabled).trim()
                     );
                     break;
                 case SyntaxNodeType.SortClause:
@@ -305,10 +295,8 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     );
                     break;
                 default:
-                    const text = FormatterHelper.getCurrentText(
-                        child,
-                        fullText
-                    ).trim();
+                    const text = FormatterHelper.getCurrentTextFormatted(
+                        child, fullText, this.expressionFormattingEnabled).trim();
                     resultString = resultString.concat(
                         text.length === 0 ? "" : " " + text
                     );
@@ -319,3 +307,4 @@ export class ForFormatter extends AFormatter implements IFormatter {
         return resultString;
     }
 }
+
