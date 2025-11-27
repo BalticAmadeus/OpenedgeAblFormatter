@@ -81,13 +81,16 @@ export class AblFormatterProvider
 
     public provideDocumentRangeFormattingEdits(
         document: vscode.TextDocument,
-        range: vscode.Range
+        range: vscode.Range,
+        options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
         Telemetry.increaseFormattingActions("Selection");
         Telemetry.addLinesOfCodeFormatted(range.end.line - range.start.line);
 
         const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
+
+        configurationManager.setTabSize(options.tabSize);
 
         // Return a promise for async formatting
         return this.performAsyncRangeFormatting(
@@ -136,7 +139,8 @@ export class AblFormatterProvider
             case 1:
                 return this.provideDocumentRangeFormattingEdits(
                     document,
-                    ranges[0]
+                    ranges[0],
+                    options
                 );
             default:
                 // for now, just format whole document, if there is more than one range
