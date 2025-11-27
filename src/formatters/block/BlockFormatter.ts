@@ -120,6 +120,83 @@ export class BlockFormater extends AFormatter implements IFormatter {
         let codeLines = FormatterHelper.getCurrentText(parent, fullText).split(
             fullText.eolDelimiter
         );
+
+        // Check if body starts on same line as current node (method signature: body content)
+        // Only split for method/function/procedure/constructor/destructor, not for class/do/repeat/etc
+        // Detect and split inline statements after colon BEFORE slicing
+        // Note: node is a 'body' type, parent is the actual statement type (method_statement, etc.)
+        const shouldSplitInlineStatements =
+            parent &&
+            (parent.type === SyntaxNodeType.MethodStatement ||
+                parent.type === SyntaxNodeType.FunctionStatement ||
+                parent.type === SyntaxNodeType.ProcedureStatement ||
+                parent.type === SyntaxNodeType.ConstructorDefinition ||
+                parent.type === SyntaxNodeType.DestructorDefinition);
+
+        if (
+            shouldSplitInlineStatements &&
+            codeLines.length > deltaBetweenStartAndColon
+        ) {
+            const lineWithPotentialInlineContent =
+                codeLines[deltaBetweenStartAndColon];
+
+            if (
+                lineWithPotentialInlineContent &&
+                lineWithPotentialInlineContent.includes(":")
+            ) {
+                const colonPos = lineWithPotentialInlineContent.indexOf(":");
+
+                if (colonPos >= 0) {
+                    const signaturePart =
+                        lineWithPotentialInlineContent
+                            .substring(0, colonPos)
+                            .trimEnd() + ":";
+                    const bodyPart = lineWithPotentialInlineContent
+                        .substring(colonPos + 1)
+                        .trimStart();
+
+                    // Only split if there's actual statement content (not empty or just whitespace)
+                    // and it looks like a statement (starts with a keyword like define, return, etc.)
+                    // and it's NOT a true one-liner (doesn't have "end" on the same line)
+                    const startsWithStatement =
+                        /^(define|def|defi|var|return|if|for|do|assign|create|find|message)/i.test(
+                            bodyPart
+                        );
+                    const hasEndOnSameLine = /\bend\b/i.test(bodyPart);
+
+                    if (
+                        bodyPart.length > 0 &&
+                        startsWithStatement &&
+                        !hasEndOnSameLine
+                    ) {
+                        // Split the line
+                        codeLines[deltaBetweenStartAndColon] = signaturePart;
+                        codeLines.splice(
+                            deltaBetweenStartAndColon + 1,
+                            0,
+                            bodyPart
+                        );
+
+                        // Update blockStatementsStartRows
+                        if (blockStatementsStartRows.length > 0) {
+                            const firstBlockStatementRow =
+                                blockStatementsStartRows[0];
+                            blockStatementsStartRows.unshift(
+                                firstBlockStatementRow - 1
+                            );
+                            blockStatementsStartRows =
+                                blockStatementsStartRows.map(
+                                    (currentRow, index) =>
+                                        index === 0
+                                            ? currentRow
+                                            : currentRow + 1
+                                );
+                        }
+                    }
+                }
+            }
+        }
+
         if (!onlyWhiteSpacesBeforeColumnLine) {
             codeLines = codeLines.slice(deltaBetweenStartAndColon);
         }
@@ -133,7 +210,9 @@ export class BlockFormater extends AFormatter implements IFormatter {
             );
             return this.getCodeEdit(node, text, text, fullText);
         }
+
         const firstLine = codeLines[0];
+
         const lastLine = codeLines[codeLines.length - 1];
 
         const lastLineMatchesTypicalStructure = this.matchEndPattern(lastLine);
@@ -168,10 +247,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
                 const statementWithColon =
                     firstLine.slice(0, indexOfColon).trimEnd() + ":";
                 // If the part after the colon is not only whitespace, put it on the next line
-                if (
-                    partAfterColon.trim().length !== 0 &&
-                    partAfterColon !== ":"
-                ) {
+                if (partAfterColon.trim().length !== 0) {
                     codeLines.shift(); // pop from the start of the list
                     codeLines.unshift(statementWithColon, partAfterColon);
                     const firstBlockStatementRow = blockStatementsStartRows[0];

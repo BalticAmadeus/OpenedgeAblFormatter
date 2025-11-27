@@ -98,9 +98,11 @@ adeuib__rdtext.r
 adeuib__rdtogg.r
 adeuib__rundsinclude.r
 adeuib__sanitiz.r
+adeuib__saveasdynobject.r
+adeuib__selcolr.r
+adeuib__selevnt.r
 adeuib__seltrg.r
 adeuib__setpntr.r
-adeuib__setsize.r
 adeuib__showlbl.r
 adeuib__smoupg.r
 adeuib__strfmt.r
@@ -143,6 +145,8 @@ adeuib_ide__dialog_intpxpt.r
 adeuib_ide__dialog_prpobj.r
 adeuib_ide__dialog_prpsdo.r
 adeuib_ide__dialog_qenable.r
+adeuib_ide__dialog_saveasdynobject.r
+adeuib_ide__dialog_ttmaint.r
 adeuib_ide_request__requestmanager.r
 adeuib_peditor.r
 adeuib_vabattraction.r
@@ -1034,6 +1038,7 @@ rmc_rmcutil.r
 rmc__ascompile.r
 rmc__wscompile.r
 workshop__jfind2.r
+adecomm_pcmpcls.r
 aderes__fbframe.r
 adeuib_ide__dialog_mldlg.r
 adeuib__mldlg.r
@@ -1041,3 +1046,5 @@ adm2_support__wizds.r
 adm2_support__wizmap.r
 adm2_support__wizntro.r
 adm2_support__wizqry.r
+adeuib__accsect.r
+prores_r-total.r

@@ -4,7 +4,7 @@ issuesGithub_163_2
 issuesGithub_163_3
 issuesGithub_163_4
 issuesGithub_196_1
-issuesGithub_196_2
+issuesGithub_196_2 - fixed
 issuesGithub_226 - fixed
 issuesGithub_291 - fixed
 issuesGithub_338 - fixed
