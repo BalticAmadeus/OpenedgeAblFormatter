@@ -24,17 +24,17 @@ jobs:
     
                   REQUIRED_TEXT="- [x] I have run the Compilation tests (or no code changes were made)"
     
-                  if [[ "$PR_BODY" != *"$REQUIRED_TEXT"* ]]; then
+                  if [[ "$PR_BODY" == *"$REQUIRED_TEXT"* ]]; then
+                      echo "✔ Compilation tests confirmation detected."
+                      exit 0
+                  else
                       echo "❌ Required confirmation missing!"
                       echo "Please add this line to your PR description:"
                       echo ""
                       echo "    - [x] I have run the Compilation tests (or no code changes were made)"
                       echo ""
-                      exit 1   # FAIL CI
-                  else
-                      echo "✔ Compilation tests confirmation detected."
+                      exit 1
                   fi
-                    fi
 
     # -------------------------
     # MAIN TEST JOB
