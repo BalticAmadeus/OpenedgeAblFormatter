@@ -77,6 +77,13 @@ export class FormatterHelper {
         fullText: Readonly<FullText>
     ): string {
         if (node !== undefined && fullText !== undefined) {
+            // Check if this node has been formatted already
+            const formatted = fullText.formattedNodeTexts.get(node.id);
+            if (formatted !== undefined) {
+                return formatted;
+            }
+
+            // Not formatted yet, read from original text
             return fullText.text.substring(node.startIndex, node.endIndex);
         }
         return "";
@@ -247,20 +254,22 @@ export class FormatterHelper {
         let newString = "";
         if (node.type === SyntaxNodeType.LeftParenthesis) {
             const skipBefore = FormatterHelper.hasSkipKeyword(node);
-            newString =
-                (skipBefore ? "" : " ") +
-                FormatterHelper.getCurrentText(node, fullText).trim();
+            newString = (skipBefore ? "" : " ") + "(";
+        } else if (node.type === SyntaxNodeType.RightParenthesis) {
+            newString = ")";
         } else if (
-            node.type === SyntaxNodeType.RightParenthesis ||
-            (node.previousSibling !== null &&
-                node.previousSibling.type === SyntaxNodeType.LeftParenthesis)
+            node.previousSibling !== null &&
+            node.previousSibling.type === SyntaxNodeType.LeftParenthesis
         ) {
-            newString = FormatterHelper.getCurrentText(
+            // Node immediately after left paren - trim all whitespace
+            newString = FormatterHelper.getCurrentText(node, fullText).trim();
+        } else {
+            // Other nodes - trim and add single space prefix
+            const trimmed = FormatterHelper.getCurrentText(
                 node,
                 fullText
-            ).trimStart();
-        } else {
-            newString = FormatterHelper.getCurrentText(node, fullText);
+            ).trim();
+            newString = trimmed.length > 0 ? " " + trimmed : "";
         }
         return newString;
     }

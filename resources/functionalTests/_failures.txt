@@ -12,7 +12,7 @@ issuesGithub_353
 issuesGithub_414
 issuesGithub_416
 issuesGithub_417 - fixed
-issuesGithub_420
+issuesGithub_420 - fixed
 issuesGithub_433_1 - fixed
 issuesGithub_433_2 - fixed
 issuesGithub_439 - fixed

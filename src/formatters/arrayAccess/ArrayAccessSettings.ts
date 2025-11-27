@@ -6,10 +6,10 @@ export class ArrayAccessSettings extends ASettings {
         return !!this.configurationManager.get("arrayAccessFormatting");
     }
     public addSpaceAfterComma() {
-        return (
-            this.configurationManager.get(
-                "arrayAccessFormattingAddSpaceAfterComma"
-            ) === "Yes"
+        const setting = this.configurationManager.get(
+            "arrayAccessFormattingAddSpaceAfterComma"
         );
+        // Default is true (add space), only false when explicitly set to "No"
+        return setting !== "No";
     }
 }

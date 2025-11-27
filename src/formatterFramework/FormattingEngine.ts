@@ -32,9 +32,13 @@ export class FormattingEngine {
         eol: EOL,
         metemorphicEngineIsEnabled: boolean = false
     ): string {
+        console.log(
+            `[FormattingEngine.formatText] Starting, text length: ${fulfullTextString.length}`
+        );
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
+            formattedNodeTexts: new Map<number, string>(), // Cache formatted text by node ID
         };
 
         const parseResult = this.parserHelper.parse(
@@ -45,6 +49,9 @@ export class FormattingEngine {
         this.settingsOverride(parseResult);
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
+        );
+        console.log(
+            `[FormattingEngine.formatText] Got ${formatters.length} formatters`
         );
 
         this.iterateTree(parseResult.tree, fullText, formatters);
@@ -88,6 +95,9 @@ export class FormattingEngine {
         fullText: FullText,
         formatters: IFormatter[]
     ) {
+        console.log(
+            `[FormattingEngine.iterateTree] Starting with ${formatters.length} formatters`
+        );
         let cursor = tree.walk(); // Initialize the cursor at the root node
         let lastVisitedNode: SyntaxNode | null = null;
         const editsToApply: Array<{
@@ -159,7 +169,19 @@ export class FormattingEngine {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
-                        // Collect edit without modifying tree or fullText yet
+                        // Cache formatted text for this node so parents can read it
+                        this.cacheFormattedText(node, codeEdit, fullText);
+
+                        // Collect edit for later application to tree and final fullText
+                        if (Array.isArray(codeEdit)) {
+                            console.log(
+                                `[FormattingEngine] Collected ${codeEdit.length} edits for node at ${node.startIndex}-${node.endIndex}`
+                            );
+                        } else {
+                            console.log(
+                                `[FormattingEngine] Collected edit for node at ${node.startIndex}-${node.endIndex}: newText length=${codeEdit.text.length}`
+                            );
+                        }
                         editsToApply.push({
                             edit: codeEdit,
                             startIndex: node.startIndex,
@@ -361,6 +383,21 @@ export class FormattingEngine {
                 fullText.text.slice(0, codeEdit.edit.startIndex) +
                 codeEdit.text +
                 fullText.text.slice(codeEdit.edit.oldEndIndex);
+        }
+    }
+
+    // Cache formatted text for a node so parent formatters can read it
+    private cacheFormattedText(
+        node: SyntaxNode,
+        codeEdit: CodeEdit | CodeEdit[],
+        fullText: FullText
+    ): void {
+        const edits = Array.isArray(codeEdit) ? codeEdit : [codeEdit];
+
+        // Store the formatted text for this node
+        if (edits.length > 0) {
+            const formatted = edits.map((e) => e.text).join("");
+            fullText.formattedNodeTexts.set(node.id, formatted);
         }
     }
 
