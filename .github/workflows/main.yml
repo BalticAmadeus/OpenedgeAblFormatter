@@ -13,22 +13,28 @@ jobs:
     # -------------------------
     # PR CHECK FOR LOCAL TEST REMINDER
     # -------------------------
-    local-test-reminder:
+    local-test-confirmation:
         if: github.event_name == 'pull_request'
         runs-on: ubuntu-latest
         steps:
-            - name: Check PR body for local-test checkbox
+            - name: Validate Compilation test checkbox in PR body
               run: |
-                echo "Checking if PR description contains confirmation checkbox..."
-                PR_BODY="${{ github.event.pull_request.body }}"
-
-                if [[ "$PR_BODY" != *"- [x] I have run the local-only tests"* ]]; then
-                    echo "::warning::Please confirm you ran the required LOCAL-ONLY tests by adding:"
-                    echo "::warning::- [x] I have run the local-only tests"
-                    echo "::warning::This is only a reminder. CI will not fail."
-                else
-                    echo "Local test confirmation detected ✔"
-                fi
+                  echo "Checking PR description for required checkbox..."
+                  PR_BODY="${{ github.event.pull_request.body }}"
+    
+                  REQUIRED_TEXT="- [x] I have run the Compilation tests (or no code changes were made)"
+    
+                  if [[ "$PR_BODY" != *"$REQUIRED_TEXT"* ]]; then
+                      echo "❌ Required confirmation missing!"
+                      echo "Please add this line to your PR description:"
+                      echo ""
+                      echo "    - [x] I have run the Compilation tests (or no code changes were made)"
+                      echo ""
+                      exit 1   # FAIL CI
+                  else
+                      echo "✔ Compilation tests confirmation detected."
+                  fi
+                    fi
 
     # -------------------------
     # MAIN TEST JOB
