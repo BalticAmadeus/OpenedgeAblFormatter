@@ -54,7 +54,6 @@ adecomm__viewasd.w
 adecomm__winmenu.w
 adecomm__y-build.p
 adecomm__y-logic.p
-adecomm_cbcdrop.i
 adecomm_cbcdropx.i
 adecomm_ebrowse.i
 adecomm_peditor.i
@@ -243,7 +242,6 @@ adeuib_syncloch.i
 adeuib_tog-disp.i
 adeuib_uibmdefs.i
 adeweb__automap.p
-adeweb__brwsmap.w
 adeweb__cihttp.p
 adeweb__drwhtml.p
 adeweb__htmlcol.w
@@ -293,7 +291,6 @@ auditing_ui__audfileselectw.w
 auditing_ui__audmultfields.w
 auditing_ui__exp-events.w
 auditing_ui__get-file.w
-businesscomponents_Ccs_BusinessLogic_QueryOperatorEnum.cls
 businesscomponents_OpenEdge_BusinessLogic_BusinessEntity.cls
 businesscomponents_OpenEdge_BusinessLogic_Filter_AblFilterParser.cls
 businesscomponents_OpenEdge_BusinessLogic_Filter_JfpFilterParser.cls
@@ -308,7 +305,6 @@ corelib_OpenEdge_Core_Collections_HashMap.cls
 corelib_OpenEdge_Core_Collections_Map.cls
 corelib_OpenEdge_Core_Collections_MapBackedCollection.cls
 corelib_OpenEdge_Core_Collections_ObjectEqualityComparer.cls
-corelib_OpenEdge_Core_Collections_Set.cls
 corelib_OpenEdge_Core_Collections_StringKeyedMap.cls
 corelib_OpenEdge_Core_Collections_StringStringMap.cls
 corelib_OpenEdge_Core_DateHolder.cls
@@ -316,11 +312,9 @@ corelib_OpenEdge_Core_DateTimeHolder.cls
 corelib_OpenEdge_Core_DateTimeTzHolder.cls
 corelib_OpenEdge_Core_File.cls
 corelib_OpenEdge_Core_FileInfo.cls
-corelib_OpenEdge_Core_IOModeEnum.cls
 corelib_OpenEdge_Core_Json_JsonConverter.cls
 corelib_OpenEdge_Core_Json_JsonSerializer.cls
 corelib_OpenEdge_Core_LogicalValue.cls
-corelib_OpenEdge_Core_LogLevelEnum.cls
 corelib_OpenEdge_Core_Memptr.cls
 corelib_OpenEdge_Core_SemanticVersion.cls
 corelib_OpenEdge_Core_String.cls
@@ -342,7 +336,6 @@ corelib_OpenEdge_Logging_Format_TokenContextFormat.cls
 corelib_OpenEdge_Logging_JsonConfigLoggerBuilder.cls
 corelib_OpenEdge_Logging_Logger.cls
 corelib_OpenEdge_Logging_LoggerBuilder.cls
-corelib_OpenEdge_Logging_LogLevelEnum.cls
 corelib_OpenEdge_Logging_Writer_LogManagerWriter.cls
 darest_get_schemas.p
 daschema_cdc.i
@@ -396,7 +389,6 @@ netlib_OpenEdge_Web_DataObject_ServiceRegistryImpl.cls
 netlib_OpenEdge_Web_DataObject_ServiceRegistryLoader.cls
 netlib_OpenEdge_Web_DataObject_TargetTypeEnum.cls
 netlib_OpenEdge_Web_DataObject_Writer_BodyElementWriter.cls
-netlib_OpenEdge_Web_DataObject_Writer_FieldElementWriter.cls
 netlib_OpenEdge_Web_DataObject_Writer_HandleValueWriter.cls
 netlib_OpenEdge_Web_DataObject_Writer_MappingFileServiceWriter.cls
 netlib_OpenEdge_Web_DataObject_Writer_ObjectValueWriter.cls
@@ -418,7 +410,6 @@ OpenEdge_DataAdmin_Binding_PartitionContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyDetailContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyFieldContext.cls
-OpenEdge_DataAdmin_Binding_Query_CdcFieldPolicyPartitionQuery.cls
 OpenEdge_DataAdmin_Binding_RoleContext.cls
 OpenEdge_DataAdmin_Binding_SequenceContext.cls
 OpenEdge_DataAdmin_Binding_SequenceValueContext.cls
@@ -429,7 +420,6 @@ OpenEdge_DataAdmin_Binding_UserContext.cls
 OpenEdge_DataAdmin_CdcFieldPolicySet.cls
 OpenEdge_DataAdmin_CdcTablePolicySet.cls
 OpenEdge_DataAdmin_Core_CodeWriter.cls
-OpenEdge_DataAdmin_DataAccess_CdcTablePolicyData.cls
 OpenEdge_DataAdmin_DataAccess_DataAccess.cls
 OpenEdge_DataAdmin_DataAdminCollection.cls
 OpenEdge_DataAdmin_DataSource_AuthTagDataSource.cls
@@ -604,7 +594,6 @@ protools__walker.w
 protools__widgetidassign.p
 protools_dappsrv.w
 protools_widattrs.w
-rules_OpenEdge_BusinessRules_DecisionService.cls
 seclib_OpenEdge_Security_PAMStatusEnum.cls
 seclib_OpenEdge_Security_Provider_ProviderConfig.cls
 seclib_OpenEdge_Security_Provider_UserTableAuthProvider.cls

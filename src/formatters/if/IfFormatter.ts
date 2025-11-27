@@ -83,9 +83,6 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
                 if (isInline) {
                     resultString += " " + commentText.trim();
-                    if (process.send) {
-                        process.send({ type: "log", message: `[IfFormatter] Adding inline comment at index ${index}: ${JSON.stringify(commentText)}` });
-                    }
                 } else {
                     // Get the original indentation from the first line of the comment in the source
                     const commentStart = child.startIndex;
