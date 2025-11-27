@@ -102,24 +102,14 @@ export class IfFormatter extends AFormatter implements IFormatter {
                         }
                         resultString += fullText.eolDelimiter + outLine.trimEnd();
                     });
-
-                    if (process.send) {
-                        process.send({ type: "log", message: `[IfFormatter] Adding block comment node at index ${index} with indent "${baseIndent.replace(/ /g, ".")}": ${JSON.stringify(commentText)}` });
-                    }
                 }
             } else {
-                if (process.send) {
-                    process.send({ type: "log", message: `[IfFormatter] Non-comment node, calling getIfExpressionString.` });
-                }
                 resultString = resultString.concat(
                     this.getIfExpressionString(child, fullText)
                 );
             }
         });
 
-        if (process.send) {
-            process.send({ type: "log", message: `[IfFormatter] getCaseBodyBranchBlock result (first 300): ${JSON.stringify(resultString.substring(0, 300))}` });
-        }
         return resultString.trim();
     }
 
