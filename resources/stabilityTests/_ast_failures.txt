@@ -56,7 +56,7 @@ adecomm__y-build.p
 adecomm__y-logic.p
 adecomm_cbcdrop.i
 adecomm_cbcdropx.i
-adecomm_ebrowse.i
+adecomm__qinit.p
 adecomm_peditor.i
 adecomm_psearch.i
 adecomm_rptvar.i
@@ -242,6 +242,7 @@ adeuib_setcwidp.i
 adeuib_syncloch.i
 adeuib_tog-disp.i
 adeuib_uibmdefs.i
+adeuib__genproc.i
 adeweb__automap.p
 adeweb__brwsmap.w
 adeweb__cihttp.p
@@ -251,6 +252,7 @@ adeweb__joinext.p
 adeweb__mkwind.p
 adeweb__rddefs.p
 adeweb__webcom.w
+adeweb__preproc.p
 adexml__xmlfile.w
 adexml__xmlmap.w
 adexml__xmlview.w
@@ -538,6 +540,7 @@ prodict_user__usrtget.p
 prodict_user__usrtrax.p
 prodict_user__usruchg.p
 prodict_user__usrwdth.p
+prodict_user__usrpfed.p
 prodict_user_user-d.i
 prodict_user_user-f.i
 prodict_user_user-s.i
@@ -616,10 +619,12 @@ webtools_pplist.w
 webtools_promsgs.w
 webtools_util__fileact.w
 webutil_e4gl-gen.p
+webutil__sdoinfo.p
 workshop__close.w
 workshop__delete.w
 workshop__file.w
 workshop__procset.w
+workshop__proprty.w
 darest_delete_tenants.p
 darest_get_tenants.p
 prodict_dump__dmpdefs.p
