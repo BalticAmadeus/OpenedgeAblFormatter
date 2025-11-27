@@ -25,7 +25,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new IfSettings(configurationManager);
-        this.expressionFormattingEnabled = !!configurationManager.get("expressionFormatting");
+        this.expressionFormattingEnabled = !!configurationManager.get(
+            "expressionFormatting"
+        );
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
@@ -51,7 +53,11 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
         return this.getCodeEdit(
             node,
-            FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled),
+            FormatterHelper.getCurrentTextFormatted(
+                node,
+                fullText,
+                this.expressionFormattingEnabled
+            ),
             this.ifBodyValue,
             fullText
         );
@@ -88,17 +94,33 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 newString = this.settings.newLineBeforeThen()
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim()
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim()
                     : " " +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim();
                 break;
             case SyntaxNodeType.DoBlock:
                 newString = this.settings.newLineBeforeDo()
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim()
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim()
                     : " " +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim();
                 break;
             case afterThenStatements.hasFancy(node.type, ""):
                 newString = this.settings.newLineBeforeStatement()
@@ -135,23 +157,44 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     .join("");
                 break;
             case SyntaxNodeType.Error:
-                newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
+                newString = FormatterHelper.getCurrentTextFormatted(
+                    node,
+                    fullText,
+                    this.expressionFormattingEnabled
+                );
                 break;
             default: {
                 // If this is a LogicalExpression and expression formatting is enabled,
                 // use ExpressionFormatter to handle it properly
-                if (this.expressionFormattingEnabled && node.type === SyntaxNodeType.LogicalExpression) {
-                    const expressionFormatter = new ExpressionFormatter(this.configurationManager);
-                    const formattedExpression = expressionFormatter.parse(node, fullText);
-                    if (formattedExpression && !Array.isArray(formattedExpression)) {
+                if (
+                    this.expressionFormattingEnabled &&
+                    node.type === SyntaxNodeType.LogicalExpression
+                ) {
+                    const expressionFormatter = new ExpressionFormatter(
+                        this.configurationManager
+                    );
+                    const formattedExpression = expressionFormatter.parse(
+                        node,
+                        fullText
+                    );
+                    if (
+                        formattedExpression &&
+                        !Array.isArray(formattedExpression)
+                    ) {
                         newString = formattedExpression.text.trimEnd();
                     } else {
-                        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+                        const text = FormatterHelper.getCurrentText(
+                            node,
+                            fullText
+                        ).trim();
                         newString = text.length === 0 ? "" : " " + text;
                     }
                 } else {
                     const text = FormatterHelper.getCurrentTextFormatted(
-                        node, fullText, this.expressionFormattingEnabled).trim();
+                        node,
+                        fullText,
+                        this.expressionFormattingEnabled
+                    ).trim();
                     newString = text.length === 0 ? "" : " " + text;
                 }
                 break;
@@ -169,23 +212,43 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 newString = this.settings.newLineBeforeThen()
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim()
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim()
                     : " " +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim();
                 break;
             case SyntaxNodeType.ElseKeyword:
                 newString =
                     fullText.eolDelimiter +
                     " ".repeat(this.startColumn) +
-                    FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
+                    FormatterHelper.getCurrentTextFormatted(
+                        node,
+                        fullText,
+                        this.expressionFormattingEnabled
+                    ).trim();
                 break;
             case SyntaxNodeType.DoBlock:
                 newString = this.settings.newLineBeforeDo()
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim()
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim()
                     : " " +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim();
                 newString = newString.trimEnd();
                 break;
             case afterThenStatements.hasFancy(node.type, ""):
@@ -193,28 +256,57 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
                       " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim()
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim()
                     : " " +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim();
                 break;
             case SyntaxNodeType.Error:
-                newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
+                newString = FormatterHelper.getCurrentTextFormatted(
+                    node,
+                    fullText,
+                    this.expressionFormattingEnabled
+                );
                 break;
             default: {
                 // If this is a LogicalExpression and expression formatting is enabled,
                 // use ExpressionFormatter to handle it properly
-                if (this.expressionFormattingEnabled && node.type === SyntaxNodeType.LogicalExpression) {
-                    const expressionFormatter = new ExpressionFormatter(this.configurationManager);
-                    const formattedExpression = expressionFormatter.parse(node, fullText);
-                    if (formattedExpression && !Array.isArray(formattedExpression)) {
+                if (
+                    this.expressionFormattingEnabled &&
+                    node.type === SyntaxNodeType.LogicalExpression
+                ) {
+                    const expressionFormatter = new ExpressionFormatter(
+                        this.configurationManager
+                    );
+                    const formattedExpression = expressionFormatter.parse(
+                        node,
+                        fullText
+                    );
+                    if (
+                        formattedExpression &&
+                        !Array.isArray(formattedExpression)
+                    ) {
                         newString = formattedExpression.text.trimEnd();
                     } else {
-                        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+                        const text = FormatterHelper.getCurrentText(
+                            node,
+                            fullText
+                        ).trim();
                         newString = text.length === 0 ? "" : " " + text;
                     }
                 } else {
                     const text = FormatterHelper.getCurrentTextFormatted(
-                        node, fullText, this.expressionFormattingEnabled).trim();
+                        node,
+                        fullText,
+                        this.expressionFormattingEnabled
+                    ).trim();
                     newString = text.length === 0 ? "" : " " + text;
                 }
                 break;
@@ -235,35 +327,68 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 newString =
                     fullText.eolDelimiter +
                     " ".repeat(this.startColumn) +
-                    FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
+                    FormatterHelper.getCurrentTextFormatted(
+                        node,
+                        fullText,
+                        this.expressionFormattingEnabled
+                    ).trim();
                 break;
             case SyntaxNodeType.DoBlock:
                 newString = this.settings.newLineBeforeDo()
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim()
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim()
                     : " " +
-                      FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled).trim();
+                      FormatterHelper.getCurrentTextFormatted(
+                          node,
+                          fullText,
+                          this.expressionFormattingEnabled
+                      ).trim();
                 newString = newString.trimEnd();
                 break;
             case SyntaxNodeType.Error:
-                newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
+                newString = FormatterHelper.getCurrentTextFormatted(
+                    node,
+                    fullText,
+                    this.expressionFormattingEnabled
+                );
                 break;
             default: {
                 // If this is a LogicalExpression and expression formatting is enabled,
                 // use ExpressionFormatter to handle it properly
-                if (this.expressionFormattingEnabled && node.type === SyntaxNodeType.LogicalExpression) {
-                    const expressionFormatter = new ExpressionFormatter(this.configurationManager);
-                    const formattedExpression = expressionFormatter.parse(node, fullText);
-                    if (formattedExpression && !Array.isArray(formattedExpression)) {
+                if (
+                    this.expressionFormattingEnabled &&
+                    node.type === SyntaxNodeType.LogicalExpression
+                ) {
+                    const expressionFormatter = new ExpressionFormatter(
+                        this.configurationManager
+                    );
+                    const formattedExpression = expressionFormatter.parse(
+                        node,
+                        fullText
+                    );
+                    if (
+                        formattedExpression &&
+                        !Array.isArray(formattedExpression)
+                    ) {
                         newString = formattedExpression.text.trimEnd();
                     } else {
-                        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+                        const text = FormatterHelper.getCurrentText(
+                            node,
+                            fullText
+                        ).trim();
                         newString = text.length === 0 ? "" : " " + text;
                     }
                 } else {
                     const text = FormatterHelper.getCurrentTextFormatted(
-                        node, fullText, this.expressionFormattingEnabled).trim();
+                        node,
+                        fullText,
+                        this.expressionFormattingEnabled
+                    ).trim();
                     newString = text.length === 0 ? "" : " " + text;
                 }
                 break;
@@ -291,4 +416,3 @@ export class IfFormatter extends AFormatter implements IFormatter {
             : this.findParentIfStatementStartColumn(node.parent);
     }
 }
-

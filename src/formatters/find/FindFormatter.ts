@@ -21,7 +21,9 @@ export class FindFormatter extends AFormatter implements IFormatter {
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new FindSettings(configurationManager);
-        this.expressionFormattingEnabled = !!configurationManager.get("expressionFormatting");
+        this.expressionFormattingEnabled = !!configurationManager.get(
+            "expressionFormatting"
+        );
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
@@ -39,7 +41,11 @@ export class FindFormatter extends AFormatter implements IFormatter {
         this.collectCaseStructure(node, fullText);
         return this.getCodeEdit(
             node,
-            FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled),
+            FormatterHelper.getCurrentTextFormatted(
+                node,
+                fullText,
+                this.expressionFormattingEnabled
+            ),
             this.findBodyValue,
             fullText
         );
@@ -82,7 +88,10 @@ export class FindFormatter extends AFormatter implements IFormatter {
         switch (node.type) {
             case SyntaxNodeType.FindKeyword:
                 newString = FormatterHelper.getCurrentTextFormatted(
-                    node, fullText, this.expressionFormattingEnabled).trim();
+                    node,
+                    fullText,
+                    this.expressionFormattingEnabled
+                ).trim();
                 break;
             case SyntaxNodeType.WhereClause:
                 newString = this.getWhereClauseBlock(
@@ -97,11 +106,18 @@ export class FindFormatter extends AFormatter implements IFormatter {
                 );
                 break;
             case SyntaxNodeType.Error:
-                newString = FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled);
+                newString = FormatterHelper.getCurrentTextFormatted(
+                    node,
+                    fullText,
+                    this.expressionFormattingEnabled
+                );
                 break;
             default:
                 const text = FormatterHelper.getCurrentTextFormatted(
-                    node, fullText, this.expressionFormattingEnabled).trim();
+                    node,
+                    fullText,
+                    this.expressionFormattingEnabled
+                ).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
         }
@@ -121,19 +137,30 @@ export class FindFormatter extends AFormatter implements IFormatter {
                 case SyntaxNodeType.WhereKeyword:
                     resultString = resultString.concat(
                         " ",
-                        FormatterHelper.getCurrentTextFormatted(child, fullText, this.expressionFormattingEnabled).trim(),
+                        FormatterHelper.getCurrentTextFormatted(
+                            child,
+                            fullText,
+                            this.expressionFormattingEnabled
+                        ).trim(),
                         fullText.eolDelimiter,
                         " ".repeat(alignColumn)
                     );
                     break;
                 case SyntaxNodeType.Error:
                     resultString = resultString.concat(
-                        FormatterHelper.getCurrentTextFormatted(node, fullText, this.expressionFormattingEnabled)
+                        FormatterHelper.getCurrentTextFormatted(
+                            node,
+                            fullText,
+                            this.expressionFormattingEnabled
+                        )
                     );
                     break;
                 default:
                     const text = FormatterHelper.getCurrentTextFormatted(
-                        child, fullText, this.expressionFormattingEnabled).trim();
+                        child,
+                        fullText,
+                        this.expressionFormattingEnabled
+                    ).trim();
                     resultString = resultString.concat(
                         text.length === 0 ? "" : " " + text
                     );
@@ -144,4 +171,3 @@ export class FindFormatter extends AFormatter implements IFormatter {
         return resultString;
     }
 }
-
