@@ -90,7 +90,11 @@ export class FormattingEngine {
     ) {
         let cursor = tree.walk(); // Initialize the cursor at the root node
         let lastVisitedNode: SyntaxNode | null = null;
-        const editsToApply: Array<{ edit: CodeEdit | CodeEdit[], startIndex: number, endIndex: number }> = []; // Collect edits with range info
+        const editsToApply: Array<{
+            edit: CodeEdit | CodeEdit[];
+            startIndex: number;
+            endIndex: number;
+        }> = []; // Collect edits with range info
 
         while (true) {
             if (cursor.gotoFirstChild()) {
@@ -159,9 +163,9 @@ export class FormattingEngine {
                         editsToApply.push({
                             edit: codeEdit,
                             startIndex: node.startIndex,
-                            endIndex: node.endIndex
+                            endIndex: node.endIndex,
                         });
-                        
+
                         this.numOfCodeEdits++;
                     }
                 }
@@ -176,7 +180,7 @@ export class FormattingEngine {
                 // If no more siblings, move up to the parent node
                 if (!cursor.gotoParent()) {
                     cursor.delete(); // Clean up the cursor
-                    
+
                     // Now apply edits, removing overlaps - keep parent/larger edits over child/smaller ones
                     // Sort by size (largest/outermost first) to prioritize parent node edits
                     editsToApply.sort((a, b) => {
@@ -188,29 +192,36 @@ export class FormattingEngine {
                         // For same size, sort by position (later positions first for reverse application)
                         return b.startIndex - a.startIndex;
                     });
-                    
+
                     // Remove overlapping edits - keep parent/outer edits, discard child/inner edits
                     const nonOverlappingEdits: typeof editsToApply = [];
                     for (const edit of editsToApply) {
-                        const overlaps = nonOverlappingEdits.some(existing => {
-                            // Check if ranges overlap
-                            return !(edit.endIndex <= existing.startIndex || edit.startIndex >= existing.endIndex);
-                        });
-                        
+                        const overlaps = nonOverlappingEdits.some(
+                            (existing) => {
+                                // Check if ranges overlap
+                                return !(
+                                    edit.endIndex <= existing.startIndex ||
+                                    edit.startIndex >= existing.endIndex
+                                );
+                            }
+                        );
+
                         if (!overlaps) {
                             nonOverlappingEdits.push(edit);
                         }
                     }
-                    
+
                     // Now sort by position (reverse) for safe application
-                    nonOverlappingEdits.sort((a, b) => b.startIndex - a.startIndex);
-                    
+                    nonOverlappingEdits.sort(
+                        (a, b) => b.startIndex - a.startIndex
+                    );
+
                     // Apply edits to tree and fullText in reverse order
                     for (const { edit } of nonOverlappingEdits) {
                         this.insertChangeIntoTree(tree, edit);
                         this.insertChangeIntoFullText(edit, fullText);
                     }
-                    
+
                     return; // Exit if there are no more nodes to visit
                 }
             }
