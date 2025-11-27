@@ -90,6 +90,7 @@ export class FormattingEngine {
     ) {
         let cursor = tree.walk(); // Initialize the cursor at the root node
         let lastVisitedNode: SyntaxNode | null = null;
+        const editsToApply: Array<{ edit: CodeEdit | CodeEdit[], startIndex: number, endIndex: number }> = []; // Collect edits with range info
 
         while (true) {
             if (cursor.gotoFirstChild()) {
@@ -154,8 +155,14 @@ export class FormattingEngine {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
+                        // Only update the tree structure, don't modify fullText yet
                         this.insertChangeIntoTree(tree, codeEdit);
-                        this.insertChangeIntoFullText(codeEdit, fullText);
+                        editsToApply.push({
+                            edit: codeEdit,
+                            startIndex: node.startIndex,
+                            endIndex: node.endIndex
+                        });
+                        
                         this.numOfCodeEdits++;
                     }
                 }
@@ -170,6 +177,39 @@ export class FormattingEngine {
                 // If no more siblings, move up to the parent node
                 if (!cursor.gotoParent()) {
                     cursor.delete(); // Clean up the cursor
+                    
+                    // Now apply edits, removing overlaps - keep parent/larger edits over child/smaller ones
+                    // Sort by size (largest/outermost first) to prioritize parent node edits
+                    editsToApply.sort((a, b) => {
+                        const aSize = a.endIndex - a.startIndex;
+                        const bSize = b.endIndex - b.startIndex;
+                        if (aSize !== bSize) {
+                            return bSize - aSize; // Larger edits (parent nodes) first
+                        }
+                        // For same size, sort by position (later positions first for reverse application)
+                        return b.startIndex - a.startIndex;
+                    });
+                    
+                    // Remove overlapping edits - keep parent/outer edits, discard child/inner edits
+                    const nonOverlappingEdits: typeof editsToApply = [];
+                    for (const edit of editsToApply) {
+                        const overlaps = nonOverlappingEdits.some(existing => {
+                            // Check if ranges overlap
+                            return !(edit.endIndex <= existing.startIndex || edit.startIndex >= existing.endIndex);
+                        });
+                        
+                        if (!overlaps) {
+                            nonOverlappingEdits.push(edit);
+                        }
+                    }
+                    
+                    // Now sort by position (reverse) for safe application
+                    nonOverlappingEdits.sort((a, b) => b.startIndex - a.startIndex);
+                    
+                    for (const { edit } of nonOverlappingEdits) {
+                        this.insertChangeIntoFullText(edit, fullText);
+                    }
+                    
                     return; // Exit if there are no more nodes to visit
                 }
             }
