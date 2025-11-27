@@ -32,9 +32,13 @@ export class FormattingEngine {
         eol: EOL,
         metemorphicEngineIsEnabled: boolean = false
     ): string {
+        console.log(
+            `[FormattingEngine.formatText] Starting, text length: ${fulfullTextString.length}`
+        );
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
+            formattedNodeTexts: new Map<number, string>(), // Cache formatted text by node ID
         };
 
         const parseResult = this.parserHelper.parse(
@@ -45,6 +49,9 @@ export class FormattingEngine {
         this.settingsOverride(parseResult);
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
+        );
+        console.log(
+            `[FormattingEngine.formatText] Got ${formatters.length} formatters`
         );
 
         this.iterateTree(parseResult.tree, fullText, formatters);
@@ -88,8 +95,16 @@ export class FormattingEngine {
         fullText: FullText,
         formatters: IFormatter[]
     ) {
+        console.log(
+            `[FormattingEngine.iterateTree] Starting with ${formatters.length} formatters`
+        );
         let cursor = tree.walk(); // Initialize the cursor at the root node
         let lastVisitedNode: SyntaxNode | null = null;
+        const editsToApply: Array<{
+            edit: CodeEdit | CodeEdit[];
+            startIndex: number;
+            endIndex: number;
+        }> = []; // Collect edits with range info
 
         while (true) {
             if (cursor.gotoFirstChild()) {
@@ -154,8 +169,25 @@ export class FormattingEngine {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
-                        this.insertChangeIntoTree(tree, codeEdit);
-                        this.insertChangeIntoFullText(codeEdit, fullText);
+                        // Cache formatted text for this node so parents can read it
+                        this.cacheFormattedText(node, codeEdit, fullText);
+
+                        // Collect edit for later application to tree and final fullText
+                        if (Array.isArray(codeEdit)) {
+                            console.log(
+                                `[FormattingEngine] Collected ${codeEdit.length} edits for node at ${node.startIndex}-${node.endIndex}`
+                            );
+                        } else {
+                            console.log(
+                                `[FormattingEngine] Collected edit for node at ${node.startIndex}-${node.endIndex}: newText length=${codeEdit.text.length}`
+                            );
+                        }
+                        editsToApply.push({
+                            edit: codeEdit,
+                            startIndex: node.startIndex,
+                            endIndex: node.endIndex,
+                        });
+
                         this.numOfCodeEdits++;
                     }
                 }
@@ -170,6 +202,48 @@ export class FormattingEngine {
                 // If no more siblings, move up to the parent node
                 if (!cursor.gotoParent()) {
                     cursor.delete(); // Clean up the cursor
+
+                    // Now apply edits, removing overlaps - keep parent/larger edits over child/smaller ones
+                    // Sort by size (largest/outermost first) to prioritize parent node edits
+                    editsToApply.sort((a, b) => {
+                        const aSize = a.endIndex - a.startIndex;
+                        const bSize = b.endIndex - b.startIndex;
+                        if (aSize !== bSize) {
+                            return bSize - aSize; // Larger edits (parent nodes) first
+                        }
+                        // For same size, sort by position (later positions first for reverse application)
+                        return b.startIndex - a.startIndex;
+                    });
+
+                    // Remove overlapping edits - keep parent/outer edits, discard child/inner edits
+                    const nonOverlappingEdits: typeof editsToApply = [];
+                    for (const edit of editsToApply) {
+                        const overlaps = nonOverlappingEdits.some(
+                            (existing) => {
+                                // Check if ranges overlap
+                                return !(
+                                    edit.endIndex <= existing.startIndex ||
+                                    edit.startIndex >= existing.endIndex
+                                );
+                            }
+                        );
+
+                        if (!overlaps) {
+                            nonOverlappingEdits.push(edit);
+                        }
+                    }
+
+                    // Now sort by position (reverse) for safe application
+                    nonOverlappingEdits.sort(
+                        (a, b) => b.startIndex - a.startIndex
+                    );
+
+                    // Apply edits to tree and fullText in reverse order
+                    for (const { edit } of nonOverlappingEdits) {
+                        this.insertChangeIntoTree(tree, edit);
+                        this.insertChangeIntoFullText(edit, fullText);
+                    }
+
                     return; // Exit if there are no more nodes to visit
                 }
             }
@@ -309,6 +383,21 @@ export class FormattingEngine {
                 fullText.text.slice(0, codeEdit.edit.startIndex) +
                 codeEdit.text +
                 fullText.text.slice(codeEdit.edit.oldEndIndex);
+        }
+    }
+
+    // Cache formatted text for a node so parent formatters can read it
+    private cacheFormattedText(
+        node: SyntaxNode,
+        codeEdit: CodeEdit | CodeEdit[],
+        fullText: FullText
+    ): void {
+        const edits = Array.isArray(codeEdit) ? codeEdit : [codeEdit];
+
+        // Store the formatted text for this node
+        if (edits.length > 0) {
+            const formatted = edits.map((e) => e.text).join("");
+            fullText.formattedNodeTexts.set(node.id, formatted);
         }
     }
 

@@ -13,6 +13,7 @@ import { IConfigurationManager } from "../../utils/IConfigurationManager";
 export class AssignFormatter extends AFormatter implements IFormatter {
     private startColumn = 0;
     private assignBodyValue = "";
+    private readonly expressionFormattingEnabled: boolean;
 
     public static readonly formatterLabel = "assignFormatting";
     private readonly settings: AssignSettings;
@@ -20,6 +21,9 @@ export class AssignFormatter extends AFormatter implements IFormatter {
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
         this.settings = new AssignSettings(configurationManager);
+        this.expressionFormattingEnabled = !!configurationManager.get(
+            "expressionFormatting"
+        );
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
@@ -37,7 +41,11 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         this.collectAssignStructure(node, fullText);
         return this.getCodeEdit(
             node,
-            FormatterHelper.getCurrentText(node, fullText),
+            FormatterHelper.getCurrentTextFormatted(
+                node,
+                fullText,
+                this.expressionFormattingEnabled
+            ),
             this.assignBodyValue,
             fullText
         );
@@ -97,9 +105,10 @@ export class AssignFormatter extends AFormatter implements IFormatter {
 
         switch (node.type) {
             case SyntaxNodeType.AssignKeyword:
-                assignString = FormatterHelper.getCurrentText(
+                assignString = FormatterHelper.getCurrentTextFormatted(
                     node,
-                    fullText
+                    fullText,
+                    this.expressionFormattingEnabled
                 ).trim();
             case SyntaxNodeType.Assignment:
                 assignString += this.getAssignmentString(
@@ -109,12 +118,17 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                 );
                 break;
             case SyntaxNodeType.Error:
-                assignString = FormatterHelper.getCurrentText(node, fullText);
+                assignString = FormatterHelper.getCurrentTextFormatted(
+                    node,
+                    fullText,
+                    this.expressionFormattingEnabled
+                );
                 break;
             default:
-                const text = FormatterHelper.getCurrentText(
+                const text = FormatterHelper.getCurrentTextFormatted(
                     node,
-                    fullText
+                    fullText,
+                    this.expressionFormattingEnabled
                 ).trim();
                 assignString = text.length === 0 ? "" : " " + text;
                 break;
@@ -188,7 +202,12 @@ export class AssignFormatter extends AFormatter implements IFormatter {
 
         whenExpressionNode.children.forEach((child) => {
             formattedString +=
-                " " + FormatterHelper.getCurrentText(child, fullText).trim();
+                " " +
+                FormatterHelper.getCurrentTextFormatted(
+                    child,
+                    fullText,
+                    this.expressionFormattingEnabled
+                ).trim();
         });
 
         return formattedString;

@@ -77,9 +77,33 @@ export class FormatterHelper {
         fullText: Readonly<FullText>
     ): string {
         if (node !== undefined && fullText !== undefined) {
+            // Check if this node has been formatted already
+            const formatted = fullText.formattedNodeTexts.get(node.id);
+            if (formatted !== undefined) {
+                return formatted;
+            }
+
+            // Not formatted yet, read from original text
             return fullText.text.substring(node.startIndex, node.endIndex);
         }
         return "";
+    }
+
+    /**
+     * Get formatted text for a node, with special handling for LogicalExpression nodes.
+     * If the node is a LogicalExpression and expression formatting is enabled,
+     * the caller should use ExpressionFormatter to format it properly.
+     * This method just returns the original text - formatting logic is delegated
+     * to ExpressionFormatter.
+     */
+    public static getCurrentTextFormatted(
+        node: Readonly<SyntaxNode>,
+        fullText: Readonly<FullText>,
+        expressionFormattingEnabled: boolean = false
+    ): string {
+        // Note: Formatting of LogicalExpression nodes should be handled by ExpressionFormatter
+        // This method signature is kept for backwards compatibility but delegates to getCurrentText
+        return this.getCurrentText(node, fullText);
     }
 
     public static getBodyText(
@@ -247,20 +271,22 @@ export class FormatterHelper {
         let newString = "";
         if (node.type === SyntaxNodeType.LeftParenthesis) {
             const skipBefore = FormatterHelper.hasSkipKeyword(node);
-            newString =
-                (skipBefore ? "" : " ") +
-                FormatterHelper.getCurrentText(node, fullText).trim();
+            newString = (skipBefore ? "" : " ") + "(";
+        } else if (node.type === SyntaxNodeType.RightParenthesis) {
+            newString = ")";
         } else if (
-            node.type === SyntaxNodeType.RightParenthesis ||
-            (node.previousSibling !== null &&
-                node.previousSibling.type === SyntaxNodeType.LeftParenthesis)
+            node.previousSibling !== null &&
+            node.previousSibling.type === SyntaxNodeType.LeftParenthesis
         ) {
-            newString = FormatterHelper.getCurrentText(
+            // Node immediately after left paren - trim all whitespace
+            newString = FormatterHelper.getCurrentText(node, fullText).trim();
+        } else {
+            // Other nodes - trim and add single space prefix
+            const trimmed = FormatterHelper.getCurrentText(
                 node,
                 fullText
-            ).trimStart();
-        } else {
-            newString = FormatterHelper.getCurrentText(node, fullText);
+            ).trim();
+            newString = trimmed.length > 0 ? " " + trimmed : "";
         }
         return newString;
     }

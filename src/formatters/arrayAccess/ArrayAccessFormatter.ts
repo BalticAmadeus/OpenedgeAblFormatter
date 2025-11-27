@@ -23,14 +23,10 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
-        if (
+        return (
             node.type === SyntaxNodeType.ArrayAccess ||
             node.type === SyntaxNodeType.ArrayLiteral
-        ) {
-            return true;
-        }
-
-        return false;
+        );
     }
 
     compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
@@ -41,6 +37,11 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
+        // Reset flags for this formatting operation
+        this.formattingArrayLiteral = false;
+        this.addSpaceBeforeLeftBracket = false;
+        this.addSpaceBeforeIdentifier = false;
+
         if (node.type === SyntaxNodeType.ArrayLiteral) {
             this.formattingArrayLiteral = true;
 
@@ -123,9 +124,9 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
-        node.children.forEach((child) => {
+        for (const child of node.children) {
             resultString = resultString.concat(this.getString(child, fullText));
-        });
+        }
         return resultString;
     }
 
@@ -133,34 +134,27 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         if (node.type === SyntaxNodeType.LeftBracket) {
-            newString = FormatterHelper.getCurrentText(node, fullText).trim();
-
+            newString = "[";
             if (this.addSpaceBeforeLeftBracket) {
                 newString = " " + newString;
             }
+        } else if (node.type === SyntaxNodeType.RightBracket) {
+            newString = "]";
         } else if (
-            node.type === SyntaxNodeType.RightBracket ||
-            (node.previousSibling !== null &&
-                node.previousSibling.type === SyntaxNodeType.LeftBracket)
+            node.type === SyntaxNodeType.CommaKeyword &&
+            this.formattingArrayLiteral
         ) {
-            newString = FormatterHelper.getCurrentText(
-                node,
-                fullText
-            ).trimStart();
+            newString = ",";
+            if (this.settings.addSpaceAfterComma()) {
+                newString += " ";
+            }
         } else {
-            if (this.formattingArrayLiteral) {
-                newString = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
-                if (
-                    node.type === SyntaxNodeType.CommaKeyword &&
-                    this.settings.addSpaceAfterComma()
-                ) {
-                    newString += " ";
-                }
-            } else {
-                newString = FormatterHelper.getCurrentText(node, fullText);
+            // For all other nodes, get the text (which will be from cache or original source)
+            newString = FormatterHelper.getCurrentText(node, fullText).trim();
+
+            // If the result is empty (whitespace node), skip it
+            if (newString === "") {
+                return "";
             }
         }
         return newString;
