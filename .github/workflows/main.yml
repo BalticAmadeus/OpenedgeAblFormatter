@@ -40,6 +40,7 @@ jobs:
     # MAIN TEST JOB
     # -------------------------
     test:
+        needs: local-test-confirmation
         strategy:
             matrix:
                 os: [ubuntu-latest, windows-latest, macos-latest]
