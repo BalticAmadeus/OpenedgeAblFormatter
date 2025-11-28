@@ -6,7 +6,7 @@ DEFINE TEMP-TABLE tDataSource
     FIELD TargetProc   AS HANDLE
     FIELD DataSource   AS HANDLE
     FIELD ObjectName   AS CHAR
-    FIELD DocumentPath AS CHAR /* Consumer only */
+    FIELD DocumentPath AS CHAR  /* Consumer only */
     FIELD Commit       AS LOG
     INDEX DataSource AS UNIQUE TargetProc DataSource
     INDEX ObjectName ObjectName TargetProc

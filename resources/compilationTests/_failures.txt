@@ -1,5 +1,6 @@
 ablunit_ABLUnitCore.r
 adecomm__getdbs.r
+adecomm__wincolr.r
 adedict__brwadj.r
 adedict__brwgray.r
 adedict__brwlist.r
@@ -121,6 +122,7 @@ adeshar__gendefs.r
 adeshar__qenable.r
 adeshar__qset.r
 adeshar__qwhere.r
+adeshar_dirsrch.r
 adeuib__abmbar.r
 adeuib__acontp.r
 adeuib__advisor.r
@@ -275,6 +277,7 @@ adeweb__genrt.r
 adeweb__genweb.r
 adeweb__htmlcol.r
 adeweb__joinext.r
+adeweb__loadhtm.r
 adeweb__mkwind.r
 adeweb__qbuild.r
 adeweb__rddefs.r
@@ -1332,6 +1335,8 @@ webtools_util__fileact.r
 webtools_util__putfile.r
 webtools_util__run4gl.r
 webutil__cpyfile.r
+webutil__genoff.r
+webutil__offsrch.r
 webutil__osfile.r
 webutil__osfile3.r
 webutil__sdoinfo.r
@@ -1339,6 +1344,7 @@ webutil__weblist.r
 webutil__webmsgs.r
 webutil_conve4gl.r
 webutil_e4gl-gen.r
+webutil_tagextr.r
 workshop__cdread.r
 workshop__close.r
 workshop__dbinfo.r
@@ -1350,6 +1356,7 @@ workshop__genrt.r
 workshop__htmlmap.r
 workshop__jgenlst.r
 workshop__list.r
+workshop__loadhtm.r
 workshop__opened.r
 workshop__prefers.r
 workshop__procset.r
@@ -1375,6 +1382,8 @@ rmc_rmcutil.r
 rmc__ascompile.r
 rmc__wscompile.r
 workshop__jfind2.r
+adecomm_dirsrch.r
+adecomm_fileinfo.r
 adecomm_pcmpcls.r
 aderes__fbframe.r
 adeuib_ide__dialog_mldlg.r
