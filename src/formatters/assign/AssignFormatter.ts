@@ -72,7 +72,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                 
                 // Check if comment contains newlines (block comment on own line)
                 if (commentText.includes("\n") || commentText.includes("\r")) {
-                    const lines = commentText.split(/\r?\n/);
+                    const lines = commentText.split(fullText.eolDelimiter);
                     let foundFirstCommentLine = false;
                     
                     for (const line of lines) {

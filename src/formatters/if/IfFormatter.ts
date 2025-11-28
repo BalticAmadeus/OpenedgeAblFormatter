@@ -90,7 +90,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     const indentMatch = fullText.text.substring(lineStart, commentStart).match(/^\s*/);
                     const baseIndent = indentMatch ? indentMatch[0] : "";
 
-                    const lines = commentText.split(/\r?\n/);
+                    const lines = commentText.split(fullText.eolDelimiter);
                     lines.forEach((line, idx) => {
                         // Only add baseIndent if the line does not already start with it (or is empty)
                         let outLine = line;
