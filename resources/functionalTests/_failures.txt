@@ -62,7 +62,7 @@ issuesGithub_532 - fixed
 issuesGithub_533 - fixed
 issuesGithub_535 - fixed
 issuesGithub_538 - fixed
-issuesGithub_544
+issuesGithub_544 - fixed
 issuesGithub_556 - fixed
 issuesGithub_557
 issuesGithub_558
