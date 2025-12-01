@@ -51,33 +51,71 @@ export class FormattingEngine {
         console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
         
         // Check if assignment operator ends at position > 30 (issue #420 pattern)
+        // AND if there's a parenthesized_expression (only case that breaks)
         let assignmentOperatorEndPosition = 0;
+        let shouldUseSplitLogic = false;
+        let hasParenthesizedExpression = false;
+        
         const rootNode = parseResult.tree.rootNode;
         if (rootNode.firstChild) {
             const firstChild = rootNode.firstChild;
-            if (firstChild.type === 'variable_assignment' || firstChild.type === 'assignment') {
+            console.log(`[FormattingEngine.formatText] Root's first child type: ${firstChild.type}`);
+            
+            // Handle both variable_assignment and assign_statement
+            if (firstChild.type === 'variable_assignment' || firstChild.type === 'assign_statement') {
+                
+                // Helper function to check for parenthesized_expression in tree
+                const checkForParenthesized = (node: any): boolean => {
+                    if (node.type === 'parenthesized_expression') return true;
+                    for (let k = 0; k < node.childCount; k++) {
+                        const child = node.child(k);
+                        if (child && checkForParenthesized(child)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+                
                 for (let i = 0; i < firstChild.childCount; i++) {
                     const child = firstChild.child(i);
                     if (child && child.type === 'assignment') {
+                        console.log(`[FormattingEngine.formatText] Found assignment node with ${child.childCount} children`);
+                        
+                        // Check for parenthesized_expression
+                        if (checkForParenthesized(child)) {
+                            hasParenthesizedExpression = true;
+                            console.log(`[FormattingEngine.formatText] *** FOUND PARENTHESIZED_EXPRESSION ***`);
+                        }
+                        
                         for (let j = 0; j < child.childCount; j++) {
                             const grandChild = child.child(j);
-                            if (grandChild && grandChild.type === 'assignment_operator') {
-                                assignmentOperatorEndPosition = grandChild.endIndex;
-                                console.log(`[FormattingEngine.formatText] *** ASSIGNMENT OPERATOR ENDS AT: ${assignmentOperatorEndPosition} ***`);
-                                break;
+                            if (grandChild) {
+                                console.log(`[FormattingEngine.formatText]   Child ${j}: type=${grandChild.type}, start=${grandChild.startIndex}, end=${grandChild.endIndex}`);
+                                if (grandChild.type === 'assignment_operator') {
+                                    assignmentOperatorEndPosition = grandChild.endIndex;
+                                    console.log(`[FormattingEngine.formatText] *** ASSIGNMENT OPERATOR ENDS AT: ${assignmentOperatorEndPosition} ***`);
+                                    break;
+                                }
                             }
                         }
                     }
                 }
+                
+                // Use split logic only if:
+                // 1. Assignment operator ends at position > 30
+                // 2. Has parenthesized_expression (only case that breaks)
+                if (assignmentOperatorEndPosition > 30 && hasParenthesizedExpression) {
+                    shouldUseSplitLogic = true;
+                    console.log(`[FormattingEngine.formatText] Conditions met: operator end > 30 AND has parenthesized_expression`);
+                }
             }
         }
         
-        const useSplitLogic = assignmentOperatorEndPosition > 30;
-        console.log(`[FormattingEngine.formatText] Use split logic: ${useSplitLogic} (operator end: ${assignmentOperatorEndPosition})`);
+        console.log(`[FormattingEngine.formatText] Use split logic: ${shouldUseSplitLogic} (operator end: ${assignmentOperatorEndPosition}, hasParenthesized: ${hasParenthesizedExpression})`);
         
-        this.iterateTree(parseResult.tree, fullText, formatters, useSplitLogic);
+        this.iterateTree(parseResult.tree, fullText, formatters, shouldUseSplitLogic);
         
-        if (useSplitLogic) {
+        if (shouldUseSplitLogic) {
             console.log(`[FormattingEngine.formatText] After iterateTree PHASE 1 (LEAF NODES), text length: ${fullText.text.length}`);
         } else {
             console.log(`[FormattingEngine.formatText] After iterateTree (NORMAL), text length: ${fullText.text.length}`);
@@ -94,7 +132,7 @@ export class FormattingEngine {
         console.log(`[FormattingEngine.formatText] After iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
 
         // SECOND PASS: Format parent nodes only when split logic is active
-        if (useSplitLogic) {
+        if (shouldUseSplitLogic) {
             console.log(`[FormattingEngine.formatText] ========== STARTING PHASE 2: PARENT NODES ==========`);
             this.iterateTreeParentNodes(newTree, fullText, formatters);
             console.log(`[FormattingEngine.formatText] After iterateTreeParentNodes PHASE 2, text length: ${fullText.text.length}`);
