@@ -1394,3 +1394,8 @@ adm2_support__wizntro.r
 adm2_support__wizqry.r
 adeuib__accsect.r
 prores_r-total.r
+adeweb__preproc.r
+prores_a-read.r
+prores_l-verify.r
+prores_l-write.r
+workshop__preproc.r
