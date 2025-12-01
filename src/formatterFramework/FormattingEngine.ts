@@ -49,8 +49,39 @@ export class FormattingEngine {
         );
 
         console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
-        this.iterateTree(parseResult.tree, fullText, formatters);
-        console.log(`[FormattingEngine.formatText] After iterateTree, text length: ${fullText.text.length}`);
+        
+        // Check if assignment operator ends at position > 30 (issue #420 pattern)
+        let assignmentOperatorEndPosition = 0;
+        const rootNode = parseResult.tree.rootNode;
+        if (rootNode.firstChild) {
+            const firstChild = rootNode.firstChild;
+            if (firstChild.type === 'variable_assignment' || firstChild.type === 'assignment') {
+                for (let i = 0; i < firstChild.childCount; i++) {
+                    const child = firstChild.child(i);
+                    if (child && child.type === 'assignment') {
+                        for (let j = 0; j < child.childCount; j++) {
+                            const grandChild = child.child(j);
+                            if (grandChild && grandChild.type === 'assignment_operator') {
+                                assignmentOperatorEndPosition = grandChild.endIndex;
+                                console.log(`[FormattingEngine.formatText] *** ASSIGNMENT OPERATOR ENDS AT: ${assignmentOperatorEndPosition} ***`);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        const useSplitLogic = assignmentOperatorEndPosition > 30;
+        console.log(`[FormattingEngine.formatText] Use split logic: ${useSplitLogic} (operator end: ${assignmentOperatorEndPosition})`);
+        
+        this.iterateTree(parseResult.tree, fullText, formatters, useSplitLogic);
+        
+        if (useSplitLogic) {
+            console.log(`[FormattingEngine.formatText] After iterateTree PHASE 1 (LEAF NODES), text length: ${fullText.text.length}`);
+        } else {
+            console.log(`[FormattingEngine.formatText] After iterateTree (NORMAL), text length: ${fullText.text.length}`);
+        }
 
         const newTree = this.parserHelper.parse(
             this.fileIdentifier,
@@ -62,6 +93,12 @@ export class FormattingEngine {
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
         console.log(`[FormattingEngine.formatText] After iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
 
+        // SECOND PASS: Format parent nodes only when split logic is active
+        if (useSplitLogic) {
+            console.log(`[FormattingEngine.formatText] ========== STARTING PHASE 2: PARENT NODES ==========`);
+            this.iterateTreeParentNodes(newTree, fullText, formatters);
+            console.log(`[FormattingEngine.formatText] After iterateTreeParentNodes PHASE 2, text length: ${fullText.text.length}`);
+        }
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
         console.log(`[FormattingEngine.formatText] COMPLETE - Final text length: ${fullText.text.length}, numOfCodeEdits: ${this.numOfCodeEdits}`);
 
@@ -162,7 +199,8 @@ export class FormattingEngine {
     private iterateTree(
         tree: Tree,
         fullText: FullText,
-        formatters: IFormatter[]
+        formatters: IFormatter[],
+        leafNodesOnly: boolean = false
     ) {
         let cursor = tree.walk();
         let lastVisitedNode: SyntaxNode | null = null;
@@ -229,37 +267,35 @@ export class FormattingEngine {
                     !this.skipFormatting &&
                     !bodyBlockKeywords.hasFancy(node.type, "")
                 ) {
-                    const codeEdit = this.parse(node, fullText, formatters);
+                    if (leafNodesOnly) {
+                        // SPLIT LOGIC: Only format LEAF nodes (no children with edits)
+                        const hasFormattableChildren = node.children.some(child => 
+                            !bodyBlockKeywords.hasFancy(child.type, "") &&
+                            formatters.some(formatter => formatter.match(child))
+                        );
+                        
+                        // Only process leaf nodes in first pass
+                        if (!hasFormattableChildren) {
+                            const codeEdit = this.parse(node, fullText, formatters);
 
-                    if (codeEdit !== undefined) {
-                        const editInfo = Array.isArray(codeEdit) ? codeEdit[0] : codeEdit;
-                        
-                        // DETAILED LOGGING FOR DEBUGGING TREE.EDIT() BEHAVIOR
-                        console.log(`\n[iterateTree] ========== EDIT ${this.numOfCodeEdits + 1} ==========`);
-                        console.log(`[iterateTree] Node type: ${node.type}`);
-                        console.log(`[iterateTree] BEFORE edit - node position: ${node.startIndex} → ${node.endIndex} (length: ${node.endIndex - node.startIndex})`);
-                        console.log(`[iterateTree] BEFORE edit - edit position: ${editInfo.edit.startIndex} → ${editInfo.edit.oldEndIndex} (length: ${editInfo.edit.oldEndIndex - editInfo.edit.startIndex})`);
-                        console.log(`[iterateTree] BEFORE edit - fullText.text length: ${fullText.text.length}`);
-                        
-                        const oldTextFromFullText = fullText.text.substring(editInfo.edit.startIndex, editInfo.edit.oldEndIndex);
-                        const oldTextFromNode = node.text;
-                        console.log(`[iterateTree] Old text from fullText[${editInfo.edit.startIndex}:${editInfo.edit.oldEndIndex}]: "${oldTextFromFullText.substring(0, 80)}${oldTextFromFullText.length > 80 ? '...' : ''}"`);
-                        console.log(`[iterateTree] Old text from node.text: "${oldTextFromNode.substring(0, 80)}${oldTextFromNode.length > 80 ? '...' : ''}"`);
-                        console.log(`[iterateTree] New text: "${editInfo.text.substring(0, 80)}${editInfo.text.length > 80 ? '...' : ''}" (length: ${editInfo.text.length})`);
-                        console.log(`[iterateTree] Text match: ${oldTextFromFullText === oldTextFromNode ? 'YES ✓' : 'NO ✗ MISMATCH!'}`);
-                        
-                        this.insertChangeIntoTree(tree, codeEdit);
-                        console.log(`[iterateTree] AFTER tree.edit() - node position: ${node.startIndex} → ${node.endIndex} (length: ${node.endIndex - node.startIndex})`);
-                        console.log(`[iterateTree] AFTER tree.edit() - node.text: "${node.text.substring(0, 80)}${node.text.length > 80 ? '...' : ''}"`);
-                        
-                        this.insertChangeIntoFullText(codeEdit, fullText);
-                        console.log(`[iterateTree] AFTER insertChangeIntoFullText - fullText.text length: ${fullText.text.length}`);
-                        const newTextAtNodePos = fullText.text.substring(node.startIndex, node.endIndex);
-                        console.log(`[iterateTree] Text at updated node position[${node.startIndex}:${node.endIndex}]: "${newTextAtNodePos.substring(0, 80)}${newTextAtNodePos.length > 80 ? '...' : ''}"`);
-                        console.log(`[iterateTree] Positions aligned: ${newTextAtNodePos === node.text ? 'YES ✓' : 'NO ✗ MISMATCH!'}`);
-                        console.log(`[iterateTree] ========================================\n`);
-                        
-                        this.numOfCodeEdits++;
+                            if (codeEdit !== undefined) {
+                                console.log(`[iterateTree] PHASE 1 - LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                this.insertChangeIntoTree(tree, codeEdit);
+                                this.insertChangeIntoFullText(codeEdit, fullText);
+                                this.numOfCodeEdits++;
+                            }
+                        } else {
+                            console.log(`[iterateTree] PHASE 1 - SKIPPING PARENT NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                        }
+                    } else {
+                        // NORMAL LOGIC: Format all nodes
+                        const codeEdit = this.parse(node, fullText, formatters);
+
+                        if (codeEdit !== undefined) {
+                            this.insertChangeIntoTree(tree, codeEdit);
+                            this.insertChangeIntoFullText(codeEdit, fullText);
+                            this.numOfCodeEdits++;
+                        }
                     }
                 }
 
@@ -274,6 +310,91 @@ export class FormattingEngine {
                 if (!cursor.gotoParent()) {
                     cursor.delete(); // Clean up the cursor
                     return; // Exit if there are no more nodes to visit
+                }
+            }
+        }
+    }
+
+    // SECOND PASS: Format parent nodes after leaf nodes are stable
+    private iterateTreeParentNodes(
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[]
+    ) {
+        let cursor = tree.walk();
+        let lastVisitedNode: SyntaxNode | null = null;
+
+        while (true) {
+            const currentNode = cursor.currentNode();
+            
+            if (cursor.gotoFirstChild()) {
+                continue;
+            }
+            // Process the current node (this is a leaf node or a node with no unvisited children)
+            while (true) {
+                const node = cursor.currentNode();
+
+                // Skip the node if it was the last one visited
+                if (node === lastVisitedNode) {
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        return;
+                    }
+                    continue;
+                }
+
+                // Skip annotation handling in second pass
+                if (node.type === SyntaxNodeType.Annotation) {
+                    lastVisitedNode = node;
+
+                    if (cursor.gotoNextSibling()) {
+                        break;
+                    }
+
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        return;
+                    }
+
+                    continue;
+                }
+
+                // Parse and process the current node (POST-ORDER)
+                // SECOND PASS: Only format PARENT nodes (have formattable children)
+                if (
+                    !this.skipFormatting &&
+                    !bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
+                    // Check if this node is a parent (has children that would be formatted)
+                    const hasFormattableChildren = node.children.some(child => 
+                        !bodyBlockKeywords.hasFancy(child.type, "") &&
+                        formatters.some(formatter => formatter.match(child))
+                    );
+                    
+                    // Only process parent nodes in second pass
+                    if (hasFormattableChildren) {
+                        const codeEdit = this.parse(node, fullText, formatters);
+
+                        if (codeEdit !== undefined) {
+                            console.log(`[iterateTreeParentNodes] PARENT NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            this.insertChangeIntoTree(tree, codeEdit);
+                            this.insertChangeIntoFullText(codeEdit, fullText);
+                            this.numOfCodeEdits++;
+                        }
+                    }
+                }
+
+                // Mark the current node as the last visited node
+                lastVisitedNode = node;
+
+                // Try to move to the next sibling
+                if (cursor.gotoNextSibling()) {
+                    break;
+                }
+                // If no more siblings, move up to the parent node
+                if (!cursor.gotoParent()) {
+                    cursor.delete();
+                    return;
                 }
             }
         }
