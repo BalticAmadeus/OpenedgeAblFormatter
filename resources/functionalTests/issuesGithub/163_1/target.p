@@ -4,8 +4,8 @@
 "AblFormatter.ifFormattingStatementLocation": "New"}*/
 
 IF Something > 0 THEN
-    cMessage = "Hello". 
-    /* comment, */ 
+    cMessage = "Hello".
+    /* comment, */
     /* comment  */
 ELSE
     cMessage = "Paka".

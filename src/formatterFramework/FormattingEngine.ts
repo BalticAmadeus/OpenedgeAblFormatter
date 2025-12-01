@@ -39,7 +39,7 @@ export class FormattingEngine {
 
         const parseResult = this.parserHelper.parse(
             this.fileIdentifier,
-            fulfullTextString
+            fullText.text
         );
 
         this.settingsOverride(parseResult);
