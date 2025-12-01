@@ -1,5 +1,5 @@
 /* My temp-table */
-define temp-table ttInfo // test
+define temp-table ttInfo
       /* ID Fields */
     field id    as integer   serialize-name "id" 
     
