@@ -4,6 +4,13 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.4.6 (2025-12-01)
+
+- Improved ASSIGN statement formatting
+- Improved INPUT/OUTPUT statement formatting
+- Fixed issue for selection formatting
+- **tree-sitter-abl** version bump and other Improvements [See all](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/18?closed=1)
+
 ## 0.4.5 (2025-11-17)
 
 - Implemented functionality to exclude code from formatting
