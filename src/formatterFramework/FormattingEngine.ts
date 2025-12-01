@@ -32,6 +32,7 @@ export class FormattingEngine {
         eol: EOL,
         metemorphicEngineIsEnabled: boolean = false
     ): string {
+        console.log(`[FormattingEngine.formatText] START - Input length: ${fulfullTextString.length}`);
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
@@ -47,7 +48,9 @@ export class FormattingEngine {
             this.configurationManager
         );
 
+        console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
         this.iterateTree(parseResult.tree, fullText, formatters);
+        console.log(`[FormattingEngine.formatText] After iterateTree, text length: ${fullText.text.length}`);
 
         const newTree = this.parserHelper.parse(
             this.fileIdentifier,
@@ -55,9 +58,12 @@ export class FormattingEngine {
             parseResult.tree
         ).tree;
 
+        console.log(`[FormattingEngine.formatText] Before iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
+        console.log(`[FormattingEngine.formatText] After iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
 
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
+        console.log(`[FormattingEngine.formatText] COMPLETE - Final text length: ${fullText.text.length}, numOfCodeEdits: ${this.numOfCodeEdits}`);
 
         if (
             metemorphicEngineIsEnabled &&
@@ -83,15 +89,87 @@ export class FormattingEngine {
         return fullText.text;
     }
 
+    private collectEdits(
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[]
+    ): Array<{ codeEdit: CodeEdit | CodeEdit[]; startIndex: number }> {
+        const edits: Array<{ codeEdit: CodeEdit | CodeEdit[]; startIndex: number }> = [];
+        let cursor = tree.walk();
+        let lastVisitedNode: SyntaxNode | null = null;
+
+        while (true) {
+            if (cursor.gotoFirstChild()) {
+                continue;
+            }
+            
+            while (true) {
+                const node = cursor.currentNode();
+
+                if (node === lastVisitedNode) {
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        return edits;
+                    }
+                    continue;
+                }
+
+                if (node.type === SyntaxNodeType.Annotation) {
+                    const children = node.children;
+                    const keywordNode = children[1];
+                    const annotationName = keywordNode?.toString();
+
+                    if (annotationName?.toLowerCase() === "noformat") {
+                        this.skipFormatting = true;
+                    } else if (annotationName?.toLowerCase() === "formatoff") {
+                        this.skipFormatting = true;
+                    } else if (annotationName?.toLowerCase() === "formaton") {
+                        this.skipFormatting = false;
+                    }
+
+                    continue;
+                }
+
+                if (
+                    !this.skipFormatting &&
+                    !bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
+                    const codeEdit = this.parse(node, fullText, formatters);
+
+                    if (codeEdit !== undefined) {
+                        const editInfo = Array.isArray(codeEdit) ? codeEdit[0] : codeEdit;
+                        edits.push({
+                            codeEdit,
+                            startIndex: editInfo.edit.startIndex
+                        });
+                    }
+                }
+
+                lastVisitedNode = node;
+
+                if (cursor.gotoNextSibling()) {
+                    break;
+                }
+
+                if (!cursor.gotoParent()) {
+                    cursor.delete();
+                    return edits;
+                }
+            }
+        }
+    }
+
     private iterateTree(
         tree: Tree,
         fullText: FullText,
         formatters: IFormatter[]
     ) {
-        let cursor = tree.walk(); // Initialize the cursor at the root node
+        let cursor = tree.walk();
         let lastVisitedNode: SyntaxNode | null = null;
 
         while (true) {
+            const currentNode = cursor.currentNode();
+            
             if (cursor.gotoFirstChild()) {
                 continue;
             }
@@ -146,7 +224,7 @@ export class FormattingEngine {
                     continue;
                 }
 
-                // Parse and process the current node
+                // Parse and process the current node (POST-ORDER)
                 if (
                     !this.skipFormatting &&
                     !bodyBlockKeywords.hasFancy(node.type, "")
@@ -156,6 +234,7 @@ export class FormattingEngine {
                     if (codeEdit !== undefined) {
                         this.insertChangeIntoTree(tree, codeEdit);
                         this.insertChangeIntoFullText(codeEdit, fullText);
+                        
                         this.numOfCodeEdits++;
                     }
                 }
@@ -275,12 +354,16 @@ export class FormattingEngine {
         codeEdit: CodeEdit | CodeEdit[]
     ): void {
         if (Array.isArray(codeEdit)) {
-            codeEdit.forEach((oneCodeEdit) => {
+            console.log(`[insertChangeIntoTree] Applying ${codeEdit.length} edits to tree`);
+            codeEdit.forEach((oneCodeEdit, index) => {
+                console.log(`[insertChangeIntoTree] Edit ${index + 1}: startIndex=${oneCodeEdit.edit.startIndex}, oldEndIndex=${oneCodeEdit.edit.oldEndIndex}, newEndIndex=${oneCodeEdit.edit.newEndIndex}`);
                 tree.edit(oneCodeEdit.edit);
             });
         } else {
+            console.log(`[insertChangeIntoTree] Applying single edit: startIndex=${codeEdit.edit.startIndex}, oldEndIndex=${codeEdit.edit.oldEndIndex}, newEndIndex=${codeEdit.edit.newEndIndex}`);
             tree.edit(codeEdit.edit);
         }
+        console.log(`[insertChangeIntoTree] Tree edit complete`);
     }
 
     private logTree(node: SyntaxNode): string[] {
@@ -299,16 +382,28 @@ export class FormattingEngine {
     ): void {
         if (Array.isArray(codeEdit)) {
             codeEdit.forEach((oneCodeEdit) => {
-                fullText.text =
-                    fullText.text.slice(0, oneCodeEdit.edit.startIndex) +
-                    oneCodeEdit.text +
-                    fullText.text.slice(oneCodeEdit.edit.oldEndIndex);
+                console.log(`[insertChangeIntoFullText] Array mode - startIndex: ${oneCodeEdit.edit.startIndex}, oldEndIndex: ${oneCodeEdit.edit.oldEndIndex}`);
+                console.log(`[insertChangeIntoFullText] Current text length: ${fullText.text.length}`);
+                console.log(`[insertChangeIntoFullText] Text being replaced (${oneCodeEdit.edit.startIndex} to ${oneCodeEdit.edit.oldEndIndex}): "${fullText.text.substring(oneCodeEdit.edit.startIndex, oneCodeEdit.edit.oldEndIndex)}"`);
+                console.log(`[insertChangeIntoFullText] New text (length ${oneCodeEdit.text.length}): "${oneCodeEdit.text}"`);
+                const before = fullText.text.slice(0, oneCodeEdit.edit.startIndex);
+                const after = fullText.text.slice(oneCodeEdit.edit.oldEndIndex);
+                console.log(`[insertChangeIntoFullText] Before slice (0 to ${oneCodeEdit.edit.startIndex}): length=${before.length}`);
+                console.log(`[insertChangeIntoFullText] After slice (${oneCodeEdit.edit.oldEndIndex} to end): length=${after.length}`);
+                fullText.text = before + oneCodeEdit.text + after;
+                console.log(`[insertChangeIntoFullText] Result text length: ${fullText.text.length}`);
             });
         } else {
-            fullText.text =
-                fullText.text.slice(0, codeEdit.edit.startIndex) +
-                codeEdit.text +
-                fullText.text.slice(codeEdit.edit.oldEndIndex);
+            console.log(`[insertChangeIntoFullText] Single mode - startIndex: ${codeEdit.edit.startIndex}, oldEndIndex: ${codeEdit.edit.oldEndIndex}`);
+            console.log(`[insertChangeIntoFullText] Current text length: ${fullText.text.length}`);
+            console.log(`[insertChangeIntoFullText] Text being replaced (${codeEdit.edit.startIndex} to ${codeEdit.edit.oldEndIndex}): "${fullText.text.substring(codeEdit.edit.startIndex, codeEdit.edit.oldEndIndex)}"`);
+            console.log(`[insertChangeIntoFullText] New text (length ${codeEdit.text.length}): "${codeEdit.text}"`);
+            const before = fullText.text.slice(0, codeEdit.edit.startIndex);
+            const after = fullText.text.slice(codeEdit.edit.oldEndIndex);
+            console.log(`[insertChangeIntoFullText] Before slice (0 to ${codeEdit.edit.startIndex}): length=${before.length}`);
+            console.log(`[insertChangeIntoFullText] After slice (${codeEdit.edit.oldEndIndex} to end): length=${after.length}`);
+            fullText.text = before + codeEdit.text + after;
+            console.log(`[insertChangeIntoFullText] Result text length: ${fullText.text.length}`);
         }
     }
 
@@ -321,7 +416,19 @@ export class FormattingEngine {
 
         formatters.some((formatter) => {
             if (formatter.match(node)) {
+                console.log(`[FormattingEngine.parse] Formatter matched: ${(formatter.constructor as any).formatterLabel || formatter.constructor.name}`);
+                console.log(`[FormattingEngine.parse] Node type: ${node.type}, text: "${node.text}"`);
+                console.log(`[FormattingEngine.parse] Node position: start=${node.startIndex}, end=${node.endIndex}`);
+                console.log(`[FormattingEngine.parse] fullText length before parse: ${fullText.text.length}`);
+                
                 result = formatter.parse(node, fullText);
+                
+                if (result) {
+                    const editInfo = Array.isArray(result) ? result[0] : result;
+                    console.log(`[FormattingEngine.parse] Formatter generated edit: startIndex=${editInfo.edit.startIndex}, oldEndIndex=${editInfo.edit.oldEndIndex}, newText="${editInfo.text}"`);
+                } else {
+                    console.log(`[FormattingEngine.parse] Formatter returned no edit`);
+                }
 
                 return true;
             }

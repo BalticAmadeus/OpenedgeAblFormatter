@@ -170,6 +170,7 @@ export class AblParserHelper implements IParserHelper {
         text: string,
         options?: any
     ): Promise<string> {
+        console.log(`[AblParserHelper.format] MAIN PROCESS - Input text length: ${text.length}`);
         await this.ensureWorkerReady();
         // Always send all relevant settings if not already provided
         if (!options) {
@@ -185,6 +186,7 @@ export class AblParserHelper implements IParserHelper {
                 return new Promise<string>((resolve, reject) => {
                     const id = ++this.messageId;
                     this.pendingRequests.set(id, { resolve, reject });
+                    console.log(`[AblParserHelper.format] MAIN PROCESS - Sending to worker, text length: ${text.length}`);
                     this.workerProcess!.send({
                         type: "format",
                         id,
@@ -335,10 +337,12 @@ export class AblParserHelper implements IParserHelper {
                 stdio: ["pipe", "pipe", "pipe", "ipc"],
             });
 
-            this.workerProcess.stdout?.on("data", (data) => {});
+            this.workerProcess.stdout?.on("data", (data) => {
+                console.log("[Worker stdout]:", data.toString().trim());
+            });
 
             this.workerProcess.stderr?.on("data", (data) => {
-                console.log("stderr", data);
+                console.log("[Worker stderr]:", data.toString().trim());
             });
 
             this.workerProcess.on("message", (message: any) => {
@@ -407,11 +411,19 @@ export class AblParserHelper implements IParserHelper {
                 }
             }
         } else if (message.type === "formatResult" && message.id) {
+            console.log(`[AblParserHelper.handleWorkerMessage] MAIN PROCESS - Received formatResult, text length: ${message.formattedText?.length || 0}`);
             const pendingRequest = this.pendingRequests.get(message.id);
             if (pendingRequest) {
                 this.pendingRequests.delete(message.id);
                 if (message.success) {
-                    pendingRequest.resolve(message.formattedText);
+                    const textLength = message.formattedText?.length ?? 0;
+                    console.log(`[AblParserHelper.handleWorkerMessage] MAIN PROCESS - Resolving promise with result length: ${textLength}`);
+                    if (message.formattedText === undefined || message.formattedText === null) {
+                        console.error(`[AblParserHelper] Worker returned undefined/null formattedText for request ${message.id}`);
+                        pendingRequest.reject(new Error("Worker returned undefined/null formattedText"));
+                    } else {
+                        pendingRequest.resolve(message.formattedText);
+                    }
                 } else {
                     // Ensure error is a string
                     const errorMsg =

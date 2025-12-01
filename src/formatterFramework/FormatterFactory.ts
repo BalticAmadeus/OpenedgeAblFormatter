@@ -21,6 +21,20 @@ export class FormatterFactory {
                 );
             }
         }
+        
+        // Prioritize VariableAssignmentFormatter to run first
+        // This prevents position corruption when assignment operators are at position 31+
+        instances.sort((a, b) => {
+            const aLabel = (a.constructor as any).formatterLabel || "";
+            const bLabel = (b.constructor as any).formatterLabel || "";
+            
+            if (aLabel === "variableAssignmentFormatting") return -1;
+            if (bLabel === "variableAssignmentFormatting") return 1;
+            return 0;
+        });
+        
+        console.log(`[FormatterFactory] Formatter order: ${instances.map(f => (f.constructor as any).formatterLabel || f.constructor.name).join(", ")}`);
+        
         return instances;
     }
 
