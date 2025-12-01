@@ -5,6 +5,7 @@ import { WorkerConfigurationManager } from "../utils/ConfigurationManagerWorker"
 import { enableFormatterDecorators } from "../formatterFramework/enableFormatterDecorators";
 import { DebugManagerMock } from "../test/suite/DebugManagerMock";
 import { FileIdentifier } from "../model/FileIdentifier";
+import { WorkerParserHelper } from "./WorkerParserHelper";
 
 // Register all formatters in the worker
 enableFormatterDecorators();
@@ -89,31 +90,10 @@ class ParserWorker {
             const configManager = new WorkerConfigurationManager();
             configManager.setAll(settings);
 
-            // Dummy parserHelper for FormattingEngine
-            const parserHelper = {
-                getParser: () => this.parser,
-                getLanguage: () => this.ablLanguage,
-                getTree: () => tree1, // Not used in isAstEqual
-                parse: (
-                    _fileIdentifier: any,
-                    text: string,
-                    _previousTree?: any
-                ) => {
-                    return { tree: this.parser!.parse(text), ranges: [] };
-                },
-                parseAsync: async (
-                    _fileIdentifier: any,
-                    text: string,
-                    _previousTree?: any
-                ) => {
-                    return { tree: this.parser!.parse(text), ranges: [] };
-                },
-                format: async () => {
-                    throw new Error(
-                        "Not implemented in worker dummy parserHelper"
-                    );
-                },
-            };
+            const parserHelper = new WorkerParserHelper(
+                this.parser,
+                this.ablLanguage
+            );
 
             const formattingEngine = new FormattingEngine(
                 parserHelper,
@@ -167,31 +147,10 @@ class ParserWorker {
             // Parse and apply settings override from comment block in the document
             this.applySettingsOverrideFromComment(message.text, configManager);
 
-            // Dummy parser helper (implements IParserHelper signature, returns ParseResult)
-            const parserHelper = {
-                getParser: () => this.parser,
-                getLanguage: () => this.ablLanguage,
-                getTree: () => tree,
-                parse: (
-                    _fileIdentifier: any,
-                    text: string,
-                    _previousTree?: any
-                ) => {
-                    return { tree: this.parser!.parse(text), ranges: [] };
-                },
-                parseAsync: async (
-                    _fileIdentifier: any,
-                    text: string,
-                    _previousTree?: any
-                ) => {
-                    return { tree: this.parser!.parse(text), ranges: [] };
-                },
-                format: async () => {
-                    throw new Error(
-                        "Not implemented in worker dummy parserHelper"
-                    );
-                },
-            };
+            const parserHelper = new WorkerParserHelper(
+                this.parser,
+                this.ablLanguage
+            );
 
             // --- Apply settings override from comments before formatting ---
             // This matches the main-thread logic

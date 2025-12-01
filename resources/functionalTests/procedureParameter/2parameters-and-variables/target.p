@@ -1,6 +1,6 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.procedureParamaterFormatting": true, 
-  "AblFormatter.variableDefinitionFormatting": true} */
+/*  { "AblFormatter.procedureParameterFormatting": true, 
+      "AblFormatter.variableDefinitionFormatting": true} */
 
 define INPUT  PARAMETER relText   AS CHARACTER NO-UNDO.
 define OUTPUT PARAMETER abortRead AS myReader  NO-UNDO.

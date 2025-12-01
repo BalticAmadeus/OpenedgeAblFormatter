@@ -1,10 +1,10 @@
 issuesGithub_153
-issuesGithub_163_1
-issuesGithub_163_2
-issuesGithub_163_3
-issuesGithub_163_4
+issuesGithub_163_1 - fixed
+issuesGithub_163_2 - fixed
+issuesGithub_163_3 - fixed
+issuesGithub_163_4 - fixed
 issuesGithub_196_1
-issuesGithub_196_2
+issuesGithub_196_2 - fixed
 issuesGithub_226 - fixed
 issuesGithub_291 - fixed
 issuesGithub_338 - fixed
@@ -62,7 +62,7 @@ issuesGithub_532 - fixed
 issuesGithub_533 - fixed
 issuesGithub_535 - fixed
 issuesGithub_538 - fixed
-issuesGithub_544
+issuesGithub_544 - fixed
 issuesGithub_556 - fixed
 issuesGithub_557
 issuesGithub_558

@@ -11,7 +11,7 @@ class Something:
         define buffer bSomething for Something.
         
         for each ttSomething:
-        
+         
             create bSomething.
         end.
         

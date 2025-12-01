@@ -1,6 +1,6 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.procedureParamaterFormatting": true, 
-  "AblFormatter.variableDefinitionFormatting": true} */
+/*  { "AblFormatter.procedureParameterFormatting": true, 
+      "AblFormatter.variableDefinitionFormatting": true} */
 
 PROCEDURE addEntry:
     define OUTPUT PARAMETER cTableName AS CHARACTER NO-UNDO.

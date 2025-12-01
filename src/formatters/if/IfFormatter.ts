@@ -65,10 +65,46 @@ export class IfFormatter extends AFormatter implements IFormatter {
     ): string {
         let resultString = "";
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getIfExpressionString(child, fullText)
-            );
+        node.children.forEach((child, index) => {
+            if (child.type === "comment") {
+                const commentText = FormatterHelper.getCurrentText(child, fullText);
+
+                // Check if this comment is inline with the previous node
+                let isInline = false;
+                if (index > 0) {
+                    const prev = node.children[index - 1];
+                    if (prev) {
+                        const between = fullText.text.substring(prev.endIndex, child.startIndex);
+                        if (!between.includes("\n")) {
+                            isInline = true;
+                        }
+                    }
+                }
+
+                if (isInline) {
+                    resultString += " " + commentText.trim();
+                } else {
+                    // Get the original indentation from the first line of the comment in the source
+                    const commentStart = child.startIndex;
+                    const lineStart = fullText.text.lastIndexOf('\n', commentStart - 1) + 1;
+                    const indentMatch = fullText.text.substring(lineStart, commentStart).match(/^\s*/);
+                    const baseIndent = indentMatch ? indentMatch[0] : "";
+
+                    const lines = commentText.split(fullText.eolDelimiter);
+                    lines.forEach((line, idx) => {
+                        // Only add baseIndent if the line does not already start with it (or is empty)
+                        let outLine = line;
+                        if (line.trim().length > 0 && !line.startsWith(baseIndent)) {
+                            outLine = baseIndent + line.trimStart();
+                        }
+                        resultString += fullText.eolDelimiter + outLine.trimEnd();
+                    });
+                }
+            } else {
+                resultString = resultString.concat(
+                    this.getIfExpressionString(child, fullText)
+                );
+            }
         });
 
         return resultString.trim();
