@@ -1,4 +1,4 @@
-issuesGithub_153 - fixed
+issuesGithub_153
 issuesGithub_163_1 - fixed
 issuesGithub_163_2 - fixed
 issuesGithub_163_3 - fixed
