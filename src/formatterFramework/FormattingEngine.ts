@@ -32,17 +32,14 @@ export class FormattingEngine {
         eol: EOL,
         metemorphicEngineIsEnabled: boolean = false
     ): string {
-        // Normalize all line endings to LF for internal processing
-        let normalizedText = fulfullTextString.replace(/\r\n/g, '\n');
-
         const fullText: FullText = {
-            text: normalizedText,
-            eolDelimiter: '\n', // Always use LF internally
+            text: fulfullTextString,
+            eolDelimiter: eol.eolDel,
         };
 
         const parseResult = this.parserHelper.parse(
             this.fileIdentifier,
-            normalizedText
+            fullText.text
         );
 
         this.settingsOverride(parseResult);
@@ -83,12 +80,7 @@ export class FormattingEngine {
             );
         }
 
-        // Restore original EOL before returning
-        let resultText = fullText.text;
-        if (eol.eolDel === '\r\n') {
-            resultText = resultText.replace(/\n/g, '\r\n');
-        }
-        return resultText;
+        return fullText.text;
     }
 
     private iterateTree(
