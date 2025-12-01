@@ -57,7 +57,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
     ): string {
         let resultString = "";
         const longestLeft = this.getLongestLeft(node.children, fullText);
-        
+
         const children: SyntaxNode[] = [];
         for (let i = 0; i < node.childCount; i++) {
             const child = node.child(i);
@@ -69,20 +69,20 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         for (const child of children) {
             if (child.type === "comment") {
                 const commentText = FormatterHelper.getCurrentText(child, fullText);
-                
+
                 // Check if comment contains newlines (block comment on own line)
                 if (commentText.includes("\n") || commentText.includes("\r")) {
                     const lines = commentText.split(fullText.eolDelimiter);
                     let foundFirstCommentLine = false;
-                    
+
                     for (const line of lines) {
                         const trimmedLine = line.trim();
-                        
+
                         // Skip empty lines at the beginning
                         if (trimmedLine.length === 0 && !foundFirstCommentLine) {
                             continue;
                         }
-                        
+
                         // Once we find a non-empty line, add this and all subsequent lines
                         if (trimmedLine.length > 0) {
                             if (!foundFirstCommentLine) {
@@ -95,19 +95,19 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                             }
                         }
                     }
-                    
+
                 } else {
                     resultString += commentText;
                 }
             } else {
                 const assignString = this.getAssignStatementString(child, fullText, longestLeft);
-                
+
                 resultString += assignString;
             }
         }
 
         resultString += this.getFormattedEndDot(fullText);
-        
+
         return resultString;
     }
 
