@@ -232,8 +232,32 @@ export class FormattingEngine {
                     const codeEdit = this.parse(node, fullText, formatters);
 
                     if (codeEdit !== undefined) {
+                        const editInfo = Array.isArray(codeEdit) ? codeEdit[0] : codeEdit;
+                        
+                        // DETAILED LOGGING FOR DEBUGGING TREE.EDIT() BEHAVIOR
+                        console.log(`\n[iterateTree] ========== EDIT ${this.numOfCodeEdits + 1} ==========`);
+                        console.log(`[iterateTree] Node type: ${node.type}`);
+                        console.log(`[iterateTree] BEFORE edit - node position: ${node.startIndex} → ${node.endIndex} (length: ${node.endIndex - node.startIndex})`);
+                        console.log(`[iterateTree] BEFORE edit - edit position: ${editInfo.edit.startIndex} → ${editInfo.edit.oldEndIndex} (length: ${editInfo.edit.oldEndIndex - editInfo.edit.startIndex})`);
+                        console.log(`[iterateTree] BEFORE edit - fullText.text length: ${fullText.text.length}`);
+                        
+                        const oldTextFromFullText = fullText.text.substring(editInfo.edit.startIndex, editInfo.edit.oldEndIndex);
+                        const oldTextFromNode = node.text;
+                        console.log(`[iterateTree] Old text from fullText[${editInfo.edit.startIndex}:${editInfo.edit.oldEndIndex}]: "${oldTextFromFullText.substring(0, 80)}${oldTextFromFullText.length > 80 ? '...' : ''}"`);
+                        console.log(`[iterateTree] Old text from node.text: "${oldTextFromNode.substring(0, 80)}${oldTextFromNode.length > 80 ? '...' : ''}"`);
+                        console.log(`[iterateTree] New text: "${editInfo.text.substring(0, 80)}${editInfo.text.length > 80 ? '...' : ''}" (length: ${editInfo.text.length})`);
+                        console.log(`[iterateTree] Text match: ${oldTextFromFullText === oldTextFromNode ? 'YES ✓' : 'NO ✗ MISMATCH!'}`);
+                        
                         this.insertChangeIntoTree(tree, codeEdit);
+                        console.log(`[iterateTree] AFTER tree.edit() - node position: ${node.startIndex} → ${node.endIndex} (length: ${node.endIndex - node.startIndex})`);
+                        console.log(`[iterateTree] AFTER tree.edit() - node.text: "${node.text.substring(0, 80)}${node.text.length > 80 ? '...' : ''}"`);
+                        
                         this.insertChangeIntoFullText(codeEdit, fullText);
+                        console.log(`[iterateTree] AFTER insertChangeIntoFullText - fullText.text length: ${fullText.text.length}`);
+                        const newTextAtNodePos = fullText.text.substring(node.startIndex, node.endIndex);
+                        console.log(`[iterateTree] Text at updated node position[${node.startIndex}:${node.endIndex}]: "${newTextAtNodePos.substring(0, 80)}${newTextAtNodePos.length > 80 ? '...' : ''}"`);
+                        console.log(`[iterateTree] Positions aligned: ${newTextAtNodePos === node.text ? 'YES ✓' : 'NO ✗ MISMATCH!'}`);
+                        console.log(`[iterateTree] ========================================\n`);
                         
                         this.numOfCodeEdits++;
                     }
