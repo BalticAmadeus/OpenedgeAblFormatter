@@ -78,8 +78,14 @@ export class FormatterHelper {
     ): string {
         if (node !== undefined && fullText !== undefined) {
             const text = fullText.text.substring(node.startIndex, node.endIndex);
-            // console.log(`[FormatterHelper.getCurrentText] node.type=${node.type}, startIndex=${node.startIndex}, endIndex=${node.endIndex}, fullText.length=${fullText.text.length}, extracted.length=${text.length}`);
-            // console.log(`[FormatterHelper.getCurrentText] extracted text: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"`);
+            // Debug log for all assignments to find the problematic one
+            if (node.type === 'assignment' || node.type === 'variable_assignment' || node.type === 'assign_statement') {
+                console.log(`[FormatterHelper.getCurrentText] ${node.type}: startIndex=${node.startIndex}, endIndex=${node.endIndex}, fullText.length=${fullText.text.length}, extracted.length=${text.length}`);
+                if (text.includes('Instance.ID')) {
+                    console.log(`[FormatterHelper.getCurrentText] >>> FOUND Instance.ID ASSIGNMENT <<<`);
+                    console.log(`[FormatterHelper.getCurrentText] Full text: "${text}"`);
+                }
+            }
             return text;
         }
         return "";
