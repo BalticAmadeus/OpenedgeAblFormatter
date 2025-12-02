@@ -50,34 +50,40 @@ export class FormattingEngine {
 
         console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
         
-        // Check if assignment operator ends at position > 30 (issue #420 pattern)
+        // Check if ANY assignment operator ends at position > 30 (issue #420 pattern)
         // AND if there's a parenthesized_expression (only case that breaks)
-        let assignmentOperatorEndPosition = 0;
+        // Need to check ALL root-level statements, not just the first one
         let shouldUseSplitLogic = false;
-        let hasParenthesizedExpression = false;
         
         const rootNode = parseResult.tree.rootNode;
-        if (rootNode.firstChild) {
-            const firstChild = rootNode.firstChild;
-            console.log(`[FormattingEngine.formatText] Root's first child type: ${firstChild.type}`);
+        console.log(`[FormattingEngine.formatText] Root has ${rootNode.childCount} children`);
+        
+        // Helper function to check for parenthesized_expression in tree
+        const checkForParenthesized = (node: any): boolean => {
+            if (node.type === 'parenthesized_expression') return true;
+            for (let k = 0; k < node.childCount; k++) {
+                const child = node.child(k);
+                if (child && checkForParenthesized(child)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        
+        // Check ALL root-level children for assignments that need split logic
+        for (let rootChildIndex = 0; rootChildIndex < rootNode.childCount; rootChildIndex++) {
+            const rootChild = rootNode.child(rootChildIndex);
+            if (!rootChild) continue;
+            
+            console.log(`[FormattingEngine.formatText] Checking root child ${rootChildIndex}: type=${rootChild.type}`);
             
             // Handle both variable_assignment and assign_statement
-            if (firstChild.type === 'variable_assignment' || firstChild.type === 'assign_statement') {
+            if (rootChild.type === 'variable_assignment' || rootChild.type === 'assign_statement') {
+                let assignmentOperatorColumn = 0;
+                let hasParenthesizedExpression = false;
                 
-                // Helper function to check for parenthesized_expression in tree
-                const checkForParenthesized = (node: any): boolean => {
-                    if (node.type === 'parenthesized_expression') return true;
-                    for (let k = 0; k < node.childCount; k++) {
-                        const child = node.child(k);
-                        if (child && checkForParenthesized(child)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                };
-                
-                for (let i = 0; i < firstChild.childCount; i++) {
-                    const child = firstChild.child(i);
+                for (let i = 0; i < rootChild.childCount; i++) {
+                    const child = rootChild.child(i);
                     if (child && child.type === 'assignment') {
                         console.log(`[FormattingEngine.formatText] Found assignment node with ${child.childCount} children`);
                         
@@ -90,10 +96,11 @@ export class FormattingEngine {
                         for (let j = 0; j < child.childCount; j++) {
                             const grandChild = child.child(j);
                             if (grandChild) {
-                                console.log(`[FormattingEngine.formatText]   Child ${j}: type=${grandChild.type}, start=${grandChild.startIndex}, end=${grandChild.endIndex}`);
+                                console.log(`[FormattingEngine.formatText]   Child ${j}: type=${grandChild.type}, start=${grandChild.startIndex}, end=${grandChild.endIndex}, position=${grandChild.startPosition.row}:${grandChild.startPosition.column}`);
                                 if (grandChild.type === 'assignment_operator') {
-                                    assignmentOperatorEndPosition = grandChild.endIndex;
-                                    console.log(`[FormattingEngine.formatText] *** ASSIGNMENT OPERATOR ENDS AT: ${assignmentOperatorEndPosition} ***`);
+                                    // Use column position (position within the line), not absolute file position
+                                    assignmentOperatorColumn = grandChild.endPosition.column;
+                                    console.log(`[FormattingEngine.formatText] *** ASSIGNMENT OPERATOR at line ${grandChild.startPosition.row + 1}, column ${grandChild.startPosition.column} - ${grandChild.endPosition.column} ***`);
                                     break;
                                 }
                             }
@@ -101,17 +108,22 @@ export class FormattingEngine {
                     }
                 }
                 
-                // Use split logic only if:
-                // 1. Assignment operator ends at position > 30
+                // Use split logic if ANY assignment meets criteria:
+                // 1. Assignment operator COLUMN position > threshold (indicates excessive whitespace before =)
+                //    - Check column position (position in line), not absolute file position
+                //    - For variable_assignment: column > 30 (no "assign" keyword)
+                //    - For assign_statement: column > 37 (includes "assign " keyword = 7 chars)
                 // 2. Has parenthesized_expression (only case that breaks)
-                if (assignmentOperatorEndPosition > 30 && hasParenthesizedExpression) {
+                const threshold = rootChild.type === 'assign_statement' ? 37 : 30;
+                if (assignmentOperatorColumn > threshold && hasParenthesizedExpression) {
                     shouldUseSplitLogic = true;
-                    console.log(`[FormattingEngine.formatText] Conditions met: operator end > 30 AND has parenthesized_expression`);
+                    console.log(`[FormattingEngine.formatText] *** ACTIVATING SPLIT LOGIC for root child ${rootChildIndex}: operator column ${assignmentOperatorColumn} > ${threshold} AND has parenthesized_expression`);
+                    break; // Found one that needs split logic, that's enough
                 }
             }
         }
         
-        console.log(`[FormattingEngine.formatText] Use split logic: ${shouldUseSplitLogic} (operator end: ${assignmentOperatorEndPosition}, hasParenthesized: ${hasParenthesizedExpression})`);
+        console.log(`[FormattingEngine.formatText] Use split logic: ${shouldUseSplitLogic}`);
         
         this.iterateTree(parseResult.tree, fullText, formatters, shouldUseSplitLogic);
         
@@ -306,18 +318,26 @@ export class FormattingEngine {
                     !bodyBlockKeywords.hasFancy(node.type, "")
                 ) {
                     if (leafNodesOnly) {
-                        // SPLIT LOGIC: Only format LEAF nodes (no children with edits)
+                        // SPLIT LOGIC: Format in two groups
                         const hasFormattableChildren = node.children.some(child => 
                             !bodyBlockKeywords.hasFancy(child.type, "") &&
                             formatters.some(formatter => formatter.match(child))
                         );
                         
-                        // Only process leaf nodes in first pass
-                        if (!hasFormattableChildren) {
+                        // Group 1: Leaf nodes (no formattable children)
+                        // Group 2: Top-level assignment nodes (to remove whitespace)
+                        const isTopLevelAssignment = (node.type === 'assignment' || node.type === 'variable_assignment') && 
+                                                     (node.parent?.type === 'variable_assignment' || node.parent?.type === 'source_code');
+                        
+                        if (!hasFormattableChildren || isTopLevelAssignment) {
                             const codeEdit = this.parse(node, fullText, formatters);
 
                             if (codeEdit !== undefined) {
-                                console.log(`[iterateTree] PHASE 1 - LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                if (isTopLevelAssignment) {
+                                    console.log(`[iterateTree] PHASE 1 - TOP-LEVEL ASSIGNMENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                } else {
+                                    console.log(`[iterateTree] PHASE 1 - LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                }
                                 this.insertChangeIntoTree(tree, codeEdit);
                                 this.insertChangeIntoFullText(codeEdit, fullText);
                                 this.numOfCodeEdits++;
@@ -359,10 +379,17 @@ export class FormattingEngine {
         fullText: FullText,
         formatters: IFormatter[]
     ) {
+        // CRITICAL: Collect all edits first, then apply them
+        // Applying tree.edit() during iteration corrupts node positions
+        const collectedEdits: Array<{node: SyntaxNode, edit: CodeEdit | CodeEdit[]}> = [];
+        
         let cursor = tree.walk();
         let lastVisitedNode: SyntaxNode | null = null;
+        let done = false;
 
-        while (true) {
+        console.log(`[iterateTreeParentNodes] PHASE 2 - Collecting edits...`);
+        
+        while (!done) {
             const currentNode = cursor.currentNode();
             
             if (cursor.gotoFirstChild()) {
@@ -376,7 +403,8 @@ export class FormattingEngine {
                 if (node === lastVisitedNode) {
                     if (!cursor.gotoParent()) {
                         cursor.delete();
-                        return;
+                        done = true;
+                        break;
                     }
                     continue;
                 }
@@ -391,7 +419,8 @@ export class FormattingEngine {
 
                     if (!cursor.gotoParent()) {
                         cursor.delete();
-                        return;
+                        done = true;
+                        break;
                     }
 
                     continue;
@@ -403,6 +432,21 @@ export class FormattingEngine {
                     !this.skipFormatting &&
                     !bodyBlockKeywords.hasFancy(node.type, "")
                 ) {
+                    // Skip assignment and variable_assignment nodes in parent phase
+                    // These are top-level containers that shouldn't be reformatted after their children
+                    if (node.type === 'assignment' || node.type === 'variable_assignment') {
+                        lastVisitedNode = node;
+                        if (cursor.gotoNextSibling()) {
+                            break;
+                        }
+                        if (!cursor.gotoParent()) {
+                            cursor.delete();
+                            done = true;
+                            break;
+                        }
+                        continue;
+                    }
+                    
                     // Check if this node is a parent (has children that would be formatted)
                     const hasFormattableChildren = node.children.some(child => 
                         !bodyBlockKeywords.hasFancy(child.type, "") &&
@@ -414,10 +458,9 @@ export class FormattingEngine {
                         const codeEdit = this.parse(node, fullText, formatters);
 
                         if (codeEdit !== undefined) {
-                            console.log(`[iterateTreeParentNodes] PARENT NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
-                            this.insertChangeIntoTree(tree, codeEdit);
-                            this.insertChangeIntoFullText(codeEdit, fullText);
-                            this.numOfCodeEdits++;
+                            console.log(`[iterateTreeParentNodes] COLLECTING edit for: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            // DON'T apply yet - just collect!
+                            collectedEdits.push({node, edit: codeEdit});
                         }
                     }
                 }
@@ -432,10 +475,64 @@ export class FormattingEngine {
                 // If no more siblings, move up to the parent node
                 if (!cursor.gotoParent()) {
                     cursor.delete();
-                    return;
+                    done = true;
+                    break;
                 }
             }
         }
+        
+        // Now apply all collected edits IN REVERSE ORDER
+        // This is critical: edits must be applied from end to start of file
+        // so that earlier positions remain valid as we apply later edits
+        console.log(`[iterateTreeParentNodes] Collected ${collectedEdits.length} edits, deduplicating overlaps...`);
+        
+        // Deduplicate: remove edits that are contained within other edits
+        // Keep only the outermost edit for any overlapping region
+        const deduplicatedEdits: typeof collectedEdits = [];
+        for (let i = 0; i < collectedEdits.length; i++) {
+            const currentEdit = collectedEdits[i];
+            const currentStart = Array.isArray(currentEdit.edit) ? currentEdit.edit[0].edit.startIndex : currentEdit.edit.edit.startIndex;
+            const currentEnd = Array.isArray(currentEdit.edit) ? currentEdit.edit[currentEdit.edit.length - 1].edit.oldEndIndex : currentEdit.edit.edit.oldEndIndex;
+            
+            let isContainedByAnother = false;
+            for (let j = 0; j < collectedEdits.length; j++) {
+                if (i === j) continue;
+                
+                const otherEdit = collectedEdits[j];
+                const otherStart = Array.isArray(otherEdit.edit) ? otherEdit.edit[0].edit.startIndex : otherEdit.edit.edit.startIndex;
+                const otherEnd = Array.isArray(otherEdit.edit) ? otherEdit.edit[otherEdit.edit.length - 1].edit.oldEndIndex : otherEdit.edit.edit.oldEndIndex;
+                
+                // Check if current edit is fully contained within other edit
+                if (otherStart <= currentStart && otherEnd >= currentEnd && (otherStart < currentStart || otherEnd > currentEnd)) {
+                    isContainedByAnother = true;
+                    console.log(`[iterateTreeParentNodes] Skipping ${currentEdit.node.type} at ${currentStart}-${currentEnd} (contained by ${otherEdit.node.type} at ${otherStart}-${otherEnd})`);
+                    break;
+                }
+            }
+            
+            if (!isContainedByAnother) {
+                deduplicatedEdits.push(currentEdit);
+            }
+        }
+        
+        console.log(`[iterateTreeParentNodes] After deduplication: ${deduplicatedEdits.length} edits remaining (removed ${collectedEdits.length - deduplicatedEdits.length} overlaps)`);
+        
+        // Sort by startIndex descending (end of file first)
+        deduplicatedEdits.sort((a, b) => {
+            const aStart = Array.isArray(a.edit) ? a.edit[0].edit.startIndex : a.edit.edit.startIndex;
+            const bStart = Array.isArray(b.edit) ? b.edit[0].edit.startIndex : b.edit.edit.startIndex;
+            return bStart - aStart; // Descending order
+        });
+        
+        console.log(`[iterateTreeParentNodes] Applying ${deduplicatedEdits.length} edits in reverse order...`);
+        for (const {node, edit} of deduplicatedEdits) {
+            const startPos = Array.isArray(edit) ? edit[0].edit.startIndex : edit.edit.startIndex;
+            console.log(`[iterateTreeParentNodes] APPLYING edit for: ${node.type} at position ${startPos}`);
+            this.insertChangeIntoTree(tree, edit);
+            this.insertChangeIntoFullText(edit, fullText);
+            this.numOfCodeEdits++;
+        }
+        console.log(`[iterateTreeParentNodes] PHASE 2 complete`);
     }
 
     /*
@@ -537,16 +634,16 @@ export class FormattingEngine {
         codeEdit: CodeEdit | CodeEdit[]
     ): void {
         if (Array.isArray(codeEdit)) {
-            console.log(`[insertChangeIntoTree] Applying ${codeEdit.length} edits to tree`);
+            // console.log(`[insertChangeIntoTree] Applying ${codeEdit.length} edits to tree`);
             codeEdit.forEach((oneCodeEdit, index) => {
-                console.log(`[insertChangeIntoTree] Edit ${index + 1}: startIndex=${oneCodeEdit.edit.startIndex}, oldEndIndex=${oneCodeEdit.edit.oldEndIndex}, newEndIndex=${oneCodeEdit.edit.newEndIndex}`);
+                // console.log(`[insertChangeIntoTree] Edit ${index + 1}: startIndex=${oneCodeEdit.edit.startIndex}, oldEndIndex=${oneCodeEdit.edit.oldEndIndex}, newEndIndex=${oneCodeEdit.edit.newEndIndex}`);
                 tree.edit(oneCodeEdit.edit);
             });
         } else {
-            console.log(`[insertChangeIntoTree] Applying single edit: startIndex=${codeEdit.edit.startIndex}, oldEndIndex=${codeEdit.edit.oldEndIndex}, newEndIndex=${codeEdit.edit.newEndIndex}`);
+            // console.log(`[insertChangeIntoTree] Applying single edit: startIndex=${codeEdit.edit.startIndex}, oldEndIndex=${codeEdit.edit.oldEndIndex}, newEndIndex=${codeEdit.edit.newEndIndex}`);
             tree.edit(codeEdit.edit);
         }
-        console.log(`[insertChangeIntoTree] Tree edit complete`);
+        // console.log(`[insertChangeIntoTree] Tree edit complete`);
     }
 
     private logTree(node: SyntaxNode): string[] {
@@ -565,28 +662,28 @@ export class FormattingEngine {
     ): void {
         if (Array.isArray(codeEdit)) {
             codeEdit.forEach((oneCodeEdit) => {
-                console.log(`[insertChangeIntoFullText] Array mode - startIndex: ${oneCodeEdit.edit.startIndex}, oldEndIndex: ${oneCodeEdit.edit.oldEndIndex}`);
-                console.log(`[insertChangeIntoFullText] Current text length: ${fullText.text.length}`);
-                console.log(`[insertChangeIntoFullText] Text being replaced (${oneCodeEdit.edit.startIndex} to ${oneCodeEdit.edit.oldEndIndex}): "${fullText.text.substring(oneCodeEdit.edit.startIndex, oneCodeEdit.edit.oldEndIndex)}"`);
-                console.log(`[insertChangeIntoFullText] New text (length ${oneCodeEdit.text.length}): "${oneCodeEdit.text}"`);
+                // console.log(`[insertChangeIntoFullText] Array mode - startIndex: ${oneCodeEdit.edit.startIndex}, oldEndIndex: ${oneCodeEdit.edit.oldEndIndex}`);
+                // console.log(`[insertChangeIntoFullText] Current text length: ${fullText.text.length}`);
+                // console.log(`[insertChangeIntoFullText] Text being replaced (${oneCodeEdit.edit.startIndex} to ${oneCodeEdit.edit.oldEndIndex}): "${fullText.text.substring(oneCodeEdit.edit.startIndex, oneCodeEdit.edit.oldEndIndex)}"`);
+                // console.log(`[insertChangeIntoFullText] New text (length ${oneCodeEdit.text.length}): "${oneCodeEdit.text}"`);
                 const before = fullText.text.slice(0, oneCodeEdit.edit.startIndex);
                 const after = fullText.text.slice(oneCodeEdit.edit.oldEndIndex);
-                console.log(`[insertChangeIntoFullText] Before slice (0 to ${oneCodeEdit.edit.startIndex}): length=${before.length}`);
-                console.log(`[insertChangeIntoFullText] After slice (${oneCodeEdit.edit.oldEndIndex} to end): length=${after.length}`);
+                // console.log(`[insertChangeIntoFullText] Before slice (0 to ${oneCodeEdit.edit.startIndex}): length=${before.length}`);
+                // console.log(`[insertChangeIntoFullText] After slice (${oneCodeEdit.edit.oldEndIndex} to end): length=${after.length}`);
                 fullText.text = before + oneCodeEdit.text + after;
-                console.log(`[insertChangeIntoFullText] Result text length: ${fullText.text.length}`);
+                // console.log(`[insertChangeIntoFullText] Result text length: ${fullText.text.length}`);
             });
         } else {
-            console.log(`[insertChangeIntoFullText] Single mode - startIndex: ${codeEdit.edit.startIndex}, oldEndIndex: ${codeEdit.edit.oldEndIndex}`);
-            console.log(`[insertChangeIntoFullText] Current text length: ${fullText.text.length}`);
-            console.log(`[insertChangeIntoFullText] Text being replaced (${codeEdit.edit.startIndex} to ${codeEdit.edit.oldEndIndex}): "${fullText.text.substring(codeEdit.edit.startIndex, codeEdit.edit.oldEndIndex)}"`);
-            console.log(`[insertChangeIntoFullText] New text (length ${codeEdit.text.length}): "${codeEdit.text}"`);
+            // console.log(`[insertChangeIntoFullText] Single mode - startIndex: ${codeEdit.edit.startIndex}, oldEndIndex: ${codeEdit.edit.oldEndIndex}`);
+            // console.log(`[insertChangeIntoFullText] Current text length: ${fullText.text.length}`);
+            // console.log(`[insertChangeIntoFullText] Text being replaced (${codeEdit.edit.startIndex} to ${codeEdit.edit.oldEndIndex}): "${fullText.text.substring(codeEdit.edit.startIndex, codeEdit.edit.oldEndIndex)}"`);
+            // console.log(`[insertChangeIntoFullText] New text (length ${codeEdit.text.length}): "${codeEdit.text}"`);
             const before = fullText.text.slice(0, codeEdit.edit.startIndex);
             const after = fullText.text.slice(codeEdit.edit.oldEndIndex);
-            console.log(`[insertChangeIntoFullText] Before slice (0 to ${codeEdit.edit.startIndex}): length=${before.length}`);
-            console.log(`[insertChangeIntoFullText] After slice (${codeEdit.edit.oldEndIndex} to end): length=${after.length}`);
+            // console.log(`[insertChangeIntoFullText] Before slice (0 to ${codeEdit.edit.startIndex}): length=${before.length}`);
+            // console.log(`[insertChangeIntoFullText] After slice (${codeEdit.edit.oldEndIndex} to end): length=${after.length}`);
             fullText.text = before + codeEdit.text + after;
-            console.log(`[insertChangeIntoFullText] Result text length: ${fullText.text.length}`);
+            // console.log(`[insertChangeIntoFullText] Result text length: ${fullText.text.length}`);
         }
     }
 
@@ -599,18 +696,18 @@ export class FormattingEngine {
 
         formatters.some((formatter) => {
             if (formatter.match(node)) {
-                console.log(`[FormattingEngine.parse] Formatter matched: ${(formatter.constructor as any).formatterLabel || formatter.constructor.name}`);
-                console.log(`[FormattingEngine.parse] Node type: ${node.type}, text: "${node.text}"`);
-                console.log(`[FormattingEngine.parse] Node position: start=${node.startIndex}, end=${node.endIndex}`);
-                console.log(`[FormattingEngine.parse] fullText length before parse: ${fullText.text.length}`);
+                // console.log(`[FormattingEngine.parse] Formatter matched: ${(formatter.constructor as any).formatterLabel || formatter.constructor.name}`);
+                // console.log(`[FormattingEngine.parse] Node type: ${node.type}, text: "${node.text}"`);
+                // console.log(`[FormattingEngine.parse] Node position: start=${node.startIndex}, end=${node.endIndex}`);
+                // console.log(`[FormattingEngine.parse] fullText length before parse: ${fullText.text.length}`);
                 
                 result = formatter.parse(node, fullText);
                 
                 if (result) {
                     const editInfo = Array.isArray(result) ? result[0] : result;
-                    console.log(`[FormattingEngine.parse] Formatter generated edit: startIndex=${editInfo.edit.startIndex}, oldEndIndex=${editInfo.edit.oldEndIndex}, newText="${editInfo.text}"`);
+                    // console.log(`[FormattingEngine.parse] Formatter generated edit: startIndex=${editInfo.edit.startIndex}, oldEndIndex=${editInfo.edit.oldEndIndex}, newText="${editInfo.text}"`);
                 } else {
-                    console.log(`[FormattingEngine.parse] Formatter returned no edit`);
+                    // console.log(`[FormattingEngine.parse] Formatter returned no edit`);
                 }
 
                 return true;

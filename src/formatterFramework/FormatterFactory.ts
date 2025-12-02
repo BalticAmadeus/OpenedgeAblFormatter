@@ -33,7 +33,7 @@ export class FormatterFactory {
             return 0;
         });
         
-        console.log(`[FormatterFactory] Formatter order: ${instances.map(f => (f.constructor as any).formatterLabel || f.constructor.name).join(", ")}`);
+        // console.log(`[FormatterFactory] Formatter order: ${instances.map(f => (f.constructor as any).formatterLabel || f.constructor.name).join(", ")}`);
         
         return instances;
     }
