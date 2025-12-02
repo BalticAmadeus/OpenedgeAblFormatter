@@ -50,10 +50,10 @@ export class FormattingEngine {
 
         console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
         
-        // Check if ANY assignment operator ends at position > 30 (issue #420 pattern)
-        // AND if there's a parenthesized_expression (only case that breaks)
-        // Need to check ALL root-level statements, not just the first one
-        let shouldUseSplitLogic = false;
+        // Detection Phase: Classify each assignment as normal or needing split logic
+        // Split logic needed when: column > 30/37 AND has parenthesized_expression
+        const assignmentsNeedingSplitLogic = new Set<number>();
+        const normalAssignments = new Set<number>();
         
         const rootNode = parseResult.tree.rootNode;
         console.log(`[FormattingEngine.formatText] Root has ${rootNode.childCount} children`);
@@ -108,32 +108,63 @@ export class FormattingEngine {
                     }
                 }
                 
-                // Use split logic if ANY assignment meets criteria:
+                // Use split logic if THIS assignment meets criteria:
                 // 1. Assignment operator COLUMN position > threshold (indicates excessive whitespace before =)
                 //    - Check column position (position in line), not absolute file position
                 //    - For variable_assignment: column > 30 (no "assign" keyword)
                 //    - For assign_statement: column > 37 (includes "assign " keyword = 7 chars)
                 // 2. Has parenthesized_expression (only case that breaks)
+                // SPECIAL: assign_statement with parenthesized expressions ALWAYS uses split-logic
+                //          because single-pass formatter corrupts them
                 const threshold = rootChild.type === 'assign_statement' ? 37 : 30;
-                if (assignmentOperatorColumn > threshold && hasParenthesizedExpression) {
-                    shouldUseSplitLogic = true;
-                    console.log(`[FormattingEngine.formatText] *** ACTIVATING SPLIT LOGIC for root child ${rootChildIndex}: operator column ${assignmentOperatorColumn} > ${threshold} AND has parenthesized_expression`);
-                    break; // Found one that needs split logic, that's enough
+                const needsSplitLogic = (assignmentOperatorColumn > threshold && hasParenthesizedExpression) ||
+                                       (rootChild.type === 'assign_statement' && hasParenthesizedExpression);
+                
+                if (needsSplitLogic) {
+                    assignmentsNeedingSplitLogic.add(rootChildIndex);
+                    console.log(`[FormattingEngine.formatText] *** MARKING ROOT CHILD ${rootChildIndex} for split logic: ${rootChild.type === 'assign_statement' ? 'ASSIGN statement with parenthesized' : `operator column ${assignmentOperatorColumn} > ${threshold} AND has parenthesized_expression`}`);
+                } else if (rootChild.type === 'variable_assignment' || rootChild.type === 'assign_statement') {
+                    normalAssignments.add(rootChildIndex);
+                    console.log(`[FormattingEngine.formatText] *** MARKING ROOT CHILD ${rootChildIndex} for normal formatting`);
                 }
+            } else {
+                // Non-assignment root children get normal formatting
+                normalAssignments.add(rootChildIndex);
             }
         }
         
-        console.log(`[FormattingEngine.formatText] Use split logic: ${shouldUseSplitLogic}`);
+        console.log(`[FormattingEngine.formatText] Classification complete:`);
+        console.log(`[FormattingEngine.formatText]   Normal assignments: ${Array.from(normalAssignments).join(', ') || 'none'}`);
+        console.log(`[FormattingEngine.formatText]   Split-logic assignments: ${Array.from(assignmentsNeedingSplitLogic).join(', ') || 'none'}`);
         
-        this.iterateTree(parseResult.tree, fullText, formatters, shouldUseSplitLogic);
-        
-        if (shouldUseSplitLogic) {
-            console.log(`[FormattingEngine.formatText] After iterateTree PHASE 1 (LEAF NODES), text length: ${fullText.text.length}`);
+        // Strategy selection based on classification
+        if (assignmentsNeedingSplitLogic.size === 0) {
+            // Simple case: no problematic assignments, use original single-pass formatting
+            console.log(`[FormattingEngine.formatText] Using original single-pass formatting (no split-logic needed)`);
+            this.iterateTree(parseResult.tree, fullText, formatters, false, new Set());
+            console.log(`[FormattingEngine.formatText] After single-pass formatting, text length: ${fullText.text.length}`);
         } else {
-            console.log(`[FormattingEngine.formatText] After iterateTree (NORMAL), text length: ${fullText.text.length}`);
+            // Complex case: selective formatting
+            console.log(`[FormattingEngine.formatText] Using selective formatting strategy`);
+            
+            // Format normal assignments first (single pass)
+            if (normalAssignments.size > 0) {
+                console.log(`[FormattingEngine.formatText] === Formatting ${normalAssignments.size} normal assignments (single-pass) ===`);
+                this.iterateTreeSelective(parseResult.tree, fullText, formatters, normalAssignments, 'normal');
+                console.log(`[FormattingEngine.formatText] After normal assignments, text length: ${fullText.text.length}`);
+            }
+            
+            // Format split-logic assignments (two-phase)
+            console.log(`[FormattingEngine.formatText] === Formatting ${assignmentsNeedingSplitLogic.size} split-logic assignments (two-phase) ===`);
+            
+            // Phase 1: Leaf nodes
+            console.log(`[FormattingEngine.formatText] SPLIT PHASE 1: Leaf nodes`);
+            this.iterateTreeSelective(parseResult.tree, fullText, formatters, assignmentsNeedingSplitLogic, 'split-phase1');
+            console.log(`[FormattingEngine.formatText] After split PHASE 1, text length: ${fullText.text.length}`);
         }
 
-        const newTree = this.parserHelper.parse(
+        // Re-parse for block formatting and PHASE 2 (always needed)
+        let newTree = this.parserHelper.parse(
             this.fileIdentifier,
             fullText.text,
             parseResult.tree
@@ -143,11 +174,11 @@ export class FormattingEngine {
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
         console.log(`[FormattingEngine.formatText] After iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
 
-        // SECOND PASS: Format parent nodes only when split logic is active
-        if (shouldUseSplitLogic) {
-            console.log(`[FormattingEngine.formatText] ========== STARTING PHASE 2: PARENT NODES ==========`);
-            this.iterateTreeParentNodes(newTree, fullText, formatters);
-            console.log(`[FormattingEngine.formatText] After iterateTreeParentNodes PHASE 2, text length: ${fullText.text.length}`);
+        // PHASE 2: Format parent nodes only for split-logic assignments
+        if (assignmentsNeedingSplitLogic.size > 0) {
+            console.log(`[FormattingEngine.formatText] SPLIT PHASE 2: Parent nodes (collect-apply)`);
+            this.iterateTreeParentNodesSelective(newTree, fullText, formatters, assignmentsNeedingSplitLogic);
+            console.log(`[FormattingEngine.formatText] After split PHASE 2, text length: ${fullText.text.length}`);
         }
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
         console.log(`[FormattingEngine.formatText] COMPLETE - Final text length: ${fullText.text.length}, numOfCodeEdits: ${this.numOfCodeEdits}`);
@@ -246,11 +277,166 @@ export class FormattingEngine {
         }
     }
 
+    // Helper: Find which root child index a node belongs to
+    // Note: We compare nodes by type + position since tree-sitter may create multiple objects for same node
+    private findRootParentIndex(node: SyntaxNode, rootNode: SyntaxNode): number {
+        const nodesEqual = (a: SyntaxNode, b: SyntaxNode): boolean => {
+            return a.type === b.type && a.startIndex === b.startIndex && a.endIndex === b.endIndex;
+        };
+        
+        let current: SyntaxNode | null = node;
+        let iterations = 0;
+        const maxIterations = 20;
+        
+        while (current && iterations < maxIterations) {
+            iterations++;
+            
+            // Check if current node IS the root (shouldn't happen, but handle it)
+            if (nodesEqual(current, rootNode)) {
+                // The node itself is root, return -1
+                return -1;
+            }
+            
+            // Check if current node's parent is root (by structural equality)
+            if (current.parent && nodesEqual(current.parent, rootNode)) {
+                // Find index of current in root's children
+                for (let i = 0; i < rootNode.childCount; i++) {
+                    const child = rootNode.child(i);
+                    if (child && nodesEqual(child, current)) {
+                        return i;
+                    }
+                }
+                // If we're here, current.parent matches rootNode but current not found in children
+                // This shouldn't happen
+                console.log(`[findRootParentIndex] WEIRD: ${node.type} - current.parent matches rootNode but current not in children`);
+                return -1;
+            }
+            
+            current = current.parent;
+        }
+        
+        if (iterations >= maxIterations) {
+            console.log(`[findRootParentIndex] ERROR: ${node.type} exceeded max iterations!`);
+        }
+        
+        return -1; // Not found (reached top without finding root as parent)
+    }
+
+    // Selective formatting: format only nodes belonging to target assignments
+    private iterateTreeSelective(
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[],
+        targetAssignments: Set<number>,
+        mode: 'normal' | 'split-phase1'
+    ) {
+        let cursor = tree.walk();
+        let lastVisitedNode: SyntaxNode | null = null;
+
+        const rootNode = tree.rootNode;
+        console.log(`[iterateTreeSelective] mode=${mode}, targeting ${targetAssignments.size} assignments: [${Array.from(targetAssignments).join(', ')}]`);
+        
+        let nodeCount = 0;
+
+        while (true) {
+            if (cursor.gotoFirstChild()) {
+                continue;
+            }
+
+            while (true) {
+                const node = cursor.currentNode();
+                nodeCount++;
+                
+                if (nodeCount <= 10) {
+                    console.log(`[iterateTreeSelective] Processing node #${nodeCount}: ${node.type}`);
+                }
+
+                if (node === lastVisitedNode) {
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        return;
+                    }
+                    continue;
+                }
+
+                // Check if this node belongs to a target assignment
+                const rootIndex = this.findRootParentIndex(node, rootNode);
+                const belongsToTarget = targetAssignments.has(rootIndex);
+                
+                if (nodeCount <= 20) {
+                    console.log(`[iterateTreeSelective] Node #${nodeCount} ${node.type}: rootIndex=${rootIndex}, belongsToTarget=${belongsToTarget}, skipFormatting=${this.skipFormatting}`);
+                }
+
+                if (node.type === SyntaxNodeType.Annotation) {
+                    lastVisitedNode = node;
+                    if (cursor.gotoNextSibling()) {
+                        break;
+                    }
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        return;
+                    }
+                    continue;
+                }
+
+                // Format only if belongs to target and passes mode filter
+                if (belongsToTarget && !this.skipFormatting && !bodyBlockKeywords.hasFancy(node.type, "")) {
+                    if (mode === 'normal') {
+                        // Normal mode: format all nodes
+                        const codeEdit = this.parse(node, fullText, formatters);
+                        if (codeEdit !== undefined) {
+                            console.log(`[iterateTreeSelective-normal] Formatting: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            this.insertChangeIntoTree(tree, codeEdit);
+                            this.insertChangeIntoFullText(codeEdit, fullText);
+                            this.numOfCodeEdits++;
+                        }
+                    } else if (mode === 'split-phase1') {
+                        // Split phase 1: format leaf nodes and top-level assignments only
+                        const hasFormattableChildren = node.children.some(child => 
+                            !bodyBlockKeywords.hasFancy(child.type, "") &&
+                            formatters.some(formatter => formatter.match(child))
+                        );
+                        
+                        const isTopLevelAssignment = (node.type === 'assignment' || node.type === 'variable_assignment' || node.type === 'assign_statement') && 
+                                                     (node.parent?.type === 'variable_assignment' || node.parent?.type === 'assign_statement' || node.parent?.type === 'source_code');
+                        
+                        if (!hasFormattableChildren || isTopLevelAssignment) {
+                            const codeEdit = this.parse(node, fullText, formatters);
+                            if (codeEdit !== undefined) {
+                                if (isTopLevelAssignment) {
+                                    console.log(`[iterateTreeSelective-split] TOP-LEVEL ASSIGNMENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                } else {
+                                    console.log(`[iterateTreeSelective-split] LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                }
+                                this.insertChangeIntoTree(tree, codeEdit);
+                                this.insertChangeIntoFullText(codeEdit, fullText);
+                                this.numOfCodeEdits++;
+                            }
+                        } else {
+                            console.log(`[iterateTreeSelective-split] SKIPPING PARENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                        }
+                    }
+                }
+
+                lastVisitedNode = node;
+
+                if (cursor.gotoNextSibling()) {
+                    break;
+                }
+                if (!cursor.gotoParent()) {
+                    cursor.delete();
+                    return;
+                }
+            }
+        }
+    }
+
     private iterateTree(
         tree: Tree,
         fullText: FullText,
         formatters: IFormatter[],
-        leafNodesOnly: boolean = false
+        leafNodesOnly: boolean = false,
+        assignmentsNeedingSplitLogic: Set<number> = new Set()
     ) {
         let cursor = tree.walk();
         let lastVisitedNode: SyntaxNode | null = null;
@@ -325,9 +511,9 @@ export class FormattingEngine {
                         );
                         
                         // Group 1: Leaf nodes (no formattable children)
-                        // Group 2: Top-level assignment nodes (to remove whitespace)
-                        const isTopLevelAssignment = (node.type === 'assignment' || node.type === 'variable_assignment') && 
-                                                     (node.parent?.type === 'variable_assignment' || node.parent?.type === 'source_code');
+                        // Group 2: Top-level assignment/variable_assignment nodes (to remove whitespace)
+                        const isTopLevelAssignment = (node.type === 'assignment' || node.type === 'variable_assignment' || node.type === 'assign_statement') && 
+                                                     (node.parent?.type === 'variable_assignment' || node.parent?.type === 'assign_statement' || node.parent?.type === 'source_code');
                         
                         if (!hasFormattableChildren || isTopLevelAssignment) {
                             const codeEdit = this.parse(node, fullText, formatters);
@@ -532,7 +718,175 @@ export class FormattingEngine {
             this.insertChangeIntoFullText(edit, fullText);
             this.numOfCodeEdits++;
         }
-        console.log(`[iterateTreeParentNodes] PHASE 2 complete`);
+                console.log(`[iterateTreeParentNodes] PHASE 2 complete`);
+    }
+
+    private iterateTreeParentNodesSelective(
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[],
+        targetAssignments: Set<number>
+    ) {
+        // CRITICAL: Collect all edits first, then apply them
+        // Applying tree.edit() during iteration corrupts node positions
+        const collectedEdits: Array<{node: SyntaxNode, edit: CodeEdit | CodeEdit[]}> = [];
+        const rootNode = tree.rootNode;
+        
+        let cursor = tree.walk();
+        let lastVisitedNode: SyntaxNode | null = null;
+        let done = false;
+
+        console.log(`[iterateTreeParentNodesSelective] PHASE 2 - Collecting edits for target assignments...`);
+        
+        while (!done) {
+            const currentNode = cursor.currentNode();
+            
+            if (cursor.gotoFirstChild()) {
+                continue;
+            }
+            // Process the current node (this is a leaf node or a node with no unvisited children)
+            while (true) {
+                const node = cursor.currentNode();
+
+                // Skip the node if it was the last one visited
+                if (node === lastVisitedNode) {
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        done = true;
+                        break;
+                    }
+                    continue;
+                }
+
+                // Skip annotation handling in second pass
+                if (node.type === SyntaxNodeType.Annotation) {
+                    lastVisitedNode = node;
+
+                    if (cursor.gotoNextSibling()) {
+                        break;
+                    }
+
+                    if (!cursor.gotoParent()) {
+                        cursor.delete();
+                        done = true;
+                        break;
+                    }
+
+                    continue;
+                }
+
+                // Check if this node belongs to a target assignment
+                const rootIndex = this.findRootParentIndex(node, rootNode);
+                const belongsToTarget = targetAssignments.has(rootIndex);
+
+                // Parse and process the current node (POST-ORDER)
+                // SECOND PASS: Only format PARENT nodes (have formattable children) that belong to target assignments
+                if (
+                    belongsToTarget &&
+                    !this.skipFormatting &&
+                    !bodyBlockKeywords.hasFancy(node.type, "")
+                ) {
+                    // Skip assignment and variable_assignment nodes in parent phase
+                    // These are top-level containers that shouldn't be reformatted after their children
+                    if (node.type === 'assignment' || node.type === 'variable_assignment') {
+                        lastVisitedNode = node;
+                        if (cursor.gotoNextSibling()) {
+                            break;
+                        }
+                        if (!cursor.gotoParent()) {
+                            cursor.delete();
+                            done = true;
+                            break;
+                        }
+                        continue;
+                    }
+                    
+                    // Check if this node is a parent (has children that would be formatted)
+                    const hasFormattableChildren = node.children.some(child => 
+                        !bodyBlockKeywords.hasFancy(child.type, "") &&
+                        formatters.some(formatter => formatter.match(child))
+                    );
+                    
+                    // Only process parent nodes in second pass
+                    if (hasFormattableChildren) {
+                        const codeEdit = this.parse(node, fullText, formatters);
+
+                        if (codeEdit !== undefined) {
+                            console.log(`[iterateTreeParentNodesSelective] COLLECTING edit for: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            // DON'T apply yet - just collect!
+                            collectedEdits.push({node, edit: codeEdit});
+                        }
+                    }
+                }
+
+                // Mark the current node as the last visited node
+                lastVisitedNode = node;
+
+                // Try to move to the next sibling
+                if (cursor.gotoNextSibling()) {
+                    break;
+                }
+                // If no more siblings, move up to the parent node
+                if (!cursor.gotoParent()) {
+                    cursor.delete();
+                    done = true;
+                    break;
+                }
+            }
+        }
+        
+        // Now apply all collected edits IN REVERSE ORDER
+        // This is critical: edits must be applied from end to start of file
+        // so that earlier positions remain valid as we apply later edits
+        console.log(`[iterateTreeParentNodesSelective] Collected ${collectedEdits.length} edits, deduplicating overlaps...`);
+        
+        // Deduplicate: remove edits that are contained within other edits
+        // Keep only the outermost edit for any overlapping region
+        const deduplicatedEdits: typeof collectedEdits = [];
+        for (let i = 0; i < collectedEdits.length; i++) {
+            const currentEdit = collectedEdits[i];
+            const currentStart = Array.isArray(currentEdit.edit) ? currentEdit.edit[0].edit.startIndex : currentEdit.edit.edit.startIndex;
+            const currentEnd = Array.isArray(currentEdit.edit) ? currentEdit.edit[currentEdit.edit.length - 1].edit.oldEndIndex : currentEdit.edit.edit.oldEndIndex;
+            
+            let isContainedByAnother = false;
+            for (let j = 0; j < collectedEdits.length; j++) {
+                if (i === j) continue;
+                
+                const otherEdit = collectedEdits[j];
+                const otherStart = Array.isArray(otherEdit.edit) ? otherEdit.edit[0].edit.startIndex : otherEdit.edit.edit.startIndex;
+                const otherEnd = Array.isArray(otherEdit.edit) ? otherEdit.edit[otherEdit.edit.length - 1].edit.oldEndIndex : otherEdit.edit.edit.oldEndIndex;
+                
+                // Check if current edit is fully contained within other edit
+                if (otherStart <= currentStart && otherEnd >= currentEnd && (otherStart < currentStart || otherEnd > currentEnd)) {
+                    isContainedByAnother = true;
+                    console.log(`[iterateTreeParentNodesSelective] Skipping ${currentEdit.node.type} at ${currentStart}-${currentEnd} (contained by ${otherEdit.node.type} at ${otherStart}-${otherEnd})`);
+                    break;
+                }
+            }
+            
+            if (!isContainedByAnother) {
+                deduplicatedEdits.push(currentEdit);
+            }
+        }
+        
+        console.log(`[iterateTreeParentNodesSelective] After deduplication: ${deduplicatedEdits.length} edits remaining (removed ${collectedEdits.length - deduplicatedEdits.length} overlaps)`);
+        
+        // Sort by startIndex descending (end of file first)
+        deduplicatedEdits.sort((a, b) => {
+            const aStart = Array.isArray(a.edit) ? a.edit[0].edit.startIndex : a.edit.edit.startIndex;
+            const bStart = Array.isArray(b.edit) ? b.edit[0].edit.startIndex : b.edit.edit.startIndex;
+            return bStart - aStart; // Descending order
+        });
+        
+        console.log(`[iterateTreeParentNodesSelective] Applying ${deduplicatedEdits.length} edits in reverse order...`);
+        for (const {node, edit} of deduplicatedEdits) {
+            const startPos = Array.isArray(edit) ? edit[0].edit.startIndex : edit.edit.startIndex;
+            console.log(`[iterateTreeParentNodesSelective] APPLYING edit for: ${node.type} at position ${startPos}`);
+            this.insertChangeIntoTree(tree, edit);
+            this.insertChangeIntoFullText(edit, fullText);
+            this.numOfCodeEdits++;
+        }
+        console.log(`[iterateTreeParentNodesSelective] PHASE 2 complete`);
     }
 
     /*
