@@ -952,11 +952,17 @@ export class FormattingEngine {
                     !this.skipFormatting &&
                     bodyBlockKeywords.hasFancy(node.type, "")
                 ) {
-                    const codeEdit = this.parse(node, fullText, formatters);
-                    if (codeEdit !== undefined) {
-                        this.insertChangeIntoTree(tree, codeEdit);
-                        this.insertChangeIntoFullText(codeEdit, fullText);
-                        this.numOfCodeEdits++;
+                    // Check if this is an assignment that needs two-phase formatting
+                    if (this.needsTwoPhaseFormatting(node, fullText)) {
+                        console.log(`[iterateTreeFormatBlocks] Assignment at ${node.startIndex}-${node.endIndex} needs two-phase formatting`);
+                        this.applyTwoPhaseToSingleAssignment(node, tree, fullText, formatters);
+                    } else {
+                        const codeEdit = this.parse(node, fullText, formatters);
+                        if (codeEdit !== undefined) {
+                            this.insertChangeIntoTree(tree, codeEdit);
+                            this.insertChangeIntoFullText(codeEdit, fullText);
+                            this.numOfCodeEdits++;
+                        }
                     }
                 }
 
@@ -975,6 +981,186 @@ export class FormattingEngine {
                 }
             }
         }
+    }
+
+    private needsTwoPhaseFormatting(node: SyntaxNode, fullText: FullText): boolean {
+        // Only check assign_statement and variable_assignment nodes
+        if (node.type !== 'assign_statement' && node.type !== 'variable_assignment') {
+            return false;
+        }
+
+        let assignmentOperatorColumn = 0;
+        let hasParenthesizedExpression = false;
+
+        // Helper to check for parenthesized_expression
+        const checkForParenthesized = (n: SyntaxNode): boolean => {
+            if (n.type === 'parenthesized_expression') return true;
+            for (let i = 0; i < n.childCount; i++) {
+                const child = n.child(i);
+                if (child && checkForParenthesized(child)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // Find assignment operator and check for parenthesized expressions
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child && child.type === 'assignment') {
+                // Check for parenthesized_expression
+                if (checkForParenthesized(child)) {
+                    hasParenthesizedExpression = true;
+                }
+
+                // Find assignment_operator
+                for (let j = 0; j < child.childCount; j++) {
+                    const grandChild = child.child(j);
+                    if (grandChild && grandChild.type === 'assignment_operator') {
+                        assignmentOperatorColumn = grandChild.endPosition.column;
+                        break;
+                    }
+                }
+            }
+        }
+
+        const threshold = 30;
+        const needsSplitLogic = assignmentOperatorColumn > threshold && hasParenthesizedExpression;
+
+        if (needsSplitLogic) {
+            console.log(`[needsTwoPhaseFormatting] Assignment at ${node.startIndex}: operator column ${assignmentOperatorColumn} > ${threshold} AND has parenthesized_expression`);
+        }
+
+        return needsSplitLogic;
+    }
+
+    private applyTwoPhaseToSingleAssignment(
+        node: SyntaxNode,
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[]
+    ): void {
+        console.log(`[applyTwoPhaseToSingleAssignment] START - node at ${node.startIndex}-${node.endIndex}`);
+        
+        // Phase 1: Format leaf nodes only (expressions, literals, etc.)
+        this.formatLeafNodesOnly(node, tree, fullText, formatters);
+        
+        // Re-parse to get updated tree
+        const newTree = this.parserHelper.parse(
+            this.fileIdentifier,
+            fullText.text,
+            tree
+        ).tree;
+        
+        // Find the updated node at the same position (approximately)
+        const updatedNode = this.findNodeAtPosition(newTree.rootNode, node.startIndex, node.endIndex);
+        if (!updatedNode) {
+            console.log(`[applyTwoPhaseToSingleAssignment] Could not find updated node, skipping phase 2`);
+            return;
+        }
+        
+        // Phase 2: Format parent nodes
+        this.formatParentNodesOnly(updatedNode, newTree, fullText, formatters);
+        
+        console.log(`[applyTwoPhaseToSingleAssignment] COMPLETE`);
+    }
+
+    private findNodeAtPosition(root: SyntaxNode, startIndex: number, endIndex: number): SyntaxNode | null {
+        // Find a node that roughly matches the original position
+        // Use a tolerance for position matching since formatting may have shifted things
+        const tolerance = 100;
+        
+        let bestMatch: SyntaxNode | null = null;
+        let bestMatchScore = Infinity;
+        
+        const search = (node: SyntaxNode) => {
+            const startDiff = Math.abs(node.startIndex - startIndex);
+            const endDiff = Math.abs(node.endIndex - endIndex);
+            const score = startDiff + endDiff;
+            
+            if ((node.type === 'assign_statement' || node.type === 'variable_assignment') && score < bestMatchScore) {
+                bestMatch = node;
+                bestMatchScore = score;
+            }
+            
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child) search(child);
+            }
+        };
+        
+        search(root);
+        return bestMatchScore < tolerance ? bestMatch : null;
+    }
+
+    private formatLeafNodesOnly(
+        node: SyntaxNode,
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[]
+    ): void {
+        // Recursively format only leaf nodes (no formattable children)
+        const processNode = (n: SyntaxNode) => {
+            const hasFormattableChildren = n.children.some(child => 
+                !bodyBlockKeywords.hasFancy(child.type, "") &&
+                formatters.some(formatter => formatter.match(child))
+            );
+            
+            if (!hasFormattableChildren) {
+                // This is a leaf node, format it
+                const codeEdit = this.parse(n, fullText, formatters);
+                if (codeEdit !== undefined) {
+                    this.insertChangeIntoTree(tree, codeEdit);
+                    this.insertChangeIntoFullText(codeEdit, fullText);
+                    this.numOfCodeEdits++;
+                }
+            } else {
+                // Has children, recurse
+                for (let i = 0; i < n.childCount; i++) {
+                    const child = n.child(i);
+                    if (child && !bodyBlockKeywords.hasFancy(child.type, "")) {
+                        processNode(child);
+                    }
+                }
+            }
+        };
+        
+        processNode(node);
+    }
+
+    private formatParentNodesOnly(
+        node: SyntaxNode,
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[]
+    ): void {
+        // Format only parent nodes (have formattable children)
+        const processNode = (n: SyntaxNode) => {
+            const hasFormattableChildren = n.children.some(child => 
+                !bodyBlockKeywords.hasFancy(child.type, "") &&
+                formatters.some(formatter => formatter.match(child))
+            );
+            
+            if (hasFormattableChildren) {
+                // This is a parent node, format it
+                const codeEdit = this.parse(n, fullText, formatters);
+                if (codeEdit !== undefined) {
+                    this.insertChangeIntoTree(tree, codeEdit);
+                    this.insertChangeIntoFullText(codeEdit, fullText);
+                    this.numOfCodeEdits++;
+                }
+            }
+            
+            // Recurse to children
+            for (let i = 0; i < n.childCount; i++) {
+                const child = n.child(i);
+                if (child && !bodyBlockKeywords.hasFancy(child.type, "")) {
+                    processNode(child);
+                }
+            }
+        };
+        
+        processNode(node);
     }
 
     private insertChangeIntoTree(
