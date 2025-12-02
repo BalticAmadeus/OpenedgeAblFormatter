@@ -5,7 +5,6 @@
 {
 	"version": "0.2.0",
 	"configurations": [
-
 		{
 			"name": "Run Extension",
 			"type": "extensionHost",
@@ -20,7 +19,7 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
-			"name": "Run Extension (func)",
+			"name": "Run Extension (from Functional Test dir)",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -33,7 +32,7 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
-			"name": "Extension Tests",
+			"name": "Functional Tests",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -45,8 +44,8 @@
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
-        {
-			"name": "Extension Tests (Metamorphic)",
+		{
+			"name": "Functional Tests + Metamorphic",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -90,7 +89,7 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
-			"name": "AST Tests (Metamorphic)",
+			"name": "AST Tests + Metamorphic",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
