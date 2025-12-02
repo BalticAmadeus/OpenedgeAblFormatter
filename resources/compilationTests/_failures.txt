@@ -151,7 +151,6 @@ adeuib__dynsckr.r
 adeuib__edtgrid.r
 adeuib__fldinfo.r
 adeuib__genmult.r
-adeuib__getpref.r
 adeuib__initpal.r
 adeuib__inscal8.r
 adeuib__intpxpt.r
@@ -170,7 +169,6 @@ adeuib__prpobj.r
 adeuib__prpsdo.r
 adeuib__prpsmar.r
 adeuib__prvcont.r
-adeuib__putpref.r
 adeuib__qbuild.r
 adeuib__qikcomp.r
 adeuib__qssuckr.r
@@ -269,7 +267,6 @@ adeuib_wabattrgencode.r
 adeuib_wabattribute.r
 adeweb__automap.r
 adeweb__brwsmap.r
-adeweb__cdread.r
 adeweb__cihttp.r
 adeweb__drwhtml.r
 adeweb__gendefs.r
@@ -294,7 +291,6 @@ adm2_folder.r
 adm2_logic.r
 adm2_lookup.r
 adm2_lookupqp.r
-adm2_sbologic.r
 adm2_support__wizard.r
 adm2_support__wizbkgr.r
 adm2_support__wizdfld.r
@@ -1327,7 +1323,6 @@ webtools_edtscrpt.r
 webtools_helpsrch.r
 webtools_oscommnd.r
 webtools_pplist.r
-webtools_promsgs.r
 webtools_session.r
 webtools_util__dirlist.r
 webtools_util__errmsgs.r
@@ -1345,7 +1340,6 @@ webutil__webmsgs.r
 webutil_conve4gl.r
 webutil_e4gl-gen.r
 webutil_tagextr.r
-workshop__cdread.r
 workshop__close.r
 workshop__dbinfo.r
 workshop__delete.r

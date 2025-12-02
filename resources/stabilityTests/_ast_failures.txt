@@ -285,7 +285,6 @@ adm2_support_vb2bdata.w
 adm2_support_viewerd.w
 adm2_timesdfv.w
 auditing__auditmainw.w
-auditing_include__xmlsec.i
 auditing_src_adm2_admmsgs.i
 auditing_ui__addmultevents.w
 auditing_ui__audeventmaintw.w
@@ -427,7 +426,6 @@ OpenEdge_DataAdmin_DataAdminCollection.cls
 OpenEdge_DataAdmin_DataSource_AuthTagDataSource.cls
 OpenEdge_DataAdmin_DataSource_CdcTablePolicyDataSource.cls
 OpenEdge_DataAdmin_DataSource_DatabaseOptionDataSource.cls
-OpenEdge_DataAdmin_DataSource_FieldChildDataSource.cls
 OpenEdge_DataAdmin_DataSource_FieldDataSource.cls
 OpenEdge_DataAdmin_DataSource_GrantedRoleDataSource.cls
 OpenEdge_DataAdmin_DataSource_RoleDataSource.cls

@@ -27,13 +27,21 @@ export class FormatterHelper {
     }
 
     public static getActualTextRow(input: string, fullText: FullText): number {
-        const regex = new RegExp(`^\\s*(${fullText.eolDelimiter})*`);
+        let newLineCount = 0;
+        let encounteredNonWhitespace = false;
+        const eolDelimiter = fullText.eolDelimiter;
 
-        const leadingNewlines = input.match(regex);
+        for (let i = 0; i < input.length; i++) {
+            if (input.substr(i, eolDelimiter.length) === eolDelimiter) {
+                newLineCount++;
+                i += eolDelimiter.length - 1;
+            } else if (!/\s/.test(input[i])) {
+                encounteredNonWhitespace = true;
+                break;
+            }
+        }
 
-        return leadingNewlines
-            ? leadingNewlines[0].split(fullText.eolDelimiter).length - 1
-            : 0;
+        return encounteredNonWhitespace ? newLineCount : 0;
     }
 
     public static getActualStatementIndentation(
