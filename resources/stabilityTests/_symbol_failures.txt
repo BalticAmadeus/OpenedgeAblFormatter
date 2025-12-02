@@ -54,3 +54,4 @@ prodict_misc_osappend.p
 prodict_sec__sec-perm.p
 //010 issues <--
 adecomm__auddat.p
+auditing_include__xmlsec.i
