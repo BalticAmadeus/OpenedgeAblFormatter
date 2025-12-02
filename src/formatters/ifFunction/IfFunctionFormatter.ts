@@ -27,6 +27,11 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -42,7 +47,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
             ) {
                 newText = this.addParenthesesAroundExpression(newText);
                 if (!this.hasTernaryExpressionParent(node)) {
-                    /* 
+                    /*
                         The expression gets pushed by 1 space since the '(' is added at the start
                     */
                     const delta =

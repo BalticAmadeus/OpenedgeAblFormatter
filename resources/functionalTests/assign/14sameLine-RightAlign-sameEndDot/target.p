@@ -6,4 +6,5 @@
 "AblFormatter.assignFormattingEndDotLocation": "Same",
 "AblFormatter.expressionFormatting": false}*/
 
-ASSIGN number11 = 2 number2  = 33333.
+ASSIGN number11 = 2
+       number2  = 33333.

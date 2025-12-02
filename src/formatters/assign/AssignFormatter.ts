@@ -26,6 +26,10 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         return node.type === SyntaxNodeType.AssignStatement;
     }
 
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -52,13 +56,55 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
-        let longestLeft = this.getLongestLeft(node.children, fullText);
+        const longestLeft = this.getLongestLeft(node.children, fullText);
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getAssigStatementString(child, fullText, longestLeft)
-            );
-        });
+        const children: SyntaxNode[] = [];
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child) {
+                children.push(child);
+            }
+        }
+
+        for (const child of children) {
+            if (child.type === "comment") {
+                const commentText = FormatterHelper.getCurrentText(child, fullText);
+
+                // Check if comment contains newlines (block comment on own line)
+                if (commentText.includes("\n") || commentText.includes("\r")) {
+                    const lines = commentText.split(fullText.eolDelimiter);
+                    let foundFirstCommentLine = false;
+
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+
+                        // Skip empty lines at the beginning
+                        if (trimmedLine.length === 0 && !foundFirstCommentLine) {
+                            continue;
+                        }
+
+                        // Once we find a non-empty line, add this and all subsequent lines
+                        if (trimmedLine.length > 0) {
+                            if (!foundFirstCommentLine) {
+                                // First line - add with newline prefix
+                                foundFirstCommentLine = true;
+                                resultString += fullText.eolDelimiter + line;
+                            } else {
+                                // Continuation lines - add with newline
+                                resultString += fullText.eolDelimiter + line;
+                            }
+                        }
+                    }
+
+                } else {
+                    resultString += commentText;
+                }
+            } else {
+                const assignString = this.getAssignStatementString(child, fullText, longestLeft);
+
+                resultString += assignString;
+            }
+        }
 
         resultString += this.getFormattedEndDot(fullText);
 
@@ -69,7 +115,12 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         if (this.settings.endDotAlignment()) {
             return (
                 fullText.eolDelimiter +
-                " ".repeat(this.startColumn + this.settings.tabSize()) +
+                " ".repeat(
+                    this.startColumn +
+                        (this.settings.newLineAfterAssign()
+                            ? this.settings.tabSize()
+                            : SyntaxNodeType.AssignKeyword.length + 1)
+                ) +
                 "."
             );
         } else if (this.settings.endDotLocationNew()) {
@@ -79,7 +130,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         }
     }
 
-    private getAssigStatementString(
+    private getAssignStatementString(
         node: SyntaxNode,
         fullText: Readonly<FullText>,
         longestLeft: number
@@ -92,8 +143,9 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText
                 ).trim();
+                break;
             case SyntaxNodeType.Assignment:
-                assignString += this.getAssignmentString(
+                assignString = this.getAssignmentString(
                     node,
                     fullText,
                     longestLeft
@@ -148,7 +200,19 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                   middleText +
                   " " +
                   rightText
-                : " " + paddedLeftText + " " + middleText + " " + rightText;
+                : (node.previousSibling?.type === SyntaxNodeType.AssignKeyword // is it first assignment?
+                      ? " "
+                      : fullText.eolDelimiter +
+                        " ".repeat(
+                            this.startColumn +
+                                SyntaxNodeType.AssignKeyword.length +
+                                1
+                        )) +
+                  paddedLeftText +
+                  " " +
+                  middleText +
+                  " " +
+                  rightText;
         }
         if (whenExpressionNode) {
             newString += this.formatWhenExpression(
@@ -164,12 +228,6 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>
     ): string {
         let formattedString = "";
-
-        if (this.settings.newLineAfterAssign()) {
-            formattedString +=
-                fullText.eolDelimiter +
-                " ".repeat(this.startColumn + this.settings.tabSize() - 1);
-        }
 
         whenExpressionNode.children.forEach((child) => {
             formattedString +=

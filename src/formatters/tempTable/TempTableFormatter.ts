@@ -14,6 +14,8 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "temptableFormatting";
     private readonly settings: TempTableSettings;
     private alignType = 0;
+    private hasFieldOptions = false;
+    private alignFieldOptions = 0;
     private startColumn = 0;
     private temptableValueColumn = 0;
     private temptableBodyValue = "";
@@ -29,10 +31,16 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
+        this.hasFieldOptions = false;
         this.collectTemptableStructure(node, fullText);
         const text = FormatterHelper.getCurrentText(node, fullText);
         this.collectTemptableString(node, fullText);
@@ -50,21 +58,60 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     private getTemptableBlock(node: SyntaxNode, fullText: FullText): string {
         let resultString = "";
+        const children: SyntaxNode[] = [];
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getTemptableExpressionString(
+        // Collect all children
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child) {
+                children.push(child);
+            }
+        }
+
+        for (const child of children) {
+            if (child.type === "comment") {
+                const commentText = FormatterHelper.getCurrentText(child, fullText);
+
+                // Check if comment contains newlines (block comment on own line)
+                if (commentText.includes("\n") || commentText.includes("\r")) {
+                    const lines = commentText.split(fullText.eolDelimiter);
+                    let foundFirstCommentLine = false;
+
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+
+                        // Skip empty lines at the beginning
+                        if (trimmedLine.length === 0 && !foundFirstCommentLine) {
+                            continue;
+                        }
+
+                        // Once we find a non-empty line, add this and all subsequent lines
+                        if (trimmedLine.length > 0) {
+                            if (!foundFirstCommentLine) {
+                                // First line - add with newline prefix
+                                foundFirstCommentLine = true;
+                                resultString += fullText.eolDelimiter + line;
+                            } else {
+                                // Continuation lines - add with newline
+                                resultString += fullText.eolDelimiter + line;
+                            }
+                        }
+                    }
+                } else {
+                    // Comment was inline (no newlines) - keep it inline
+                    resultString += commentText;
+                }
+            } else {
+                // Format the non-comment child
+                resultString += this.getTemptableExpressionString(
                     child,
-                    fullText.eolDelimiter.concat(
-                        " ".repeat(this.temptableValueColumn)
-                    ),
+                    fullText.eolDelimiter.concat(" ".repeat(this.temptableValueColumn)),
                     fullText
-                )
-            );
-        });
+                );
+            }
+        }
 
         resultString += ".";
-
         return resultString;
     }
 
@@ -79,7 +126,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     private getTemptableStructure(node: SyntaxNode, fullText: FullText): void {
         switch (node.type) {
-            case SyntaxNodeType.FieldDefinition:
+            case SyntaxNodeType.FieldClause:
                 node.children.forEach((child) => {
                     this.getFieldStructure(child, fullText);
                 });
@@ -94,6 +141,15 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                     this.alignType,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
                 );
+                break;
+            case SyntaxNodeType.TypeTuning:
+                this.alignFieldOptions = Math.max(
+                    this.alignFieldOptions,
+                    FormatterHelper.getCurrentText(node, fullText).trim().length
+                );
+                break;
+            case SyntaxNodeType.FieldOption:
+                this.hasFieldOptions = true;
                 break;
         }
     }
@@ -124,11 +180,17 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 break;
             case SyntaxNodeType.TypeTuning:
                 newString = this.collectTypeTuningString(node, fullText);
+                if (this.hasFieldOptions) {
+                    newString =
+                        newString +
+                        " ".repeat(this.alignFieldOptions - text.length);
+                }
                 break;
             case SyntaxNodeType.Identifier:
                 newString =
                     " " + text + " ".repeat(this.alignType - text.length);
                 break;
+
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -180,10 +242,10 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
             case definitionKeywords.hasFancy(node.type, ""):
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
-            case SyntaxNodeType.FieldDefinition:
+            case SyntaxNodeType.FieldClause:
                 newString = separator + this.collectFieldString(node, fullText);
                 break;
-            case SyntaxNodeType.IndexDefinition:
+            case SyntaxNodeType.IndexClause:
                 node.children.forEach((child) => {
                     newString = newString.concat(
                         this.getTemptableExpressionString(
@@ -200,9 +262,8 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 break;
             case SyntaxNodeType.LikeKeyword:
                 if (
-                    node.parent!.type.trim() ===
-                        SyntaxNodeType.FieldDefinition ||
-                    node.parent!.type.trim() === SyntaxNodeType.IndexDefinition
+                    node.parent!.type.trim() === SyntaxNodeType.FieldClause ||
+                    node.parent!.type.trim() === SyntaxNodeType.IndexClause
                 ) {
                     newString =
                         " " +

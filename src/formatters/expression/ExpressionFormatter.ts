@@ -36,18 +36,33 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
             (node.type === SyntaxNodeType.UnaryExpression &&
                 node.child(0)?.type === SyntaxNodeType.Not)
         ) {
-            if (this.hasWhilePhraseParent(node)) {
-                return false;
-            }
+            //Comment solve issue 499
+            // if (this.hasWhilePhraseParent(node)) {
+            //     return false;
+            // }
             return true;
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
+
+        /* PK: a nasty hack, I know it's wrong (remove this code after fixed: https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/439) */
+        if (
+            node.type === SyntaxNodeType.AdditiveExpression &&
+            !text.includes(" +") &&
+            !text.includes(" -")
+        ) {
+            return undefined;
+        }
 
         let newText = "";
         if (

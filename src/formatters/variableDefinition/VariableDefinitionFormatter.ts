@@ -4,7 +4,11 @@ import { IFormatter } from "../../formatterFramework/IFormatter";
 import { CodeEdit } from "../../model/CodeEdit";
 import { FullText } from "../../model/FullText";
 import { AFormatter } from "../AFormatter";
-import { definitionKeywords, SyntaxNodeType } from "../../model/SyntaxNodeType";
+import {
+    definitionKeywords,
+    variableKeywords,
+    SyntaxNodeType,
+} from "../../model/SyntaxNodeType";
 import { VariableDefinitionSettings } from "./VariableDefinitionSettings";
 import { IConfigurationManager } from "../../utils/IConfigurationManager";
 import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
@@ -21,7 +25,11 @@ export class VariableDefinitionFormatter
     private alignVariableTuning: number = 0;
     private alignExtent: number = 0;
     private alignVariableKeyword: number = 0;
-    private hasAccessTuning = false;
+    private countAccessTuning: number = 0;
+    private alignScopeGroup: number = 0;
+    private hasAccessTuning: boolean = false;
+    private hasStaticWithoutAccess: boolean = false;
+    private hasScopeTuningWithoutAccess: boolean = false;
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
@@ -34,6 +42,11 @@ export class VariableDefinitionFormatter
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -76,6 +89,12 @@ export class VariableDefinitionFormatter
                 this.getExpressionString(child, fullText)
             );
         });
+
+        // Fix for issue #448
+        const lastNode = node.children[node.children.length - 1];
+        if (lastNode.type === SyntaxNodeType.TypeTuning) {
+            resultString = resultString.trimEnd();
+        }
         resultString += ".";
         return resultString;
     }
@@ -107,6 +126,7 @@ export class VariableDefinitionFormatter
                 );
                 break;
             case SyntaxNodeType.AccessTuning:
+                this.countAccessTuning++;
                 this.alignVariableKeyword = Math.max(
                     this.alignVariableKeyword,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
@@ -116,15 +136,21 @@ export class VariableDefinitionFormatter
                 const hasExtentKeyword = node.children.find(
                     (child) => child.type === SyntaxNodeType.ExtentKeyword
                 );
-                const IsPreviousTypeTunning =
+                const IsPreviousTypeTuning =
                     node.previousSibling?.type === SyntaxNodeType.TypeTuning;
 
-                if (hasExtentKeyword && IsPreviousTypeTunning) {
+                if (hasExtentKeyword && IsPreviousTypeTuning) {
                     this.alignExtent = Math.max(
                         this.alignExtent,
                         this.collectTypeTuningString(node, fullText).length
                     );
                 }
+                break;
+            case SyntaxNodeType.ScopeTuning:
+                this.alignScopeGroup = Math.max(
+                    this.alignScopeGroup,
+                    this.collectScopeTuningGroup(node, fullText).length
+                );
                 break;
         }
     }
@@ -166,18 +192,27 @@ export class VariableDefinitionFormatter
                 this.hasAccessTuning = true;
                 break;
             }
-            case SyntaxNodeType.VariableKeyword: {
+            case variableKeywords.hasFancy(node.type, ""): {
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
                 ).trim();
-                if (!this.hasAccessTuning && this.alignVariableKeyword !== 0) {
-                    newString =
-                        " ".repeat(2 + this.alignVariableKeyword) + text;
-                    this.hasAccessTuning = true;
-                } else {
-                    newString = " " + text;
+                const shouldAlign =
+                    !this.hasAccessTuning && this.alignVariableKeyword !== 0;
+                let spacesCount = 1;
+
+                if (shouldAlign) {
+                    if (
+                        this.hasStaticWithoutAccess ||
+                        this.hasScopeTuningWithoutAccess
+                    ) {
+                        spacesCount = 1;
+                    } else {
+                        spacesCount = 2 + this.alignVariableKeyword;
+                        this.hasAccessTuning = true;
+                    }
                 }
+                newString = " ".repeat(spacesCount) + text;
                 break;
             }
             case SyntaxNodeType.Identifier:
@@ -191,6 +226,49 @@ export class VariableDefinitionFormatter
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
+            case SyntaxNodeType.ScopeTuning: {
+                if (this.visitedNodes.has(node.id)) {
+                    return "";
+                }
+                const scopeGroupText = this.collectScopeTuningGroup(
+                    node,
+                    fullText
+                );
+                const hasStatic = node.children.find(
+                    (child) => child.type === SyntaxNodeType.StaticKeyword
+                );
+
+                this.markScopeGroupAsVisited(node);
+
+                if (hasStatic) {
+                    this.hasStaticWithoutAccess = true;
+                } else {
+                    this.hasScopeTuningWithoutAccess = true;
+                }
+
+                const needsLeadingPadding =
+                    this.hasAccessTuning ||
+                    this.countAccessTuning === 0 ||
+                    this.hasScopeTuningWithoutAccess;
+
+                const needsTrailingPadding =
+                    !this.hasAccessTuning &&
+                    !this.hasStaticWithoutAccess &&
+                    !hasStatic;
+
+                const leadingSpaces = needsLeadingPadding
+                    ? 1
+                    : this.alignVariableKeyword + 2; // Compensate two trimmed whitespaces
+                const trailingSpaces = needsTrailingPadding
+                    ? this.alignScopeGroup - scopeGroupText.length
+                    : 0;
+
+                newString =
+                    " ".repeat(leadingSpaces) +
+                    scopeGroupText +
+                    " ".repeat(trailingSpaces);
+                break;
+            }
             case SyntaxNodeType.VariableTuning:
                 let variableTuningText = "";
                 let spacesCount = 0;
@@ -262,8 +340,36 @@ export class VariableDefinitionFormatter
         return newString;
     }
 
+    private collectScopeTuningGroup(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): string {
+        let scopeGroupText = "";
+        let currentNode: SyntaxNode | null = node;
+
+        while (currentNode && currentNode.type === SyntaxNodeType.ScopeTuning) {
+            const currentText = FormatterHelper.getCurrentText(
+                currentNode,
+                fullText
+            ).trim();
+            scopeGroupText += (scopeGroupText ? " " : "") + currentText;
+            currentNode = currentNode.nextSibling;
+        }
+        return scopeGroupText;
+    }
+
+    private markScopeGroupAsVisited(node: SyntaxNode): void {
+        let currentNode: SyntaxNode | null = node;
+        while (currentNode && currentNode.type === SyntaxNodeType.ScopeTuning) {
+            this.visitedNodes.add(currentNode.id);
+            currentNode = currentNode.nextSibling;
+        }
+    }
+
     private resetNodeVariables() {
         this.hasAccessTuning = false;
+        this.hasStaticWithoutAccess = false;
+        this.hasScopeTuningWithoutAccess = false;
     }
 
     private resetVariables() {
@@ -271,5 +377,7 @@ export class VariableDefinitionFormatter
         this.alignVariableTuning = 0;
         this.alignExtent = 0;
         this.alignVariableKeyword = 0;
+        this.countAccessTuning = 0;
+        this.alignScopeGroup = 0;
     }
 }

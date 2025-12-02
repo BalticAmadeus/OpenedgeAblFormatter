@@ -18,7 +18,7 @@ export class ProcedureParameterFormatter
     extends AFormatter
     implements IFormatter
 {
-    public static readonly formatterLabel = "procedureParamaterFormatting";
+    public static readonly formatterLabel = "procedureParameterFormatting";
     private readonly settings: ProcedureParameterSettings;
     private static visitedNodes: Set<number> = new Set();
     private static alignType = 0;
@@ -31,11 +31,16 @@ export class ProcedureParameterFormatter
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
-        if (node.type === SyntaxNodeType.ProcedureParameterDefinition) {
+        if (node.type === SyntaxNodeType.ParameterDefinition) {
             return true;
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -56,9 +61,7 @@ export class ProcedureParameterFormatter
             if (currentNode.type === SyntaxNodeType.Comment) {
                 continue;
             }
-            if (
-                currentNode.type !== SyntaxNodeType.ProcedureParameterDefinition
-            ) {
+            if (currentNode.type !== SyntaxNodeType.ParameterDefinition) {
                 break;
             }
             this.collectStructure(currentNode, fullText);

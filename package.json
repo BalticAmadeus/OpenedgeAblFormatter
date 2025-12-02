@@ -1,11 +1,11 @@
 {
   "name": "openedge-abl-formatter",
-  "displayName": "OpenEdge Abl Formatter",
+  "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.1.0",
+  "version": "0.4.6",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
-    "url": "https://github.com/BalticAmadeus/AblFormatter"
+    "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
   },
   "engines": {
     "vscode": "^1.84.0"
@@ -19,6 +19,26 @@
   "main": "./out/extension.js",
   "publisher": "BalticAmadeus",
   "contributes": {
+    "commands": [
+      {
+        "command": "openedgeAblFormatter.excludeCode",
+        "title": "Exclude from formatting",
+        "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.reportBug",
+        "title": "Report Bug",
+        "category": "OpenEdge ABL Formatter"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "openedgeAblFormatter.excludeCode",
+          "group": "navigation"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "abl",
@@ -32,6 +52,41 @@
           ".i",
           ".cls",
           ".w"
+        ]
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "ablFormatter",
+        "title": "AblFormatter",
+        "description": "OpenEdge ABL Formatter is a OpenEdge (ABL) code formatter.",
+        "steps": [
+          {
+            "id": "telemetryNotice",
+            "title": "Telemetry notice for OpenEdge ABL Formatter",
+            "description": "How and What data is collected by Formatter\n [Learn More](https://code.visualstudio.com/docs/editor/telemetry#:~:text=Visual%20Studio%20Code%20collects%20telemetry%20data%2C%20which%20is,slow%20start-up%20times%2C%20and%20to%20prioritize%20new%20features.)",
+            "media": {
+              "markdown": "resources/walkthrough/TelemetryNotice.md"
+            }
+          },
+          {
+            "id": "DisableGlobalTelemetry",
+            "title": "How to disable all Telemetry",
+            "description": "Disabling all telemetry that VSCode sends.\n[Global Telemetry Setting](command:toSide:workbench.action.openSettings?%22@tag:telemetry%22)",
+            "media": {
+              "image": "resources/walkthrough/DisableGlobalTelemetry.png",
+              "altText": "Settings for disabling all telemetry sent by VSCode can be found in settings with @tag:telemetry tag"
+            }
+          },
+          {
+            "id": "DisableAblFormatterTelemetry",
+            "title": "How to disable only ABL Formatter Telemetry",
+            "description": "If global setting for telemetry is \"off\" then this setting is ignored and no telemetry is sent.\n[ABL Formatter Telemetry Setting](command:toSide:workbench.action.openSettings?%22Telemetry.ablFormatterTelemetry%22)",
+            "media": {
+              "image": "resources/walkthrough/DisableFormatterTelemetry.png",
+              "altText": "Settings for disabling telemetry sent by OpenEdge ABL Formatter can be found in settings with @tag:telemetry tag"
+            }
+          }
         ]
       }
     ],
@@ -303,18 +358,32 @@
           "description": "Enable STATEMENT formatting"
         },
         "AblFormatter.showTreeInfoOnHover": {
-          "order": 10100,
+          "order": 99,
           "type": "boolean",
-          "default": "true",
+          "default": "false",
           "description": "Enable table view with tree info on hover"
+        },
+        "Telemetry.ablFormatterTelemetry": {
+          "order": 10200,
+          "type": "boolean",
+          "default": true,
+          "description": "Enable telemetry",
+          "tags": [
+            "usesOnlineServices",
+            "telemetry"
+          ]
         }
       }
     }
   },
   "scripts": {
+    "inject-telemetry-key": "replace-in-file \"__TELEMETRY_KEY__\"  \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" ./out/extension.js",
+    "reset-telemetry-key": "replace-in-file \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" \"__TELEMETRY_KEY__\" ./out/extension.js",
     "copy-wasm": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out",
+    "copy-wasm-parser": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out/parser",
+    "package": "npx vsce package && npm run reset-telemetry-key",
     "delete-out": "rimraf out",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && npm run copy-wasm",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && esbuild ./src/parser/ParserWorker.ts --bundle --outfile=out/parser/ParserWorker.js --format=cjs --platform=node && npm run copy-wasm && npm run copy-wasm-parser && npm run inject-telemetry-key",
     "build": "npm run esbuild",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
@@ -327,29 +396,37 @@
     "copy-test-cases": "copyfiles -u 2 ./resources/samples/* .test_dir/samples",
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
     "test": "node ./out/test/runTest.js",
-    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
-    "stability-test": "node ./out/stability-test/runTest.js"
+    "test-w-metamorphic": "node ./out/test/runTest.js --metamorphic",
+    "test-symbol": "node ./out/test-symbol/runTest.js",
+    "test-ast": "node ./out/test-ast/runTest.js",
+    "test-ast-metamorphic": "node ./out/test-ast/runTest.js --metamorphic",
+    "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js",
+    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.1",
     "@types/chai": "^4.3.11",
-    "@types/mocha": "^10.0.3",
+    "@types/mocha": "^10.0.10",
     "@types/node": "18.x",
     "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
-    "@vscode/test-electron": "^2.3.6",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.3.2",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
-    "esbuild": "0.19.11",
+    "esbuild": "^0.25.2",
     "eslint": "^8.52.0",
-    "glob": "^10.3.10",
-    "mocha": "^10.2.0",
+    "glob": "^11.0.1",
+    "mocha": "^10.8.2",
+    "replace-in-file": "^8.3.0",
     "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.2.2",
-    "vscode-extension-tester": "^6.0.0"
+    "vscode-extension-tester": "^8.13.0"
   },
   "dependencies": {
-    "web-tree-sitter": "0.20.8"
+    "@vscode/extension-telemetry": "^0.9.8",
+    "web-tree-sitter": "^0.20.8"
   }
 }

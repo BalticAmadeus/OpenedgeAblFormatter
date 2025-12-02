@@ -1,97 +1,130 @@
 import * as vscode from "vscode";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
-import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
+import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
+import { Telemetry } from "../utils/Telemetry";
+import { BaseEngineOutput } from "../mtest/EngineParams";
 
 export class AblFormatterProvider
     implements
         vscode.DocumentRangeFormattingEditProvider,
         vscode.DocumentFormattingEditProvider
 {
-    private parserHelper: IParserHelper;
+    private readonly parserHelper: IParserHelper;
+    private readonly metamorphicTestingEngine: MetamorphicEngine<BaseEngineOutput>;
 
-    public constructor(parserHelper: IParserHelper) {
+    public constructor(
+        parserHelper: IParserHelper,
+        metamorphicTestingEngine: MetamorphicEngine<BaseEngineOutput>
+    ) {
         this.parserHelper = parserHelper;
+        this.metamorphicTestingEngine = metamorphicTestingEngine;
     }
 
     public provideDocumentFormattingEdits(
         document: vscode.TextDocument,
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log("AblFormatterProvider.provideDocumentFormattingEdits");
+        Telemetry.increaseFormattingActions("Document");
+        Telemetry.addLinesOfCodeFormatted(document.lineCount);
 
         const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
 
         configurationManager.setTabSize(options.tabSize);
 
+        // Return a promise for async formatting
+        return this.performAsyncDocumentFormatting(
+            document,
+            configurationManager,
+            debugManager
+        );
+    }
+
+    private async performAsyncDocumentFormatting(
+        document: vscode.TextDocument,
+        configurationManager: ConfigurationManager,
+        debugManager: DebugManager
+    ): Promise<vscode.TextEdit[]> {
         try {
-            const codeFormatter = new FormattingEngine(
-                this.parserHelper,
+            const allSettings = configurationManager.getAll();
+            allSettings.eol = new EOL(document.eol);
+
+            const formattedText = await this.parserHelper.format(
                 new FileIdentifier(document.fileName, document.version),
-                configurationManager,
-                debugManager
-            );
-
-            const str = codeFormatter.formatText(
                 document.getText(),
-                new EOL(document.eol)
+                allSettings
             );
 
-            const editor = vscode.window.activeTextEditor;
-            editor!.edit(
-                (edit: vscode.TextEditorEdit) => {
-                    edit.replace(
-                        new vscode.Range(
-                            new vscode.Position(0, 0),
-                            new vscode.Position(10000000, 10000000)
-                        ),
-                        str
-                    );
-                },
-                { undoStopBefore: false, undoStopAfter: false }
+            // Return the TextEdit for the whole document
+            return [
+                vscode.TextEdit.replace(
+                    new vscode.Range(
+                        new vscode.Position(0, 0),
+                        new vscode.Position(document.lineCount, 0)
+                    ),
+                    formattedText
+                ),
+            ];
+        } catch (error) {
+            vscode.window.showErrorMessage(
+                `ABL Formatter: Failed to format document - ${
+                    error instanceof Error ? error.message : String(error)
+                }`
             );
-        } catch (e) {
-            console.log(e);
-            return;
+            return [];
         }
     }
 
     public provideDocumentRangeFormattingEdits(
         document: vscode.TextDocument,
-        range: vscode.Range
+        range: vscode.Range,
+        options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log("AblFormatterProvider.provideDocumentFormattingEdits");
+        Telemetry.increaseFormattingActions("Selection");
+        Telemetry.addLinesOfCodeFormatted(range.end.line - range.start.line);
 
         const configurationManager = ConfigurationManager.getInstance();
         const debugManager = DebugManager.getInstance();
 
+        configurationManager.setTabSize(options.tabSize);
+
+        // Return a promise for async formatting
+        return this.performAsyncRangeFormatting(
+            document,
+            range,
+            configurationManager,
+            debugManager
+        );
+    }
+
+    private async performAsyncRangeFormatting(
+        document: vscode.TextDocument,
+        range: vscode.Range,
+        configurationManager: ConfigurationManager,
+        debugManager: DebugManager
+    ): Promise<vscode.TextEdit[]> {
         try {
-            const codeFormatter = new FormattingEngine(
-                this.parserHelper,
+            const allSettings = configurationManager.getAll();
+            allSettings.eol = new EOL(document.eol);
+
+            const formattedText = await this.parserHelper.format(
                 new FileIdentifier(document.fileName, document.version),
-                configurationManager,
-                debugManager
-            );
-
-            const str = codeFormatter.formatText(
                 document.getText(range),
-                new EOL(document.eol)
+                allSettings
             );
 
-            const editor = vscode.window.activeTextEditor;
-            editor!.edit(
-                (edit: vscode.TextEditorEdit) => {
-                    edit.replace(range, str);
-                },
-                { undoStopBefore: false, undoStopAfter: false }
+            return [vscode.TextEdit.replace(range, formattedText)];
+        } catch (error) {
+            vscode.window.showErrorMessage(
+                `ABL Formatter: Failed to format range - ${
+                    error instanceof Error ? error.message : String(error)
+                }`
             );
-        } catch (e) {
-            console.log(e);
-            return;
+            return [];
         }
     }
 
@@ -100,18 +133,14 @@ export class AblFormatterProvider
         ranges: vscode.Range[],
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
-        console.log(
-            "AblFormatterProvider.provideDocumentFormattingEdits2",
-            ranges
-        );
-
         switch (ranges.length) {
             case 0:
                 return [];
             case 1:
                 return this.provideDocumentRangeFormattingEdits(
                     document,
-                    ranges[0]
+                    ranges[0],
+                    options
                 );
             default:
                 // for now, just format whole document, if there is more than one range

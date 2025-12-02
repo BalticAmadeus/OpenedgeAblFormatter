@@ -22,14 +22,20 @@ export class StatementFormatter extends AFormatter implements IFormatter {
     match(node: Readonly<SyntaxNode>): boolean {
         if (
             node.type === SyntaxNodeType.AblStatement ||
-            node.type === SyntaxNodeType.InputStreamStatement ||
-            node.type === SyntaxNodeType.OutputStreamStatement ||
-            node.type === SyntaxNodeType.OutputCloseStatement
+            node.type === SyntaxNodeType.ReturnStatement ||
+            node.type === SyntaxNodeType.MessageStatement ||
+            node.type === SyntaxNodeType.InputOutputStatement ||
+            node.type === SyntaxNodeType.ReleaseStatement
         ) {
             return true;
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -61,7 +67,10 @@ export class StatementFormatter extends AFormatter implements IFormatter {
                 );
             }
         });
-        return resultString + ".";
+        if (FormatterHelper.getCurrentText(node, fullText).endsWith(".")) {
+            resultString = resultString.concat(".");
+        }
+        return resultString;
     }
 
     private getStatementString(node: SyntaxNode, fullText: FullText): string {
@@ -69,7 +78,14 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
         switch (node.type) {
             case SyntaxNodeType.Error:
-                resultString = FormatterHelper.getCurrentText(node, fullText);
+                if (text.toUpperCase() === "ERROR") {
+                    resultString = " " + text;
+                } else {
+                    resultString = FormatterHelper.getCurrentText(
+                        node,
+                        fullText
+                    );
+                }
                 break;
             default:
                 resultString = text.length === 0 ? "" : " " + text;

@@ -40,6 +40,11 @@ export class FunctionParameterFormatter
         }
         return false;
     }
+
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
@@ -65,6 +70,7 @@ export class FunctionParameterFormatter
 
         this.collectStructure(node, fullText);
         const newText = this.collectString(node, fullText);
+        this.resetAlignmentValues();
         return this.getCodeEdit(node, oldText, newText, fullText);
     }
 
@@ -106,7 +112,7 @@ export class FunctionParameterFormatter
         fullText: Readonly<FullText>
     ): void {
         switch (node.type) {
-            case SyntaxNodeType.FunctionParameterMode:
+            case SyntaxNodeType.ArgumentMode:
                 this.alignParameterMode = Math.max(
                     this.alignParameterMode,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
@@ -167,7 +173,7 @@ export class FunctionParameterFormatter
             (child) => child.type === SyntaxNodeType.TypeTuning
         );
         this.parameterModeInCurrentParameter = node.children.some(
-            (child) => child.type === SyntaxNodeType.FunctionParameterMode
+            (child) => child.type === SyntaxNodeType.ArgumentMode
         );
 
         let resultString = "";
@@ -194,7 +200,7 @@ export class FunctionParameterFormatter
                     newString = " " + newString;
                 }
                 break;
-            case SyntaxNodeType.FunctionParameterMode:
+            case SyntaxNodeType.ArgumentMode:
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
@@ -203,10 +209,12 @@ export class FunctionParameterFormatter
 
                 // Add a space because the structure is, for example, "INPUT identifier AS TypeTuning", so we need a space before the identifier.
                 if (this.typeTuningInCurrentParameter) {
-                    newString += " ".repeat(
-                        this.settings.alignTypes()
-                            ? this.alignParameterMode - text.length + 1
-                            : 1
+                    newString = newString.concat(
+                        " ".repeat(
+                            this.settings.alignTypes()
+                                ? this.alignParameterMode - text.length + 1
+                                : 1
+                        )
                     );
                 }
                 break;
@@ -215,14 +223,26 @@ export class FunctionParameterFormatter
                     node,
                     fullText
                 ).trim();
-                // No type-tuning implies that the type is DATASET, DATASET-HANDLE, TABLE or TABLE-HANDLE, and the identifier itself is not at the start of the parameter.
+                // If there's no type-tuning, identifier is not at start; just prefix a space.
                 if (!this.typeTuningInCurrentParameter) {
-                    newString = " " + text;
-                } else {
-                    newString = this.settings.alignTypes()
-                        ? text + " ".repeat(this.alignType - text.length)
-                        : text;
+                    newString = ` ${text}`;
+                    break;
                 }
+
+                newString = this.settings.alignTypes()
+                    ? text.padEnd(this.alignType, " ")
+                    : text;
+
+                const needsModePadding =
+                    this.settings.alignTypes() &&
+                    this.alignParameterMode > 0 &&
+                    node.previousSibling?.type !== SyntaxNodeType.ArgumentMode;
+
+                if (needsModePadding) {
+                    newString =
+                        " ".repeat(this.alignParameterMode + 1) + newString;
+                }
+
                 break;
             }
             case SyntaxNodeType.TypeTuning:
@@ -282,5 +302,12 @@ export class FunctionParameterFormatter
                 break;
         }
         return newString;
+    }
+
+    private resetAlignmentValues(): void {
+        this.alignType = 0;
+        this.alignParameterType = 0;
+        this.alignParameterMode = 0;
+        this.alignParameters = 0;
     }
 }

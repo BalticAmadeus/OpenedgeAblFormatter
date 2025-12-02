@@ -4,6 +4,7 @@ export enum SyntaxNodeType {
     Error = "ERROR",
 
     AvailableExpression = "available_expression",
+    Annotation = "annotation",
     CaseStatement = "case_statement",
     CaseCondition = "case_condition",
     CaseBody = "case_body",
@@ -18,18 +19,18 @@ export enum SyntaxNodeType {
     AblStatement = "abl_statement",
     LogicalExpression = "logical_expression",
     WhenExpression = "when_expression",
+    Definition = "definition",
     TemptableDefinition = "temp_table_definition",
     PropertyDefinition = "property_definition",
-    FieldDefinition = "field_definition",
-    IndexDefinition = "index_definition",
-    InputStreamStatement = "input_stream_statement",
-    OutputStreamStatement = "output_stream_statement",
-    OutputCloseStatement = "output_close_statement",
+    FieldClause = "field_clause",
+    FieldOption = "field_option",
+    IndexClause = "index_clause",
+    InputOutputStatement = "input_output_statement",
     VariableDefinition = "variable_definition",
-    ProcedureParameterDefinition = "procedure_parameter_definition",
+    ParameterDefinition = "parameter_definition",
     ConstructorDefinition = "constructor_definition",
     DestructorDefinition = "destructor_definition",
-    MethodDefinition = "method_definition",
+    MethodStatement = "method_statement",
     FindStatement = "find_statement",
     WhereClause = "where_clause",
     UndoStatement = "undo_statement",
@@ -57,8 +58,10 @@ export enum SyntaxNodeType {
     BooleanLiteral = "boolean_literal",
     ElseIfStatement = "else_if_statement",
     ReturnStatement = "return_statement",
+    MessageStatement = "message_statement",
+    ReleaseStatement = "release_statement",
     FunctionCallStatement = "function_call_statement",
-    FunctionalCallArgument = "functional_call_argument",
+    FunctionCallArgument = "function_call_argument",
     UsingStatement = "using_statement",
     ClassStatement = "class_statement",
     FinallyStatement = "finally_statement",
@@ -85,7 +88,8 @@ export enum SyntaxNodeType {
     Label = "label",
     Parameters = "parameters",
     FunctionParameter = "function_parameter",
-    FunctionParameterMode = "function_parameter_mode",
+    ArgumentMode = "argument_mode",
+    ScopeTuning = "scope_tuning",
     // arithmetic operators
     Add = "+",
     Subtract = "-",
@@ -105,6 +109,7 @@ export enum SyntaxNodeType {
     AssignmentOperator = "assignment_operator",
 
     // keywords
+    SkipKeyword = "SKIP",
     WhenKeyword = "WHEN",
     ByKeyword = "BY",
     ThenKeyword = "THEN",
@@ -144,17 +149,22 @@ export enum SyntaxNodeType {
     OutputKeyword = "OUTPUT",
     InputOutputKeyword = "INPUT-OUTPUT",
     ReturnKeyword = "RETURN",
+    MessageKeyword = "MESSAGE",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
+    VarKeyword = "VAR",
     TableKeyword = "TABLE",
     TableHandleKeyword = "TABLE-HANDLE",
     DatasetKeyword = "DATASET",
     DatasetHandleKeyword = "DATASET-HANDLE",
+    StaticKeyword = "STATIC",
+    SerializeNameKeyword = "SERIALIZE-NAME",
 }
 
 export const afterThenStatements = new MyFancySet<string>([
     SyntaxNodeType.ReturnStatement,
     SyntaxNodeType.AblStatement,
+    SyntaxNodeType.MessageStatement,
     SyntaxNodeType.FunctionCallStatement,
     SyntaxNodeType.AssignStatement,
     SyntaxNodeType.VariableAssignment,
@@ -196,4 +206,9 @@ export const parentheses = new MyFancySet<string>([
 export const logicalKeywords = new MyFancySet<string>([
     SyntaxNodeType.AndKeyword,
     SyntaxNodeType.OrKeyword,
+]);
+
+export const variableKeywords = new MyFancySet<string>([
+    SyntaxNodeType.VariableKeyword,
+    SyntaxNodeType.VarKeyword,
 ]);

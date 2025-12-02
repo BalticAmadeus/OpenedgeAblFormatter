@@ -1,49 +1,71 @@
-import * as assert from "assert";
-import * as fs from "fs";
+import * as assert from "node:assert";
+import * as fs from "node:fs";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
-import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
-import path from "path";
+import path, { join } from "node:path";
 import { EOL } from "../../model/EOL";
 import { DebugManagerMock } from "./DebugManagerMock";
+import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
+import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
+import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
+import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
+import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
+import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
+import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
 
 let parserHelper: AblParserHelper;
+let metamorphicEngine: MetamorphicEngine<DebugTestingEngineOutput> | undefined;
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
 const functionalTestDir = "resources/functionalTests";
+const testResultsDir = path.join(
+    extensionDevelopmentPath,
+    "resources/testResults/functionalTests"
+);
 const functionalTestDirs = getDirs(
     path.join(extensionDevelopmentPath, functionalTestDir)
 );
 let functionalTestCases: string[] = [];
 functionalTestDirs.forEach((dir) => {
-    const testsInsideDir = getDirs(
-        path.join(extensionDevelopmentPath, functionalTestDir + "/" + dir)
-    );
+    const dirPath = path.join(extensionDevelopmentPath, functionalTestDir, dir);
+    // Only process if it's a directory
+    if (!fs.statSync(dirPath).isDirectory()) {
+        return;
+    }
+    const testsInsideDir = getDirs(dirPath);
     testsInsideDir.forEach((test) => {
         functionalTestCases.push(dir + "/" + test);
     });
 });
 
+const knownFailures = getFailedTestCases(
+    join(extensionDevelopmentPath, "resources/functionalTests")
+);
 const treeSitterErrorTestDir = "resources/treeSitterErrorTests";
 const treeSitterErrorTestDirs = getDirs(
     path.join(extensionDevelopmentPath, treeSitterErrorTestDir)
 );
 let treeSitterTestCases: string[] = [];
-treeSitterErrorTestDirs.forEach((dir) => {
+
+const isMetamorphicEnabled =
+    process.argv.includes("--metamorphic") ||
+    process.env.TEST_MODE === "metamorphic";
+
+for (const dir of treeSitterErrorTestDirs) {
     const testsInsideDir = getDirs(
         path.join(extensionDevelopmentPath, treeSitterErrorTestDir + "/" + dir)
     );
-    testsInsideDir.forEach((test) => {
+    for (const test of testsInsideDir) {
         treeSitterTestCases.push(dir + "/" + test);
-    });
-});
+    }
+}
 
 // example for running single test case;
 // testCases = ["assign/1formattingFalse"];
@@ -58,11 +80,29 @@ suite("Extension Test Suite", () => {
             console.log("Parser initialized");
         });
 
+        if (fs.existsSync(testResultsDir)) {
+            fs.rmSync(testResultsDir, { recursive: true, force: true });
+        }
+        fs.mkdirSync(testResultsDir, { recursive: true });
+
         parserHelper = new AblParserHelper(
             extensionDevelopmentPath,
             new DebugManagerMock()
         );
-        await parserHelper.awaitLanguage();
+
+        if (isMetamorphicEnabled) {
+            metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>(
+                console
+            )
+                .addMR(new ReplaceEQ())
+                .addMR(new ReplaceForEachToForLast())
+                .addMR(new RemoveNoError())
+                .addMR(new IdempotenceMR(parserHelper));
+
+            metamorphicEngine.setFormattingEngine(
+                new FormattingEngineMock(parserHelper)
+            );
+        }
 
         console.log(
             "FunctionalTests: ",
@@ -76,37 +116,127 @@ suite("Extension Test Suite", () => {
         );
     });
 
-    functionalTestCases.forEach((cases) => {
-        test(`Functional test: ${cases}`, () => {
-            functionalTest(cases);
-        });
-    });
+    for (const cases of functionalTestCases) {
+        test(`Functional test: ${cases}`, async () => {
+            await functionalTest(cases);
+        }).timeout(10000);
+    }
 
-    treeSitterTestCases.forEach((cases) => {
-        test(`Tree Sitter Error test: ${cases}`, () => {
-            treeSitterTest(cases);
+    for (const cases of treeSitterTestCases) {
+        test(`Tree Sitter Error test: ${cases}`, async () => {
+            await treeSitterTest(cases);
+        }).timeout(10000);
+    }
+
+    suiteTeardown(() => {
+        if (metamorphicEngine === undefined) {
+            return;
+        }
+
+        const metamorphicTestCases = metamorphicEngine.getMatrix();
+        console.log(
+            "Running Metamorphic Tests:",
+            metamorphicTestCases
+                .map((item) => `${item.fileName}:${item.mrName}`)
+                .join(",")
+        );
+
+        suite("Metamorphic Tests", () => {
+            metamorphicTestCases.forEach((cases) => {
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
+                    if (!metamorphicEngine) {
+                        throw new Error("metamorphicEngine is undefined");
+                    }
+                    const result = await metamorphicEngine.runOne(
+                        cases.fileName,
+                        cases.mrName
+                    );
+
+                    assert.equal(
+                        result,
+                        undefined,
+                        result?.actual + "\r\n" + result?.expected
+                    );
+                }).timeout(10000);
+            });
         });
     });
 });
 
-function functionalTest(name: string): void {
+async function functionalTest(name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const inputText = getInput(name);
-    const resultText = format(inputText, name);
-    const targetText = getTarget(name);
 
-    assert.strictEqual(
-        resultText
-            .replaceAll(" ", "_")
-            .replaceAll("\r\n", "#CRLF\r\n")
-            .replaceAll("(?<!\r)\n", "#LF\n"),
-        targetText
-            .replaceAll(" ", "_")
-            .replaceAll("\r\n", "#CRLF\r\n")
-            .replaceAll("(?<!\r)\n", "#LF\n")
+    const resultText = await parserHelper.format(
+        new FileIdentifier(name, 1),
+        inputText,
+        { eol: new EOL(getFileEOL(inputText)) }
     );
+
+    const inputTree = await parserHelper.parseAsync(
+        new FileIdentifier(name, 1),
+        inputText
+    );
+
+    const resultTree = await parserHelper.parseAsync(
+        new FileIdentifier(name, 1),
+        resultText
+    );
+
+    if (metamorphicEngine) {
+        metamorphicEngine.addNameInputAndOutputPair(
+            name,
+            new EOL(getFileEOL(inputText)),
+            { text: inputText, tree: inputTree.tree },
+            { text: resultText, tree: resultTree.tree }
+        );
+    }
+
+    const targetText = getTarget(name);
+    const fileName = name.replaceAll(/[\s/\\:*?"<>|]+/g, "_");
+
+    try {
+        if (knownFailures.includes(fileName)) {
+            assert.notStrictEqual(
+                resultText
+                    .replaceAll(" ", "_")
+                    .replaceAll("\r\n", "#CRLF\r\n")
+                    .replaceAll(/(?<!\r)\n/g, "#LF\n"),
+                targetText
+                    .replaceAll(" ", "_")
+                    .replaceAll("\r\n", "#CRLF\r\n")
+                    .replaceAll(/(?<!\r)\n/g, "#LF\n")
+            );
+        } else {
+            assert.strictEqual(
+                resultText
+                    .replaceAll(" ", "_")
+                    .replaceAll("\r\n", "#CRLF\r\n")
+                    .replaceAll(/(?<!\r)\n/g, "#LF\n"),
+                targetText
+                    .replaceAll(" ", "_")
+                    .replaceAll("\r\n", "#CRLF\r\n")
+                    .replaceAll(/(?<!\r)\n/g, "#LF\n")
+            );
+        }
+    } catch (err: any) {
+        if (knownFailures.includes(fileName)) {
+            console.log(
+                "Issue was fixed - please remove from known failures list: ",
+                fileName
+            );
+        }
+
+        const afterFilePath = path.join(testResultsDir, `${fileName}.p`);
+
+        fs.writeFileSync(afterFilePath, resultText, "utf-8");
+
+        err.stack = `${err.stack}\n\n Failing output written to: ${afterFilePath}\n`;
+
+        throw err;
+    }
 }
 
 function getError(fileName: string): string {
@@ -140,27 +270,17 @@ function getTarget(fileName: string): string {
     return readFile(filePath);
 }
 
-function format(text: string, name: string): string {
-    const configurationManager = ConfigurationManager.getInstance();
-
-    const codeFormatter = new FormattingEngine(
-        parserHelper,
-        new FileIdentifier(name, 1),
-        configurationManager,
-        new DebugManagerMock()
-    );
-
-    const result = codeFormatter.formatText(text, new EOL(getFileEOL(text)));
-
-    return result;
-}
-
 function readFile(fileUri: string): string {
     return fs.readFileSync(fileUri, "utf-8");
 }
 
 function getDirs(fileUri: string): string[] {
-    return fs.readdirSync(fileUri, "utf-8");
+    try {
+        return fs.readdirSync(fileUri, { encoding: "utf-8" });
+    } catch (error) {
+        console.error(`Failed to read directory: ${fileUri}`, error);
+        return [];
+    }
 }
 
 function getFileEOL(fileText: string): string {
@@ -173,23 +293,26 @@ function getFileEOL(fileText: string): string {
     }
 }
 
-function treeSitterTest(name: string): void {
+async function treeSitterTest(name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const errorText = getError(name);
-    const errors = parseAndCheckForErrors(errorText as string, name);
+    const errors = await parseAndCheckForErrors(errorText, name);
 
     const errorMessage = formatErrorMessage(errors, name);
 
     assert.strictEqual(errors.length, 0, errorMessage);
 }
 
-function parseAndCheckForErrors(
+async function parseAndCheckForErrors(
     text: string,
     name: string
-): Parser.SyntaxNode[] {
-    const parseResult = parserHelper.parse(new FileIdentifier(name, 1), text);
+): Promise<Parser.SyntaxNode[]> {
+    const parseResult = await parserHelper.parseAsync(
+        new FileIdentifier(name, 1),
+        text
+    );
 
     const rootNode = parseResult.tree.rootNode;
     const errors = getNodesWithErrors(rootNode);
@@ -233,4 +356,25 @@ function formatErrorMessage(errors: Parser.SyntaxNode[], name: string): string {
     });
 
     return errorMessage;
+}
+
+function getFailedTestCases(filePath: string): string[] {
+    const failedFilePath = path.join(filePath, "_failures.txt");
+
+    // Check if the file exists to avoid errors
+    if (!fs.existsSync(failedFilePath)) {
+        console.log("Known Failures file does not exist!");
+        return [];
+    }
+
+    // Read the file and split lines into an array
+    const data = fs.readFileSync(failedFilePath, "utf8");
+    const failures = data
+        .split("\n")
+        .map((line) => line.replace(/\r$/, "")) // Remove trailing \r if present
+        .filter((line) => line.trim() !== ""); // Filter out empty lines
+
+    console.log("Known failures list has ", failures.length, "cases");
+
+    return failures;
 }

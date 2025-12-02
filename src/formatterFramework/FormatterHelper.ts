@@ -1,7 +1,8 @@
 import { SyntaxNode } from "web-tree-sitter";
+import { Position } from "vscode";
 import { FullText } from "../model/FullText";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
-import { log } from "console";
+import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 
 export class FormatterHelper {
     public static getActualTextIndentation(
@@ -173,13 +174,13 @@ export class FormatterHelper {
             } else if (node.type === SyntaxNodeType.VariableAssignment) {
                 resultString = resultString.trimStart() + ".";
             }
-
             const parent = node.parent;
             if (
                 parent !== null &&
                 (parent.type === SyntaxNodeType.ArrayAccess ||
                     parent.type === SyntaxNodeType.Argument ||
-                    parent.type === SyntaxNodeType.Arguments)
+                    parent.type === SyntaxNodeType.Arguments ||
+                    parent.type === SyntaxNodeType.AblStatement)
             ) {
                 return resultString.trim();
             } else {
@@ -237,8 +238,10 @@ export class FormatterHelper {
     ) {
         let newString = "";
         if (node.type === SyntaxNodeType.LeftParenthesis) {
+            const skipBefore = FormatterHelper.hasSkipKeyword(node);
             newString =
-                " " + FormatterHelper.getCurrentText(node, fullText).trim();
+                (skipBefore ? "" : " ") +
+                FormatterHelper.getCurrentText(node, fullText).trim();
         } else if (
             node.type === SyntaxNodeType.RightParenthesis ||
             (node.previousSibling !== null &&
@@ -252,5 +255,61 @@ export class FormatterHelper {
             newString = FormatterHelper.getCurrentText(node, fullText);
         }
         return newString;
+    }
+
+    public static hasSkipKeyword(node: SyntaxNode): boolean | null {
+        return (
+            !!node.parent &&
+            !!node.parent.previousSibling &&
+            node.parent.previousSibling.type === SyntaxNodeType.SkipKeyword
+        );
+    }
+
+    public static getExcludedRanges(
+        node: SyntaxNode
+    ): { start: number; end: number }[] {
+        const ranges: { start: number; end: number }[] = [];
+        let excludeStart: number | null = null;
+
+        const visit = (n: SyntaxNode) => {
+            if (n.type === SyntaxNodeType.Annotation) {
+                const text = n.text.replace(/[\s.@"]/g, "").toUpperCase();
+
+                if (text === ExcludeAnnotationType.excludeStartAnnotation) {
+                    excludeStart = n.startPosition.row;
+                } else if (
+                    text === ExcludeAnnotationType.excludeEndAnnotation
+                ) {
+                    if (excludeStart !== null) {
+                        ranges.push({
+                            start: excludeStart,
+                            end: n.endPosition.row,
+                        });
+                        excludeStart = null;
+                    } else {
+                        ranges.push({
+                            start: n.startPosition.row,
+                            end: n.endPosition.row,
+                        });
+                    }
+                }
+            }
+
+            n.children.forEach(visit);
+        };
+
+        visit(node);
+
+        const uniqueRanges = ranges.filter(
+            (currentRange, currentIndex, allRanges) =>
+                currentIndex ===
+                allRanges.findIndex(
+                    (otherRange) =>
+                        otherRange.start === currentRange.start &&
+                        otherRange.end === currentRange.end
+                )
+        );
+
+        return uniqueRanges;
     }
 }

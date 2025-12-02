@@ -13,6 +13,7 @@ import { IConfigurationManager } from "../../utils/IConfigurationManager";
 export class ForFormatter extends AFormatter implements IFormatter {
     private startColumn = 0;
     private forBodyValue = "";
+    private eachStatementsFound = 0;
 
     public static readonly formatterLabel = "forFormatting";
     private readonly settings: ForSettings;
@@ -30,10 +31,15 @@ export class ForFormatter extends AFormatter implements IFormatter {
         return false;
     }
 
+    compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
+        return super.compare(node1, node2);
+    }
+
     parse(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
+        this.eachStatementsFound = 0;
         this.collectForStructure(node, fullText);
 
         return this.getCodeEdit(
@@ -63,7 +69,10 @@ export class ForFormatter extends AFormatter implements IFormatter {
         let alignColumn = 0;
 
         node.children.forEach((child) => {
-            if (child.type === SyntaxNodeType.Identifier) {
+            if (
+                this.eachStatementsFound < 2 &&
+                child.type === SyntaxNodeType.Identifier
+            ) {
                 alignColumn = this.startColumn + resultString.length;
             }
             resultString = resultString.concat(
@@ -92,6 +101,20 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText
                 ).trimEnd();
+                break;
+            case SyntaxNodeType.EachKeyword:
+                this.eachStatementsFound++;
+                if (this.eachStatementsFound > 1) {
+                    newString = newString.concat(
+                        fullText.eolDelimiter,
+                        " ".repeat(this.startColumn + this.settings.tabSize()),
+                        FormatterHelper.getCurrentText(node, fullText).trim()
+                    );
+                } else {
+                    newString =
+                        " " +
+                        FormatterHelper.getCurrentText(node, fullText).trim();
+                }
                 break;
             case SyntaxNodeType.DotKeyword:
             case SyntaxNodeType.ColonKeyword:

@@ -5,6 +5,7 @@
 {
 	"version": "0.2.0",
 	"configurations": [
+
 		{
 			"name": "Run Extension",
 			"type": "extensionHost",
@@ -43,22 +44,81 @@
 				"${workspaceFolder}/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
-		},		{
-			"name": "Stability Tests",
+		},
+        {
+			"name": "Extension Tests (Metamorphic)",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/stability-test/suite/index",
+				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"TEST_MODE": "metamorphic"
+			}
+		},
+		{
+			"name": "Symbol Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-symbol/suite/index",
 				"${workspaceFolder}/resources/stabilityTests"
 			],
 			"outFiles": [
-				"${workspaceFolder}/out/stability-test/**/*.js"
+				"${workspaceFolder}/out/test-symbol/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
-		}
+		},
+		{
+			"name": "AST Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-ast/suite/index",
+				"${workspaceFolder}/resources/stabilityTests"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-ast/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "AST Tests (Metamorphic)",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-ast/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-ast/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"TEST_MODE": "metamorphic"
+			}
+		},
+		{
+			"name": "Compilation Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-compilation/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-compilation/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
+		},
 	],
-
 	"folders": [
 		{
 			"path": "${workspaceFolder}/resources/samples"
