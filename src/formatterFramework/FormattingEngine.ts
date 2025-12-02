@@ -50,120 +50,99 @@ export class FormattingEngine {
 
         console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
         
-        // CRITICAL FIX: Detection phase must run AFTER phase 1 formatting
-        // The column position check only makes sense on formatted code with proper indentation
-        // Original code may have column < 30, but after indentation it becomes > 30
-        // TODO: Move detection phase to run between phase 1 and phase 2
-        const assignmentsNeedingSplitLogic = new Set<number>();
-        const normalAssignments = new Set<number>();
+        // CORRECT APPROACH:
+        // 1. Detect special cases on UNFORMATTED code using AST complexity (not column position)
+        // 2. Format special cases with two-phase logic
+        // 3. RE-SCAN to find updated positions of special cases (line numbers changed!)
+        // 4. Format everything else with normal formatting (excluding special cases)
         
+        const assignmentsNeedingTwoPhase = new Set<number>();
         const rootNode = parseResult.tree.rootNode;
-        console.log(`[FormattingEngine.formatText] Root has ${rootNode.childCount} children`);
         
-        // Helper function to check for parenthesized_expression in tree
-        const checkForParenthesized = (node: any): boolean => {
-            if (node.type === 'parenthesized_expression') return true;
-            for (let k = 0; k < node.childCount; k++) {
-                const child = node.child(k);
-                if (child && checkForParenthesized(child)) {
-                    return true;
-                }
-            }
-            return false;
-        };
+        console.log(`[FormattingEngine.formatText] STEP 1: Detecting complex assignments...`);
         
-        // Helper function to recursively find all assignments in a subtree
-        const findAssignmentsInNode = (node: any, rootChildIndex: number, depth: number = 0) => {
-            // Check if this node is an assignment
-            if (node.type === 'variable_assignment' || node.type === 'assign_statement') {
-                let assignmentOperatorColumn = 0;
-                let hasParenthesizedExpression = false;
-                
-                // Only evaluate split-logic criteria for TOP-LEVEL assignments (direct children of root children)
-                // Nested assignments within functions/blocks shouldn't trigger split-logic for the entire root child
-                const isTopLevelAssignment = (depth === 0 || depth === 1);
-                
-                if (isTopLevelAssignment) {
-                    for (let i = 0; i < node.childCount; i++) {
-                        const child = node.child(i);
-                        if (child && child.type === 'assignment') {
-                            console.log(`${"  ".repeat(depth)}[findAssignments] Found assignment node`);
-                            
-                            // Check for parenthesized_expression
-                            if (checkForParenthesized(child)) {
-                                hasParenthesizedExpression = true;
-                                console.log(`${"  ".repeat(depth)}[findAssignments] *** HAS PARENTHESIZED ***`);
-                            }
-                            
-                            for (let j = 0; j < child.childCount; j++) {
-                                const grandChild = child.child(j);
-                                if (grandChild && grandChild.type === 'assignment_operator') {
-                                    assignmentOperatorColumn = grandChild.endPosition.column;
-                                    console.log(`${"  ".repeat(depth)}[findAssignments] *** OPERATOR at column ${assignmentOperatorColumn} ***`);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    
-                    const threshold = 30;
-                    const needsSplitLogic = assignmentOperatorColumn > threshold && hasParenthesizedExpression;
-                    
-                    if (needsSplitLogic) {
-                        assignmentsNeedingSplitLogic.add(rootChildIndex);
-                        if (rootChildIndex === 21 || rootChildIndex === 25) {
-                            console.log(`[FormattingEngine.formatText] *** MARKING ROOT CHILD ${rootChildIndex} for split logic: operator column ${assignmentOperatorColumn} > ${threshold} AND has parenthesized_expression`);
-                        }
-                    } else if (node.type === 'variable_assignment' || node.type === 'assign_statement') {
-                        normalAssignments.add(rootChildIndex);
-                    }
-                }
+        // Helper to recursively find ALL assignments in the tree, not just root children
+        const findComplexAssignments = (node: SyntaxNode, rootChildIndex: number) => {
+            if (this.needsTwoPhaseFormatting(node, fullText)) {
+                assignmentsNeedingTwoPhase.add(rootChildIndex);
+                console.log(`[FormattingEngine.formatText] *** DETECTED complex assignment at root child ${rootChildIndex}, node at ${node.startIndex}`);
             }
             
             // Recursively check all children
             for (let i = 0; i < node.childCount; i++) {
                 const child = node.child(i);
                 if (child) {
-                    findAssignmentsInNode(child, rootChildIndex, depth + 1);
+                    findComplexAssignments(child, rootChildIndex);
                 }
             }
         };
         
-        // Scan each root child and all its descendants
         for (let rootChildIndex = 0; rootChildIndex < rootNode.childCount; rootChildIndex++) {
             const rootChild = rootNode.child(rootChildIndex);
             if (!rootChild) continue;
             
-            // Recursively find all assignments in this root child
-            findAssignmentsInNode(rootChild, rootChildIndex);
+            // Search this root child and all its descendants
+            findComplexAssignments(rootChild, rootChildIndex);
         }
         
-        console.log(`[FormattingEngine.formatText] Split-logic assignments: ${Array.from(assignmentsNeedingSplitLogic).join(', ') || 'none'}`);
+        let newTree = parseResult.tree;
+        let skipRootIndexes = new Set<number>();
         
-        // Phase 1: Format leaf nodes and top-level assignments for split-logic assignments
-        if (assignmentsNeedingSplitLogic.size > 0) {
-            console.log(`[FormattingEngine.formatText] PHASE 1 (split-logic): Formatting leaf nodes for ${assignmentsNeedingSplitLogic.size} assignments`);
-            this.iterateTreeSelective(parseResult.tree, fullText, formatters, assignmentsNeedingSplitLogic, 'split-phase1');
+        // STEP 2: If we found complex assignments, format ONLY those using two-phase
+        if (assignmentsNeedingTwoPhase.size > 0) {
+            console.log(`[FormattingEngine.formatText] STEP 2: Formatting ${assignmentsNeedingTwoPhase.size} root children containing complex assignments with two-phase logic`);
+            
+            // Phase 1: Format leaf nodes only for complex assignments
+            this.iterateTreeSelective(newTree, fullText, formatters, assignmentsNeedingTwoPhase, 'split-phase1');
+            
+            // Re-parse after phase 1
+            newTree = this.parserHelper.parse(
+                this.fileIdentifier,
+                fullText.text,
+                newTree
+            ).tree;
+            
+            // Phase 2: Format parent nodes for complex assignments
+            this.iterateTreeParentNodesSelective(newTree, fullText, formatters, assignmentsNeedingTwoPhase);
+            
+            // Re-parse again
+            newTree = this.parserHelper.parse(
+                this.fileIdentifier,
+                fullText.text,
+                newTree
+            ).tree;
+            
+            // STEP 3: RE-SCAN to get updated root indexes after formatting changed line numbers
+            console.log(`[FormattingEngine.formatText] STEP 3: Re-scanning to find updated positions of complex assignments...`);
+            const updatedRootNode = newTree.rootNode;
+            
+            const findComplexAssignmentsUpdated = (node: SyntaxNode, rootChildIndex: number) => {
+                if (this.needsTwoPhaseFormatting(node, fullText)) {
+                    skipRootIndexes.add(rootChildIndex);
+                    console.log(`[FormattingEngine.formatText] *** Will SKIP root child ${rootChildIndex} during normal formatting (assignment at ${node.startIndex})`);
+                }
+                
+                for (let i = 0; i < node.childCount; i++) {
+                    const child = node.child(i);
+                    if (child) {
+                        findComplexAssignmentsUpdated(child, rootChildIndex);
+                    }
+                }
+            };
+            
+            for (let rootChildIndex = 0; rootChildIndex < updatedRootNode.childCount; rootChildIndex++) {
+                const rootChild = updatedRootNode.child(rootChildIndex);
+                if (!rootChild) continue;
+                
+                findComplexAssignmentsUpdated(rootChild, rootChildIndex);
+            }
+        } else {
+            console.log(`[FormattingEngine.formatText] STEP 2: No complex assignments detected`);
         }
         
-        // Phase 1: Format all normal assignments (full formatting)
-        if (normalAssignments.size > 0) {
-            console.log(`[FormattingEngine.formatText] PHASE 1 (normal): Formatting ${normalAssignments.size} normal assignments`);
-            this.iterateTreeSelective(parseResult.tree, fullText, formatters, normalAssignments, 'normal');
-        }
-
-        // Re-parse after phase 1 to get fresh tree with updated positions
-        let newTree = this.parserHelper.parse(
-            this.fileIdentifier,
-            fullText.text,
-            parseResult.tree
-        ).tree;
-
-        // Phase 2: Format parent nodes for split-logic assignments only
-        if (assignmentsNeedingSplitLogic.size > 0) {
-            console.log(`[FormattingEngine.formatText] PHASE 2 (split-logic): Formatting parent nodes for ${assignmentsNeedingSplitLogic.size} assignments`);
-            this.iterateTreeParentNodesSelective(newTree, fullText, formatters, assignmentsNeedingSplitLogic);
-        }
+        // STEP 4: Do normal formatting for everything (excluding already-formatted complex assignments)
+        console.log(`[FormattingEngine.formatText] STEP 4: Applying normal formatting (excluding ${skipRootIndexes.size} root children with complex assignments)`);
+        this.iterateTree(newTree, fullText, formatters, false, skipRootIndexes);
 
         // Re-parse for block formatting
         newTree = this.parserHelper.parse(
@@ -430,10 +409,11 @@ export class FormattingEngine {
         fullText: FullText,
         formatters: IFormatter[],
         leafNodesOnly: boolean = false,
-        assignmentsNeedingSplitLogic: Set<number> = new Set()
+        excludeRootIndexes: Set<number> = new Set()
     ) {
         let cursor = tree.walk();
         let lastVisitedNode: SyntaxNode | null = null;
+        const rootNode = tree.rootNode;
 
         while (true) {
             const currentNode = cursor.currentNode();
@@ -497,7 +477,14 @@ export class FormattingEngine {
                     !this.skipFormatting &&
                     !bodyBlockKeywords.hasFancy(node.type, "")
                 ) {
-                    if (leafNodesOnly) {
+                    // Check if this node belongs to an excluded root index
+                    const rootIndex = this.findRootParentIndex(node, rootNode);
+                    const shouldSkip = excludeRootIndexes.has(rootIndex);
+                    
+                    if (shouldSkip) {
+                        // Skip formatting for nodes that belong to special case assignments
+                        // These were already formatted with two-phase logic
+                    } else if (leafNodesOnly) {
                         // SPLIT LOGIC: Format in two groups
                         const hasFormattableChildren = node.children.some(child => 
                             !bodyBlockKeywords.hasFancy(child.type, "") &&
@@ -952,17 +939,11 @@ export class FormattingEngine {
                     !this.skipFormatting &&
                     bodyBlockKeywords.hasFancy(node.type, "")
                 ) {
-                    // Check if this is an assignment that needs two-phase formatting
-                    if (this.needsTwoPhaseFormatting(node, fullText)) {
-                        console.log(`[iterateTreeFormatBlocks] Assignment at ${node.startIndex}-${node.endIndex} needs two-phase formatting`);
-                        this.applyTwoPhaseToSingleAssignment(node, tree, fullText, formatters);
-                    } else {
-                        const codeEdit = this.parse(node, fullText, formatters);
-                        if (codeEdit !== undefined) {
-                            this.insertChangeIntoTree(tree, codeEdit);
-                            this.insertChangeIntoFullText(codeEdit, fullText);
-                            this.numOfCodeEdits++;
-                        }
+                    const codeEdit = this.parse(node, fullText, formatters);
+                    if (codeEdit !== undefined) {
+                        this.insertChangeIntoTree(tree, codeEdit);
+                        this.insertChangeIntoFullText(codeEdit, fullText);
+                        this.numOfCodeEdits++;
                     }
                 }
 
@@ -983,55 +964,112 @@ export class FormattingEngine {
         }
     }
 
+    private bodyContainsProblematicAssignment(bodyNode: SyntaxNode, fullText: FullText): boolean {
+        // Search for assign_statement or variable_assignment in the body that meets criteria
+        const searchNode = (node: SyntaxNode): boolean => {
+            if (node.type === 'assign_statement' || node.type === 'variable_assignment') {
+                if (this.needsTwoPhaseFormatting(node, fullText)) {
+                    return true;
+                }
+            }
+            
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child && searchNode(child)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        
+        return searchNode(bodyNode);
+    }
+
+    private applyTwoPhaseToBodyNode(
+        bodyNode: SyntaxNode,
+        tree: Tree,
+        fullText: FullText,
+        formatters: IFormatter[]
+    ): void {
+        console.log(`[applyTwoPhaseToBodyNode] START - body at ${bodyNode.startIndex}-${bodyNode.endIndex}`);
+        
+        // Find all problematic assignments in this body
+        const problematicAssignments: SyntaxNode[] = [];
+        const findAssignments = (node: SyntaxNode) => {
+            if (node.type === 'assign_statement' || node.type === 'variable_assignment') {
+                if (this.needsTwoPhaseFormatting(node, fullText)) {
+                    problematicAssignments.push(node);
+                }
+            }
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child) findAssignments(child);
+            }
+        };
+        findAssignments(bodyNode);
+        
+        console.log(`[applyTwoPhaseToBodyNode] Found ${problematicAssignments.length} problematic assignments`);
+        
+        // Apply two-phase formatting to each problematic assignment
+        for (const assignment of problematicAssignments) {
+            this.applyTwoPhaseToSingleAssignment(assignment, tree, fullText, formatters);
+        }
+        
+        // Now format the body node itself (just the indentation structure)
+        const codeEdit = this.parse(bodyNode, fullText, formatters);
+        if (codeEdit !== undefined) {
+            this.insertChangeIntoTree(tree, codeEdit);
+            this.insertChangeIntoFullText(codeEdit, fullText);
+            this.numOfCodeEdits++;
+        }
+        
+        console.log(`[applyTwoPhaseToBodyNode] COMPLETE`);
+    }
+
     private needsTwoPhaseFormatting(node: SyntaxNode, fullText: FullText): boolean {
         // Only check assign_statement and variable_assignment nodes
         if (node.type !== 'assign_statement' && node.type !== 'variable_assignment') {
             return false;
         }
 
-        let assignmentOperatorColumn = 0;
+        // NEW APPROACH: Use AST complexity instead of column position
+        // Look for assignments with deep nesting that normal formatting corrupts
+        let hasComplexExpression = false;
         let hasParenthesizedExpression = false;
-
-        // Helper to check for parenthesized_expression
-        const checkForParenthesized = (n: SyntaxNode): boolean => {
-            if (n.type === 'parenthesized_expression') return true;
+        let nestedFunctionCount = 0;
+        
+        const checkComplexity = (n: SyntaxNode, depth: number = 0): void => {
+            if (n.type === 'parenthesized_expression') {
+                hasParenthesizedExpression = true;
+            }
+            
+            if (n.type === 'function_call') {
+                nestedFunctionCount++;
+            }
+            
+            // Check for IF expression with multiple function calls
+            if (n.type === 'if_expression' && depth > 0) {
+                hasComplexExpression = true;
+            }
+            
             for (let i = 0; i < n.childCount; i++) {
                 const child = n.child(i);
-                if (child && checkForParenthesized(child)) {
-                    return true;
+                if (child) {
+                    checkComplexity(child, depth + 1);
                 }
             }
-            return false;
         };
-
-        // Find assignment operator and check for parenthesized expressions
-        for (let i = 0; i < node.childCount; i++) {
-            const child = node.child(i);
-            if (child && child.type === 'assignment') {
-                // Check for parenthesized_expression
-                if (checkForParenthesized(child)) {
-                    hasParenthesizedExpression = true;
-                }
-
-                // Find assignment_operator
-                for (let j = 0; j < child.childCount; j++) {
-                    const grandChild = child.child(j);
-                    if (grandChild && grandChild.type === 'assignment_operator') {
-                        assignmentOperatorColumn = grandChild.endPosition.column;
-                        break;
-                    }
-                }
-            }
+        
+        checkComplexity(node);
+        
+        // Criteria: Assignment with parenthesized expression AND (complex IF or 3+ function calls)
+        const needsTwoPhase = hasParenthesizedExpression && (hasComplexExpression || nestedFunctionCount >= 3);
+        
+        if (needsTwoPhase) {
+            console.log(`[needsTwoPhaseFormatting] COMPLEX ASSIGNMENT at ${node.startIndex}: hasParenthesized=${hasParenthesizedExpression}, hasComplexIF=${hasComplexExpression}, functions=${nestedFunctionCount}`);
         }
-
-        const threshold = 30;
-        const needsSplitLogic = assignmentOperatorColumn > threshold && hasParenthesizedExpression;
-
-        if (needsSplitLogic) {
-            console.log(`[needsTwoPhaseFormatting] Assignment at ${node.startIndex}: operator column ${assignmentOperatorColumn} > ${threshold} AND has parenthesized_expression`);
-        }
-
-        return needsSplitLogic;
+        
+        return needsTwoPhase;
     }
 
     private applyTwoPhaseToSingleAssignment(
