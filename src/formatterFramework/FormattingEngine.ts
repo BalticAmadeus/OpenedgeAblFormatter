@@ -32,7 +32,7 @@ export class FormattingEngine {
         eol: EOL,
         metemorphicEngineIsEnabled: boolean = false
     ): string {
-        console.log(`[FormattingEngine.formatText] START - Input length: ${fulfullTextString.length}`);
+        // console.log(`[FormattingEngine.formatText] START - Input length: ${fulfullTextString.length}`);
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
@@ -48,7 +48,7 @@ export class FormattingEngine {
             this.configurationManager
         );
 
-        console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
+        // console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
         
         // Detection Phase: Classify each assignment as normal or needing split logic
         // Split logic needed when: column > 30/37 AND has parenthesized_expression
@@ -56,7 +56,7 @@ export class FormattingEngine {
         const normalAssignments = new Set<number>();
         
         const rootNode = parseResult.tree.rootNode;
-        console.log(`[FormattingEngine.formatText] Root has ${rootNode.childCount} children`);
+        // console.log(`[FormattingEngine.formatText] Root has ${rootNode.childCount} children`);
         
         // Helper function to check for parenthesized_expression in tree
         const checkForParenthesized = (node: any): boolean => {
@@ -75,7 +75,7 @@ export class FormattingEngine {
             const rootChild = rootNode.child(rootChildIndex);
             if (!rootChild) continue;
             
-            console.log(`[FormattingEngine.formatText] Checking root child ${rootChildIndex}: type=${rootChild.type}`);
+            // console.log(`[FormattingEngine.formatText] Checking root child ${rootChildIndex}: type=${rootChild.type}`);
             
             // Handle both variable_assignment and assign_statement
             if (rootChild.type === 'variable_assignment' || rootChild.type === 'assign_statement') {
@@ -85,22 +85,22 @@ export class FormattingEngine {
                 for (let i = 0; i < rootChild.childCount; i++) {
                     const child = rootChild.child(i);
                     if (child && child.type === 'assignment') {
-                        console.log(`[FormattingEngine.formatText] Found assignment node with ${child.childCount} children`);
+                        // console.log(`[FormattingEngine.formatText] Found assignment node with ${child.childCount} children`);
                         
                         // Check for parenthesized_expression
                         if (checkForParenthesized(child)) {
                             hasParenthesizedExpression = true;
-                            console.log(`[FormattingEngine.formatText] *** FOUND PARENTHESIZED_EXPRESSION ***`);
+                            // console.log(`[FormattingEngine.formatText] *** FOUND PARENTHESIZED_EXPRESSION ***`);
                         }
                         
                         for (let j = 0; j < child.childCount; j++) {
                             const grandChild = child.child(j);
                             if (grandChild) {
-                                console.log(`[FormattingEngine.formatText]   Child ${j}: type=${grandChild.type}, start=${grandChild.startIndex}, end=${grandChild.endIndex}, position=${grandChild.startPosition.row}:${grandChild.startPosition.column}`);
+                                // console.log(`[FormattingEngine.formatText]   Child ${j}: type=${grandChild.type}, start=${grandChild.startIndex}, end=${grandChild.endIndex}, position=${grandChild.startPosition.row}:${grandChild.startPosition.column}`);
                                 if (grandChild.type === 'assignment_operator') {
                                     // Use column position (position within the line), not absolute file position
                                     assignmentOperatorColumn = grandChild.endPosition.column;
-                                    console.log(`[FormattingEngine.formatText] *** ASSIGNMENT OPERATOR at line ${grandChild.startPosition.row + 1}, column ${grandChild.startPosition.column} - ${grandChild.endPosition.column} ***`);
+                                    // console.log(`[FormattingEngine.formatText] *** ASSIGNMENT OPERATOR at line ${grandChild.startPosition.row + 1}, column ${grandChild.startPosition.column} - ${grandChild.endPosition.column} ***`);
                                     break;
                                 }
                             }
@@ -109,23 +109,20 @@ export class FormattingEngine {
                 }
                 
                 // Use split logic if THIS assignment meets criteria:
-                // 1. Assignment operator COLUMN position > threshold (indicates excessive whitespace before =)
-                //    - Check column position (position in line), not absolute file position
-                //    - For variable_assignment: column > 30 (no "assign" keyword)
-                //    - For assign_statement: column > 37 (includes "assign " keyword = 7 chars)
+                // 1. Assignment operator COLUMN position > 30 (indicates excessive whitespace before =)
+                //    - Column position is measured from line start, so it already includes
+                //      any "ASSIGN " keyword offset - no adjustment needed
                 // 2. Has parenthesized_expression (only case that breaks)
-                // SPECIAL: assign_statement with parenthesized expressions ALWAYS uses split-logic
-                //          because single-pass formatter corrupts them
-                const threshold = rootChild.type === 'assign_statement' ? 37 : 30;
-                const needsSplitLogic = (assignmentOperatorColumn > threshold && hasParenthesizedExpression) ||
-                                       (rootChild.type === 'assign_statement' && hasParenthesizedExpression);
+                // Both conditions must be true: excessive whitespace AND parenthesized expressions
+                const threshold = 30;
+                const needsSplitLogic = assignmentOperatorColumn > threshold && hasParenthesizedExpression;
                 
                 if (needsSplitLogic) {
                     assignmentsNeedingSplitLogic.add(rootChildIndex);
-                    console.log(`[FormattingEngine.formatText] *** MARKING ROOT CHILD ${rootChildIndex} for split logic: ${rootChild.type === 'assign_statement' ? 'ASSIGN statement with parenthesized' : `operator column ${assignmentOperatorColumn} > ${threshold} AND has parenthesized_expression`}`);
+                    // console.log(`[FormattingEngine.formatText] *** MARKING ROOT CHILD ${rootChildIndex} for split logic: ${rootChild.type === 'assign_statement' ? 'ASSIGN statement with parenthesized' : `operator column ${assignmentOperatorColumn} > ${threshold} AND has parenthesized_expression`}`);
                 } else if (rootChild.type === 'variable_assignment' || rootChild.type === 'assign_statement') {
                     normalAssignments.add(rootChildIndex);
-                    console.log(`[FormattingEngine.formatText] *** MARKING ROOT CHILD ${rootChildIndex} for normal formatting`);
+                    // console.log(`[FormattingEngine.formatText] *** MARKING ROOT CHILD ${rootChildIndex} for normal formatting`);
                 }
             } else {
                 // Non-assignment root children get normal formatting
@@ -133,34 +130,34 @@ export class FormattingEngine {
             }
         }
         
-        console.log(`[FormattingEngine.formatText] Classification complete:`);
-        console.log(`[FormattingEngine.formatText]   Normal assignments: ${Array.from(normalAssignments).join(', ') || 'none'}`);
-        console.log(`[FormattingEngine.formatText]   Split-logic assignments: ${Array.from(assignmentsNeedingSplitLogic).join(', ') || 'none'}`);
+        // console.log(`[FormattingEngine.formatText] Classification complete:`);
+        // console.log(`[FormattingEngine.formatText]   Normal assignments: ${Array.from(normalAssignments).join(', ') || 'none'}`);
+        // console.log(`[FormattingEngine.formatText]   Split-logic assignments: ${Array.from(assignmentsNeedingSplitLogic).join(', ') || 'none'}`);
         
         // Strategy selection based on classification
         if (assignmentsNeedingSplitLogic.size === 0) {
             // Simple case: no problematic assignments, use original single-pass formatting
-            console.log(`[FormattingEngine.formatText] Using original single-pass formatting (no split-logic needed)`);
+            // console.log(`[FormattingEngine.formatText] Using original single-pass formatting (no split-logic needed)`);
             this.iterateTree(parseResult.tree, fullText, formatters, false, new Set());
-            console.log(`[FormattingEngine.formatText] After single-pass formatting, text length: ${fullText.text.length}`);
+            // console.log(`[FormattingEngine.formatText] After single-pass formatting, text length: ${fullText.text.length}`);
         } else {
             // Complex case: selective formatting
-            console.log(`[FormattingEngine.formatText] Using selective formatting strategy`);
+            // console.log(`[FormattingEngine.formatText] Using selective formatting strategy`);
             
             // Format normal assignments first (single pass)
             if (normalAssignments.size > 0) {
-                console.log(`[FormattingEngine.formatText] === Formatting ${normalAssignments.size} normal assignments (single-pass) ===`);
+                // console.log(`[FormattingEngine.formatText] === Formatting ${normalAssignments.size} normal assignments (single-pass) ===`);
                 this.iterateTreeSelective(parseResult.tree, fullText, formatters, normalAssignments, 'normal');
-                console.log(`[FormattingEngine.formatText] After normal assignments, text length: ${fullText.text.length}`);
+                // console.log(`[FormattingEngine.formatText] After normal assignments, text length: ${fullText.text.length}`);
             }
             
             // Format split-logic assignments (two-phase)
-            console.log(`[FormattingEngine.formatText] === Formatting ${assignmentsNeedingSplitLogic.size} split-logic assignments (two-phase) ===`);
+            // console.log(`[FormattingEngine.formatText] === Formatting ${assignmentsNeedingSplitLogic.size} split-logic assignments (two-phase) ===`);
             
             // Phase 1: Leaf nodes
-            console.log(`[FormattingEngine.formatText] SPLIT PHASE 1: Leaf nodes`);
+            // console.log(`[FormattingEngine.formatText] SPLIT PHASE 1: Leaf nodes`);
             this.iterateTreeSelective(parseResult.tree, fullText, formatters, assignmentsNeedingSplitLogic, 'split-phase1');
-            console.log(`[FormattingEngine.formatText] After split PHASE 1, text length: ${fullText.text.length}`);
+            // console.log(`[FormattingEngine.formatText] After split PHASE 1, text length: ${fullText.text.length}`);
         }
 
         // Re-parse for block formatting and PHASE 2 (always needed)
@@ -170,18 +167,18 @@ export class FormattingEngine {
             parseResult.tree
         ).tree;
 
-        console.log(`[FormattingEngine.formatText] Before iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
+        // console.log(`[FormattingEngine.formatText] Before iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
-        console.log(`[FormattingEngine.formatText] After iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
+        // console.log(`[FormattingEngine.formatText] After iterateTreeFormatBlocks, text length: ${fullText.text.length}`);
 
         // PHASE 2: Format parent nodes only for split-logic assignments
         if (assignmentsNeedingSplitLogic.size > 0) {
-            console.log(`[FormattingEngine.formatText] SPLIT PHASE 2: Parent nodes (collect-apply)`);
+            // console.log(`[FormattingEngine.formatText] SPLIT PHASE 2: Parent nodes (collect-apply)`);
             this.iterateTreeParentNodesSelective(newTree, fullText, formatters, assignmentsNeedingSplitLogic);
-            console.log(`[FormattingEngine.formatText] After split PHASE 2, text length: ${fullText.text.length}`);
+            // console.log(`[FormattingEngine.formatText] After split PHASE 2, text length: ${fullText.text.length}`);
         }
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
-        console.log(`[FormattingEngine.formatText] COMPLETE - Final text length: ${fullText.text.length}, numOfCodeEdits: ${this.numOfCodeEdits}`);
+        // console.log(`[FormattingEngine.formatText] COMPLETE - Final text length: ${fullText.text.length}, numOfCodeEdits: ${this.numOfCodeEdits}`);
 
         if (
             metemorphicEngineIsEnabled &&
@@ -308,7 +305,7 @@ export class FormattingEngine {
                 }
                 // If we're here, current.parent matches rootNode but current not found in children
                 // This shouldn't happen
-                console.log(`[findRootParentIndex] WEIRD: ${node.type} - current.parent matches rootNode but current not in children`);
+                // console.log(`[findRootParentIndex] WEIRD: ${node.type} - current.parent matches rootNode but current not in children`);
                 return -1;
             }
             
@@ -316,7 +313,7 @@ export class FormattingEngine {
         }
         
         if (iterations >= maxIterations) {
-            console.log(`[findRootParentIndex] ERROR: ${node.type} exceeded max iterations!`);
+            // console.log(`[findRootParentIndex] ERROR: ${node.type} exceeded max iterations!`);
         }
         
         return -1; // Not found (reached top without finding root as parent)
@@ -334,7 +331,7 @@ export class FormattingEngine {
         let lastVisitedNode: SyntaxNode | null = null;
 
         const rootNode = tree.rootNode;
-        console.log(`[iterateTreeSelective] mode=${mode}, targeting ${targetAssignments.size} assignments: [${Array.from(targetAssignments).join(', ')}]`);
+        // console.log(`[iterateTreeSelective] mode=${mode}, targeting ${targetAssignments.size} assignments: [${Array.from(targetAssignments).join(', ')}]`);
         
         let nodeCount = 0;
 
@@ -348,7 +345,7 @@ export class FormattingEngine {
                 nodeCount++;
                 
                 if (nodeCount <= 10) {
-                    console.log(`[iterateTreeSelective] Processing node #${nodeCount}: ${node.type}`);
+                    // console.log(`[iterateTreeSelective] Processing node #${nodeCount}: ${node.type}`);
                 }
 
                 if (node === lastVisitedNode) {
@@ -364,7 +361,7 @@ export class FormattingEngine {
                 const belongsToTarget = targetAssignments.has(rootIndex);
                 
                 if (nodeCount <= 20) {
-                    console.log(`[iterateTreeSelective] Node #${nodeCount} ${node.type}: rootIndex=${rootIndex}, belongsToTarget=${belongsToTarget}, skipFormatting=${this.skipFormatting}`);
+                    // console.log(`[iterateTreeSelective] Node #${nodeCount} ${node.type}: rootIndex=${rootIndex}, belongsToTarget=${belongsToTarget}, skipFormatting=${this.skipFormatting}`);
                 }
 
                 if (node.type === SyntaxNodeType.Annotation) {
@@ -385,7 +382,7 @@ export class FormattingEngine {
                         // Normal mode: format all nodes
                         const codeEdit = this.parse(node, fullText, formatters);
                         if (codeEdit !== undefined) {
-                            console.log(`[iterateTreeSelective-normal] Formatting: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            // console.log(`[iterateTreeSelective-normal] Formatting: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                             this.insertChangeIntoTree(tree, codeEdit);
                             this.insertChangeIntoFullText(codeEdit, fullText);
                             this.numOfCodeEdits++;
@@ -404,16 +401,16 @@ export class FormattingEngine {
                             const codeEdit = this.parse(node, fullText, formatters);
                             if (codeEdit !== undefined) {
                                 if (isTopLevelAssignment) {
-                                    console.log(`[iterateTreeSelective-split] TOP-LEVEL ASSIGNMENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                    // console.log(`[iterateTreeSelective-split] TOP-LEVEL ASSIGNMENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                                 } else {
-                                    console.log(`[iterateTreeSelective-split] LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                    // console.log(`[iterateTreeSelective-split] LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                                 }
                                 this.insertChangeIntoTree(tree, codeEdit);
                                 this.insertChangeIntoFullText(codeEdit, fullText);
                                 this.numOfCodeEdits++;
                             }
                         } else {
-                            console.log(`[iterateTreeSelective-split] SKIPPING PARENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            // console.log(`[iterateTreeSelective-split] SKIPPING PARENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                         }
                     }
                 }
@@ -520,16 +517,16 @@ export class FormattingEngine {
 
                             if (codeEdit !== undefined) {
                                 if (isTopLevelAssignment) {
-                                    console.log(`[iterateTree] PHASE 1 - TOP-LEVEL ASSIGNMENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                    // console.log(`[iterateTree] PHASE 1 - TOP-LEVEL ASSIGNMENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                                 } else {
-                                    console.log(`[iterateTree] PHASE 1 - LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                                    // console.log(`[iterateTree] PHASE 1 - LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                                 }
                                 this.insertChangeIntoTree(tree, codeEdit);
                                 this.insertChangeIntoFullText(codeEdit, fullText);
                                 this.numOfCodeEdits++;
                             }
                         } else {
-                            console.log(`[iterateTree] PHASE 1 - SKIPPING PARENT NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            // console.log(`[iterateTree] PHASE 1 - SKIPPING PARENT NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                         }
                     } else {
                         // NORMAL LOGIC: Format all nodes
@@ -573,7 +570,7 @@ export class FormattingEngine {
         let lastVisitedNode: SyntaxNode | null = null;
         let done = false;
 
-        console.log(`[iterateTreeParentNodes] PHASE 2 - Collecting edits...`);
+        // console.log(`[iterateTreeParentNodes] PHASE 2 - Collecting edits...`);
         
         while (!done) {
             const currentNode = cursor.currentNode();
@@ -644,7 +641,7 @@ export class FormattingEngine {
                         const codeEdit = this.parse(node, fullText, formatters);
 
                         if (codeEdit !== undefined) {
-                            console.log(`[iterateTreeParentNodes] COLLECTING edit for: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            // console.log(`[iterateTreeParentNodes] COLLECTING edit for: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                             // DON'T apply yet - just collect!
                             collectedEdits.push({node, edit: codeEdit});
                         }
@@ -670,7 +667,7 @@ export class FormattingEngine {
         // Now apply all collected edits IN REVERSE ORDER
         // This is critical: edits must be applied from end to start of file
         // so that earlier positions remain valid as we apply later edits
-        console.log(`[iterateTreeParentNodes] Collected ${collectedEdits.length} edits, deduplicating overlaps...`);
+        // console.log(`[iterateTreeParentNodes] Collected ${collectedEdits.length} edits, deduplicating overlaps...`);
         
         // Deduplicate: remove edits that are contained within other edits
         // Keep only the outermost edit for any overlapping region
@@ -691,7 +688,7 @@ export class FormattingEngine {
                 // Check if current edit is fully contained within other edit
                 if (otherStart <= currentStart && otherEnd >= currentEnd && (otherStart < currentStart || otherEnd > currentEnd)) {
                     isContainedByAnother = true;
-                    console.log(`[iterateTreeParentNodes] Skipping ${currentEdit.node.type} at ${currentStart}-${currentEnd} (contained by ${otherEdit.node.type} at ${otherStart}-${otherEnd})`);
+                    // console.log(`[iterateTreeParentNodes] Skipping ${currentEdit.node.type} at ${currentStart}-${currentEnd} (contained by ${otherEdit.node.type} at ${otherStart}-${otherEnd})`);
                     break;
                 }
             }
@@ -701,7 +698,7 @@ export class FormattingEngine {
             }
         }
         
-        console.log(`[iterateTreeParentNodes] After deduplication: ${deduplicatedEdits.length} edits remaining (removed ${collectedEdits.length - deduplicatedEdits.length} overlaps)`);
+        // console.log(`[iterateTreeParentNodes] After deduplication: ${deduplicatedEdits.length} edits remaining (removed ${collectedEdits.length - deduplicatedEdits.length} overlaps)`);
         
         // Sort by startIndex descending (end of file first)
         deduplicatedEdits.sort((a, b) => {
@@ -710,15 +707,15 @@ export class FormattingEngine {
             return bStart - aStart; // Descending order
         });
         
-        console.log(`[iterateTreeParentNodes] Applying ${deduplicatedEdits.length} edits in reverse order...`);
+        // console.log(`[iterateTreeParentNodes] Applying ${deduplicatedEdits.length} edits in reverse order...`);
         for (const {node, edit} of deduplicatedEdits) {
             const startPos = Array.isArray(edit) ? edit[0].edit.startIndex : edit.edit.startIndex;
-            console.log(`[iterateTreeParentNodes] APPLYING edit for: ${node.type} at position ${startPos}`);
+            // console.log(`[iterateTreeParentNodes] APPLYING edit for: ${node.type} at position ${startPos}`);
             this.insertChangeIntoTree(tree, edit);
             this.insertChangeIntoFullText(edit, fullText);
             this.numOfCodeEdits++;
         }
-                console.log(`[iterateTreeParentNodes] PHASE 2 complete`);
+                // console.log(`[iterateTreeParentNodes] PHASE 2 complete`);
     }
 
     private iterateTreeParentNodesSelective(
@@ -736,7 +733,7 @@ export class FormattingEngine {
         let lastVisitedNode: SyntaxNode | null = null;
         let done = false;
 
-        console.log(`[iterateTreeParentNodesSelective] PHASE 2 - Collecting edits for target assignments...`);
+        // console.log(`[iterateTreeParentNodesSelective] PHASE 2 - Collecting edits for target assignments...`);
         
         while (!done) {
             const currentNode = cursor.currentNode();
@@ -812,7 +809,7 @@ export class FormattingEngine {
                         const codeEdit = this.parse(node, fullText, formatters);
 
                         if (codeEdit !== undefined) {
-                            console.log(`[iterateTreeParentNodesSelective] COLLECTING edit for: ${node.type} at ${node.startIndex}-${node.endIndex}`);
+                            // console.log(`[iterateTreeParentNodesSelective] COLLECTING edit for: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                             // DON'T apply yet - just collect!
                             collectedEdits.push({node, edit: codeEdit});
                         }
@@ -838,7 +835,7 @@ export class FormattingEngine {
         // Now apply all collected edits IN REVERSE ORDER
         // This is critical: edits must be applied from end to start of file
         // so that earlier positions remain valid as we apply later edits
-        console.log(`[iterateTreeParentNodesSelective] Collected ${collectedEdits.length} edits, deduplicating overlaps...`);
+        // console.log(`[iterateTreeParentNodesSelective] Collected ${collectedEdits.length} edits, deduplicating overlaps...`);
         
         // Deduplicate: remove edits that are contained within other edits
         // Keep only the outermost edit for any overlapping region
@@ -859,7 +856,7 @@ export class FormattingEngine {
                 // Check if current edit is fully contained within other edit
                 if (otherStart <= currentStart && otherEnd >= currentEnd && (otherStart < currentStart || otherEnd > currentEnd)) {
                     isContainedByAnother = true;
-                    console.log(`[iterateTreeParentNodesSelective] Skipping ${currentEdit.node.type} at ${currentStart}-${currentEnd} (contained by ${otherEdit.node.type} at ${otherStart}-${otherEnd})`);
+                    // console.log(`[iterateTreeParentNodesSelective] Skipping ${currentEdit.node.type} at ${currentStart}-${currentEnd} (contained by ${otherEdit.node.type} at ${otherStart}-${otherEnd})`);
                     break;
                 }
             }
@@ -869,7 +866,7 @@ export class FormattingEngine {
             }
         }
         
-        console.log(`[iterateTreeParentNodesSelective] After deduplication: ${deduplicatedEdits.length} edits remaining (removed ${collectedEdits.length - deduplicatedEdits.length} overlaps)`);
+        // console.log(`[iterateTreeParentNodesSelective] After deduplication: ${deduplicatedEdits.length} edits remaining (removed ${collectedEdits.length - deduplicatedEdits.length} overlaps)`);
         
         // Sort by startIndex descending (end of file first)
         deduplicatedEdits.sort((a, b) => {
@@ -878,15 +875,15 @@ export class FormattingEngine {
             return bStart - aStart; // Descending order
         });
         
-        console.log(`[iterateTreeParentNodesSelective] Applying ${deduplicatedEdits.length} edits in reverse order...`);
+        // console.log(`[iterateTreeParentNodesSelective] Applying ${deduplicatedEdits.length} edits in reverse order...`);
         for (const {node, edit} of deduplicatedEdits) {
             const startPos = Array.isArray(edit) ? edit[0].edit.startIndex : edit.edit.startIndex;
-            console.log(`[iterateTreeParentNodesSelective] APPLYING edit for: ${node.type} at position ${startPos}`);
+            // console.log(`[iterateTreeParentNodesSelective] APPLYING edit for: ${node.type} at position ${startPos}`);
             this.insertChangeIntoTree(tree, edit);
             this.insertChangeIntoFullText(edit, fullText);
             this.numOfCodeEdits++;
         }
-        console.log(`[iterateTreeParentNodesSelective] PHASE 2 complete`);
+        // console.log(`[iterateTreeParentNodesSelective] PHASE 2 complete`);
     }
 
     /*
