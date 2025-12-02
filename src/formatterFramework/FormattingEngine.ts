@@ -32,7 +32,7 @@ export class FormattingEngine {
         eol: EOL,
         metemorphicEngineIsEnabled: boolean = false
     ): string {
-        console.log(`[FormattingEngine.formatText] START - Input length: ${fulfullTextString.length}`);
+        // console.log(`[FormattingEngine.formatText] START - Input length: ${fulfullTextString.length}`);
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
@@ -48,7 +48,7 @@ export class FormattingEngine {
             this.configurationManager
         );
 
-        console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
+        // console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
         
         // CORRECT APPROACH:
         // 1. Detect special cases on UNFORMATTED code using AST complexity (not column position)
@@ -59,13 +59,13 @@ export class FormattingEngine {
         const assignmentsNeedingTwoPhase = new Set<number>();
         const rootNode = parseResult.tree.rootNode;
         
-        console.log(`[FormattingEngine.formatText] STEP 1: Detecting complex assignments...`);
+        // console.log(`[FormattingEngine.formatText] STEP 1: Detecting complex assignments...`);
         
         // Helper to recursively find ALL assignments in the tree, not just root children
         const findComplexAssignments = (node: SyntaxNode, rootChildIndex: number) => {
             if (this.needsTwoPhaseFormatting(node, fullText)) {
                 assignmentsNeedingTwoPhase.add(rootChildIndex);
-                console.log(`[FormattingEngine.formatText] *** DETECTED complex assignment at root child ${rootChildIndex}, node at ${node.startIndex}`);
+                // console.log(`[FormattingEngine.formatText] *** DETECTED complex assignment at root child ${rootChildIndex}, node at ${node.startIndex}`);
             }
             
             // Recursively check all children
@@ -90,7 +90,7 @@ export class FormattingEngine {
         
         // STEP 2: If we found complex assignments, format ONLY those using two-phase
         if (assignmentsNeedingTwoPhase.size > 0) {
-            console.log(`[FormattingEngine.formatText] STEP 2: Formatting ${assignmentsNeedingTwoPhase.size} root children containing complex assignments with two-phase logic`);
+            // console.log(`[FormattingEngine.formatText] STEP 2: Formatting ${assignmentsNeedingTwoPhase.size} root children containing complex assignments with two-phase logic`);
             
             // Phase 1: Format leaf nodes only for complex assignments
             this.iterateTreeSelective(newTree, fullText, formatters, assignmentsNeedingTwoPhase, 'split-phase1');
@@ -113,13 +113,13 @@ export class FormattingEngine {
             ).tree;
             
             // STEP 3: RE-SCAN to get updated root indexes after formatting changed line numbers
-            console.log(`[FormattingEngine.formatText] STEP 3: Re-scanning to find updated positions of complex assignments...`);
+            // console.log(`[FormattingEngine.formatText] STEP 3: Re-scanning to find updated positions of complex assignments...`);
             const updatedRootNode = newTree.rootNode;
             
             const findComplexAssignmentsUpdated = (node: SyntaxNode, rootChildIndex: number) => {
                 if (this.needsTwoPhaseFormatting(node, fullText)) {
                     skipRootIndexes.add(rootChildIndex);
-                    console.log(`[FormattingEngine.formatText] *** Will SKIP root child ${rootChildIndex} during normal formatting (assignment at ${node.startIndex})`);
+                    // console.log(`[FormattingEngine.formatText] *** Will SKIP root child ${rootChildIndex} during normal formatting (assignment at ${node.startIndex})`);
                 }
                 
                 for (let i = 0; i < node.childCount; i++) {
@@ -137,11 +137,11 @@ export class FormattingEngine {
                 findComplexAssignmentsUpdated(rootChild, rootChildIndex);
             }
         } else {
-            console.log(`[FormattingEngine.formatText] STEP 2: No complex assignments detected`);
+            // console.log(`[FormattingEngine.formatText] STEP 2: No complex assignments detected`);
         }
         
         // STEP 4: Do normal formatting for everything (excluding already-formatted complex assignments)
-        console.log(`[FormattingEngine.formatText] STEP 4: Applying normal formatting (excluding ${skipRootIndexes.size} root children with complex assignments)`);
+        // console.log(`[FormattingEngine.formatText] STEP 4: Applying normal formatting (excluding ${skipRootIndexes.size} root children with complex assignments)`);
         this.iterateTree(newTree, fullText, formatters, false, skipRootIndexes);
 
         // Re-parse for block formatting
@@ -154,7 +154,7 @@ export class FormattingEngine {
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
 
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
-        console.log(`[FormattingEngine.formatText] COMPLETE - Final length: ${fullText.text.length}, edits: ${this.numOfCodeEdits}`);
+        // console.log(`[FormattingEngine.formatText] COMPLETE - Final length: ${fullText.text.length}, edits: ${this.numOfCodeEdits}`);
 
         if (
             metemorphicEngineIsEnabled &&
@@ -1065,9 +1065,9 @@ export class FormattingEngine {
         // Criteria: Assignment with parenthesized expression AND (complex IF or 3+ function calls)
         const needsTwoPhase = hasParenthesizedExpression && (hasComplexExpression || nestedFunctionCount >= 3);
         
-        if (needsTwoPhase) {
-            console.log(`[needsTwoPhaseFormatting] COMPLEX ASSIGNMENT at ${node.startIndex}: hasParenthesized=${hasParenthesizedExpression}, hasComplexIF=${hasComplexExpression}, functions=${nestedFunctionCount}`);
-        }
+        // if (needsTwoPhase) {
+        //     console.log(`[needsTwoPhaseFormatting] COMPLEX ASSIGNMENT at ${node.startIndex}: hasParenthesized=${hasParenthesizedExpression}, hasComplexIF=${hasComplexExpression}, functions=${nestedFunctionCount}`);
+        // }
         
         return needsTwoPhase;
     }
@@ -1244,19 +1244,19 @@ export class FormattingEngine {
             }
         } else {
             // Log edits that affect the problematic ASSIGN region (around 10850)
-            if (codeEdit.edit.startIndex < 11000 && codeEdit.edit.oldEndIndex > 10800) {
-                console.log(`[insertChangeIntoFullText] !!! EDIT NEAR PROBLEM AREA !!!`);
-                console.log(`[insertChangeIntoFullText] startIndex=${codeEdit.edit.startIndex}, oldEndIndex=${codeEdit.edit.oldEndIndex}`);
-                console.log(`[insertChangeIntoFullText] OLD TEXT: "${fullText.text.substring(codeEdit.edit.startIndex, codeEdit.edit.oldEndIndex)}"`);
-                console.log(`[insertChangeIntoFullText] NEW TEXT: "${codeEdit.text}"`);
-                console.log(`[insertChangeIntoFullText] Text length BEFORE: ${fullText.text.length}`);
-            }
+            // if (codeEdit.edit.startIndex < 11000 && codeEdit.edit.oldEndIndex > 10800) {
+            //     console.log(`[insertChangeIntoFullText] !!! EDIT NEAR PROBLEM AREA !!!`);
+            //     console.log(`[insertChangeIntoFullText] startIndex=${codeEdit.edit.startIndex}, oldEndIndex=${codeEdit.edit.oldEndIndex}`);
+            //     console.log(`[insertChangeIntoFullText] OLD TEXT: "${fullText.text.substring(codeEdit.edit.startIndex, codeEdit.edit.oldEndIndex)}"`);
+            //     console.log(`[insertChangeIntoFullText] NEW TEXT: "${codeEdit.text}"`);
+            //     console.log(`[insertChangeIntoFullText] Text length BEFORE: ${fullText.text.length}`);
+            // }
             const before = fullText.text.slice(0, codeEdit.edit.startIndex);
             const after = fullText.text.slice(codeEdit.edit.oldEndIndex);
             fullText.text = before + codeEdit.text + after;
-            if (codeEdit.edit.startIndex < 11000 && codeEdit.edit.oldEndIndex > 10800) {
-                console.log(`[insertChangeIntoFullText] Text length AFTER: ${fullText.text.length}`);
-            }
+            // if (codeEdit.edit.startIndex < 11000 && codeEdit.edit.oldEndIndex > 10800) {
+            //     console.log(`[insertChangeIntoFullText] Text length AFTER: ${fullText.text.length}`);
+            // }
         }
     }
 
@@ -1270,21 +1270,21 @@ export class FormattingEngine {
         formatters.some((formatter) => {
             if (formatter.match(node)) {
                 // Log formatters that touch the problem area
-                if (node.startIndex < 11000 && node.endIndex > 10800) {
-                    console.log(`[FormattingEngine.parse] !!! FORMATTER IN PROBLEM AREA !!!`);
-                    console.log(`[FormattingEngine.parse] Formatter: ${(formatter.constructor as any).formatterLabel || formatter.constructor.name}`);
-                    console.log(`[FormattingEngine.parse] Node type: ${node.type}`);
-                    console.log(`[FormattingEngine.parse] Node position: start=${node.startIndex}, end=${node.endIndex}`);
-                    console.log(`[FormattingEngine.parse] Node text: "${node.text.substring(0, 100)}${node.text.length > 100 ? '...' : ''}"`);
-                }
+                // if (node.startIndex < 11000 && node.endIndex > 10800) {
+                //     console.log(`[FormattingEngine.parse] !!! FORMATTER IN PROBLEM AREA !!!`);
+                //     console.log(`[FormattingEngine.parse] Formatter: ${(formatter.constructor as any).formatterLabel || formatter.constructor.name}`);
+                //     console.log(`[FormattingEngine.parse] Node type: ${node.type}`);
+                //     console.log(`[FormattingEngine.parse] Node position: start=${node.startIndex}, end=${node.endIndex}`);
+                //     console.log(`[FormattingEngine.parse] Node text: "${node.text.substring(0, 100)}${node.text.length > 100 ? '...' : ''}"`);
+                // }
                 
                 result = formatter.parse(node, fullText);
                 
-                if (result && node.startIndex < 11000 && node.endIndex > 10800) {
-                    const editInfo = Array.isArray(result) ? result[0] : result;
-                    console.log(`[FormattingEngine.parse] Generated edit: startIndex=${editInfo.edit.startIndex}, oldEndIndex=${editInfo.edit.oldEndIndex}`);
-                    console.log(`[FormattingEngine.parse] New text length: ${editInfo.text.length}, Old text length: ${editInfo.edit.oldEndIndex - editInfo.edit.startIndex}`);
-                }
+                // if (result && node.startIndex < 11000 && node.endIndex > 10800) {
+                //     const editInfo = Array.isArray(result) ? result[0] : result;
+                //     console.log(`[FormattingEngine.parse] Generated edit: startIndex=${editInfo.edit.startIndex}, oldEndIndex=${editInfo.edit.oldEndIndex}`);
+                //     console.log(`[FormattingEngine.parse] New text length: ${editInfo.text.length}, Old text length: ${editInfo.edit.oldEndIndex - editInfo.edit.startIndex}`);
+                // }
 
                 return true;
             }
