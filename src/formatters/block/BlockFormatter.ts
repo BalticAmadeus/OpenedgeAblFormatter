@@ -267,8 +267,6 @@ export class BlockFormater extends AFormatter implements IFormatter {
             end: range.end - parent.startPosition.row,
         }));
 
-        console.log("[Extension Host] Excluded ranges:", excludedRanges);
-
         codeLines.forEach((codeLine, index) => {
             const lineNumber = parent.startPosition.row + index;
 

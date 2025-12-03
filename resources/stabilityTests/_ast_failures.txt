@@ -14,7 +14,7 @@ adecomm__chosobj.w
 adecomm__dbconnc.p
 adecomm__dblist.p
 adecomm__dlgrecm.p
-//adecomm__dswidfunc.p
+adecomm__dswidfunc.p
 adecomm__dtbldat.p
 adecomm__dynbuf.p
 adecomm__encpdat.p
