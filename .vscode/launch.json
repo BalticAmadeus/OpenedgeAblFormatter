@@ -5,7 +5,6 @@
 {
 	"version": "0.2.0",
 	"configurations": [
-
 		{
 			"name": "Run Extension",
 			"type": "extensionHost",
@@ -45,7 +44,7 @@
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
-        {
+		{
 			"name": "Extension Tests (Metamorphic)",
 			"type": "extensionHost",
 			"request": "launch",
@@ -86,6 +85,20 @@
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/test-ast/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "Error Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-error/suite/index",
+				"${workspaceFolder}/resources/stabilityTests"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-error/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
