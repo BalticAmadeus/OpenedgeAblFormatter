@@ -413,13 +413,7 @@ export class AblParserHelper implements IParserHelper {
             if (pendingRequest) {
                 this.pendingRequests.delete(message.id);
                 if (message.success) {
-                    const textLength = message.formattedText?.length ?? 0;
-                    if (message.formattedText === undefined || message.formattedText === null) {
-                        console.error(`[AblParserHelper] Worker returned undefined/null formattedText for request ${message.id}`);
-                        pendingRequest.reject(new Error("Worker returned undefined/null formattedText"));
-                    } else {
-                        pendingRequest.resolve(message.formattedText);
-                    }
+                    pendingRequest.resolve(message.formattedText);
                 } else {
                     // Ensure error is a string
                     const errorMsg =
