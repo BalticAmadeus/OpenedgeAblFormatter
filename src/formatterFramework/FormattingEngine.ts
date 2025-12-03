@@ -1021,15 +1021,20 @@ export class FormattingEngine {
             }
         }
 
-        // SPECIFIC DETECTION: Three conditions must be met:
+        // SPECIFIC DETECTION: Four conditions must be met:
         // 1. Assignment operator column position > 30
         // 2. Comparison operator AND ternary_expression INSIDE parenthesized expression
         // 3. The parenthesized expression is part of an additive_expression (e.g., "(...) + 1")
+        // 4. The EXPRESSION COMPONENTS must have both start AND end on the SAME LINE
+        //    Note: ASSIGN keyword and variable name can be on different lines
         
         let assignmentOperatorColumn = 0;
         let hasComparisonInParenthesized = false;
         let hasTernaryInParenthesized = false;
-        let isInAdditiveExpression = false;
+        let parenthesizedExpressionStartLine = -1;
+        let parenthesizedExpressionEndLine = -1;
+        let additiveExpressionStartLine = -1;
+        let additiveExpressionEndLine = -1;
         
         // Find assignment operator column position
         for (let i = 0; i < node.childCount; i++) {
@@ -1062,7 +1067,10 @@ export class FormattingEngine {
             // Check if this is a parenthesized_expression that's a child of additive_expression
             if (n.type === 'parenthesized_expression' && n.parent) {
                 if (n.parent.type === 'additive_expression') {
-                    isInAdditiveExpression = true;
+                    parenthesizedExpressionStartLine = n.startPosition.row;
+                    parenthesizedExpressionEndLine = n.endPosition.row;
+                    additiveExpressionStartLine = n.parent.startPosition.row;
+                    additiveExpressionEndLine = n.parent.endPosition.row;
                 }
             }
             
@@ -1080,13 +1088,23 @@ export class FormattingEngine {
         checkPattern(node);
         
         const threshold = 30;
+        // Check that each expression component starts and ends on the same line
+        const parenthesizedOnSingleLine = parenthesizedExpressionStartLine !== -1 && 
+                                          parenthesizedExpressionStartLine === parenthesizedExpressionEndLine;
+        const additiveOnSingleLine = additiveExpressionStartLine !== -1 && 
+                                     additiveExpressionStartLine === additiveExpressionEndLine;
+        const bothOnSameLine = parenthesizedOnSingleLine && 
+                              additiveOnSingleLine &&
+                              parenthesizedExpressionStartLine === additiveExpressionStartLine;
+        
         const needsTwoPhase = assignmentOperatorColumn > threshold && 
                              hasComparisonInParenthesized && 
                              hasTernaryInParenthesized &&
-                             isInAdditiveExpression;
+                             bothOnSameLine;
         
         if (needsTwoPhase) {
-            console.log(`[needsTwoPhaseFormatting] DETECTED at ${node.startIndex}: operator column ${assignmentOperatorColumn} > ${threshold}, comparison + ternary in parenthesized, in additive_expression`);
+            const lineNumber = node.startPosition.row + 1; // Tree-sitter uses 0-based row numbers
+            console.log(`[needsTwoPhaseFormatting] DETECTED at line ${lineNumber} (position ${node.startIndex}): operator column ${assignmentOperatorColumn} > ${threshold}, expression on single line (${parenthesizedExpressionStartLine}), comparison + ternary in parenthesized, in additive_expression`);
         }
         
         return needsTwoPhase;
