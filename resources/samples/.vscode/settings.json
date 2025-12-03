@@ -9,6 +9,4 @@
     "AblFormatter.ifFormatting": false,
     "AblFormatter.temptableFormatting": false,
     "AblFormatter.propertyFormatting": false,
-    "AblFormatter.expressionFormatting": true,
-    "AblFormatter.variableAssignmentFormatting": true
 }

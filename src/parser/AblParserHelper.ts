@@ -171,12 +171,14 @@ export class AblParserHelper implements IParserHelper {
         options?: any
     ): Promise<string> {
         await this.ensureWorkerReady();
+        // Always send all relevant settings if not already provided
         if (!options) {
             options = {};
         }
         if (!options.settings) {
             options.settings = ConfigurationManager.getInstance().getAll();
         }
+        // Retry logic if workerProcess is not available
         let attempt = 0;
         while (attempt < 2) {
             if (this.workerProcess) {
@@ -198,6 +200,7 @@ export class AblParserHelper implements IParserHelper {
                     }, 60000);
                 });
             } else {
+                // Wait a bit and retry ensureWorkerReady
                 await new Promise((res) => setTimeout(res, 50));
                 await this.ensureWorkerReady();
                 attempt++;
@@ -441,6 +444,7 @@ export class AblParserHelper implements IParserHelper {
                 }
             }
         } else if (message.type === "log") {
+            console.log(`[Worker]: ${message.message}`);
         }
     }
 
