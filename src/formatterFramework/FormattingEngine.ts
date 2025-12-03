@@ -65,7 +65,7 @@ export class FormattingEngine {
         const findComplexAssignments = (node: SyntaxNode, rootChildIndex: number) => {
             if (this.needsTwoPhaseFormatting(node, fullText)) {
                 assignmentsNeedingTwoPhase.add(rootChildIndex);
-                // console.log(`[FormattingEngine.formatText] *** DETECTED complex assignment at root child ${rootChildIndex}, node at ${node.startIndex}`);
+                console.log(`[FormattingEngine.formatText] *** DETECTED complex assignment at root child ${rootChildIndex}, node at ${node.startIndex}`);
             }
             
             // Recursively check all children
@@ -90,7 +90,7 @@ export class FormattingEngine {
         
         // STEP 2: If we found complex assignments, format ONLY those using two-phase
         if (assignmentsNeedingTwoPhase.size > 0) {
-            // console.log(`[FormattingEngine.formatText] STEP 2: Formatting ${assignmentsNeedingTwoPhase.size} root children containing complex assignments with two-phase logic`);
+            console.log(`[FormattingEngine.formatText] STEP 2: Formatting ${assignmentsNeedingTwoPhase.size} root children containing complex assignments with two-phase logic`);
             
             // Phase 1: Format leaf nodes only for complex assignments
             this.iterateTreeSelective(newTree, fullText, formatters, assignmentsNeedingTwoPhase, 'split-phase1');
@@ -1032,42 +1032,84 @@ export class FormattingEngine {
             return false;
         }
 
-        // NEW APPROACH: Use AST complexity instead of column position
-        // Look for assignments with deep nesting that normal formatting corrupts
-        let hasComplexExpression = false;
-        let hasParenthesizedExpression = false;
-        let nestedFunctionCount = 0;
+        // CRITICAL: Skip multi-field ASSIGN statements (they have multiple variable_assignment children)
+        // We only want to detect single-line assignments like: iInstance = (IF ... THEN ... ELSE 1) + 1
+        if (node.type === 'assign_statement') {
+            let variableAssignmentCount = 0;
+            for (let i = 0; i < node.childCount; i++) {
+                const child = node.child(i);
+                if (child && child.type === 'variable_assignment') {
+                    variableAssignmentCount++;
+                    if (variableAssignmentCount > 1) {
+                        // This is a multi-field ASSIGN block, skip it
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // SPECIFIC DETECTION: Three conditions must be met:
+        // 1. Assignment operator column position > 30
+        // 2. Comparison operator INSIDE parenthesized expression
+        // 3. The parenthesized expression is part of an additive_expression (e.g., "(...) + 1")
         
-        const checkComplexity = (n: SyntaxNode, depth: number = 0): void => {
-            if (n.type === 'parenthesized_expression') {
-                hasParenthesizedExpression = true;
+        let assignmentOperatorColumn = 0;
+        let hasComparisonInParenthesized = false;
+        let isInAdditiveExpression = false;
+        
+        // Find assignment operator column position
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child && child.type === 'assignment') {
+                for (let j = 0; j < child.childCount; j++) {
+                    const grandChild = child.child(j);
+                    if (grandChild && grandChild.type === 'assignment_operator') {
+                        assignmentOperatorColumn = grandChild.endPosition.column;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Check for the pattern: parenthesized_expression with comparison inside, within additive_expression
+        const checkPattern = (n: SyntaxNode, insideParenthesized: boolean = false): void => {
+            // If we're inside a parenthesized expression, check for comparison operators
+            if (insideParenthesized && (
+                n.type === 'comparison_expression' ||
+                n.type === 'relational_expression' ||
+                n.type === 'equality_expression'
+            )) {
+                hasComparisonInParenthesized = true;
             }
             
-            if (n.type === 'function_call') {
-                nestedFunctionCount++;
+            // Check if this is a parenthesized_expression that's a child of additive_expression
+            if (n.type === 'parenthesized_expression' && n.parent) {
+                if (n.parent.type === 'additive_expression') {
+                    isInAdditiveExpression = true;
+                }
             }
             
-            // Check for IF expression with multiple function calls
-            if (n.type === 'if_expression' && depth > 0) {
-                hasComplexExpression = true;
-            }
+            // Track when we enter/exit parenthesized expressions
+            const nowInParenthesized = insideParenthesized || n.type === 'parenthesized_expression';
             
             for (let i = 0; i < n.childCount; i++) {
                 const child = n.child(i);
                 if (child) {
-                    checkComplexity(child, depth + 1);
+                    checkPattern(child, nowInParenthesized);
                 }
             }
         };
         
-        checkComplexity(node);
+        checkPattern(node);
         
-        // Criteria: Assignment with parenthesized expression AND (complex IF or 3+ function calls)
-        const needsTwoPhase = hasParenthesizedExpression && (hasComplexExpression || nestedFunctionCount >= 3);
+        const threshold = 30;
+        const needsTwoPhase = assignmentOperatorColumn > threshold && 
+                             hasComparisonInParenthesized && 
+                             isInAdditiveExpression;
         
-        // if (needsTwoPhase) {
-        //     console.log(`[needsTwoPhaseFormatting] COMPLEX ASSIGNMENT at ${node.startIndex}: hasParenthesized=${hasParenthesizedExpression}, hasComplexIF=${hasComplexExpression}, functions=${nestedFunctionCount}`);
-        // }
+        if (needsTwoPhase) {
+            console.log(`[needsTwoPhaseFormatting] DETECTED at ${node.startIndex}: operator column ${assignmentOperatorColumn} > ${threshold}, comparison in parenthesized, in additive_expression`);
+        }
         
         return needsTwoPhase;
     }
