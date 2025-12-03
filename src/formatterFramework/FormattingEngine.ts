@@ -86,7 +86,6 @@ export class FormattingEngine {
         }
         
         let newTree = parseResult.tree;
-        let skipRootIndexes = new Set<number>();
         
         // STEP 2: If we found complex assignments, format ONLY those using two-phase
         if (assignmentsNeedingTwoPhase.size > 0) {
@@ -111,38 +110,12 @@ export class FormattingEngine {
                 fullText.text,
                 newTree
             ).tree;
-            
-            // STEP 3: RE-SCAN to get updated root indexes after formatting changed line numbers
-            // console.log(`[FormattingEngine.formatText] STEP 3: Re-scanning to find updated positions of complex assignments...`);
-            const updatedRootNode = newTree.rootNode;
-            
-            const findComplexAssignmentsUpdated = (node: SyntaxNode, rootChildIndex: number) => {
-                if (this.needsTwoPhaseFormatting(node, fullText)) {
-                    skipRootIndexes.add(rootChildIndex);
-                    // console.log(`[FormattingEngine.formatText] *** Will SKIP root child ${rootChildIndex} during normal formatting (assignment at ${node.startIndex})`);
-                }
-                
-                for (let i = 0; i < node.childCount; i++) {
-                    const child = node.child(i);
-                    if (child) {
-                        findComplexAssignmentsUpdated(child, rootChildIndex);
-                    }
-                }
-            };
-            
-            for (let rootChildIndex = 0; rootChildIndex < updatedRootNode.childCount; rootChildIndex++) {
-                const rootChild = updatedRootNode.child(rootChildIndex);
-                if (!rootChild) continue;
-                
-                findComplexAssignmentsUpdated(rootChild, rootChildIndex);
-            }
-        } else {
-            // console.log(`[FormattingEngine.formatText] STEP 2: No complex assignments detected`);
         }
         
-        // STEP 4: Do normal formatting for everything (excluding already-formatted complex assignments)
-        // console.log(`[FormattingEngine.formatText] STEP 4: Applying normal formatting (excluding ${skipRootIndexes.size} root children with complex assignments)`);
-        this.iterateTree(newTree, fullText, formatters, false, skipRootIndexes);
+        // STEP 3: Do normal formatting for everything (excluding already-formatted complex assignments)
+        // Reuse assignmentsNeedingTwoPhase as skipRootIndexes - no need to re-scan
+        console.log(`[FormattingEngine.formatText] STEP 3: Applying normal formatting (excluding ${assignmentsNeedingTwoPhase.size} root children with complex assignments)`);
+        this.iterateTree(newTree, fullText, formatters, false, assignmentsNeedingTwoPhase);
 
         // Re-parse for block formatting
         newTree = this.parserHelper.parse(
@@ -1050,11 +1023,12 @@ export class FormattingEngine {
 
         // SPECIFIC DETECTION: Three conditions must be met:
         // 1. Assignment operator column position > 30
-        // 2. Comparison operator INSIDE parenthesized expression
+        // 2. Comparison operator AND ternary_expression INSIDE parenthesized expression
         // 3. The parenthesized expression is part of an additive_expression (e.g., "(...) + 1")
         
         let assignmentOperatorColumn = 0;
         let hasComparisonInParenthesized = false;
+        let hasTernaryInParenthesized = false;
         let isInAdditiveExpression = false;
         
         // Find assignment operator column position
@@ -1071,15 +1045,18 @@ export class FormattingEngine {
             }
         }
         
-        // Check for the pattern: parenthesized_expression with comparison inside, within additive_expression
+        // Check for the pattern: parenthesized_expression with comparison AND ternary inside, within additive_expression
         const checkPattern = (n: SyntaxNode, insideParenthesized: boolean = false): void => {
-            // If we're inside a parenthesized expression, check for comparison operators
-            if (insideParenthesized && (
-                n.type === 'comparison_expression' ||
-                n.type === 'relational_expression' ||
-                n.type === 'equality_expression'
-            )) {
-                hasComparisonInParenthesized = true;
+            // If we're inside a parenthesized expression, check for comparison operators and ternary expressions
+            if (insideParenthesized) {
+                if (n.type === 'comparison_expression' ||
+                    n.type === 'relational_expression' ||
+                    n.type === 'equality_expression') {
+                    hasComparisonInParenthesized = true;
+                }
+                if (n.type === 'ternary_expression') {
+                    hasTernaryInParenthesized = true;
+                }
             }
             
             // Check if this is a parenthesized_expression that's a child of additive_expression
@@ -1105,10 +1082,11 @@ export class FormattingEngine {
         const threshold = 30;
         const needsTwoPhase = assignmentOperatorColumn > threshold && 
                              hasComparisonInParenthesized && 
+                             hasTernaryInParenthesized &&
                              isInAdditiveExpression;
         
         if (needsTwoPhase) {
-            console.log(`[needsTwoPhaseFormatting] DETECTED at ${node.startIndex}: operator column ${assignmentOperatorColumn} > ${threshold}, comparison in parenthesized, in additive_expression`);
+            console.log(`[needsTwoPhaseFormatting] DETECTED at ${node.startIndex}: operator column ${assignmentOperatorColumn} > ${threshold}, comparison + ternary in parenthesized, in additive_expression`);
         }
         
         return needsTwoPhase;

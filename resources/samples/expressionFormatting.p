@@ -1,4 +1,21 @@
-
+/* formatterSettingsOverride */
+/*{
+    "AblFormatter.temptableFormatting": true,
+    "AblFormatter.usingFormatting": true,
+    "AblFormatter.bodyFormatting": true,
+    "AblFormatter.propertyFormatting": true,
+    "AblFormatter.ifFunctionFormatting": true,
+    "AblFormatter.enumFormatting": true,
+    "AblFormatter.variableDefinitionFormatting": false,
+    "AblFormatter.procedureParameterFormatting": true,
+    "AblFormatter.showTreeInfoOnHover": false,
+    "AblFormatter.ifFormatting": true,
+    "AblFormatter.blockFormatting": true,
+    "AblFormatter.caseFormatting": true,
+    "AblFormatter.forFormatting": true,
+    "AblFormatter.findFormatting": true,
+    "AblFormatter.assignFormatting": true
+}*/
 /*********************************************************************
 * Copyright (C) 2000 by Progress Software Corporation. All rights    *
 * reserved. Prior versions of this work may contain portions         *
