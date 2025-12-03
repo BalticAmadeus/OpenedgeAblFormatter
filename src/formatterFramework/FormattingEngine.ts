@@ -32,7 +32,6 @@ export class FormattingEngine {
         eol: EOL,
         metemorphicEngineIsEnabled: boolean = false
     ): string {
-        // console.log(`[FormattingEngine.formatText] START - Input length: ${fulfullTextString.length}`);
         const fullText: FullText = {
             text: fulfullTextString,
             eolDelimiter: eol.eolDel,
@@ -48,7 +47,6 @@ export class FormattingEngine {
             this.configurationManager
         );
 
-        // console.log(`[FormattingEngine.formatText] Before iterateTree, text length: ${fullText.text.length}`);
         
         // CORRECT APPROACH:
         // 1. Detect special cases on UNFORMATTED code using AST complexity (not column position)
@@ -59,7 +57,6 @@ export class FormattingEngine {
         const assignmentsNeedingTwoPhase = new Set<number>();
         const rootNode = parseResult.tree.rootNode;
         
-        // console.log(`[FormattingEngine.formatText] STEP 1: Detecting complex assignments...`);
         
         // Helper to recursively find ALL assignments in the tree, not just root children
         const findComplexAssignments = (node: SyntaxNode, rootChildIndex: number) => {
@@ -127,7 +124,6 @@ export class FormattingEngine {
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
 
         this.debugManager.fileFormattedSuccessfully(this.numOfCodeEdits);
-        // console.log(`[FormattingEngine.formatText] COMPLETE - Final length: ${fullText.text.length}, edits: ${this.numOfCodeEdits}`);
 
         if (
             metemorphicEngineIsEnabled &&
@@ -254,7 +250,6 @@ export class FormattingEngine {
                 }
                 // If we're here, current.parent matches rootNode but current not found in children
                 // This shouldn't happen
-                // console.log(`[findRootParentIndex] WEIRD: ${node.type} - current.parent matches rootNode but current not in children`);
                 return -1;
             }
             
@@ -262,7 +257,6 @@ export class FormattingEngine {
         }
         
         if (iterations >= maxIterations) {
-            // console.log(`[findRootParentIndex] ERROR: ${node.type} exceeded max iterations!`);
         }
         
         return -1; // Not found (reached top without finding root as parent)
@@ -280,7 +274,6 @@ export class FormattingEngine {
         let lastVisitedNode: SyntaxNode | null = null;
 
         const rootNode = tree.rootNode;
-        // console.log(`[iterateTreeSelective] mode=${mode}, targeting ${targetAssignments.size} assignments: [${Array.from(targetAssignments).join(', ')}]`);
         
         let nodeCount = 0;
 
@@ -294,7 +287,6 @@ export class FormattingEngine {
                 nodeCount++;
                 
                 if (nodeCount <= 10) {
-                    // console.log(`[iterateTreeSelective] Processing node #${nodeCount}: ${node.type}`);
                 }
 
                 if (node === lastVisitedNode) {
@@ -310,7 +302,6 @@ export class FormattingEngine {
                 const belongsToTarget = targetAssignments.has(rootIndex);
                 
                 if (nodeCount <= 20) {
-                    // console.log(`[iterateTreeSelective] Node #${nodeCount} ${node.type}: rootIndex=${rootIndex}, belongsToTarget=${belongsToTarget}, skipFormatting=${this.skipFormatting}`);
                 }
 
                 if (node.type === SyntaxNodeType.Annotation) {
@@ -331,7 +322,6 @@ export class FormattingEngine {
                         // Normal mode: format all nodes
                         const codeEdit = this.parse(node, fullText, formatters);
                         if (codeEdit !== undefined) {
-                            // console.log(`[iterateTreeSelective-normal] Formatting: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                             this.insertChangeIntoTree(tree, codeEdit);
                             this.insertChangeIntoFullText(codeEdit, fullText);
                             this.numOfCodeEdits++;
@@ -350,16 +340,13 @@ export class FormattingEngine {
                             const codeEdit = this.parse(node, fullText, formatters);
                             if (codeEdit !== undefined) {
                                 if (isTopLevelAssignment) {
-                                    // console.log(`[iterateTreeSelective-split] TOP-LEVEL ASSIGNMENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                                 } else {
-                                    // console.log(`[iterateTreeSelective-split] LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                                 }
                                 this.insertChangeIntoTree(tree, codeEdit);
                                 this.insertChangeIntoFullText(codeEdit, fullText);
                                 this.numOfCodeEdits++;
                             }
                         } else {
-                            // console.log(`[iterateTreeSelective-split] SKIPPING PARENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                         }
                     }
                 }
@@ -474,16 +461,13 @@ export class FormattingEngine {
 
                             if (codeEdit !== undefined) {
                                 if (isTopLevelAssignment) {
-                                    // console.log(`[iterateTree] PHASE 1 - TOP-LEVEL ASSIGNMENT: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                                 } else {
-                                    // console.log(`[iterateTree] PHASE 1 - LEAF NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                                 }
                                 this.insertChangeIntoTree(tree, codeEdit);
                                 this.insertChangeIntoFullText(codeEdit, fullText);
                                 this.numOfCodeEdits++;
                             }
                         } else {
-                            // console.log(`[iterateTree] PHASE 1 - SKIPPING PARENT NODE: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                         }
                     } else {
                         // NORMAL LOGIC: Format all nodes
@@ -527,7 +511,6 @@ export class FormattingEngine {
         let lastVisitedNode: SyntaxNode | null = null;
         let done = false;
 
-        // console.log(`[iterateTreeParentNodes] PHASE 2 - Collecting edits...`);
         
         while (!done) {
             const currentNode = cursor.currentNode();
@@ -598,7 +581,6 @@ export class FormattingEngine {
                         const codeEdit = this.parse(node, fullText, formatters);
 
                         if (codeEdit !== undefined) {
-                            // console.log(`[iterateTreeParentNodes] COLLECTING edit for: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                             // DON'T apply yet - just collect!
                             collectedEdits.push({node, edit: codeEdit});
                         }
@@ -624,7 +606,6 @@ export class FormattingEngine {
         // Now apply all collected edits IN REVERSE ORDER
         // This is critical: edits must be applied from end to start of file
         // so that earlier positions remain valid as we apply later edits
-        // console.log(`[iterateTreeParentNodes] Collected ${collectedEdits.length} edits, deduplicating overlaps...`);
         
         // Deduplicate: remove edits that are contained within other edits
         // Keep only the outermost edit for any overlapping region
@@ -645,7 +626,6 @@ export class FormattingEngine {
                 // Check if current edit is fully contained within other edit
                 if (otherStart <= currentStart && otherEnd >= currentEnd && (otherStart < currentStart || otherEnd > currentEnd)) {
                     isContainedByAnother = true;
-                    // console.log(`[iterateTreeParentNodes] Skipping ${currentEdit.node.type} at ${currentStart}-${currentEnd} (contained by ${otherEdit.node.type} at ${otherStart}-${otherEnd})`);
                     break;
                 }
             }
@@ -655,7 +635,6 @@ export class FormattingEngine {
             }
         }
         
-        // console.log(`[iterateTreeParentNodes] After deduplication: ${deduplicatedEdits.length} edits remaining (removed ${collectedEdits.length - deduplicatedEdits.length} overlaps)`);
         
         // Sort by startIndex descending (end of file first)
         deduplicatedEdits.sort((a, b) => {
@@ -664,15 +643,12 @@ export class FormattingEngine {
             return bStart - aStart; // Descending order
         });
         
-        // console.log(`[iterateTreeParentNodes] Applying ${deduplicatedEdits.length} edits in reverse order...`);
         for (const {node, edit} of deduplicatedEdits) {
             const startPos = Array.isArray(edit) ? edit[0].edit.startIndex : edit.edit.startIndex;
-            // console.log(`[iterateTreeParentNodes] APPLYING edit for: ${node.type} at position ${startPos}`);
             this.insertChangeIntoTree(tree, edit);
             this.insertChangeIntoFullText(edit, fullText);
             this.numOfCodeEdits++;
         }
-                // console.log(`[iterateTreeParentNodes] PHASE 2 complete`);
     }
 
     private iterateTreeParentNodesSelective(
@@ -690,7 +666,6 @@ export class FormattingEngine {
         let lastVisitedNode: SyntaxNode | null = null;
         let done = false;
 
-        // console.log(`[iterateTreeParentNodesSelective] PHASE 2 - Collecting edits for target assignments...`);
         
         while (!done) {
             const currentNode = cursor.currentNode();
@@ -766,7 +741,6 @@ export class FormattingEngine {
                         const codeEdit = this.parse(node, fullText, formatters);
 
                         if (codeEdit !== undefined) {
-                            // console.log(`[iterateTreeParentNodesSelective] COLLECTING edit for: ${node.type} at ${node.startIndex}-${node.endIndex}`);
                             // DON'T apply yet - just collect!
                             collectedEdits.push({node, edit: codeEdit});
                         }
@@ -792,7 +766,6 @@ export class FormattingEngine {
         // Now apply all collected edits IN REVERSE ORDER
         // This is critical: edits must be applied from end to start of file
         // so that earlier positions remain valid as we apply later edits
-        // console.log(`[iterateTreeParentNodesSelective] Collected ${collectedEdits.length} edits, deduplicating overlaps...`);
         
         // Deduplicate: remove edits that are contained within other edits
         // Keep only the outermost edit for any overlapping region
@@ -813,7 +786,6 @@ export class FormattingEngine {
                 // Check if current edit is fully contained within other edit
                 if (otherStart <= currentStart && otherEnd >= currentEnd && (otherStart < currentStart || otherEnd > currentEnd)) {
                     isContainedByAnother = true;
-                    // console.log(`[iterateTreeParentNodesSelective] Skipping ${currentEdit.node.type} at ${currentStart}-${currentEnd} (contained by ${otherEdit.node.type} at ${otherStart}-${otherEnd})`);
                     break;
                 }
             }
@@ -823,7 +795,6 @@ export class FormattingEngine {
             }
         }
         
-        // console.log(`[iterateTreeParentNodesSelective] After deduplication: ${deduplicatedEdits.length} edits remaining (removed ${collectedEdits.length - deduplicatedEdits.length} overlaps)`);
         
         // Sort by startIndex descending (end of file first)
         deduplicatedEdits.sort((a, b) => {
@@ -832,15 +803,12 @@ export class FormattingEngine {
             return bStart - aStart; // Descending order
         });
         
-        // console.log(`[iterateTreeParentNodesSelective] Applying ${deduplicatedEdits.length} edits in reverse order...`);
         for (const {node, edit} of deduplicatedEdits) {
             const startPos = Array.isArray(edit) ? edit[0].edit.startIndex : edit.edit.startIndex;
-            // console.log(`[iterateTreeParentNodesSelective] APPLYING edit for: ${node.type} at position ${startPos}`);
             this.insertChangeIntoTree(tree, edit);
             this.insertChangeIntoFullText(edit, fullText);
             this.numOfCodeEdits++;
         }
-        // console.log(`[iterateTreeParentNodesSelective] PHASE 2 complete`);
     }
 
     /*
@@ -1244,16 +1212,12 @@ export class FormattingEngine {
         codeEdit: CodeEdit | CodeEdit[]
     ): void {
         if (Array.isArray(codeEdit)) {
-            // console.log(`[insertChangeIntoTree] Applying ${codeEdit.length} edits to tree`);
             codeEdit.forEach((oneCodeEdit, index) => {
-                // console.log(`[insertChangeIntoTree] Edit ${index + 1}: startIndex=${oneCodeEdit.edit.startIndex}, oldEndIndex=${oneCodeEdit.edit.oldEndIndex}, newEndIndex=${oneCodeEdit.edit.newEndIndex}`);
                 tree.edit(oneCodeEdit.edit);
             });
         } else {
-            // console.log(`[insertChangeIntoTree] Applying single edit: startIndex=${codeEdit.edit.startIndex}, oldEndIndex=${codeEdit.edit.oldEndIndex}, newEndIndex=${codeEdit.edit.newEndIndex}`);
             tree.edit(codeEdit.edit);
         }
-        // console.log(`[insertChangeIntoTree] Tree edit complete`);
     }
 
     private logTree(node: SyntaxNode): string[] {
@@ -1283,17 +1247,11 @@ export class FormattingEngine {
         } else {
             // Log edits that affect the problematic ASSIGN region (around 10850)
             // if (codeEdit.edit.startIndex < 11000 && codeEdit.edit.oldEndIndex > 10800) {
-            //     console.log(`[insertChangeIntoFullText] !!! EDIT NEAR PROBLEM AREA !!!`);
-            //     console.log(`[insertChangeIntoFullText] startIndex=${codeEdit.edit.startIndex}, oldEndIndex=${codeEdit.edit.oldEndIndex}`);
-            //     console.log(`[insertChangeIntoFullText] OLD TEXT: "${fullText.text.substring(codeEdit.edit.startIndex, codeEdit.edit.oldEndIndex)}"`);
-            //     console.log(`[insertChangeIntoFullText] NEW TEXT: "${codeEdit.text}"`);
-            //     console.log(`[insertChangeIntoFullText] Text length BEFORE: ${fullText.text.length}`);
             // }
             const before = fullText.text.slice(0, codeEdit.edit.startIndex);
             const after = fullText.text.slice(codeEdit.edit.oldEndIndex);
             fullText.text = before + codeEdit.text + after;
             // if (codeEdit.edit.startIndex < 11000 && codeEdit.edit.oldEndIndex > 10800) {
-            //     console.log(`[insertChangeIntoFullText] Text length AFTER: ${fullText.text.length}`);
             // }
         }
     }
@@ -1309,19 +1267,12 @@ export class FormattingEngine {
             if (formatter.match(node)) {
                 // Log formatters that touch the problem area
                 // if (node.startIndex < 11000 && node.endIndex > 10800) {
-                //     console.log(`[FormattingEngine.parse] !!! FORMATTER IN PROBLEM AREA !!!`);
-                //     console.log(`[FormattingEngine.parse] Formatter: ${(formatter.constructor as any).formatterLabel || formatter.constructor.name}`);
-                //     console.log(`[FormattingEngine.parse] Node type: ${node.type}`);
-                //     console.log(`[FormattingEngine.parse] Node position: start=${node.startIndex}, end=${node.endIndex}`);
-                //     console.log(`[FormattingEngine.parse] Node text: "${node.text.substring(0, 100)}${node.text.length > 100 ? '...' : ''}"`);
                 // }
                 
                 result = formatter.parse(node, fullText);
                 
                 // if (result && node.startIndex < 11000 && node.endIndex > 10800) {
                 //     const editInfo = Array.isArray(result) ? result[0] : result;
-                //     console.log(`[FormattingEngine.parse] Generated edit: startIndex=${editInfo.edit.startIndex}, oldEndIndex=${editInfo.edit.oldEndIndex}`);
-                //     console.log(`[FormattingEngine.parse] New text length: ${editInfo.text.length}, Old text length: ${editInfo.edit.oldEndIndex - editInfo.edit.startIndex}`);
                 // }
 
                 return true;

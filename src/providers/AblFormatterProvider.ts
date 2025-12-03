@@ -29,7 +29,6 @@ export class AblFormatterProvider
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
         // debugger; // Check if this is called
-        // console.log('[AblFormatterProvider] provideDocumentFormattingEdits called');
         Telemetry.increaseFormattingActions("Document");
         Telemetry.addLinesOfCodeFormatted(document.lineCount);
 
@@ -52,18 +51,15 @@ export class AblFormatterProvider
         debugManager: DebugManager
     ): Promise<vscode.TextEdit[]> {
         try {
-            // console.log('[AblFormatterProvider] performAsyncDocumentFormatting starting');
             const allSettings = configurationManager.getAll();
             allSettings.eol = new EOL(document.eol);
 
-            // console.log('[AblFormatterProvider] Calling parserHelper.format');
             const formattedText = await this.parserHelper.format(
                 new FileIdentifier(document.fileName, document.version),
                 document.getText(),
                 allSettings
             );
 
-            // console.log('[AblFormatterProvider] Formatting complete, formattedText length:', formattedText.length);
             // Return the TextEdit for the whole document
             return [
                 vscode.TextEdit.replace(

@@ -165,51 +165,8 @@ export class AblParserHelper implements IParserHelper {
         }
     }
 
-    public async format(
-        fileIdentifier: FileIdentifier,
-        text: string,
-        options?: any
-    ): Promise<string> {
-        // console.log(`[AblParserHelper.format] MAIN PROCESS - Input text length: ${text.length}`);
-        await this.ensureWorkerReady();
-        // Always send all relevant settings if not already provided
-        if (!options) {
-            options = {};
-        }
-        if (!options.settings) {
-            options.settings = ConfigurationManager.getInstance().getAll();
-        }
-        // Retry logic if workerProcess is not available
-        let attempt = 0;
-        while (attempt < 2) {
-            if (this.workerProcess) {
-                return new Promise<string>((resolve, reject) => {
-                    const id = ++this.messageId;
-                    this.pendingRequests.set(id, { resolve, reject });
-                    // console.log(`[AblParserHelper.format] MAIN PROCESS - Sending to worker, text length: ${text.length}`);
-                    this.workerProcess!.send({
-                        type: "format",
-                        id,
-                        fileId: fileIdentifier.name,
-                        text,
-                        options,
-                    });
-                    setTimeout(() => {
-                        if (this.pendingRequests.has(id)) {
-                            this.pendingRequests.delete(id);
-                            reject(new Error("Format request timeout"));
-                        }
-                    }, 60000);
-                });
-            } else {
-                // Wait a bit and retry ensureWorkerReady
-                await new Promise((res) => setTimeout(res, 50));
-                await this.ensureWorkerReady();
-                attempt++;
-            }
-        }
-        throw new Error("Worker process not available (after retry)");
-    }
+    public async format(file: FileIdentifier, text: string, settings: FormatterSettings): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
 
     public async compare(
         text1: string,
@@ -411,13 +368,11 @@ export class AblParserHelper implements IParserHelper {
                 }
             }
         } else if (message.type === "formatResult" && message.id) {
-            // console.log(`[AblParserHelper.handleWorkerMessage] MAIN PROCESS - Received formatResult, text length: ${message.formattedText?.length || 0}`);
             const pendingRequest = this.pendingRequests.get(message.id);
             if (pendingRequest) {
                 this.pendingRequests.delete(message.id);
                 if (message.success) {
                     const textLength = message.formattedText?.length ?? 0;
-                    // console.log(`[AblParserHelper.handleWorkerMessage] MAIN PROCESS - Resolving promise with result length: ${textLength}`);
                     if (message.formattedText === undefined || message.formattedText === null) {
                         console.error(`[AblParserHelper] Worker returned undefined/null formattedText for request ${message.id}`);
                         pendingRequest.reject(new Error("Worker returned undefined/null formattedText"));
@@ -448,7 +403,6 @@ export class AblParserHelper implements IParserHelper {
                 }
             }
         } else if (message.type === "log") {
-            // console.log(`[Worker]: ${message.message}`);
         }
     }
 

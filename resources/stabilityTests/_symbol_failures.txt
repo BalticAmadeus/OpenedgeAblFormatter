@@ -1,5 +1,5 @@
 adecomm_peditor.i
-adecomm__dswidfunc.p
+//adecomm__dswidfunc.p
 adecomm__pweditor.i
 adeshar__mchgi.i
 adeuib__ttyss.i
