@@ -171,14 +171,12 @@ export class AblParserHelper implements IParserHelper {
         options?: any
     ): Promise<string> {
         await this.ensureWorkerReady();
-        // Always send all relevant settings if not already provided
         if (!options) {
             options = {};
         }
         if (!options.settings) {
             options.settings = ConfigurationManager.getInstance().getAll();
         }
-        // Retry logic if workerProcess is not available
         let attempt = 0;
         while (attempt < 2) {
             if (this.workerProcess) {
@@ -200,7 +198,6 @@ export class AblParserHelper implements IParserHelper {
                     }, 60000);
                 });
             } else {
-                // Wait a bit and retry ensureWorkerReady
                 await new Promise((res) => setTimeout(res, 50));
                 await this.ensureWorkerReady();
                 attempt++;
@@ -335,10 +332,12 @@ export class AblParserHelper implements IParserHelper {
                 stdio: ["pipe", "pipe", "pipe", "ipc"],
             });
 
-            this.workerProcess.stdout?.on("data", (data) => {});
+            this.workerProcess.stdout?.on("data", (data) => {
+                console.log("[Worker stdout]:", data.toString().trim());
+            });
 
             this.workerProcess.stderr?.on("data", (data) => {
-                console.log("stderr", data);
+                console.log("[Worker stderr]:", data.toString().trim());
             });
 
             this.workerProcess.on("message", (message: any) => {
@@ -411,7 +410,13 @@ export class AblParserHelper implements IParserHelper {
             if (pendingRequest) {
                 this.pendingRequests.delete(message.id);
                 if (message.success) {
-                    pendingRequest.resolve(message.formattedText);
+                    const textLength = message.formattedText?.length ?? 0;
+                    if (message.formattedText === undefined || message.formattedText === null) {
+                        console.error(`[AblParserHelper] Worker returned undefined/null formattedText for request ${message.id}`);
+                        pendingRequest.reject(new Error("Worker returned undefined/null formattedText"));
+                    } else {
+                        pendingRequest.resolve(message.formattedText);
+                    }
                 } else {
                     // Ensure error is a string
                     const errorMsg =
@@ -436,7 +441,6 @@ export class AblParserHelper implements IParserHelper {
                 }
             }
         } else if (message.type === "log") {
-            console.log(`[Worker]: ${message.message}`);
         }
     }
 

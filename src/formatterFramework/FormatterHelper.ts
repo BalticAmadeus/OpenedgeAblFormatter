@@ -77,7 +77,13 @@ export class FormatterHelper {
         fullText: Readonly<FullText>
     ): string {
         if (node !== undefined && fullText !== undefined) {
-            return fullText.text.substring(node.startIndex, node.endIndex);
+            const text = fullText.text.substring(node.startIndex, node.endIndex);
+            // Debug log for all assignments to find the problematic one
+            // if (node.type === 'assignment' || node.type === 'variable_assignment' || node.type === 'assign_statement') {
+            //     if (text.includes('Instance.ID')) {
+            //     }
+            // }
+            return text;
         }
         return "";
     }

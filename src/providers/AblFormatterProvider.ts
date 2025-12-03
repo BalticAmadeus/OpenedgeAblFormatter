@@ -28,6 +28,7 @@ export class AblFormatterProvider
         document: vscode.TextDocument,
         options: vscode.FormattingOptions
     ): vscode.ProviderResult<vscode.TextEdit[]> {
+        // debugger; // Check if this is called
         Telemetry.increaseFormattingActions("Document");
         Telemetry.addLinesOfCodeFormatted(document.lineCount);
 
@@ -70,6 +71,7 @@ export class AblFormatterProvider
                 ),
             ];
         } catch (error) {
+            console.error('[AblFormatterProvider] Error during formatting:', error);
             vscode.window.showErrorMessage(
                 `ABL Formatter: Failed to format document - ${
                     error instanceof Error ? error.message : String(error)

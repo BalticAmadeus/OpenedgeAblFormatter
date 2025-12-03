@@ -1394,8 +1394,23 @@ adm2_support__wizntro.r
 adm2_support__wizqry.r
 adeuib__accsect.r
 prores_r-total.r
+<<<<<<< HEAD
+=======
+adecomm_dirsrch.r
+adecomm_fileinfo.r
+adecomm__wincolr.r
+adeshar_dirsrch.r
+adeweb__loadhtm.r
+>>>>>>> 420-issue-test-branch
 adeweb__preproc.r
 prores_a-read.r
 prores_l-verify.r
 prores_l-write.r
+<<<<<<< HEAD
+=======
+webutil_tagextr.r
+webutil__genoff.r
+webutil__offsrch.r
+workshop__loadhtm.r
+>>>>>>> 420-issue-test-branch
 workshop__preproc.r

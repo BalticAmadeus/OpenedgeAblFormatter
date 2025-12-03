@@ -130,12 +130,18 @@ class ParserWorker {
 
     private handleFormatRequest(message: any): void {
         try {
+            if (process.send) {
+                process.send({ type: "log", message: `[ParserWorker.handleFormatRequest] WORKER PROCESS - Received text length: ${message.text?.length || 0}` });
+            }
             if (!this.ablLanguage || !this.parser) {
                 throw new Error("Parser not initialized");
             }
 
             // Parse the text using the worker's parser
             const tree = this.parser.parse(message.text);
+            if (process.send) {
+                process.send({ type: "log", message: `[ParserWorker.handleFormatRequest] WORKER PROCESS - Parsed tree successfully` });
+            }
 
             // Accept settings from the main thread (message.options.settings)
             const settings = { ...(message.options?.settings || {}) };
@@ -165,12 +171,17 @@ class ParserWorker {
             formattingEngine["settingsOverride"](parseResult);
 
             // Now format with updated configManager (only correct settings enabled)
+            if (process.send) {
+                process.send({ type: "log", message: `[ParserWorker.handleFormatRequest] WORKER PROCESS - Calling formatText, input length: ${message.text?.length || 0}` });
+            }
             const formattedText = formattingEngine.formatText(
                 message.text,
                 message.options?.eol
             );
 
             if (process.send) {
+                process.send({ type: "log", message: `[ParserWorker.handleFormatRequest] WORKER PROCESS - formatText returned, result length: ${formattedText.length}` });
+                process.send({ type: "log", message: `[ParserWorker.handleFormatRequest] WORKER PROCESS - Sending result back to main process, length: ${formattedText.length}` });
                 process.send({
                     type: "formatResult",
                     id: message.id,
