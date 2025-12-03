@@ -165,8 +165,46 @@ export class AblParserHelper implements IParserHelper {
         }
     }
 
-    public async format(file: FileIdentifier, text: string, settings: FormatterSettings): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
+    public async format(
+        fileIdentifier: FileIdentifier,
+        text: string,
+        options?: any
+    ): Promise<string> {
+        await this.ensureWorkerReady();
+        if (!options) {
+            options = {};
+        }
+        if (!options.settings) {
+            options.settings = ConfigurationManager.getInstance().getAll();
+        }
+        let attempt = 0;
+        while (attempt < 2) {
+            if (this.workerProcess) {
+                return new Promise<string>((resolve, reject) => {
+                    const id = ++this.messageId;
+                    this.pendingRequests.set(id, { resolve, reject });
+                    this.workerProcess!.send({
+                        type: "format",
+                        id,
+                        fileId: fileIdentifier.name,
+                        text,
+                        options,
+                    });
+                    setTimeout(() => {
+                        if (this.pendingRequests.has(id)) {
+                            this.pendingRequests.delete(id);
+                            reject(new Error("Format request timeout"));
+                        }
+                    }, 60000);
+                });
+            } else {
+                await new Promise((res) => setTimeout(res, 50));
+                await this.ensureWorkerReady();
+                attempt++;
+            }
+        }
+        throw new Error("Worker process not available (after retry)");
+    }
 
     public async compare(
         text1: string,
