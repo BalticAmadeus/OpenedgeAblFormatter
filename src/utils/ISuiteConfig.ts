@@ -4,6 +4,9 @@ export interface ISuiteConfig<TResult extends { tree: any; text: string }> {
     testType: string;
     knownFailuresFile: string;
     resultFailuresFile: string;
+
+    disableFormatting?: boolean;
+
     processBeforeText: (
         text: string,
         parserHelper: AblParserHelper

@@ -41,7 +41,12 @@ export async function runGenericTest<
     );
 
     // Await the async format function
-    const afterText = await format(beforeText, name, parserHelper);
+    // Do nothing if formatting was specifically disabled
+    const afterText =
+        config.disableFormatting === undefined ||
+        config.disableFormatting === false
+            ? await format(beforeText, name, parserHelper)
+            : beforeText;
     const afterResult = await config.processAfterText(afterText, parserHelper);
 
     if (beforeResult === undefined || afterResult === undefined) {

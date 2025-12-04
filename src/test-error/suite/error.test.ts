@@ -12,8 +12,10 @@ import { ISuiteConfig } from "../../utils/ISuiteConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { SyntaxNode, Tree } from "web-tree-sitter";
 import { FileIdentifier } from "../../model/FileIdentifier";
+import * as assert from "node:assert";
 
 let parserHelper: AblParserHelper;
+let totalErrors: number = 0;
 
 suite("Error Stability Test Suite", () => {
     suiteSetup(async () => {
@@ -40,6 +42,7 @@ suite("Error Stability Test Suite", () => {
             parserHelper = null as any;
         }
         vscode.window.showInformationMessage("Error tests done!");
+        console.log("Number of Errors in total:", totalErrors);
     });
 
     for (const cases of stabilityTestCases) {
@@ -47,6 +50,10 @@ suite("Error Stability Test Suite", () => {
             await errorTest(cases, parserHelper);
         }).timeout(20000);
     }
+
+    test(`Erorr test: SUM`, async () => {
+        assert.equal(totalErrors, 69420);
+    }).timeout(20000);
 });
 
 async function errorTest(
@@ -55,7 +62,11 @@ async function errorTest(
 ): Promise<void> {
     enableFormatterDecorators();
 
-    const config: ISuiteConfig<{ tree: Tree | undefined; text: string }> = {
+    const configErrorsBeforeFormatting: ISuiteConfig<{
+        tree: Tree | undefined;
+        text: string;
+        errorCount: number;
+    }> = {
         testType: "error",
         knownFailuresFile: "_error_failures.txt",
         resultFailuresFile: "_error_failures.txt",
@@ -64,31 +75,31 @@ async function errorTest(
             parserHelper: AblParserHelper
         ) => {
             const tree = await generateAst(text, parserHelper);
-            return { tree, text };
+            if (tree === undefined) {
+                return { tree: undefined, text: text, errorCount: 0 };
+            } else {
+                return {
+                    tree: undefined,
+                    text: text,
+                    errorCount: countErrors(tree),
+                };
+            }
         },
         processAfterText: async (
             text: string,
             parserHelper: AblParserHelper
         ) => {
-            const tree = await generateAst(text, parserHelper);
-            return { tree, text };
+            return {
+                tree: undefined,
+                text: text,
+                errorCount: 0,
+            };
         },
         compareResults: async (before, after) =>
-            compareTrees(before.tree, after.tree),
+            before.errorCount !== after.errorCount,
     };
 
-    await runGenericTest(name, parserHelper, config);
-}
-
-function compareTrees(
-    beforeTree: Tree | undefined,
-    afterTree: Tree | undefined
-): boolean {
-    if (beforeTree === undefined || afterTree === undefined) {
-        return true;
-    }
-
-    return countErrors(beforeTree) !== countErrors(afterTree);
+    await runGenericTest(name, parserHelper, configErrorsBeforeFormatting);
 }
 
 function countErrors(tree: Tree): number {
@@ -96,6 +107,7 @@ function countErrors(tree: Tree): number {
 
     console.log("Count", count);
 
+    totalErrors += count;
     return count;
 }
 
@@ -103,7 +115,11 @@ function iterateAndCountErrors(syntaxNode: SyntaxNode): number {
     let count = 0;
 
     for (let i = 0; i < syntaxNode.childCount; i++) {
-        if (syntaxNode.children[i].type === "ERROR") {
+        if (
+            syntaxNode.children[i].type.toLowerCase() === "error" &&
+            syntaxNode.type.toLowerCase() !== "on_error_phrase" &&
+            syntaxNode.type.toLowerCase() !== "no-error"
+        ) {
             count++;
         }
         count += iterateAndCountErrors(syntaxNode.children[i]);
