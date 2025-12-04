@@ -22,9 +22,6 @@ auditing_src_adm2_logic.i
 adeuib__tview.w
 //0049 issues (reduced functionality) <--
 //0049 issues -->
-aderes_e-type.p
-aderes_l-type.p
-aderes_p-type.p
 //0049 issues <--
 //0050-pre issues -->
 unique.i
@@ -34,18 +31,6 @@ protools__prospy.w
 //0050 issues -->
 prodict_dump__dmpsec.p
 //0050 issues <--
-adecomm_psearch.i
-adecomp__fspec.p
-adedict_FLD__newfld.p
-adedict_FLD__savedom.p
-adedict_FLD__savefld.p
-adedict_IDX__newidx.p
-adedict_TBL__savetbl.p
-aderes_l-layout.p
-aderes_r-layout.p
-aderes_r-short.p
-adeuib__mlref.p
-prodict_pro__pro_fld.p
 //010 issues -->
 auditing__auditmainw.w
 OpenEdge_DataAdmin_DataSource_IndexDataSource.cls

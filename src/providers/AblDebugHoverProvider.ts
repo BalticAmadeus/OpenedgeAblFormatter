@@ -136,10 +136,10 @@ export class AblDebugHoverProvider implements HoverProvider {
             ":" +
             node.endIndex +
             " | " +
-            node.text
+            `\`${node.text
                 .replaceAll("\r\n", " ")
                 .replaceAll("\n", " ")
-                .substring(0, 200) +
+                .substring(0, 200)}\`` +
             " | " +
             " \n";
 
