@@ -1,9 +1,4 @@
-adecomm_peditor.i
-adecomm__dswidfunc.p
-adecomm__pweditor.i
 adeshar__mchgi.i
-adeuib__ttyss.i
-protools__scrcap.w
 adexml__xmlview.w
 //0046 issues -->
 adecomm__auddfilt.p
@@ -19,7 +14,6 @@ auditing_src_adm2_logic.i
 //0048pre issues -->
 //0048pre issues <--
 //0049 issues (reduced functionality) -->
-adeuib__tview.w
 //0049 issues (reduced functionality) <--
 //0049 issues -->
 aderes_e-type.p
@@ -53,4 +47,6 @@ prodict_gui__guiuchg.p
 prodict_misc_osappend.p
 prodict_sec__sec-perm.p
 //010 issues <--
+adm2_support_datad.w
+adm2_support_dataviewd.w
 adecomm__auddat.p
