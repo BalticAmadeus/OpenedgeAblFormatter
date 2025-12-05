@@ -111,7 +111,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
             }
         }
 
-        resultString += this.getFormattedEndDot(fullText.eolDelimiter);
+        resultString += this.getFormattedEndDot(fullText.eolDelimiter.concat(" ".repeat(this.startColumn)));
         return resultString;
     }
 
