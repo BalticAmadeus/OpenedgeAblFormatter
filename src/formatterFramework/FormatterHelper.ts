@@ -157,73 +157,95 @@ export class FormatterHelper {
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
+        let state = { currentlyInsideParentheses: false };
+        node.children.forEach((child) => {
+            resultString = resultString.concat(
+                this.getExpressionString(child, fullText, state)
+            );
+        });
 
+        // Clean up spacing for parenthesized expressions
         if (node.type === SyntaxNodeType.ParenthesizedExpression) {
-            node.children.forEach((child) => {
-                resultString = resultString.concat(
-                    this.getParenthesizedExpressionString(child, fullText)
-                );
-            });
-            return resultString;
+            resultString = resultString
+                .replace(/\(\s+/g, "(")
+                .replace(/\s+\)/g, ")");
+        }
+
+        if (node.type === SyntaxNodeType.Assignment) {
+            resultString = resultString.trimStart();
+        } else if (node.type === SyntaxNodeType.VariableAssignment) {
+            resultString = resultString.trimStart() + ".";
+        }
+        const parent = node.parent;
+        if (
+            parent !== null &&
+            (parent.type === SyntaxNodeType.ArrayAccess ||
+                parent.type === SyntaxNodeType.Argument ||
+                parent.type === SyntaxNodeType.Arguments ||
+                parent.type === SyntaxNodeType.AblStatement)
+        ) {
+            return resultString.trim();
         } else {
-            let currentlyInsideParentheses = new Boolean(false);
-            node.children.forEach((child) => {
-                resultString = resultString.concat(
-                    this.getExpressionString(
-                        child,
-                        fullText,
-                        currentlyInsideParentheses
-                    )
-                );
-            });
-            if (node.type === SyntaxNodeType.Assignment) {
-                // In this case, we need to trim the spaces at the start of the string as well
-                resultString = resultString.trimStart();
-            } else if (node.type === SyntaxNodeType.VariableAssignment) {
-                resultString = resultString.trimStart() + ".";
-            }
-            const parent = node.parent;
-            if (
-                parent !== null &&
-                (parent.type === SyntaxNodeType.ArrayAccess ||
-                    parent.type === SyntaxNodeType.Argument ||
-                    parent.type === SyntaxNodeType.Arguments ||
-                    parent.type === SyntaxNodeType.AblStatement)
-            ) {
-                return resultString.trim();
-            } else {
-                return resultString.trimEnd();
-            }
+            return resultString.trimEnd();
         }
     }
 
     private static getExpressionString(
         node: SyntaxNode,
         fullText: Readonly<FullText>,
-        currentlyInsideParentheses: Boolean
+        state: { currentlyInsideParentheses: boolean }
     ): string {
-        if (currentlyInsideParentheses === true) {
+        if (state.currentlyInsideParentheses === true) {
             return this.getParenthesizedExpressionString(node, fullText);
         }
         let newString = "";
 
         switch (node.type) {
             case SyntaxNodeType.ParenthesizedExpression:
+                // CRITICAL FIX: Check if children have corrupted positions
+                let hasCorruptedChildren = false;
                 node.children.forEach((child) => {
-                    newString = newString.concat(
-                        this.getParenthesizedExpressionString(child, fullText)
-                    );
+                    const childSpan = child.endIndex - child.startIndex;
+
+                    if (
+                        child.startIndex > child.endIndex ||
+                        child.startIndex < node.startIndex ||
+                        child.endIndex > node.endIndex
+                    ) {
+                        hasCorruptedChildren = true;
+                    }
+
+                    if (
+                        (child.type === SyntaxNodeType.LeftParenthesis ||
+                            child.type === SyntaxNodeType.RightParenthesis) &&
+                        childSpan > 5
+                    ) {
+                        hasCorruptedChildren = true;
+                    }
                 });
+
+                if (hasCorruptedChildren) {
+                    newString = this.getCurrentText(node, fullText);
+                } else {
+                    node.children.forEach((child) => {
+                        newString = newString.concat(
+                            this.getParenthesizedExpressionString(
+                                child,
+                                fullText
+                            )
+                        );
+                    });
+                }
                 break;
             case SyntaxNodeType.LeftParenthesis:
-                currentlyInsideParentheses = true;
+                state.currentlyInsideParentheses = true;
                 newString = this.getParenthesizedExpressionString(
                     node,
                     fullText
                 );
                 break;
             case SyntaxNodeType.RightParenthesis:
-                currentlyInsideParentheses = false;
+                state.currentlyInsideParentheses = false;
                 newString = this.getParenthesizedExpressionString(
                     node,
                     fullText
