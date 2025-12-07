@@ -277,7 +277,6 @@ adm2_support_viewerd.w
 adm2_timesdfv.w
 adm2_folder.w
 auditing__auditmainw.w
-auditing_include__xmlsec.i
 auditing_src_adm2_admmsgs.i
 auditing_ui__addmultevents.w
 auditing_ui__audeventmaintw.w
