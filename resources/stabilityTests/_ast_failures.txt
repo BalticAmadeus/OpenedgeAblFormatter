@@ -18,7 +18,6 @@ adecomm__getflen.p
 adecomm__isfld.i
 adecomm__istbl.i
 adecomm__oscpath.p
-adecomm__osfext.p
 adecomm__palette.w
 adecomm__pwattr.i
 adecomm__pwcmpfl.p
@@ -68,8 +67,6 @@ adedict_brwtrig.i
 adedict_edittrig.i
 adedict_FLD__fldgate.p
 adedict_FLD__newfld.p
-adedict_FLD__savedom.p
-adedict_FLD__savefld.p
 adedict_FLD_fdprop.i
 adedict_IDX__newidx.p
 adedict_menutrig.i
@@ -86,7 +83,7 @@ aderes_aderes.p
 aderes_b-write.p
 aderes_c-header.p
 aderes_e-ascii.p
-aderes_e-type.p
+aderes_e-table.p
 aderes_e-write.p
 aderes_f-format.p
 aderes_f-motion.p
@@ -96,11 +93,8 @@ aderes_j-field2.p
 aderes_j-link.p
 aderes_j-table2.p
 aderes_l-layout.p
-aderes_l-type.p
-aderes_p-type.p
+aderes_r-header.p
 aderes_r-label.p
-aderes_r-layout.p
-aderes_r-short.p
 aderes_r-write.p
 aderes_restrict.i
 aderes_s-exp.p
@@ -132,7 +126,6 @@ adeuib__fclasnewbasic.w
 adeuib__genpro2.i
 adeuib__inscal8.w
 adeuib__inscall.w
-adeuib__mlref.p
 adeuib__newfunc.w
 adeuib__newobj.w
 adeuib__newobject.w
@@ -223,13 +216,16 @@ adm2_support_vb2b.w
 adm2_support_vb2bdata.w
 adm2_support_viewerd.w
 adm2_timesdfv.w
+adm2_folder.w
 auditing__auditmainw.w
-auditing_include__xmlsec.i
 auditing_src_adm2_admmsgs.i
 auditing_ui__addmultevents.w
 auditing_ui__audeventmaintw.w
 auditing_ui__audfileselectw.w
 auditing_ui__audmultfields.w
+auditing_ui__exp-events.w
+auditing_ui__get-file.w
+auditing_adm2_aud_folder.w
 businesscomponents_OpenEdge_BusinessLogic_BusinessEntity.cls
 businesscomponents_OpenEdge_BusinessLogic_Filter_AblFilterParser.cls
 businesscomponents_OpenEdge_BusinessLogic_Filter_JfpFilterParser.cls
@@ -342,6 +338,7 @@ OpenEdge_DataAdmin_Binding_PartitionContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyDetailContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyFieldContext.cls
+
 OpenEdge_DataAdmin_Binding_RoleContext.cls
 OpenEdge_DataAdmin_Binding_SequenceContext.cls
 OpenEdge_DataAdmin_Binding_SequenceValueContext.cls
@@ -366,6 +363,7 @@ OpenEdge_DataAdmin_PartitionPolicy.cls
 OpenEdge_DataAdmin_PartitionPolicyDetailSet.cls
 OpenEdge_DataAdmin_PartitionPolicySet.cls
 OpenEdge_DataAdmin_ServerCommand_TableDataCommand.cls
+OpenEdge_DataAdmin_ServerCommand_ProCommand.cls
 OpenEdge_DataAdmin_TenantGroupSet.cls
 OpenEdge_DataAdmin_TenantSet.cls
 OpenEdge_DataAdmin_Util_dbCanMigrate.p
@@ -423,6 +421,8 @@ prodict_ora__ora_lkl.p
 prodict_ora__ora_typ.p
 prodict_ora__runload.i
 prodict_ora_ora_mak1.i
+prodict_ora_protoora.p
+prodict_ora__oraload.p
 prodict_pro__obj-attrib-util.cls
 prodict_pro__pro_fld.p
 prodict_sec__sec-perm.p
@@ -445,6 +445,8 @@ prodict_user__usrtrax.p
 prodict_user__usruchg.p
 prodict_user__usrwdth.p
 prodict_user__usrpfed.p
+prodict_user_user-d.i
+prodict_user_user-f.i
 prodict_user_usermenu.i
 prohelp__keybrd.p
 prores_a-field.p

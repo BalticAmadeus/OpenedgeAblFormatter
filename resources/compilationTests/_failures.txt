@@ -1,6 +1,7 @@
 ablunit_ABLUnitCore.r
 adecomm__getdbs.r
 adecomm__wincolr.r
+adecomm__resolvepath.r
 adedict__brwadj.r
 adedict__brwgray.r
 adedict__brwlist.r
@@ -100,7 +101,6 @@ aderes_s-join.r
 aderes_s-level.r
 aderes_s-zap.r
 aderes_u-logo.r
-aderes_vgtbli.r
 aderes_y-format.r
 aderes_y-output.r
 aderes_y-page.r
@@ -231,7 +231,6 @@ adeuib__usecust.r
 adeuib__vldwin.r
 adeuib__vprint.r
 adeuib__vseced.r
-adeuib__vwidgetid.r
 adeuib__wintitl.r
 adeuib__wrcont.r
 adeuib__writedf.r
@@ -783,7 +782,6 @@ OpenEdge_DataAdmin_UserPermissionSet.r
 OpenEdge_DataAdmin_UserSet.r
 OpenEdge_DataAdmin_UserTablePermission.r
 OpenEdge_DataAdmin_UserTablePermissionSet.r
-OpenEdge_DataAdmin_Util_CDCTrackingHelper.r
 OpenEdge_DataAdmin_Util_dbauthgateway_list.r
 OpenEdge_DataAdmin_Util_dbauthgateway_status.r
 OpenEdge_DataAdmin_Util_dbauthgateway_update.r
@@ -1272,14 +1270,12 @@ prores_s-info.r
 prores_s-where.r
 prores_u-option.r
 prores_u-pick.r
+prores_u-dump.r
 protools__asinfo.r
 protools__colorch.r
 protools__custmi2.r
 protools__custmiz.r
 protools__dblist.r
-protools__getidx.r
-protools__getTblFldIdx.r
-protools__ppmgr.r
 protools__ppuscl.r
 protools__procfg.r
 protools__propath.r
@@ -1315,6 +1311,7 @@ webtools_oscommnd.r
 webtools_pplist.r
 webtools_promsgs.r
 webtools_session.r
+webtools_search.r
 webtools_util__dirlist.r
 webtools_util__errmsgs.r
 webtools_util__fileact.r
@@ -1370,7 +1367,6 @@ rmc__wscompile.r
 workshop__jfind2.r
 adecomm_dirsrch.r
 adecomm_fileinfo.r
-adecomm_pcmpcls.r
 aderes__fbframe.r
 adeuib_ide__dialog_mldlg.r
 adeuib__mldlg.r
@@ -1378,7 +1374,6 @@ adm2_support__wizds.r
 adm2_support__wizmap.r
 adm2_support__wizntro.r
 adm2_support__wizqry.r
-adeuib__accsect.r
 prores_r-total.r
 adeweb__preproc.r
 prores_a-read.r
