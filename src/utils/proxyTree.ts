@@ -1,8 +1,14 @@
 import Parser from "web-tree-sitter";
 
-export function createTreeProxy(fileId: string, workerTreeData: any): Parser.Tree {
+export function createTreeProxy(
+    fileId: string,
+    workerTreeData: any
+): Parser.Tree {
     const nodeMap = new Map<any, Parser.SyntaxNode>();
-    const rootNode = createNodeProxyWithSiblings(workerTreeData.rootNode, nodeMap);
+    const rootNode = createNodeProxyWithSiblings(
+        workerTreeData.rootNode,
+        nodeMap
+    );
     const treeProxy: any = {
         rootNode: rootNode,
         getChangedRanges: (other: Parser.Tree) => [],
@@ -139,7 +145,9 @@ function setupSiblingRelationships(
     if (workerNode.previousSibling) {
         let previousSiblingProxy = nodeMap.get(workerNode.previousSibling);
         if (!previousSiblingProxy) {
-            previousSiblingProxy = createBasicSiblingProxy(workerNode.previousSibling);
+            previousSiblingProxy = createBasicSiblingProxy(
+                workerNode.previousSibling
+            );
         }
         nodeProxy.previousSibling = previousSiblingProxy;
     } else {
@@ -148,16 +156,22 @@ function setupSiblingRelationships(
     if (workerNode.nextNamedSibling) {
         let nextNamedSiblingProxy = nodeMap.get(workerNode.nextNamedSibling);
         if (!nextNamedSiblingProxy) {
-            nextNamedSiblingProxy = createBasicSiblingProxy(workerNode.nextNamedSibling);
+            nextNamedSiblingProxy = createBasicSiblingProxy(
+                workerNode.nextNamedSibling
+            );
         }
         nodeProxy.nextNamedSibling = nextNamedSiblingProxy;
     } else {
         nodeProxy.nextNamedSibling = null;
     }
     if (workerNode.previousNamedSibling) {
-        let previousNamedSiblingProxy = nodeMap.get(workerNode.previousNamedSibling);
+        let previousNamedSiblingProxy = nodeMap.get(
+            workerNode.previousNamedSibling
+        );
         if (!previousNamedSiblingProxy) {
-            previousNamedSiblingProxy = createBasicSiblingProxy(workerNode.previousNamedSibling);
+            previousNamedSiblingProxy = createBasicSiblingProxy(
+                workerNode.previousNamedSibling
+            );
         }
         nodeProxy.previousNamedSibling = previousNamedSiblingProxy;
     } else {
