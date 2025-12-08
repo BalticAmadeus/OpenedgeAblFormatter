@@ -53,4 +53,8 @@ prodict_gui__guiuchg.p
 prodict_misc_osappend.p
 prodict_sec__sec-perm.p
 //010 issues <--
+adm2_support_datad.w
+adm2_support_dataviewd.w
 adecomm__auddat.p
+auditing_include__xmlsec.i
+prodict_dump__lodsec.p
