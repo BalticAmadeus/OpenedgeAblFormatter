@@ -45,6 +45,26 @@ functionalTestDirs.forEach((dir) => {
     });
 });
 
+// Load default test settings from JSON file
+// These settings establish a consistent baseline for all tests.
+// Individual tests can override any of these settings by adding a comment block in their input.p file:
+//
+// /* formatterSettingsOverride */
+// /* {
+//     "AblFormatter.assignFormatting": false,
+//     "AblFormatter.expressionFormatting": false
+// } */
+//
+// The override comment will merge with (and take precedence over) these default settings.
+const defaultTestSettingsPath = path.join(
+    extensionDevelopmentPath,
+    functionalTestDir,
+    "settings.json"
+);
+const defaultTestSettings = JSON.parse(
+    fs.readFileSync(defaultTestSettingsPath, "utf-8")
+);
+
 const knownFailures = getFailedTestCases(
     join(extensionDevelopmentPath, "resources/functionalTests")
 );
@@ -164,8 +184,11 @@ suite("Extension Test Suite", () => {
 });
 
 async function functionalTest(name: string): Promise<void> {
-    ConfigurationManager.getInstance();
+    const configManager = ConfigurationManager.getInstance();
     enableFormatterDecorators();
+
+    // Apply default test settings - these will be used unless overridden by formatterSettingsOverride comment
+    configManager.setOverridingSettings(defaultTestSettings);
 
     const inputText = getInput(name);
 
@@ -296,6 +319,9 @@ function getFileEOL(fileText: string): string {
 async function treeSitterTest(name: string): Promise<void> {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
+
+    // Apply default test settings
+    ConfigurationManager.getInstance().setOverridingSettings(defaultTestSettings);
 
     const errorText = getError(name);
     const errors = await parseAndCheckForErrors(errorText, name);
