@@ -56,3 +56,5 @@ prodict_sec__sec-perm.p
 adm2_support_datad.w
 adm2_support_dataviewd.w
 adecomm__auddat.p
+auditing_include__xmlsec.i
+prodict_dump__lodsec.p

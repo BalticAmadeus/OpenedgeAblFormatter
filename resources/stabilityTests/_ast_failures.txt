@@ -136,7 +136,6 @@ aderes_r-layout.p
 aderes_r-short.p
 aderes_r-write.p
 aderes_restrict.i
-aderes_s-exp.p
 aderes_s-inc.p
 aderes_s-join.p
 aderes_s-zap.p
@@ -272,20 +271,17 @@ adm2_support__wizstyl.w
 adm2_support_b2bd.w
 adm2_support_datad.w
 adm2_support_dataviewd.w
-adm2_support_dynbrowserd.w
 adm2_support_filterd.w
 adm2_support_folderd.w
 adm2_support_lobfieldd.w
 adm2_support_selectd.w
 adm2_support_toggleframe.w
 adm2_support_toold.w
-adm2_support_u-paneld.w
 adm2_support_vb2b.w
 adm2_support_vb2bdata.w
 adm2_support_viewerd.w
 adm2_timesdfv.w
 auditing__auditmainw.w
-auditing_include__xmlsec.i
 auditing_src_adm2_admmsgs.i
 auditing_ui__addmultevents.w
 auditing_ui__audeventmaintw.w
@@ -343,7 +339,6 @@ darest_get_schemas.p
 daschema_cdc.i
 daschema_cdctablepolicy.i
 daschema_partition.i
-netlib_OpenEdge_Mobile_TelerikPushNotificationAdmin.cls
 netlib_OpenEdge_Mobile_TelerikPushNotificationMessageBuilder.cls
 netlib_OpenEdge_Net_FileTypeRegistry.cls
 netlib_OpenEdge_Net_FormEncoder.cls
@@ -427,7 +422,6 @@ OpenEdge_DataAdmin_DataAdminCollection.cls
 OpenEdge_DataAdmin_DataSource_AuthTagDataSource.cls
 OpenEdge_DataAdmin_DataSource_CdcTablePolicyDataSource.cls
 OpenEdge_DataAdmin_DataSource_DatabaseOptionDataSource.cls
-OpenEdge_DataAdmin_DataSource_FieldChildDataSource.cls
 OpenEdge_DataAdmin_DataSource_FieldDataSource.cls
 OpenEdge_DataAdmin_DataSource_GrantedRoleDataSource.cls
 OpenEdge_DataAdmin_DataSource_RoleDataSource.cls
@@ -471,7 +465,6 @@ prodict_gate__gat_cro.p
 prodict_gate__gat_row.p
 prodict_gate__gat_xlt.p
 prodict_gate__snd_sql.i
-prodict_gate_cmp_idx.i
 prodict_gate_cmp_nav.i
 prodict_gate_cmp_sum.i
 prodict_gate_gat_get.i
@@ -600,7 +593,6 @@ protools_widattrs.w
 seclib_OpenEdge_Security_PAMStatusEnum.cls
 seclib_OpenEdge_Security_Provider_ProviderConfig.cls
 seclib_OpenEdge_Security_Provider_UserTableAuthProvider.cls
-serveradmin_OpenEdge_ApplicationServer_Util_convert_spring_properties.p
 web_examples_aspexp.p
 web_objects_stateaware.p
 web_support_printval.p
@@ -675,3 +667,26 @@ webtools_oscommnd.w
 webtools_session.w
 workshop__seedit.w
 //010 issues <--
+adeuib__vseced.w
+adm_objects_p-navico.w
+adm_objects_p-navlbl.w
+adm_objects_p-updsav.w
+adm_objects_p-updtxn.w
+adm_samples_b-cuslkp.w
+adm_samples_p-savres.w
+adm_samples_q-itmcat.w
+adm_samples_q-ordcus.w
+adm_samples_v-cusadd.w
+adm_samples_v-cuscdt.w
+adm_samples_v-cuscom.w
+adm_samples_v-cusord.w
+adm_samples_v-itminf.w
+adm_samples_v-shpinf.w
+adm_samples_v-spin.w
+adm_template_browser.w
+adm_template_query.w
+adm_template_viewer.w
+adm_template_vieweraf.w
+adm_template_wbrowser.w
+adm_template_wquery.w
+prodict_user_usercon.i
