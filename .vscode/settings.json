@@ -9,6 +9,5 @@
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "editor.formatOnSave": true,
-    "AblFormatter.variableAssignmentFormatting": true
+    "editor.formatOnSave": true
 }
