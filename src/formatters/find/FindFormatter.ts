@@ -145,6 +145,8 @@ export class FindFormatter extends AFormatter implements IFormatter {
             }
         });
 
+        console.log("FindFormatter.getWhereClauseBlock resultString:", JSON.stringify(resultString));
+
         return resultString;
     }
 }
