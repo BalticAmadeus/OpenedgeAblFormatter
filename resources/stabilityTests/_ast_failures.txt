@@ -14,7 +14,7 @@ adecomm__chosobj.w
 adecomm__dbconnc.p
 adecomm__dblist.p
 adecomm__dlgrecm.p
-adecomm__dswidfunc.p
+//adecomm__dswidfunc.p
 adecomm__dtbldat.p
 adecomm__dynbuf.p
 adecomm__encpdat.p
@@ -123,7 +123,7 @@ aderes_fbfuncs.i
 aderes_i-opnsav.p
 aderes_i-save.p
 aderes_j-field1.p
-aderes_j-field2.p
+//aderes_j-field2.p
 aderes_j-link.p
 aderes_j-table2.p
 aderes_l-guess.p
