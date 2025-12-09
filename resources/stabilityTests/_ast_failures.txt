@@ -86,7 +86,6 @@ aderes_f-format.p
 aderes_f-motion.p
 aderes_f-write.p
 aderes_fbfuncs.i
-aderes_j-field2.p
 aderes_j-link.p
 aderes_j-table2.p
 aderes_l-layout.p

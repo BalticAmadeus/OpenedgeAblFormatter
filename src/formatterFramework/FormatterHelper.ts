@@ -172,32 +172,6 @@ export class FormatterHelper {
         }
 
         if (node.type === SyntaxNodeType.Assignment) {
-            resultString = resultString.trimStart();
-        } else if (node.type === SyntaxNodeType.VariableAssignment) {
-            resultString = resultString.trimStart() + ".";
-        }
-        const parent = node.parent;
-        if (
-            parent !== null &&
-            (parent.type === SyntaxNodeType.ArrayAccess ||
-                parent.type === SyntaxNodeType.Argument ||
-                parent.type === SyntaxNodeType.Arguments ||
-                parent.type === SyntaxNodeType.AblStatement)
-        ) {
-            return resultString.trim();
-        } else {
-            return resultString.trimEnd();
-            let currentlyInsideParentheses = new Boolean(false);
-            node.children.forEach((child) => {
-                resultString = resultString.concat(
-                    this.getExpressionString(
-                        child,
-                        fullText,
-                        currentlyInsideParentheses
-                    )
-                );
-            });
-            if (node.type === SyntaxNodeType.Assignment) {
                 // In this case, we need to trim the spaces at the start of the string as well
                 resultString = resultString.trimStart();
             } else if (node.type === SyntaxNodeType.VariableAssignment) {
@@ -221,7 +195,6 @@ export class FormatterHelper {
             } else {
                 return resultString.trimEnd();
             }
-        }
     }
 
     private static getExpressionString(
