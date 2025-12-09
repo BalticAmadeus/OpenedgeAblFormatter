@@ -190,6 +190,12 @@ export class FormatterHelper {
                     parent.type === SyntaxNodeType.Arguments ||
                     parent.type === SyntaxNodeType.AblStatement)
             ) {
+                // // Check if previous sibling is an identifier (like "where")
+                // // If so, preserve leading space to avoid joining words
+                const prevSibling = node.previousSibling;
+                if (prevSibling && prevSibling.type === SyntaxNodeType.Identifier) {
+                    return resultString.trimEnd();
+                }
                 return resultString.trim();
             } else {
                 return resultString.trimEnd();
