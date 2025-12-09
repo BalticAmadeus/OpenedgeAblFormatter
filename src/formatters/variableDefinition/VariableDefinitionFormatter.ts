@@ -169,17 +169,18 @@ export class VariableDefinitionFormatter
                     fullText
                 ).trimEnd();
                 break;
-            case SyntaxNodeType.TypeTuning:
+            case SyntaxNodeType.TypeTuning: {
                 const typeTuningText = this.collectTypeTuningString(
                     node,
                     fullText
                 );
-                newString =
-                    typeTuningText +
-                    " ".repeat(
-                        this.alignVariableTuning - typeTuningText.length
-                    );
+                const spaceCount = Math.max(
+                    1,
+                    this.alignVariableTuning - typeTuningText.length
+                );
+                newString = typeTuningText + " ".repeat(spaceCount);
                 break;
+            }
             case SyntaxNodeType.AccessTuning: {
                 const text = FormatterHelper.getCurrentText(
                     node,
@@ -215,14 +216,15 @@ export class VariableDefinitionFormatter
                 newString = " ".repeat(spacesCount) + text;
                 break;
             }
-            case SyntaxNodeType.Identifier:
+            case SyntaxNodeType.Identifier: {
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
                 ).trim();
-                newString =
-                    " " + text + " ".repeat(this.alignType - text.length);
+                const spaceCount = Math.max(1, this.alignType - text.length);
+                newString = " " + text + " ".repeat(spaceCount);
                 break;
+            }
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
