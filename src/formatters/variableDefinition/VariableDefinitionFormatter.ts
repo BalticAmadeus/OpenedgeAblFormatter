@@ -175,7 +175,7 @@ export class VariableDefinitionFormatter
                     fullText
                 );
                 const spaceCount = Math.max(
-                    1,
+                    0,
                     this.alignVariableTuning - typeTuningText.length
                 );
                 newString = typeTuningText + " ".repeat(spaceCount);
@@ -221,7 +221,7 @@ export class VariableDefinitionFormatter
                     node,
                     fullText
                 ).trim();
-                const spaceCount = Math.max(1, this.alignType - text.length);
+                const spaceCount = Math.max(0, this.alignType - text.length);
                 newString = " " + text + " ".repeat(spaceCount);
                 break;
             }
