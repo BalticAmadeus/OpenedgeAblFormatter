@@ -157,41 +157,46 @@ export class FormatterPreviewPanel {
     }
 
     private getDefaultSampleCode(): string {
-        return `/* Sample ABL Code for Formatting Preview */
+        return `
+/* Sample ABL Code for Formatting Preview */
 
-        DEFINE VARIABLE jsonTableRow AS INT NO-UNDO.
-        DEFINE VARIABLE jsonTableRow2 AS INT NO-UNDO.
+DEFINE VARIABLE iCount AS INTEGER NO-UNDO.
+DEFINE VARIABLE cName AS CHARACTER NO-UNDO.
 
-        ASSIGN
-            jsonTableRow = IF TRUE THEN 1 ELSE 2
-            jsonTableRow2222 = 2
-        .
 
-        IF TRUE THEN
-            ASSIGN jsonTableRow2222 = "1" + STRING(10000).
+IF mss_username <> ? AND
+    mss_username <> "" THEN MESSAGE "A".
 
-        IF TRUE THEN
-            ASSIGN
-                jsonTableRow2222 = "1" + STRING(10000)
-                jsonTableRow2222 = "1" + STRING(10000)
-            .
+ASSIGN
+    c = c + " " + mss_conparms
+    .
 
-        FOR EACH Customer NO-LOCK WHERE
-            Customer.CustNum > 100:
-            DISPLAY Customer.Name.
+FOR EACH Customer NO-LOCK WHERE
+    Customer.CustNum > 100 AND
+    Customer.Country = "USA":
+    DISPLAY Customer.Name Customer.City.
+END.
+
+FIND FIRST Customer NO-LOCK WHERE
+    Customer.CustNum = iCount NO-ERROR.
+
+DO WHILE TRUE:
+    DO WHILE TRUE:
+        DO WHILE TRUE:
+            MESSAGE "a".
         END.
+    END.
+END.
 
-        CASE expression:
-            WHEN "value1" THEN DO:
-                MESSAGE "Case 1".
-            END.
-            WHEN "value2" THEN DO:
-                MESSAGE "Case 2".
-            END.
-            OTHERWISE DO:
-                MESSAGE "Default".
-            END.
-        END CASE.`;
+CASE s:
+    WHEN "A" THEN
+        MESSAGE "Letter A".
+    WHEN "B" THEN
+        MESSAGE "Letter B".
+    OTHERWISE
+        MESSAGE "Letter not recognized".
+END CASE.
+`;
     }
 
     private getAllFormatterSettings(): Record<string, any> {
@@ -217,38 +222,43 @@ export class FormatterPreviewPanel {
         const settings: FormatterSetting[] = [];
 
         for (const [fullKey, config] of Object.entries(properties)) {
-            if (!fullKey.startsWith("AblFormatter.")) continue;
-            if (fullKey === "AblFormatter.showTreeInfoOnHover") continue;
+            if (!fullKey.startsWith("AblFormatter.")) {continue;}
+            if (fullKey === "AblFormatter.showTreeInfoOnHover") {continue;}
 
             const key = fullKey.replace("AblFormatter.", "");
             const configAny = config as any;
 
             // Categorize settings
             let category = "Other";
-            if (key.includes("assign")) category = "Assign";
-            else if (key.includes("if") && !key.includes("Function"))
+            if (key.includes("assign")) { category = "Assign"; }
+            else if (key.includes("if") && !key.includes("Function")) {
                 category = "If Statement";
-            else if (key.includes("ifFunction")) category = "If Function";
-            else if (key.includes("case")) category = "Case";
-            else if (key.includes("for")) category = "For";
-            else if (key.includes("find")) category = "Find";
-            else if (key.includes("block")) category = "Block";
-            else if (key.includes("temptable")) category = "Temp-Table";
-            else if (key.includes("using")) category = "Using";
-            else if (key.includes("body")) category = "Body";
-            else if (key.includes("property")) category = "Property";
-            else if (key.includes("enum")) category = "Enum";
-            else if (key.includes("variableDefinition"))
+            }
+            else if (key.includes("ifFunction")) { category = "If Function"; }
+            else if (key.includes("case")) { category = "Case"; }
+            else if (key.includes("for")) { category = "For"; }
+            else if (key.includes("find")) { category = "Find"; }
+            else if (key.includes("block")) { category = "Block"; }
+            else if (key.includes("temptable")) { category = "Temp-Table"; }
+            else if (key.includes("using")) { category = "Using"; }
+            else if (key.includes("body")) { category = "Body"; }
+            else if (key.includes("property")) { category = "Property"; }
+            else if (key.includes("enum")) { category = "Enum"; }
+            else if (key.includes("variableDefinition")) {
                 category = "Variable Definition";
-            else if (key.includes("procedureParameter"))
+            }
+            else if (key.includes("procedureParameter")) {
                 category = "Procedure Parameter";
-            else if (key.includes("functionParameter"))
+            }
+            else if (key.includes("functionParameter")) {
                 category = "Function Parameter";
-            else if (key.includes("arrayAccess")) category = "Array Access";
-            else if (key.includes("expression")) category = "Expression";
-            else if (key.includes("statement")) category = "Statement";
-            else if (key.includes("variableAssignment"))
+            }
+            else if (key.includes("arrayAccess")) { category = "Array Access"; }
+            else if (key.includes("expression")) { category = "Expression"; }
+            else if (key.includes("statement")) { category = "Statement"; }
+            else if (key.includes("variableAssignment")) {
                 category = "Variable Assignment";
+            }
 
             settings.push({
                 key: key,
@@ -651,12 +661,6 @@ export class FormatterPreviewPanel {
         <div class="preview-panel">
             <div class="preview-container">
                 <div class="code-section">
-                    <div class="code-header">Original Code</div>
-                    <div class="code-content" id="originalCode">${this.escapeHtml(
-                        this._currentSampleCode
-                    )}</div>
-                </div>
-                <div class="code-section">
                     <div class="code-header">Formatted Code</div>
                     <div class="code-content" id="formattedCode">Loading...</div>
                 </div>
@@ -749,21 +753,21 @@ export class FormatterPreviewPanel {
             
             switch (message.type) {
                 case 'previewUpdated':
-                    const originalContainer = document.getElementById('originalCode');
+                    console.log('[Webview] Received previewUpdated');
+                    
                     const formattedContainer = document.getElementById('formattedCode');
                     
-                    if (originalContainer && formattedContainer) {
-                        // Save scroll positions
-                        const formattedScrollTop = formattedContainer.scrollTop;
-                        const originalScrollTop = originalContainer.scrollTop;
+                    if (formattedContainer) {
+                        // Save scroll position
+                        const scrollTop = formattedContainer.scrollTop;
                         
-                        // Update content only (don't recreate elements)
-                        originalContainer.textContent = message.original;
+                        // Update content only
                         formattedContainer.textContent = message.formatted;
                         
-                        // Restore scroll positions
-                        formattedContainer.scrollTop = formattedScrollTop;
-                        originalContainer.scrollTop = originalScrollTop;
+                        // Restore scroll position
+                        formattedContainer.scrollTop = scrollTop;
+                        
+                        console.log('[Webview] Content updated, scroll preserved');
                     }
                     break;
                     

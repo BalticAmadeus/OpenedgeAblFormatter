@@ -51,12 +51,15 @@ export class AblFormatterProvider
     ): Promise<vscode.TextEdit[]> {
         try {
             const allSettings = configurationManager.getAll();
-            allSettings.eol = new EOL(document.eol);
-
+            
             const formattedText = await this.parserHelper.format(
                 new FileIdentifier(document.fileName, document.version),
                 document.getText(),
-                allSettings
+                {
+                    settings: allSettings,
+                    eol: new EOL(document.eol),
+                    tabSize: 4
+                }
             );
 
             // Return the TextEdit for the whole document
@@ -109,12 +112,15 @@ export class AblFormatterProvider
     ): Promise<vscode.TextEdit[]> {
         try {
             const allSettings = configurationManager.getAll();
-            allSettings.eol = new EOL(document.eol);
 
             const formattedText = await this.parserHelper.format(
                 new FileIdentifier(document.fileName, document.version),
                 document.getText(range),
-                allSettings
+                {
+                    settings: allSettings,
+                    eol: new EOL(document.eol),
+                    tabSize: 4
+                }
             );
 
             return [vscode.TextEdit.replace(range, formattedText)];
