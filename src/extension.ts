@@ -13,6 +13,7 @@ import { ReplaceEQ } from "./mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "./mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "./mtest/mrs/RemoveNoError";
 import { BaseEngineOutput } from "./mtest/EngineParams";
+import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
     undefined //no excessive logging
@@ -98,6 +99,28 @@ export async function activate(context: vscode.ExtensionContext) {
             });
         }
     );
+
+    const previewCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.openFormatterPreview",
+        () => {
+            FormatterPreviewPanel.createOrShow(
+                vscode.Uri.file(context.extensionPath),
+                parserHelper
+            );
+        }
+    );
+    context.subscriptions.push(previewCommand);
+
+    // Add status bar item for formatter preview
+    const previewStatusBarItem = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Right,
+        100
+    );
+    previewStatusBarItem.text = "$(settings-gear) ABL Format Preview";
+    previewStatusBarItem.command = "openedgeAblFormatter.openFormatterPreview";
+    previewStatusBarItem.tooltip = "Open ABL Formatter Settings Preview";
+    previewStatusBarItem.show();
+    context.subscriptions.push(previewStatusBarItem);
 
     context.subscriptions.push(excludeCodeCommand);
 

@@ -178,6 +178,16 @@ export class AblParserHelper implements IParserHelper {
         if (!options.settings) {
             options.settings = ConfigurationManager.getInstance().getAll();
         }
+
+        // SERIALIZE OPTIONS PROPERLY FOR IPC
+        const serializedOptions = {
+            settings: { ...options.settings }, // Shallow copy
+            eol: options.eol?.eolDel
+                ? { eolDel: options.eol.eolDel }
+                : options.eol, // Convert EOL to plain object
+            tabSize: options.tabSize,
+        };
+
         // Retry logic if workerProcess is not available
         let attempt = 0;
         while (attempt < 2) {
@@ -190,7 +200,7 @@ export class AblParserHelper implements IParserHelper {
                         id,
                         fileId: fileIdentifier.name,
                         text,
-                        options,
+                        options: serializedOptions,
                     });
                     setTimeout(() => {
                         if (this.pendingRequests.has(id)) {

@@ -29,6 +29,11 @@
         "command": "openedgeAblFormatter.reportBug",
         "title": "Report Bug",
         "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.openFormatterPreview",
+        "title": "Open Formatter Preview",
+        "category": "OpenEdge ABL Formatter"
       }
     ],
     "menus": {

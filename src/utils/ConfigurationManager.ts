@@ -85,31 +85,9 @@ export class ConfigurationManager implements IConfigurationManager {
             this.externalConfiguration =
                 workspace.getConfiguration("abl.completion");
         }
-        const allSettings: Record<string, any> = {};
-        // Collect all AblFormatter settings
-        if (this.configuration) {
-            for (const key of Object.keys(this.configuration)) {
-                allSettings[key] = this.configuration.get(key);
-            }
-        }
-        // Collect abl.completion.upperCase
-        if (this.externalConfiguration) {
-            allSettings["abl.completion.upperCase"] =
-                this.externalConfiguration.get("upperCase");
-        }
-        // Add tabSize if set
-        if (this.tabSize !== undefined) {
-            allSettings["tabSize"] = this.tabSize;
-        }
-        // Apply overrides if present
-        if (this.overridingSettings) {
-            for (const [key, value] of Object.entries(
-                this.overridingSettings
-            )) {
-                allSettings[key] = value;
-            }
-        }
-        return allSettings;
+
+        // Return the WorkspaceConfiguration directly - it will be serialized correctly
+        return this.configuration as any;
     }
 
     private getCassingConfig(): any {

@@ -11,9 +11,13 @@ export class WorkerConfigurationManager implements IConfigurationManager {
     private overridingSettings: any = {};
 
     public setAll(settings: Record<string, any>) {
-        this.settings = { ...this.settings, ...settings };
-        if (typeof settings.tabSize === "number") {
-            this.tabSize = settings.tabSize;
+        for (const [key, value] of Object.entries(settings)) {
+            // Normalize: always store without AblFormatter prefix
+            const normalizedKey = key.startsWith("AblFormatter.")
+                ? key.replace(/^AblFormatter\./, "")
+                : key;
+            this.settings[normalizedKey] = value;
+            this.overridingSettings[normalizedKey] = value;
         }
         if (settings["abl.completion.upperCase"] !== undefined) {
             this.casing = settings["abl.completion.upperCase"];

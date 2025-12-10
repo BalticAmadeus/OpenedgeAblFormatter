@@ -144,25 +144,29 @@ class ParserWorker {
             const configManager = new WorkerConfigurationManager();
             configManager.setAll(settings);
 
-            // Parse and apply settings override from comment block in the document
-            this.applySettingsOverrideFromComment(message.text, configManager);
+            // ONLY parse settings override from comment if this is NOT a preview
+            const isPreview = message.fileId === "preview.p";
+
+            if (!isPreview) {
+                this.applySettingsOverrideFromComment(
+                    message.text,
+                    configManager
+                );
+            }
 
             const parserHelper = new WorkerParserHelper(
                 this.parser,
                 this.ablLanguage
             );
 
-            // --- Apply settings override from comments before formatting ---
-            // This matches the main-thread logic
             const formattingEngine = new FormattingEngine(
                 parserHelper,
                 new FileIdentifier(message.fileId || "worker", 1),
                 configManager,
-                new DebugManagerMock()
+                new DebugManagerMock(),
+                undefined,
+                isPreview
             );
-            // ParseResult for settingsOverride
-            const parseResult = { tree, ranges: [] };
-            formattingEngine["settingsOverride"](parseResult);
 
             // Now format with updated configManager (only correct settings enabled)
             const formattedText = formattingEngine.formatText(

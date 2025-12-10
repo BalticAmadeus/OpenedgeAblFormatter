@@ -18,14 +18,18 @@ import { FormattingEngineMock } from "./FormattingEngineMock";
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
     private skipFormatting = false;
+    private skipSettingsOverride: boolean;
 
     constructor(
         private parserHelper: IParserHelper,
         private fileIdentifier: FileIdentifier,
         private configurationManager: IConfigurationManager,
         private debugManager: IDebugManager,
-        private metamorphicTestingEngine?: MetamorphicEngine<BaseEngineOutput>
-    ) {}
+        private metamorphicTestingEngine?: MetamorphicEngine<BaseEngineOutput>,
+        skipSettingsOverride: boolean = false
+    ) {
+        this.skipSettingsOverride = skipSettingsOverride;
+    }
 
     public formatText(
         fulfullTextString: string,
@@ -42,7 +46,10 @@ export class FormattingEngine {
             fullText.text
         );
 
-        this.settingsOverride(parseResult);
+        if (!this.skipSettingsOverride) {
+            this.settingsOverride(parseResult);
+        }
+
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
         );
