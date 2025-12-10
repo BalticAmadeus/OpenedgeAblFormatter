@@ -4,6 +4,10 @@ import { FullText } from "../model/FullText";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 
+type ParentState = {
+    currentlyInsideParentheses: boolean
+}
+
 export class FormatterHelper {
     public static getActualTextIndentation(
         input: string,
@@ -157,7 +161,7 @@ export class FormatterHelper {
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
-        let state = { currentlyInsideParentheses: false };
+        let state: ParentState = { currentlyInsideParentheses: false };
         node.children.forEach((child) => {
             resultString = resultString.concat(
                 this.getExpressionString(child, fullText, state)
@@ -200,7 +204,7 @@ export class FormatterHelper {
     private static getExpressionString(
         node: SyntaxNode,
         fullText: Readonly<FullText>,
-        state: { currentlyInsideParentheses: boolean }
+        state: ParentState
     ): string {
         if (state.currentlyInsideParentheses === true) {
             return this.getParenthesizedExpressionString(node, fullText);
@@ -208,27 +212,22 @@ export class FormatterHelper {
         let newString = "";
 
         switch (node.type) {
-            case SyntaxNodeType.ParenthesizedExpression:
+            case SyntaxNodeType.ParenthesizedExpression: {
                 // CRITICAL FIX: Check if children have corrupted positions
-                let hasCorruptedChildren = false;
-                node.children.forEach((child) => {
+                // Maximum expected span for a single parenthesis character
+                // Values exceeding this indicate corrupted parser data
+                const maxParenthesisSpan = 5;
+                
+                const hasCorruptedChildren = node.children.some((child) => {
                     const childSpan = child.endIndex - child.startIndex;
-
-                    if (
+                    return (
                         child.startIndex > child.endIndex ||
                         child.startIndex < node.startIndex ||
-                        child.endIndex > node.endIndex
-                    ) {
-                        hasCorruptedChildren = true;
-                    }
-
-                    if (
-                        (child.type === SyntaxNodeType.LeftParenthesis ||
+                        child.endIndex > node.endIndex ||
+                        ((child.type === SyntaxNodeType.LeftParenthesis ||
                             child.type === SyntaxNodeType.RightParenthesis) &&
-                        childSpan > 5
-                    ) {
-                        hasCorruptedChildren = true;
-                    }
+                            childSpan > maxParenthesisSpan)
+                    );
                 });
 
                 if (hasCorruptedChildren) {
@@ -244,6 +243,7 @@ export class FormatterHelper {
                     });
                 }
                 break;
+            }
             case SyntaxNodeType.LeftParenthesis:
                 state.currentlyInsideParentheses = true;
                 newString = this.getParenthesizedExpressionString(
