@@ -1,10 +1,7 @@
-// File: src/providers/FormatterPreviewPanel.ts
 import * as vscode from "vscode";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import * as path from "path";
-import * as fs from "fs";
-import { EOL } from "../model/EOL";
 
 interface FormatterSetting {
     key: string;
@@ -24,7 +21,6 @@ export class FormatterPreviewPanel {
     private readonly _parserHelper: IParserHelper;
     private _disposables: vscode.Disposable[] = [];
     private _currentSettings: Record<string, any> = {};
-    private _expandedCategory: string = "";
     private _expandedCategories: Set<string> = new Set();
 
 
@@ -36,8 +32,14 @@ export class FormatterPreviewPanel {
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
 
-        // If we already have a panel, show it
         if (FormatterPreviewPanel.currentPanel) {
+            FormatterPreviewPanel.currentPanel._currentSettings = FormatterPreviewPanel.currentPanel.getAllFormatterSettings();
+            FormatterPreviewPanel.currentPanel._update();
+            FormatterPreviewPanel.currentPanel.updatePreview();
+            FormatterPreviewPanel.currentPanel._panel.webview.postMessage({
+                type: "settingsReset",
+                settings: FormatterPreviewPanel.currentPanel._currentSettings,
+            });
             FormatterPreviewPanel.currentPanel._panel.reveal(column);
             return;
         }
@@ -70,7 +72,16 @@ export class FormatterPreviewPanel {
         this._panel = panel;
         this._extensionUri = extensionUri;
         this._parserHelper = parserHelper;
-
+        
+        this._panel.onDidChangeViewState(
+            (e) => {
+                if (this._panel.visible) {
+                    this.updatePreview(Array.from(this._expandedCategories));
+                }
+            },
+            null,
+            this._disposables
+        );
         // Get current settings
         this._currentSettings = this.getAllFormatterSettings();
 
@@ -165,7 +176,9 @@ END CASE.
 
     private getAllCategories(settingsMeta: FormatterSetting[]): string[] {
         const categories = new Set<string>();
-        for (const s of settingsMeta) categories.add(s.category);
+        for (const s of settingsMeta) {
+            categories.add(s.category);
+        }
         return Array.from(categories);
     }
 
@@ -261,7 +274,7 @@ END CASE.
         await this.updatePreview(category ? [category] : undefined);
     }
 
-        private async updatePreview(expandedCategories?: string[]) {
+    private async updatePreview(expandedCategories?: string[]) {
         try {
             const settingsMeta = this.getFormatterSettingsMetadata();
             const categoryMap = this.getCategorySampleMap();
@@ -269,6 +282,7 @@ END CASE.
 
             // Use provided expanded categories or current state
             const expanded = expandedCategories || Array.from(this._expandedCategories);
+
             if (expanded.length === 0) { expanded.push(categories[0]); } // Always show at least one
 
             // Join code samples for all expanded categories
@@ -314,23 +328,20 @@ END CASE.
 
     private async applySettings(settings: Record<string, any>) {
         const config = vscode.workspace.getConfiguration("AblFormatter");
-
         try {
             for (const [key, value] of Object.entries(settings)) {
-                await config.update(
-                    key,
-                    value,
-                    vscode.ConfigurationTarget.Global
-                );
+                await config.update(key, value, vscode.ConfigurationTarget.Global);
             }
-            vscode.window.showInformationMessage(
-                "Formatter settings applied successfully!"
-            );
+            this._currentSettings = this.getAllFormatterSettings();
+            this._panel.webview.postMessage({
+                type: "settingsReset",
+                settings: this._currentSettings,
+            });
+            vscode.window.showInformationMessage("Formatter settings applied successfully!");
+            await this.updatePreview();
         } catch (error) {
             vscode.window.showErrorMessage(
-                `Failed to apply settings: ${
-                    error instanceof Error ? error.message : "Unknown error"
-                }`
+                `Failed to apply settings: ${error instanceof Error ? error.message : "Unknown error"}`
             );
         }
     }
@@ -631,8 +642,52 @@ END CASE.
     </div>
     <script>
         const vscode = acquireVsCodeApi();
-        let currentSettings = ${JSON.stringify(this._currentSettings)};
-        let expandedCategories = ${JSON.stringify(expandedCategories)};
+
+        // Restore state if available, otherwise use injected values
+        let state = vscode.getState();
+        let currentSettings = state?.currentSettings ?? ${JSON.stringify(this._currentSettings)};
+        let expandedCategories = state?.expandedCategories ?? ${JSON.stringify(expandedCategories)};
+
+        function saveState() {
+            vscode.setState({
+                currentSettings,
+                expandedCategories
+            });
+        }
+        
+        // On any change:
+        function onSettingChange(key, value) {
+            currentSettings[key] = value;
+            saveState();
+            vscode.postMessage({ type: 'settingsChanged', settings: currentSettings, expandedCategories });
+        }
+        function onCategoryToggle(cat) {
+            // ...update expandedCategories...
+            saveState();
+            vscode.postMessage({ type: 'categoriesChanged', expandedCategories });
+        }
+
+        function restoreUI() {
+            // Set checkboxes/selects to currentSettings
+            for (const [key, value] of Object.entries(currentSettings)) {
+                const checkbox = document.querySelector(\`.setting-checkbox[data-key="\${key}"]\`);
+                if (checkbox) checkbox.checked = value;
+                const select = document.querySelector(\`.setting-enum[data-key="\${key}"]\`);
+                if (select) select.value = value;
+            }
+            // Set expanded/collapsed state for categories
+            document.querySelectorAll('.setting-category').forEach(section => {
+                const cat = section.dataset.category;
+                if (expandedCategories.includes(cat)) {
+                    section.classList.remove('collapsed');
+                    section.querySelector('.arrow').textContent = "▼";
+                } else {
+                    section.classList.add('collapsed');
+                    section.querySelector('.arrow').textContent = "▶";
+                }
+            });
+        }
+        restoreUI();
 
         document.querySelectorAll('.category-toggle').forEach(toggle => {
             toggle.addEventListener('click', (e) => {
@@ -649,6 +704,7 @@ END CASE.
                 // Update arrow
                 const arrow = toggle.querySelector('.arrow');
                 arrow.textContent = section.classList.contains('collapsed') ? "▶" : "▼";
+                saveState();
                 vscode.postMessage({
                     type: 'categoriesChanged',
                     expandedCategories: expandedCategories
@@ -676,10 +732,12 @@ END CASE.
                 let value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
                 if (key) {
                     currentSettings[key] = value;
+                    saveState();
                     triggerUpdate();
                 }
             });
         });
+        
         function triggerUpdate() {
             if (updateTimeout) clearTimeout(updateTimeout);
             updateTimeout = setTimeout(() => {
@@ -693,6 +751,12 @@ END CASE.
 
         window.addEventListener('message', event => {
             const message = event.data;
+            if (message.type === 'settingsReset') {
+                currentSettings = message.settings;
+                expandedCategories = message.expandedCategories ?? expandedCategories;
+                restoreUI();
+                saveState();
+            }
             switch (message.type) {
                 case 'previewUpdated':
                     if (expandedCategories.length === 0) {
@@ -708,20 +772,43 @@ END CASE.
                 case 'settingsReset':
                     currentSettings = message.settings;
 
+                    if (message.expandedCategories) {
+                        expandedCategories = message.expandedCategories;
+                    }
+                    
+                    document.querySelectorAll('.setting-category').forEach(section => {
+                        const cat = section.dataset.category;
+                        if (expandedCategories.includes(cat)) {
+                            section.classList.remove('collapsed');
+                            section.querySelector('.arrow').textContent = "▼";
+                        } else {
+                            section.classList.add('collapsed');
+                            section.querySelector('.arrow').textContent = "▶";
+                        }
+                    });
+
                     for (const [key, value] of Object.entries(message.settings)) {
                         const checkbox = document.querySelector(\`.setting-checkbox[data-key="\${key}"]\`);
                         if (checkbox) checkbox.checked = value;
                         const select = document.querySelector(\`.setting-enum[data-key="\${key}"]\`);
                         if (select) select.value = value;
                     }
+
+                    saveState();
+                    vscode.postMessage({
+                        type: 'categoriesChanged',
+                        expandedCategories: expandedCategories
+                    });
                     break;
             }
         });
 
+        // On initial load, notify extension of current expanded categories
         vscode.postMessage({
             type: 'categoriesChanged',
             expandedCategories: expandedCategories
         });
+        saveState();
     </script>
 </body>
 </html>`;
@@ -764,15 +851,6 @@ END CASE.
             html += `</div>`;
         }
         return html;
-    }
-
-    private escapeHtml(text: string): string {
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
     }
 
     public dispose() {
