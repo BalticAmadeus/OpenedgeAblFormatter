@@ -23,9 +23,10 @@ export class FormatterPreviewPanel {
     private readonly _extensionUri: vscode.Uri;
     private readonly _parserHelper: IParserHelper;
     private _disposables: vscode.Disposable[] = [];
-    private _currentSampleCode: string = "";
-    private _currentSampleName: string = "assign1.p";
     private _currentSettings: Record<string, any> = {};
+    private _expandedCategory: string = "";
+    private _expandedCategories: Set<string> = new Set();
+
 
     public static createOrShow(
         extensionUri: vscode.Uri,
@@ -70,18 +71,6 @@ export class FormatterPreviewPanel {
         this._extensionUri = extensionUri;
         this._parserHelper = parserHelper;
 
-        // Load initial sample
-        this.loadSample(this._currentSampleName);
-
-        // Ensure we have valid sample code
-        if (
-            !this._currentSampleCode ||
-            this._currentSampleCode.trim().length === 0
-        ) {
-            console.warn("No valid sample code, using default");
-            this._currentSampleCode = this.getDefaultSampleCode();
-        }
-
         // Get current settings
         this._currentSettings = this.getAllFormatterSettings();
 
@@ -95,12 +84,17 @@ export class FormatterPreviewPanel {
         this._panel.webview.onDidReceiveMessage(
             (message) => {
                 switch (message.type) {
-                    case "settingChanged":
-                        this.handleSettingChange(message.key, message.value);
+                    case "settingsChanged":
+                        this._currentSettings = message.settings;
+                        this._expandedCategories = new Set(message.expandedCategories);
+                        this.updatePreview(message.expandedCategories);
                         break;
-                    case "sampleChanged":
-                        this.loadSample(message.sample);
-                        this.updatePreview();
+                    case "categoriesChanged":
+                        this._expandedCategories = new Set(message.expandedCategories);
+                        this.updatePreview(message.expandedCategories);
+                        break;
+                    case "settingChanged":
+                        this.handleSettingChange(message.key, message.value, message.category);
                         break;
                     case "applySettings":
                         this.applySettings(message.settings);
@@ -115,71 +109,37 @@ export class FormatterPreviewPanel {
         );
     }
 
-    private loadSample(sampleName: string) {
-        try {
-            // First try the extension path
-            let samplePath = path.join(
-                this._extensionUri.fsPath,
-                "resources",
-                "samples",
-                sampleName
-            );
-
-            // If not found, check if we're in development mode
-            if (!fs.existsSync(samplePath)) {
-                // In packaged extension, samples might not be included
-                // Use a default sample code instead
-                this._currentSampleCode = this.getDefaultSampleCode();
-                this._currentSampleName = "default";
-                return;
-            }
-
-            let content = fs.readFileSync(samplePath, "utf8");
-            if (!content || content.trim().length === 0) {
-                throw new Error("Sample file is empty");
-            }
-
-            // *** ADD THIS: Strip formatterSettingsOverride comment ***
-            content = content
-                .replace(
-                    /\/\*+\s*formatterSettingsOverride\s*\*\/[\s\r\n]*\/\*+[\s\S]*?\*\//i,
-                    ""
-                )
-                .trim();
-
-            this._currentSampleCode = content;
-            this._currentSampleName = sampleName;
-        } catch (error) {
-            console.error("Error loading sample:", error);
-            this._currentSampleCode = this.getDefaultSampleCode();
-            this._currentSampleName = "default";
-        }
-    }
-
-    private getDefaultSampleCode(): string {
-        return `
-/* Sample ABL Code for Formatting Preview */
-
-DEFINE VARIABLE iCount AS INTEGER NO-UNDO.
-DEFINE VARIABLE cName AS CHARACTER NO-UNDO.
-
-
+    private getCategorySampleMap(): Record<string, string> {
+    return {
+        "Assign": `
+/* ASSIGN Statement */
+DEFINE VARIABLE c AS CHARACTER NO-UNDO.
+ASSIGN
+    c = c + " " + "test"
+    .
+`,
+        "If Statement": `
+/* IF Statement */
+DEFINE VARIABLE mss_username AS CHARACTER NO-UNDO.
 IF mss_username <> ? AND
     mss_username <> "" THEN MESSAGE "A".
-
-ASSIGN
-    c = c + " " + mss_conparms
-    .
-
+`,
+        "For": `
+/* FOR EACH with WHERE */
 FOR EACH Customer NO-LOCK WHERE
     Customer.CustNum > 100 AND
     Customer.Country = "USA":
     DISPLAY Customer.Name Customer.City.
 END.
-
+`,
+        "Find": `
+/* FIND Statement */
+DEFINE VARIABLE iCount AS INTEGER NO-UNDO.
 FIND FIRST Customer NO-LOCK WHERE
     Customer.CustNum = iCount NO-ERROR.
-
+`,
+        "Block": `
+/* Nested DO Blocks */
 DO WHILE TRUE:
     DO WHILE TRUE:
         DO WHILE TRUE:
@@ -187,7 +147,10 @@ DO WHILE TRUE:
         END.
     END.
 END.
-
+`,
+        "Case": `
+/* CASE Statement */
+DEFINE VARIABLE s AS CHARACTER NO-UNDO.
 CASE s:
     WHEN "A" THEN
         MESSAGE "Letter A".
@@ -196,7 +159,14 @@ CASE s:
     OTHERWISE
         MESSAGE "Letter not recognized".
 END CASE.
-`;
+`
+    };
+}
+
+    private getAllCategories(settingsMeta: FormatterSetting[]): string[] {
+        const categories = new Set<string>();
+        for (const s of settingsMeta) categories.add(s.category);
+        return Array.from(categories);
     }
 
     private getAllFormatterSettings(): Record<string, any> {
@@ -286,44 +256,38 @@ END CASE.
             .trim();
     }
 
-    private async handleSettingChange(key: string, value: any) {
+    private async handleSettingChange(key: string, value: any, category?: string) {
         this._currentSettings[key] = value;
-        await this.updatePreview();
+        await this.updatePreview(category ? [category] : undefined);
     }
 
-    private async updatePreview() {
+        private async updatePreview(expandedCategories?: string[]) {
         try {
-            // Validate sample code first
-            if (
-                !this._currentSampleCode ||
-                typeof this._currentSampleCode !== "string"
-            ) {
-                throw new Error(
-                    `Invalid sample code: ${typeof this._currentSampleCode}`
-                );
-            }
+            const settingsMeta = this.getFormatterSettingsMetadata();
+            const categoryMap = this.getCategorySampleMap();
+            const categories = this.getAllCategories(settingsMeta);
 
-            if (this._currentSampleCode.length === 0) {
-                throw new Error("Sample code is empty");
-            }
+            // Use provided expanded categories or current state
+            const expanded = expandedCategories || Array.from(this._expandedCategories);
+            if (expanded.length === 0) { expanded.push(categories[0]); } // Always show at least one
 
-            // Create a temporary settings object with all required fields
+            // Join code samples for all expanded categories
+            const sampleCode = expanded.length
+                ? expanded.map(cat => categoryMap[cat] || "").join("\n\n").trim()
+                : "";
+
+            // Prepare settings as before
             const tempSettings: Record<string, any> = {};
-
-            // Convert setting keys back to full format
             for (const [key, value] of Object.entries(this._currentSettings)) {
                 tempSettings[`AblFormatter.${key}`] = value;
             }
-
-            // DON'T add prefix to these - they're not AblFormatter settings
             tempSettings.tabSize = 4;
             tempSettings.eol = { eolDel: "\r\n" };
-
             const { eol, tabSize, ...formatterSettings } = tempSettings;
 
             const formattedCode = await this._parserHelper.format(
                 new FileIdentifier("preview.p", 1),
-                this._currentSampleCode,
+                sampleCode,
                 {
                     settings: formatterSettings,
                     eol: eol,
@@ -331,35 +295,13 @@ END CASE.
                 }
             );
 
-            // Check if formattedCode is valid
-            if (typeof formattedCode !== "string") {
-                throw new Error(
-                    `Formatter returned invalid result type: ${typeof formattedCode}`
-                );
-            }
-
-            if (formattedCode.length === 0) {
-                console.warn("Formatter returned empty string");
-            }
-
             this._panel.webview.postMessage({
                 type: "previewUpdated",
-                original: this._currentSampleCode,
+                original: sampleCode,
                 formatted: formattedCode,
+                expandedCategories: expanded
             });
         } catch (error) {
-            console.error("=== Preview update error ===");
-            console.error("Error type:", error?.constructor?.name);
-            console.error(
-                "Error message:",
-                error instanceof Error ? error.message : String(error)
-            );
-            console.error(
-                "Error stack:",
-                error instanceof Error ? error.stack : "No stack trace"
-            );
-            console.error("================================");
-
             this._panel.webview.postMessage({
                 type: "previewError",
                 error:
@@ -418,42 +360,29 @@ END CASE.
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const settings = this.getFormatterSettingsMetadata();
-
-        // Get sample files - handle if directory doesn't exist
-        let sampleFiles: string[] = ["default"];
-        const samplesPath = path.join(
-            this._extensionUri.fsPath,
-            "resources",
-            "samples"
-        );
-
-        if (fs.existsSync(samplesPath)) {
-            try {
-                sampleFiles = fs
-                    .readdirSync(samplesPath)
-                    .filter(
-                        (f) =>
-                            f.endsWith(".p") ||
-                            f.endsWith(".cls") ||
-                            f.endsWith(".i")
-                    )
-                    .sort();
-            } catch (error) {
-                console.error("Error reading samples directory:", error);
-            }
+        const categories = this.getAllCategories(settings);
+        const categoryMap = this.getCategorySampleMap();
+        let expandedCategories = Array.from(this._expandedCategories);
+        if (expandedCategories.length === 0 && categories.length > 0) {
+            expandedCategories = [categories[0]];
         }
 
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ABL Formatter Preview</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
         }
 
         body {
@@ -499,14 +428,100 @@ END CASE.
             display: flex;
             flex: 1;
             overflow: hidden;
+            height: 100%;
+            width: 100%;
         }
 
         .settings-panel {
             width: 350px;
+            min-width: 350px;
+            max-width: 350px;
+            box-sizing: border-box;
             overflow-y: auto;
+            overflow-x: hidden;
             border-right: 1px solid var(--vscode-panel-border);
             padding: 15px;
             background-color: var(--vscode-sideBar-background);
+            height: 100%;
+            flex-shrink: 0;
+        }
+
+        .setting-category {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--vscode-panel-border);
+            padding-bottom: 10px;
+        }
+
+        .setting-category.collapsed .setting-items {
+            display: none;
+        }
+
+        .category-toggle {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            user-select: none;
+            gap: 8px;
+        }
+
+        .arrow {
+            font-size: 11px;
+            width: 22px;
+            display: inline-block;
+            text-align: center;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+
+        .setting-items {
+            margin-left: 20px;
+        }
+
+        .setting-item {
+            margin-bottom: 12px;
+            padding-left: 8px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .setting-item label {
+            width: 100%;
+            max-width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+
+        .setting-item input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .setting-enum,
+        .setting-item select {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            margin-left: 0;
+            margin-top: 4px;
+            background-color: var(--vscode-dropdown-background);
+            color: var(--vscode-dropdown-foreground);
+            border: 1px solid var(--vscode-dropdown-border);
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .setting-description {
+            margin-left: 24px;
+            font-size: 11px;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 2px;
         }
 
         .preview-panel {
@@ -514,6 +529,8 @@ END CASE.
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            height: 100%;
+            padding: 15px;
         }
 
         .preview-container {
@@ -533,12 +550,22 @@ END CASE.
             border-left: 1px solid var(--vscode-panel-border);
         }
 
+        .section-header {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--vscode-panel-border);
+            color: var(--vscode-foreground);
+            background: var(--vscode-editor-background);
+        }
+
         .code-header {
             padding: 8px 12px;
             background-color: var(--vscode-editor-background);
             border-bottom: 1px solid var(--vscode-panel-border);
             font-weight: bold;
-            font-size: 12px;
+            font-size: 14px;
             text-transform: uppercase;
             color: var(--vscode-descriptionForeground);
         }
@@ -551,54 +578,8 @@ END CASE.
             font-size: var(--vscode-editor-font-size);
             line-height: 1.5;
             white-space: pre;
-        }
-
-        .setting-category {
-            margin-bottom: 20px;
-        }
-
-        .category-title {
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 10px;
-            color: var(--vscode-foreground);
-            border-bottom: 1px solid var(--vscode-panel-border);
-            padding-bottom: 5px;
-        }
-
-        .setting-item {
-            margin-bottom: 12px;
-            padding-left: 8px;
-        }
-
-        .setting-item label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .setting-item input[type="checkbox"] {
-            cursor: pointer;
-        }
-
-        .setting-item select {
-            margin-left: 24px;
-            margin-top: 4px;
-            width: calc(100% - 24px);
-            background-color: var(--vscode-dropdown-background);
-            color: var(--vscode-dropdown-foreground);
-            border: 1px solid var(--vscode-dropdown-border);
-            padding: 4px 8px;
-            font-size: 12px;
-        }
-
-        .setting-description {
-            margin-left: 24px;
-            font-size: 11px;
-            color: var(--vscode-descriptionForeground);
-            margin-top: 2px;
+            background: var(--vscode-editor-background);
+            height: 100%;
         }
 
         .error-message {
@@ -608,7 +589,7 @@ END CASE.
             padding: 10px;
             margin: 10px;
         }
-        
+
         @keyframes flash {
             0%, 100% { background-color: var(--vscode-editor-background); }
             50% { background-color: var(--vscode-editor-selectionBackground); }
@@ -617,86 +598,70 @@ END CASE.
         .code-content.updating {
             animation: flash 0.3s ease-in-out;
         }
-            
-        .code-content {
-            flex: 1;
-            overflow: auto;
-            padding: 12px;
-            font-family: var(--vscode-editor-font-family);
-            font-size: var(--vscode-editor-font-size);
-            line-height: 1.5;
-            /* Remove: white-space: pre; */
-            word-wrap: break-word;
-        }
     </style>
 </head>
 <body>
     <div class="toolbar">
-        ${
-            sampleFiles.length > 1
-                ? `
-        <label>Sample:</label>
-        <select id="sampleSelect">
-            ${sampleFiles
-                .map(
-                    (file) =>
-                        `<option value="${file}" ${
-                            file === this._currentSampleName ? "selected" : ""
-                        }>${file}</option>`
-                )
-                .join("")}
-        </select>
-        `
-                : ""
-        }
         <button id="applyBtn">Apply Settings</button>
         <button id="resetBtn">Reset to Defaults</button>
     </div>
-
     <div class="main-container">
         <div class="settings-panel">
-            ${this.generateSettingsHtml(settings)}
+            <div class="section-header">Formatter Settings</div>
+            ${categories.map(category => `
+                <div class="setting-category${expandedCategories.includes(category) ? "" : " collapsed"}" data-category="${category}">
+                    <div class="category-toggle" data-category="${category}">
+                        <span class="arrow">${expandedCategories.includes(category) ? "▼" : "▶"}</span>
+                        <span>${category}</span>
+                    </div>
+                    <div class="setting-items">
+                        ${this.generateSettingsHtml(settings.filter(s => s.category === category))}
+                    </div>
+                </div>
+            `).join("")}
         </div>
-
         <div class="preview-panel">
+            <div class="section-header">Formatted Code</div>
             <div class="preview-container">
-                <div class="code-section">
-                    <div class="code-header">Formatted Code</div>
-                    <div class="code-content" id="formattedCode">Loading...</div>
+                <div class="code-content" id="formattedCode">
+                    ${expandedCategories.length ? "Loading..." : ""}
                 </div>
             </div>
         </div>
     </div>
-
-        <script>
+    <script>
         const vscode = acquireVsCodeApi();
         let currentSettings = ${JSON.stringify(this._currentSettings)};
-        let isUpdating = false;
+        let expandedCategories = ${JSON.stringify(expandedCategories)};
 
-        // Initialize
-        updatePreview();
-
-        // Sample selector
-        const sampleSelect = document.getElementById('sampleSelect');
-        if (sampleSelect) {
-            sampleSelect.addEventListener('change', (e) => {
-                document.getElementById('formattedCode').textContent = 'Loading...';
+        document.querySelectorAll('.category-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                const cat = toggle.dataset.category;
+                const section = document.querySelector('.setting-category[data-category="' + cat + '"]');
+                const idx = expandedCategories.indexOf(cat);
+                if (section.classList.contains('collapsed')) {
+                    section.classList.remove('collapsed');
+                    if (idx === -1) expandedCategories.push(cat);
+                } else {
+                    section.classList.add('collapsed');
+                    if (idx !== -1) expandedCategories.splice(idx, 1);
+                }
+                // Update arrow
+                const arrow = toggle.querySelector('.arrow');
+                arrow.textContent = section.classList.contains('collapsed') ? "▶" : "▼";
                 vscode.postMessage({
-                    type: 'sampleChanged',
-                    sample: e.target.value
+                    type: 'categoriesChanged',
+                    expandedCategories: expandedCategories
                 });
             });
-        }
+        });
 
-        // Apply button
         document.getElementById('applyBtn').addEventListener('click', () => {
             vscode.postMessage({
                 type: 'applySettings',
                 settings: currentSettings
             });
         });
-
-        // Reset button
         document.getElementById('resetBtn').addEventListener('click', () => {
             document.getElementById('formattedCode').textContent = 'Resetting...';
             vscode.postMessage({
@@ -704,182 +669,100 @@ END CASE.
             });
         });
 
-        // Setting changes - debounced
         let updateTimeout = null;
-        
-        function triggerUpdate(key, value) {
-            currentSettings[key] = value;
-            
-            // Clear any pending update
-            if (updateTimeout) {
-                clearTimeout(updateTimeout);
-            }
-            
-            // Debounce updates by 300ms
+        document.querySelectorAll('.setting-checkbox, .setting-enum').forEach(el => {
+            el.addEventListener('change', (e) => {
+                const key = e.target.dataset.key;
+                let value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+                if (key) {
+                    currentSettings[key] = value;
+                    triggerUpdate();
+                }
+            });
+        });
+        function triggerUpdate() {
+            if (updateTimeout) clearTimeout(updateTimeout);
             updateTimeout = setTimeout(() => {
                 vscode.postMessage({
-                    type: 'settingChanged',
-                    key: key,
-                    value: value
+                    type: 'settingsChanged',
+                    settings: currentSettings,
+                    expandedCategories: expandedCategories
                 });
-            }, 300);
+            }, 50);
         }
 
-        document.querySelectorAll('.setting-checkbox').forEach(cb => {
-            cb.addEventListener('change', (e) => {
-                const key = e.target.dataset.key;
-                const value = e.target.checked;
-                triggerUpdate(key, value);
-            });
-        });
-
-        document.querySelectorAll('.setting-enum').forEach(select => {
-            select.addEventListener('change', (e) => {
-                const key = e.target.dataset.key;
-                const value = e.target.value;
-                triggerUpdate(key, value);
-            });
-        });
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Handle messages from extension
         window.addEventListener('message', event => {
             const message = event.data;
-            
             switch (message.type) {
                 case 'previewUpdated':
-                    console.log('[Webview] Received previewUpdated');
-                    
-                    const formattedContainer = document.getElementById('formattedCode');
-                    
-                    if (formattedContainer) {
-                        // Save scroll position
-                        const scrollTop = formattedContainer.scrollTop;
-                        
-                        // Update content only
-                        formattedContainer.textContent = message.formatted;
-                        
-                        // Restore scroll position
-                        formattedContainer.scrollTop = scrollTop;
-                        
-                        console.log('[Webview] Content updated, scroll preserved');
+                    if (expandedCategories.length === 0) {
+                        document.getElementById('formattedCode').textContent = "";
+                    } else {
+                        document.getElementById('formattedCode').textContent = message.formatted;
                     }
                     break;
-                    
-                case 'sampleLoaded':
-                    document.getElementById('originalCode').textContent = message.original;
-                    document.getElementById('formattedCode').textContent = 'Formatting...';
-                    break;
-                    
                 case 'previewError':
-                    console.error('[Webview] Preview error:', message.error);
-                    isUpdating = false;
                     document.getElementById('formattedCode').innerHTML = 
                         '<div class="error-message">Error: ' + message.error + '</div>';
                     break;
-                    
                 case 'settingsReset':
                     currentSettings = message.settings;
-                    // Update UI checkboxes and selects
+
                     for (const [key, value] of Object.entries(message.settings)) {
                         const checkbox = document.querySelector(\`.setting-checkbox[data-key="\${key}"]\`);
-                        if (checkbox) {
-                            checkbox.checked = value;
-                        }
+                        if (checkbox) checkbox.checked = value;
                         const select = document.querySelector(\`.setting-enum[data-key="\${key}"]\`);
-                        if (select) {
-                            select.value = value;
-                        }
+                        if (select) select.value = value;
                     }
                     break;
-                    
-                default:
-                    console.warn('[Webview] Unknown message type:', message.type);
             }
         });
 
-        function updatePreview() {
-            // Trigger initial preview
-            if (Object.keys(currentSettings).length > 0) {
-                const firstKey = Object.keys(currentSettings)[0];
-                vscode.postMessage({
-                    type: 'settingChanged',
-                    key: firstKey,
-                    value: currentSettings[firstKey]
-                });
-            }
-        }
+        vscode.postMessage({
+            type: 'categoriesChanged',
+            expandedCategories: expandedCategories
+        });
     </script>
 </body>
 </html>`;
     }
 
     private generateSettingsHtml(settings: FormatterSetting[]): string {
-        const categories = new Map<string, FormatterSetting[]>();
-
-        // Group by category
-        for (const setting of settings) {
-            if (!categories.has(setting.category)) {
-                categories.set(setting.category, []);
-            }
-            categories.get(setting.category)!.push(setting);
-        }
-
         let html = "";
+        for (const setting of settings) {
+            html += `<div class="setting-item">`;
 
-        for (const [category, categorySettings] of categories) {
-            html += `<div class="setting-category">`;
-            html += `<div class="category-title">${category}</div>`;
+            if (setting.type === "boolean") {
+                const checked = this._currentSettings[setting.key] ? "checked" : "";
+                html += `
+                    <label>
+                        <input type="checkbox" class="setting-checkbox" 
+                            data-key="${setting.key}" ${checked}>
+                        <span>${setting.label}</span>
+                    </label>
+                `;
+            } else if (setting.type === "enum") {
+                html += `
+                    <label>${setting.label}</label>
+                    <select class="setting-enum" data-key="${setting.key}">
+                        ${setting.enum!.map(
+                            (opt) =>
+                                `<option value="${opt}" ${
+                                    this._currentSettings[setting.key] === opt
+                                        ? "selected"
+                                        : ""
+                                }>${opt}</option>`
+                        ).join("")}
+                    </select>
+                `;
+            }
 
-            for (const setting of categorySettings) {
-                html += `<div class="setting-item">`;
-
-                if (setting.type === "boolean") {
-                    const checked = this._currentSettings[setting.key]
-                        ? "checked"
-                        : "";
-                    html += `
-                        <label>
-                            <input type="checkbox" class="setting-checkbox" 
-                                data-key="${setting.key}" ${checked}>
-                            <span>${setting.label}</span>
-                        </label>
-                    `;
-                } else if (setting.type === "enum") {
-                    html += `
-                        <label>${setting.label}</label>
-                        <select class="setting-enum" data-key="${setting.key}">
-                            ${setting
-                                .enum!.map(
-                                    (opt) =>
-                                        `<option value="${opt}" ${
-                                            this._currentSettings[
-                                                setting.key
-                                            ] === opt
-                                                ? "selected"
-                                                : ""
-                                        }>${opt}</option>`
-                                )
-                                .join("")}
-                        </select>
-                    `;
-                }
-
-                if (setting.description) {
-                    html += `<div class="setting-description">${setting.description}</div>`;
-                }
-
-                html += `</div>`;
+            if (setting.description) {
+                html += `<div class="setting-description">${setting.description}</div>`;
             }
 
             html += `</div>`;
         }
-
         return html;
     }
 
