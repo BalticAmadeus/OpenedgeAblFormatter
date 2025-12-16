@@ -170,43 +170,14 @@ export class FormatterPreviewPanel {
         const settings: FormatterSetting[] = [];
 
         for (const [fullKey, config] of Object.entries(properties)) {
-            if (!fullKey.startsWith("AblFormatter.")) {continue;}
-            if (fullKey === "AblFormatter.showTreeInfoOnHover") {continue;}
+            if (!fullKey.startsWith("AblFormatter.")) { continue; }
+            if (fullKey === "AblFormatter.showTreeInfoOnHover") { continue; }
 
             const key = fullKey.replace("AblFormatter.", "");
             const configAny = config as any;
 
-            // Categorize settings
-            let category = "Other";
-            if (key.includes("assign")) { category = "Assign"; }
-            else if (key.includes("if") && !key.includes("Function")) {
-                category = "If Statement";
-            }
-            else if (key.includes("ifFunction")) { category = "If Function"; }
-            else if (key.includes("case")) { category = "Case"; }
-            else if (key.includes("for")) { category = "For"; }
-            else if (key.includes("find")) { category = "Find"; }
-            else if (key.includes("block")) { category = "Block"; }
-            else if (key.includes("temptable")) { category = "Temp-Table"; }
-            else if (key.includes("using")) { category = "Using"; }
-            else if (key.includes("body")) { category = "Body"; }
-            else if (key.includes("property")) { category = "Property"; }
-            else if (key.includes("enum")) { category = "Enum"; }
-            else if (key.includes("variableDefinition")) {
-                category = "Variable Definition";
-            }
-            else if (key.includes("procedureParameter")) {
-                category = "Procedure Parameter";
-            }
-            else if (key.includes("functionParameter")) {
-                category = "Function Parameter";
-            }
-            else if (key.includes("arrayAccess")) { category = "Array Access"; }
-            else if (key.includes("expression")) { category = "Expression"; }
-            else if (key.includes("statement")) { category = "Statement"; }
-            else if (key.includes("variableAssignment")) {
-                category = "Variable Assignment";
-            }
+            // Use category from config if present, otherwise fallback to old logic
+            let category: string = configAny.category;
 
             settings.push({
                 key: key,
@@ -214,7 +185,7 @@ export class FormatterPreviewPanel {
                 type: configAny.type === "boolean" ? "boolean" : "enum",
                 default: configAny.default,
                 enum: configAny.enum,
-                description: configAny.description || "",
+                description: configAny.description || configAny.markdownDescription || "",
                 order: configAny.order || 9999,
                 category: category,
             });

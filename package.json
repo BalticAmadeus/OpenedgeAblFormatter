@@ -102,6 +102,7 @@
           "order": 100,
           "type": "boolean",
           "default": "true",
+          "category": "Assign",
           "markdownDescription": "Enable/disable ASSIGN statement formatting."
         },
         "AblFormatter.assignFormattingAssignLocation": {
@@ -112,6 +113,7 @@
             "New",
             "Same"
           ],
+          "category": "Assign",
           "description": "Should assigns be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.assignFormattingAlignRightExpression": {
@@ -122,6 +124,7 @@
             "Yes",
             "No"
           ],
+          "category": "Assign",
           "description": "Should right expression be aligned by longest one?"
         },
         "AblFormatter.assignFormattingEndDotLocation": {
@@ -133,24 +136,28 @@
             "New aligned",
             "Same"
           ],
+          "category": "Assign",
           "description": "Should end dot be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.findFormatting": {
           "order": 300,
           "type": "boolean",
           "default": "true",
+          "category": "Find",
           "description": "Enable FIND formatting"
         },
         "AblFormatter.forFormatting": {
           "order": 400,
           "type": "boolean",
           "default": "true",
+          "category": "For",
           "description": "Enable FOR formatting"
         },
         "AblFormatter.caseFormatting": {
           "order": 500,
           "type": "boolean",
           "default": "true",
+          "category": "Case",
           "description": "Enable CASE formatting"
         },
         "AblFormatter.caseFormattingThenLocation": {
@@ -161,6 +168,7 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should THEN clause be on a new line or the same line as the CASE keyword?"
         },
         "AblFormatter.caseFormattingDoLocation": {
@@ -171,6 +179,7 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should DO block be on a new line or the same line as the THEN keyword?"
         },
         "AblFormatter.caseFormattingStatementLocation": {
@@ -181,18 +190,21 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should the first statement in a WHEN block be on a new line or the same line?"
         },
         "AblFormatter.blockFormatting": {
           "order": 600,
           "type": "boolean",
           "default": "true",
+          "category": "Block",
           "description": "Enable block formatting"
         },
         "AblFormatter.ifFormatting": {
           "order": 700,
           "type": "boolean",
           "default": "true",
+          "category": "If Statement",
           "description": "Enable IF formatting"
         },
         "AblFormatter.ifFormattingThenLocation": {
@@ -203,6 +215,7 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should THEN clause be on a new line or the same line as the IF keyword?"
         },
         "AblFormatter.ifFormattingDoLocation": {
@@ -213,6 +226,7 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should DO block be on a new line or the same line as the THEN keyword?"
         },
         "AblFormatter.ifFormattingStatementLocation": {
@@ -223,6 +237,7 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should the first statement in an IF block be on a new line or the same line?"
         },
         "AblFormatter.temptableFormatting": {
