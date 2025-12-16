@@ -14,6 +14,8 @@ import { ReplaceForEachToForLast } from "./mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "./mtest/mrs/RemoveNoError";
 import { BaseEngineOutput } from "./mtest/EngineParams";
 import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
+import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
+
 
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
     undefined //no excessive logging
@@ -105,10 +107,17 @@ export async function activate(context: vscode.ExtensionContext) {
         () => {
             FormatterPreviewPanel.createOrShow(
                 vscode.Uri.file(context.extensionPath),
-                parserHelper
+                parserHelper,
+                previewProvider
             );
         }
     );
+    
+    const previewProvider = new FormatterPreviewProvider();
+    context.subscriptions.push(
+        vscode.workspace.registerTextDocumentContentProvider("abl-preview", previewProvider)
+    );
+    
     context.subscriptions.push(previewCommand);
 
     // Add status bar item for formatter preview

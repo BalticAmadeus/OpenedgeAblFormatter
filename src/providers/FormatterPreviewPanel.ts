@@ -1,7 +1,9 @@
 import * as vscode from "vscode";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
+import { FormatterPreviewProvider } from "./FormatterPreviewProvider";
 import * as path from "path";
+import * as fs from "fs";
 
 interface FormatterSetting {
     key: string;
@@ -22,57 +24,18 @@ export class FormatterPreviewPanel {
     private _disposables: vscode.Disposable[] = [];
     private _currentSettings: Record<string, any> = {};
     private _expandedCategories: Set<string> = new Set();
-
-
-    public static createOrShow(
-        extensionUri: vscode.Uri,
-        parserHelper: IParserHelper
-    ) {
-        const column = vscode.window.activeTextEditor
-            ? vscode.window.activeTextEditor.viewColumn
-            : undefined;
-
-        if (FormatterPreviewPanel.currentPanel) {
-            FormatterPreviewPanel.currentPanel._currentSettings = FormatterPreviewPanel.currentPanel.getAllFormatterSettings();
-            FormatterPreviewPanel.currentPanel._update();
-            FormatterPreviewPanel.currentPanel.updatePreview();
-            FormatterPreviewPanel.currentPanel._panel.webview.postMessage({
-                type: "settingsReset",
-                settings: FormatterPreviewPanel.currentPanel._currentSettings,
-            });
-            FormatterPreviewPanel.currentPanel._panel.reveal(column);
-            return;
-        }
-
-        // Otherwise, create a new panel
-        const panel = vscode.window.createWebviewPanel(
-            "ablFormatterPreview",
-            "ABL Formatter Preview",
-            column || vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                localResourceRoots: [
-                    vscode.Uri.joinPath(extensionUri, "resources"),
-                ],
-            }
-        );
-
-        FormatterPreviewPanel.currentPanel = new FormatterPreviewPanel(
-            panel,
-            extensionUri,
-            parserHelper
-        );
-    }
-
+    private _previewProvider: FormatterPreviewProvider;
+    
     private constructor(
         panel: vscode.WebviewPanel,
         extensionUri: vscode.Uri,
-        parserHelper: IParserHelper
+        parserHelper: IParserHelper,
+        previewProvider: FormatterPreviewProvider
     ) {
         this._panel = panel;
         this._extensionUri = extensionUri;
         this._parserHelper = parserHelper;
-        
+        this._previewProvider = previewProvider;
         this._panel.onDidChangeViewState(
             (e) => {
                 if (this._panel.visible) {
@@ -82,6 +45,7 @@ export class FormatterPreviewPanel {
             null,
             this._disposables
         );
+        
         // Get current settings
         this._currentSettings = this.getAllFormatterSettings();
 
@@ -120,59 +84,60 @@ export class FormatterPreviewPanel {
         );
     }
 
-    private getCategorySampleMap(): Record<string, string> {
-    return {
-        "Assign": `
-/* ASSIGN Statement */
-DEFINE VARIABLE c AS CHARACTER NO-UNDO.
-ASSIGN
-    c = c + " " + "test"
-    .
-`,
-        "If Statement": `
-/* IF Statement */
-DEFINE VARIABLE mss_username AS CHARACTER NO-UNDO.
-IF mss_username <> ? AND
-    mss_username <> "" THEN MESSAGE "A".
-`,
-        "For": `
-/* FOR EACH with WHERE */
-FOR EACH Customer NO-LOCK WHERE
-    Customer.CustNum > 100 AND
-    Customer.Country = "USA":
-    DISPLAY Customer.Name Customer.City.
-END.
-`,
-        "Find": `
-/* FIND Statement */
-DEFINE VARIABLE iCount AS INTEGER NO-UNDO.
-FIND FIRST Customer NO-LOCK WHERE
-    Customer.CustNum = iCount NO-ERROR.
-`,
-        "Block": `
-/* Nested DO Blocks */
-DO WHILE TRUE:
-    DO WHILE TRUE:
-        DO WHILE TRUE:
-            MESSAGE "a".
-        END.
-    END.
-END.
-`,
-        "Case": `
-/* CASE Statement */
-DEFINE VARIABLE s AS CHARACTER NO-UNDO.
-CASE s:
-    WHEN "A" THEN
-        MESSAGE "Letter A".
-    WHEN "B" THEN
-        MESSAGE "Letter B".
-    OTHERWISE
-        MESSAGE "Letter not recognized".
-END CASE.
-`
-    };
-}
+    public static createOrShow(
+        extensionUri: vscode.Uri,
+        parserHelper: IParserHelper,
+        previewProvider: FormatterPreviewProvider
+    ) {
+        const column = vscode.window.activeTextEditor
+            ? vscode.window.activeTextEditor.viewColumn
+            : undefined;
+
+        if (FormatterPreviewPanel.currentPanel) {
+            FormatterPreviewPanel.currentPanel._currentSettings = FormatterPreviewPanel.currentPanel.getAllFormatterSettings();
+            FormatterPreviewPanel.currentPanel._update();
+            FormatterPreviewPanel.currentPanel.updatePreview();
+            FormatterPreviewPanel.currentPanel._panel.webview.postMessage({
+                type: "settingsReset",
+                settings: FormatterPreviewPanel.currentPanel._currentSettings,
+            });
+            FormatterPreviewPanel.currentPanel._panel.reveal(column);
+            return;
+        }
+
+        // Otherwise, create a new panel
+        const panel = vscode.window.createWebviewPanel(
+            "ablFormatterPreview",
+            "ABL Formatter Preview",
+            column || vscode.ViewColumn.One,
+            {
+                enableScripts: true,
+                localResourceRoots: [
+                    vscode.Uri.joinPath(extensionUri, "resources"),
+                ],
+            }
+        );
+
+        FormatterPreviewPanel.currentPanel = new FormatterPreviewPanel(
+            panel,
+            extensionUri,
+            parserHelper,
+            previewProvider
+        );
+        FormatterPreviewPanel.currentPanel.openPreviewEditor();
+    }
+    
+    private async openPreviewEditor() {
+        const uri = vscode.Uri.parse("abl-preview://preview");
+        await vscode.commands.executeCommand(
+            "vscode.open",
+            uri,
+            { viewColumn: vscode.ViewColumn.Beside, preview: true }
+        );
+        // Set language mode for the document
+        const doc = await vscode.workspace.openTextDocument(uri);
+        await vscode.languages.setTextDocumentLanguage(doc, "abl");
+    }
 
     private getAllCategories(settingsMeta: FormatterSetting[]): string[] {
         const categories = new Set<string>();
@@ -273,22 +238,39 @@ END CASE.
         this._currentSettings[key] = value;
         await this.updatePreview(category ? [category] : undefined);
     }
+    
+    private getExampleSnippetForCategory(category: string): string {
+        // Map category to file name (simple normalization)
+        const fileName = category
+            .toLowerCase()
+            .replace(/\s+/g, "-") // spaces to dashes
+            .replace(/[^a-z0-9\-]/g, "") // remove non-alphanum/dash
+            + ".p";
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        
+        if (!workspaceFolders || workspaceFolders.length === 0) { return ""; }
+        const examplePath = path.join(
+            workspaceFolders[0].uri.fsPath,
+            "resources",
+            "samples\\settingsPreview",
+            fileName
+        );
+        if (fs.existsSync(examplePath)) {
+            return fs.readFileSync(examplePath, "utf8");
+        }
+        return "";
+    }
 
     private async updatePreview(expandedCategories?: string[]) {
         try {
-            const settingsMeta = this.getFormatterSettingsMetadata();
-            const categoryMap = this.getCategorySampleMap();
-            const categories = this.getAllCategories(settingsMeta);
-
-            // Use provided expanded categories or current state
+            // Build preview code from open categories
             const expanded = expandedCategories || Array.from(this._expandedCategories);
-
-            if (expanded.length === 0) { expanded.push(categories[0]); } // Always show at least one
-
-            // Join code samples for all expanded categories
-            const sampleCode = expanded.length
-                ? expanded.map(cat => categoryMap[cat] || "").join("\n\n").trim()
-                : "";
+            let codeSnippets: string[] = [];
+            for (const category of expanded) {
+                const snippet = this.getExampleSnippetForCategory(category);
+                if (snippet) { codeSnippets.push(snippet); }
+            }
+            const previewCode = codeSnippets.join("\n\n") || "// No example code for selected sections.";
 
             // Prepare settings as before
             const tempSettings: Record<string, any> = {};
@@ -301,7 +283,7 @@ END CASE.
 
             const formattedCode = await this._parserHelper.format(
                 new FileIdentifier("preview.p", 1),
-                sampleCode,
+                previewCode,
                 {
                     settings: formatterSettings,
                     eol: eol,
@@ -309,9 +291,13 @@ END CASE.
                 }
             );
 
+            // Update the virtual document for the preview
+            this._previewProvider.setContent(formattedCode);
+
+            // (Optional) Still update the webview preview panel if you want
             this._panel.webview.postMessage({
                 type: "previewUpdated",
-                original: sampleCode,
+                original: previewCode,
                 formatted: formattedCode,
                 expandedCategories: expanded
             });
@@ -372,7 +358,6 @@ END CASE.
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const settings = this.getFormatterSettingsMetadata();
         const categories = this.getAllCategories(settings);
-        const categoryMap = this.getCategorySampleMap();
         let expandedCategories = Array.from(this._expandedCategories);
         if (expandedCategories.length === 0 && categories.length > 0) {
             expandedCategories = [categories[0]];
@@ -444,17 +429,16 @@ END CASE.
         }
 
         .settings-panel {
-            width: 350px;
-            min-width: 350px;
-            max-width: 350px;
+            width: 100%;
+            min-width: 0;
+            max-width: none;
             box-sizing: border-box;
             overflow-y: auto;
             overflow-x: hidden;
-            border-right: 1px solid var(--vscode-panel-border);
             padding: 15px;
             background-color: var(--vscode-sideBar-background);
             height: 100%;
-            flex-shrink: 0;
+            flex-shrink: 1;
         }
 
         .setting-category {
@@ -631,14 +615,6 @@ END CASE.
                 </div>
             `).join("")}
         </div>
-        <div class="preview-panel">
-            <div class="section-header">Formatted Code</div>
-            <div class="preview-container">
-                <div class="code-content" id="formattedCode">
-                    ${expandedCategories.length ? "Loading..." : ""}
-                </div>
-            </div>
-        </div>
     </div>
     <script>
         const vscode = acquireVsCodeApi();
@@ -719,7 +695,6 @@ END CASE.
             });
         });
         document.getElementById('resetBtn').addEventListener('click', () => {
-            document.getElementById('formattedCode').textContent = 'Resetting...';
             vscode.postMessage({
                 type: 'resetSettings'
             });
@@ -758,17 +733,6 @@ END CASE.
                 saveState();
             }
             switch (message.type) {
-                case 'previewUpdated':
-                    if (expandedCategories.length === 0) {
-                        document.getElementById('formattedCode').textContent = "";
-                    } else {
-                        document.getElementById('formattedCode').textContent = message.formatted;
-                    }
-                    break;
-                case 'previewError':
-                    document.getElementById('formattedCode').innerHTML = 
-                        '<div class="error-message">Error: ' + message.error + '</div>';
-                    break;
                 case 'settingsReset':
                     currentSettings = message.settings;
 
