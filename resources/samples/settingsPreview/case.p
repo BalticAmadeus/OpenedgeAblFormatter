@@ -1,10 +1,11 @@
 /* CASE Statement */
-DEFINE VARIABLE s AS CHARACTER NO-UNDO.
 CASE s:
-    WHEN "A" THEN
-        MESSAGE "Letter A".
+    WHEN "A" THEN DO:
+    MESSAGE "Letter A".
+    MESSAGE "Another line in WHEN A".
+    END.
     WHEN "B" THEN
-        MESSAGE "Letter B".
+    MESSAGE "Letter B".
     OTHERWISE
-        MESSAGE "Letter not recognized".
+    MESSAGE "Letter not recognized".
 END CASE.

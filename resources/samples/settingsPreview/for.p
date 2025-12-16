@@ -1,6 +1,5 @@
-/* FOR EACH with WHERE */
-FOR EACH Customer NO-LOCK WHERE
-    Customer.CustNum > 100 AND
-    Customer.Country = "USA":
-    DISPLAY Customer.Name Customer.City.
+/* FOR Statement */
+FOR FIRST Customer NO-LOCK
+    BY Customer.CreditLimit:
+            DISPLAY Customer.
 END.

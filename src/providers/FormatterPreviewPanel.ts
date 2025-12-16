@@ -223,7 +223,8 @@ export class FormatterPreviewPanel {
         const examplePath = path.join(
             workspaceFolders[0].uri.fsPath,
             "resources",
-            "samples\\settingsPreview",
+            "samples",
+            "settingsPreview",
             fileName
         );
         if (fs.existsSync(examplePath)) {

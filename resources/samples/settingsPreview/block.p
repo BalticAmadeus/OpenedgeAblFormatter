@@ -1,8 +1,5 @@
-/* Nested DO Blocks */
-DO WHILE TRUE:
-    DO WHILE TRUE:
-        DO WHILE TRUE:
-            MESSAGE "a".
-        END.
-    END.
-END.
+/* DO Blocks */
+DO TRANSACTION:
+DO TRANSACTION: 
+    a /= 3.
+END. END.

@@ -1,4 +1,7 @@
 /* IF Statement */
-DEFINE VARIABLE mss_username AS CHARACTER NO-UNDO.
-IF mss_username <> ? AND
-    mss_username <> "" THEN MESSAGE "A".
+IF customerStatus = "Active" THEN
+DO:
+    MESSAGE "Customer is active." VIEW-AS ALERT-BOX.
+    RETURN customerId.
+END.
+ELSE IF customerStatus = "Inactive" THEN RETURN -1.
