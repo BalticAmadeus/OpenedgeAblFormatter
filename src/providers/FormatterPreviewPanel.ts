@@ -25,6 +25,7 @@ export class FormatterPreviewPanel {
     private _currentSettings: Record<string, any> = {};
     private _expandedCategories: Set<string> = new Set();
     private _previewProvider: FormatterPreviewProvider;
+    private _ignoreNextVisibleEditorsEvent = false;
     
     private constructor(
         panel: vscode.WebviewPanel,
@@ -82,6 +83,16 @@ export class FormatterPreviewPanel {
             null,
             this._disposables
         );
+        
+        vscode.window.onDidChangeVisibleTextEditors((editors) => {
+            if (this._ignoreNextVisibleEditorsEvent) return;
+            setTimeout(() => {
+                const previewVisible = editors.some(editor => editor.document.uri.toString() === "abl-preview://preview");
+                if (!previewVisible && FormatterPreviewPanel.currentPanel) {
+                    FormatterPreviewPanel.currentPanel.dispose();
+                }
+            }, 300); // Slightly longer debounce
+        }, null, this._disposables);
     }
 
     public static createOrShow(
@@ -129,14 +140,18 @@ export class FormatterPreviewPanel {
     
     private async openPreviewEditor() {
         const uri = vscode.Uri.parse("abl-preview://preview");
+        this._ignoreNextVisibleEditorsEvent = true;
         await vscode.commands.executeCommand(
             "vscode.open",
             uri,
             { viewColumn: vscode.ViewColumn.Beside, preview: true }
         );
-        // Set language mode for the document
+
         const doc = await vscode.workspace.openTextDocument(uri);
         await vscode.languages.setTextDocumentLanguage(doc, "abl");
+        setTimeout(() => {
+            this._ignoreNextVisibleEditorsEvent = false;
+        }, 500);
     }
 
     private getAllCategories(settingsMeta: FormatterSetting[]): string[] {
@@ -791,8 +806,25 @@ export class FormatterPreviewPanel {
 
     public dispose() {
         FormatterPreviewPanel.currentPanel = undefined;
-
         this._panel.dispose();
+
+        setTimeout(() => {
+        const previewUri = vscode.Uri.parse("abl-preview://preview");
+        const previewEditors = vscode.window.visibleTextEditors
+            .filter(editor => editor.document.uri.toString() === previewUri.toString());
+
+        if (previewEditors.length > 0) {
+            previewEditors.forEach(editor => {
+                vscode.window.showTextDocument(editor.document, editor.viewColumn, false)
+                    .then(() => vscode.commands.executeCommand('workbench.action.closeActiveEditor'));
+            });
+
+            // Optionally, open a new Untitled file to prevent VS Code from re-opening the preview
+            if (previewEditors.length === vscode.window.visibleTextEditors.length) {
+                vscode.commands.executeCommand('workbench.action.files.newUntitledFile');
+            }
+        }
+    }, 200);
 
         while (this._disposables.length) {
             const disposable = this._disposables.pop();
