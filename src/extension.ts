@@ -120,17 +120,6 @@ export async function activate(context: vscode.ExtensionContext) {
     
     context.subscriptions.push(previewCommand);
 
-    // Add status bar item for formatter preview
-    const previewStatusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        100
-    );
-    previewStatusBarItem.text = "$(settings-gear) ABL Format Preview";
-    previewStatusBarItem.command = "openedgeAblFormatter.openFormatterPreview";
-    previewStatusBarItem.tooltip = "Open ABL Formatter Settings Preview";
-    previewStatusBarItem.show();
-    context.subscriptions.push(previewStatusBarItem);
-
     context.subscriptions.push(excludeCodeCommand);
 
     setInterval(runPeriodicTask, 20_000);
