@@ -100,9 +100,7 @@ export class FormatterPreviewPanel {
         parserHelper: IParserHelper,
         previewProvider: FormatterPreviewProvider
     ) {
-        const column = vscode.window.activeTextEditor
-            ? vscode.window.activeTextEditor.viewColumn
-            : undefined;
+        const column = vscode.ViewColumn.One;
 
         if (FormatterPreviewPanel.currentPanel) {
             FormatterPreviewPanel.currentPanel._currentSettings = FormatterPreviewPanel.currentPanel.getAllFormatterSettings();
