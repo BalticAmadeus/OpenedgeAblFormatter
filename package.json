@@ -95,7 +95,7 @@
           {
             "id": "OpenFormatterPreview",
             "title": "Try the Formatter Preview",
-            "description": "You can interactively preview and configure formatting settings.\n\n[Open Formatter Preview](command:openedgeAblFormatter.openFormatterPreview)",
+            "description": "You can interactively preview and configure formatting settings.\n\n[Open Settings Preview](command:openedgeAblFormatter.openFormatterPreview)",
             "media": {
               "image": "resources/walkthrough/SettingsPreview.png",
               "altText": "Interactive preview of formatter settings"
@@ -109,8 +109,8 @@
       "properties": {
         "openFormatterPreview": {
           "order": 0,
-          "type": "null",
-          "default": null,
+          "type": "boolean",
+          "default": true,
           "category": "General",
           "markdownDescription": "[Settings Preview](command:openedgeAblFormatter.openFormatterPreview)"
         },
