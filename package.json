@@ -109,8 +109,8 @@
       "properties": {
         "openFormatterPreview": {
           "order": 0,
-          "type": "boolean",
-          "default": true,
+          "type": "null",
+          "default": null,
           "category": "General",
           "markdownDescription": "[Settings Preview](command:openedgeAblFormatter.openFormatterPreview)"
         },
