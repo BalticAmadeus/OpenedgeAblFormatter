@@ -178,7 +178,8 @@ export class VariableDefinitionFormatter
                     0,
                     this.alignVariableTuning - typeTuningText.length
                 );
-                newString = typeTuningText + " ".repeat(spaceCount);
+                newString =
+                    typeTuningText + " ".repeat(Math.max(0, spaceCount));
                 break;
             }
             case SyntaxNodeType.AccessTuning: {
@@ -186,10 +187,11 @@ export class VariableDefinitionFormatter
                     node,
                     fullText
                 ).trim();
-                newString =
-                    " " +
-                    text +
-                    " ".repeat(this.alignVariableKeyword - text.length);
+                const spaceCount = Math.max(
+                    0,
+                    this.alignVariableKeyword - text.length
+                );
+                newString = " " + text + " ".repeat(Math.max(0, spaceCount));
                 this.hasAccessTuning = true;
                 break;
             }
@@ -213,7 +215,7 @@ export class VariableDefinitionFormatter
                         this.hasAccessTuning = true;
                     }
                 }
-                newString = " ".repeat(spacesCount) + text;
+                newString = " ".repeat(Math.max(0, spacesCount)) + text;
                 break;
             }
             case SyntaxNodeType.Identifier: {
@@ -222,7 +224,7 @@ export class VariableDefinitionFormatter
                     fullText
                 ).trim();
                 const spaceCount = Math.max(0, this.alignType - text.length);
-                newString = " " + text + " ".repeat(spaceCount);
+                newString = " " + text + " ".repeat(Math.max(0, spaceCount));
                 break;
             }
             case SyntaxNodeType.Error:
@@ -262,13 +264,13 @@ export class VariableDefinitionFormatter
                     ? 1
                     : this.alignVariableKeyword + 2; // Compensate two trimmed whitespaces
                 const trailingSpaces = needsTrailingPadding
-                    ? this.alignScopeGroup - scopeGroupText.length
+                    ? Math.max(0, this.alignScopeGroup - scopeGroupText.length)
                     : 0;
 
                 newString =
-                    " ".repeat(leadingSpaces) +
+                    " ".repeat(Math.max(0, leadingSpaces)) +
                     scopeGroupText +
-                    " ".repeat(trailingSpaces);
+                    " ".repeat(Math.max(0, trailingSpaces));
                 break;
             }
             case SyntaxNodeType.VariableTuning:
@@ -295,9 +297,11 @@ export class VariableDefinitionFormatter
                             ).trim().length -
                             1;
                     } else {
-                        spacesCount = this.alignExtent;
+                        spacesCount = Math.max(0, this.alignExtent);
                     }
-                    newString = " ".repeat(spacesCount) + variableTuningText;
+                    newString =
+                        " ".repeat(Math.max(0, spacesCount)) +
+                        variableTuningText;
                     break;
                 }
             default: {
