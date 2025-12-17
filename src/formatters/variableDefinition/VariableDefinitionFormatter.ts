@@ -268,7 +268,7 @@ export class VariableDefinitionFormatter
                     : 0;
 
                 newString =
-                    " ".repeat(Math.max(0, leadingSpaces)) +
+                    " ".repeat(leadingSpaces) +
                     scopeGroupText +
                     " ".repeat(trailingSpaces);
                 break;
