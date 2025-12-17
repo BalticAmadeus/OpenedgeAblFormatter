@@ -1,5 +1,6 @@
 /* FOR Statement */
-FOR FIRST Customer NO-LOCK
-    BY Customer.CreditLimit:
-            DISPLAY Customer.
+FOR EACH Customer WHERE
+         Customer.var = 1 OR
+         Customer.var = 2:
+    Customer.var += 1.
 END.
