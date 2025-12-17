@@ -224,7 +224,7 @@ export class VariableDefinitionFormatter
                     fullText
                 ).trim();
                 const spaceCount = Math.max(0, this.alignType - text.length);
-                newString = " " + text + " ".repeat(Math.max(0, spaceCount));
+                newString = " " + text + " ".repeat(spaceCount);
                 break;
             }
             case SyntaxNodeType.Error:
