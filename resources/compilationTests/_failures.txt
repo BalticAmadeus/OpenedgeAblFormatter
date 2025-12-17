@@ -1,6 +1,7 @@
 ablunit_ABLUnitCore.r
 adecomm__getdbs.r
 adecomm__wincolr.r
+adecomm__resolvepath.r
 adedict__brwadj.r
 adedict__brwgray.r
 adedict__brwlist.r
@@ -56,7 +57,6 @@ aderes__fbprop.r
 aderes__fbresiz.r
 aderes__gotopag.r
 aderes__governr.r
-aderes__ldraw.r
 aderes__mstate.r
 aderes__rdraw.r
 aderes__renfld.r
@@ -83,7 +83,6 @@ aderes_j-link.r
 aderes_j-table1.r
 aderes_j-table2.r
 aderes_l-edit.r
-aderes_l-guess.r
 aderes_l-layout.r
 aderes_l-match.r
 aderes_l-type.r
@@ -102,7 +101,6 @@ aderes_s-join.r
 aderes_s-level.r
 aderes_s-zap.r
 aderes_u-logo.r
-aderes_vgtbli.r
 aderes_y-format.r
 aderes_y-output.r
 aderes_y-page.r
@@ -135,13 +133,11 @@ adeuib__c64tv.r
 adeuib__calcselb.r
 adeuib__calcself.r
 adeuib__chsxprt.r
-adeuib__closeup.r
 adeuib__coledit.r
 adeuib__cr_cmnu.r
 adeuib__cr_cust.r
 adeuib__cr_npop.r
 adeuib__cr_pal.r
-adeuib__cr_palw.r
 adeuib__datasrc.r
 adeuib__drawobj.r
 adeuib__drwdfld.r
@@ -149,17 +145,14 @@ adeuib__drwflds2.r
 adeuib__drwradi.r
 adeuib__dynsckr.r
 adeuib__edtgrid.r
-adeuib__fldinfo.r
-adeuib__genmult.r
+adeuib__getpref.r
 adeuib__initpal.r
 adeuib__inscal8.r
 adeuib__intpxpt.r
 adeuib__linkadd.r
 adeuib__newcalcv.r
-adeuib__newfunc.r
 adeuib__newobj.r
 adeuib__newobject.r
-adeuib__newproc.r
 adeuib__ocxevnt.r
 adeuib__oeidepref.r
 adeuib__oeidesync.r
@@ -235,7 +228,6 @@ adeuib__usecust.r
 adeuib__vldwin.r
 adeuib__vprint.r
 adeuib__vseced.r
-adeuib__vwidgetid.r
 adeuib__wintitl.r
 adeuib__wrcont.r
 adeuib__writedf.r
@@ -279,7 +271,6 @@ adeweb__mkwind.r
 adeweb__qbuild.r
 adeweb__rddefs.r
 adeweb__rdqury.r
-adeweb__webcom.r
 adexml__xmlfile.r
 adexml__xmlmap.r
 adexml__xmlview.r
@@ -332,10 +323,8 @@ auditing__auditmainw.r
 auditing__exp-audevent.r
 auditing__exp-policies-db.r
 auditing__exp-policies.r
-auditing__get-db-list.r
 auditing__imp-audevent.r
 auditing__imp-policies.r
-auditing__wrtev.r
 auditing_adm2_aud_dataextcols.r
 auditing_adm2_aud_folder.r
 auditing_sdo__audevpolicysdolog_cl.r
@@ -788,7 +777,6 @@ OpenEdge_DataAdmin_UserPermissionSet.r
 OpenEdge_DataAdmin_UserSet.r
 OpenEdge_DataAdmin_UserTablePermission.r
 OpenEdge_DataAdmin_UserTablePermissionSet.r
-OpenEdge_DataAdmin_Util_CDCTrackingHelper.r
 OpenEdge_DataAdmin_Util_dbauthgateway_list.r
 OpenEdge_DataAdmin_Util_dbauthgateway_status.r
 OpenEdge_DataAdmin_Util_dbauthgateway_update.r
@@ -1248,7 +1236,6 @@ prores_c-flag.r
 prores_c-map.r
 prores_c-merge.r
 prores_c-print.r
-prores_c-star.r
 prores_c-vector.r
 prores_f-browse.r
 prores_f-guess.r
@@ -1271,24 +1258,19 @@ prores_r-file.r
 prores_r-label.r
 prores_r-write.r
 prores_s-ask.r
-prores_s-box.r
 prores_s-calc.r
 prores_s-edit.r
-prores_s-error.r
 prores_s-field.r
 prores_s-info.r
-prores_s-order.r
 prores_s-where.r
 prores_u-option.r
 prores_u-pick.r
+prores_u-dump.r
 protools__asinfo.r
 protools__colorch.r
 protools__custmi2.r
 protools__custmiz.r
 protools__dblist.r
-protools__getidx.r
-protools__getTblFldIdx.r
-protools__ppmgr.r
 protools__ppuscl.r
 protools__procfg.r
 protools__propath.r
@@ -1307,7 +1289,6 @@ protools_dappsrv.r
 protools_sort-dia.r
 protools_vappsrv.r
 protools_vjmssrv.r
-protools_widattrs.r
 serveradmin_OpenEdge_ApplicationServer_Util_convert_spring_properties.r
 web_objects_stateaware.r
 web_objects_web-disp.r
@@ -1324,6 +1305,7 @@ webtools_helpsrch.r
 webtools_oscommnd.r
 webtools_pplist.r
 webtools_session.r
+webtools_search.r
 webtools_util__dirlist.r
 webtools_util__errmsgs.r
 webtools_util__fileact.r
@@ -1378,7 +1360,6 @@ rmc__wscompile.r
 workshop__jfind2.r
 adecomm_dirsrch.r
 adecomm_fileinfo.r
-adecomm_pcmpcls.r
 aderes__fbframe.r
 adeuib_ide__dialog_mldlg.r
 adeuib__mldlg.r
@@ -1386,7 +1367,6 @@ adm2_support__wizds.r
 adm2_support__wizmap.r
 adm2_support__wizntro.r
 adm2_support__wizqry.r
-adeuib__accsect.r
 prores_r-total.r
 adeweb__preproc.r
 prores_a-read.r

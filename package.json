@@ -226,6 +226,16 @@
           "default": "true",
           "description": "Enable TEMP-TABLE formatting"
         },
+         "AblFormatter.temptableFormattingEndDotLocation": {
+          "order": 801,
+          "type": "string",
+          "default": "Same",
+          "enum": [
+            "New",
+            "Same"
+          ],
+          "description": "Should end dot be located on a new line or the same line as the last TEMP-TABLE line?"
+        },
         "AblFormatter.usingFormatting": {
           "order": 900,
           "type": "boolean",
