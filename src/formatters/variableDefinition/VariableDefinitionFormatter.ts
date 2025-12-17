@@ -179,7 +179,7 @@ export class VariableDefinitionFormatter
                     this.alignVariableTuning - typeTuningText.length
                 );
                 newString =
-                    typeTuningText + " ".repeat(Math.max(0, spaceCount));
+                    typeTuningText + " ".repeat(spaceCount);
                 break;
             }
             case SyntaxNodeType.AccessTuning: {
