@@ -270,7 +270,7 @@ export class VariableDefinitionFormatter
                 newString =
                     " ".repeat(Math.max(0, leadingSpaces)) +
                     scopeGroupText +
-                    " ".repeat(Math.max(0, trailingSpaces));
+                    " ".repeat(trailingSpaces);
                 break;
             }
             case SyntaxNodeType.VariableTuning:
