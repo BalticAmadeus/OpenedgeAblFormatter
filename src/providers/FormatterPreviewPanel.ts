@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { FormatterPreviewProvider } from "./FormatterPreviewProvider";
-import * as path from "path";
-import * as fs from "fs";
+import * as path from "node:path";
+import * as fs from "node:fs";
 
 interface FormatterSetting {
     key: string;
@@ -21,12 +21,12 @@ export class FormatterPreviewPanel {
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
     private readonly _parserHelper: IParserHelper;
-    private _disposables: vscode.Disposable[] = [];
+    private readonly _disposables: vscode.Disposable[] = [];
+    private readonly _previewProvider: FormatterPreviewProvider;
     private _currentSettings: Record<string, any> = {};
     private _expandedCategories: Set<string> = new Set();
-    private _previewProvider: FormatterPreviewProvider;
     private _ignoreNextVisibleEditorsEvent = false;
-    
+
     private constructor(
         panel: vscode.WebviewPanel,
         extensionUri: vscode.Uri,
@@ -46,7 +46,7 @@ export class FormatterPreviewPanel {
             null,
             this._disposables
         );
-        
+
         // Get current settings
         this._currentSettings = this.getAllFormatterSettings();
 
@@ -62,15 +62,23 @@ export class FormatterPreviewPanel {
                 switch (message.type) {
                     case "settingsChanged":
                         this._currentSettings = message.settings;
-                        this._expandedCategories = new Set(message.expandedCategories);
+                        this._expandedCategories = new Set(
+                            message.expandedCategories
+                        );
                         this.updatePreview(message.expandedCategories);
                         break;
                     case "categoriesChanged":
-                        this._expandedCategories = new Set(message.expandedCategories);
+                        this._expandedCategories = new Set(
+                            message.expandedCategories
+                        );
                         this.updatePreview(message.expandedCategories);
                         break;
                     case "settingChanged":
-                        this.handleSettingChange(message.key, message.value, message.category);
+                        this.handleSettingChange(
+                            message.key,
+                            message.value,
+                            message.category
+                        );
                         break;
                     case "applySettings":
                         this.applySettings(message.settings);
@@ -83,16 +91,26 @@ export class FormatterPreviewPanel {
             null,
             this._disposables
         );
-        
-        vscode.window.onDidChangeVisibleTextEditors((editors) => {
-            if (this._ignoreNextVisibleEditorsEvent) return;
-            setTimeout(() => {
-                const previewVisible = editors.some(editor => editor.document.uri.toString() === "abl-preview://preview");
-                if (!previewVisible && FormatterPreviewPanel.currentPanel) {
-                    FormatterPreviewPanel.currentPanel.dispose();
+
+        vscode.window.onDidChangeVisibleTextEditors(
+            (editors) => {
+                if (this._ignoreNextVisibleEditorsEvent) {
+                    return;
                 }
-            }, 300); // Slightly longer debounce
-        }, null, this._disposables);
+                setTimeout(() => {
+                    const previewVisible = editors.some(
+                        (editor) =>
+                            editor.document.uri.toString() ===
+                            "abl-preview://preview"
+                    );
+                    if (!previewVisible && FormatterPreviewPanel.currentPanel) {
+                        FormatterPreviewPanel.currentPanel.dispose();
+                    }
+                }, 300); // Slightly longer debounce
+            },
+            null,
+            this._disposables
+        );
     }
 
     public static createOrShow(
@@ -103,7 +121,8 @@ export class FormatterPreviewPanel {
         const column = vscode.ViewColumn.One;
 
         if (FormatterPreviewPanel.currentPanel) {
-            FormatterPreviewPanel.currentPanel._currentSettings = FormatterPreviewPanel.currentPanel.getAllFormatterSettings();
+            FormatterPreviewPanel.currentPanel._currentSettings =
+                FormatterPreviewPanel.currentPanel.getAllFormatterSettings();
             FormatterPreviewPanel.currentPanel._update();
             FormatterPreviewPanel.currentPanel.updatePreview();
             FormatterPreviewPanel.currentPanel._panel.webview.postMessage({
@@ -135,15 +154,14 @@ export class FormatterPreviewPanel {
         );
         FormatterPreviewPanel.currentPanel.openPreviewEditor();
     }
-    
+
     private async openPreviewEditor() {
         const uri = vscode.Uri.parse("abl-preview://preview");
         this._ignoreNextVisibleEditorsEvent = true;
-        await vscode.commands.executeCommand(
-            "vscode.open",
-            uri,
-            { viewColumn: vscode.ViewColumn.Beside, preview: true }
-        );
+        await vscode.commands.executeCommand("vscode.open", uri, {
+            viewColumn: vscode.ViewColumn.Beside,
+            preview: true,
+        });
 
         const doc = await vscode.workspace.openTextDocument(uri);
         await vscode.languages.setTextDocumentLanguage(doc, "abl");
@@ -183,8 +201,12 @@ export class FormatterPreviewPanel {
         const settings: FormatterSetting[] = [];
 
         for (const [fullKey, config] of Object.entries(properties)) {
-            if (!fullKey.startsWith("AblFormatter.")) { continue; }
-            if (fullKey === "AblFormatter.showTreeInfoOnHover") { continue; }
+            if (!fullKey.startsWith("AblFormatter.")) {
+                continue;
+            }
+            if (fullKey === "AblFormatter.showTreeInfoOnHover") {
+                continue;
+            }
 
             const key = fullKey.replace("AblFormatter.", "");
             const configAny = config as any;
@@ -198,7 +220,10 @@ export class FormatterPreviewPanel {
                 type: configAny.type === "boolean" ? "boolean" : "enum",
                 default: configAny.default,
                 enum: configAny.enum,
-                description: configAny.description || configAny.markdownDescription || "",
+                description:
+                    configAny.description ||
+                    configAny.markdownDescription ||
+                    "",
                 order: configAny.order || 9999,
                 category: category,
             });
@@ -213,26 +238,33 @@ export class FormatterPreviewPanel {
     private formatLabel(key: string): string {
         // Convert camelCase to Title Case with spaces
         return key
-            .replace(/([A-Z])/g, " $1")
-            .replace(/^./, (str) => str.toUpperCase())
+            .replaceAll(/([A-Z])/g, " $1")
+            .replaceAll(/^./, (str) => str.toUpperCase())
             .trim();
     }
 
-    private async handleSettingChange(key: string, value: any, category?: string) {
+    private async handleSettingChange(
+        key: string,
+        value: any,
+        category?: string
+    ) {
         this._currentSettings[key] = value;
         await this.updatePreview(category ? [category] : undefined);
     }
-    
+
     private getExampleSnippetForCategory(category: string): string {
         // Map category to file name (simple normalization)
-        const fileName = category
-            .toLowerCase()
-            .replace(/\s+/g, "-") // spaces to dashes
-            .replace(/[^a-z0-9\-]/g, "") // remove non-alphanum/dash
-            + ".p";
+        const fileName =
+            category
+                .toLowerCase()
+                .replaceAll(/\s+/g, "-") // spaces to dashes
+                .replaceAll(/[^a-z0-9-]/g, "") + // remove non-alphanum/dash
+            ".p";
         const workspaceFolders = vscode.workspace.workspaceFolders;
-        
-        if (!workspaceFolders || workspaceFolders.length === 0) { return ""; }
+
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            return "";
+        }
         const examplePath = path.join(
             workspaceFolders[0].uri.fsPath,
             "resources",
@@ -249,13 +281,18 @@ export class FormatterPreviewPanel {
     private async updatePreview(expandedCategories?: string[]) {
         try {
             // Build preview code from open categories
-            const expanded = expandedCategories || Array.from(this._expandedCategories);
+            const expanded =
+                expandedCategories || Array.from(this._expandedCategories);
             let codeSnippets: string[] = [];
             for (const category of expanded) {
                 const snippet = this.getExampleSnippetForCategory(category);
-                if (snippet) { codeSnippets.push(snippet); }
+                if (snippet) {
+                    codeSnippets.push(snippet);
+                }
             }
-            const previewCode = codeSnippets.join("\n\n") || "// No example code for selected sections.";
+            const previewCode =
+                codeSnippets.join("\n\n") ||
+                "// No example code for selected sections.";
 
             // Prepare settings as before
             const tempSettings: Record<string, any> = {};
@@ -284,7 +321,7 @@ export class FormatterPreviewPanel {
                 type: "previewUpdated",
                 original: previewCode,
                 formatted: formattedCode,
-                expandedCategories: expanded
+                expandedCategories: expanded,
             });
         } catch (error) {
             this._panel.webview.postMessage({
@@ -301,18 +338,26 @@ export class FormatterPreviewPanel {
         const config = vscode.workspace.getConfiguration("AblFormatter");
         try {
             for (const [key, value] of Object.entries(settings)) {
-                await config.update(key, value, vscode.ConfigurationTarget.Global);
+                await config.update(
+                    key,
+                    value,
+                    vscode.ConfigurationTarget.Global
+                );
             }
             this._currentSettings = this.getAllFormatterSettings();
             this._panel.webview.postMessage({
                 type: "settingsReset",
                 settings: this._currentSettings,
             });
-            vscode.window.showInformationMessage("Formatter settings applied successfully!");
+            vscode.window.showInformationMessage(
+                "Formatter settings applied successfully!"
+            );
             await this.updatePreview();
         } catch (error) {
             vscode.window.showErrorMessage(
-                `Failed to apply settings: ${error instanceof Error ? error.message : "Unknown error"}`
+                `Failed to apply settings: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`
             );
         }
     }
@@ -588,17 +633,27 @@ export class FormatterPreviewPanel {
     <div class="main-container">
         <div class="settings-panel">
             <div class="section-header">Formatter Settings</div>
-            ${categories.map(category => `
-                <div class="setting-category${expandedCategories.includes(category) ? "" : " collapsed"}" data-category="${category}">
+            ${categories
+                .map(
+                    (category) => `
+                <div class="setting-category${
+                    expandedCategories.includes(category) ? "" : " collapsed"
+                }" data-category="${category}">
                     <div class="category-toggle" data-category="${category}">
-                        <span class="arrow">${expandedCategories.includes(category) ? "▼" : "▶"}</span>
+                        <span class="arrow">${
+                            expandedCategories.includes(category) ? "▼" : "▶"
+                        }</span>
                         <span>${category}</span>
                     </div>
                     <div class="setting-items">
-                        ${this.generateSettingsHtml(settings.filter(s => s.category === category))}
+                        ${this.generateSettingsHtml(
+                            settings.filter((s) => s.category === category)
+                        )}
                     </div>
                 </div>
-            `).join("")}
+            `
+                )
+                .join("")}
         </div>
     </div>
     <script>
@@ -606,8 +661,12 @@ export class FormatterPreviewPanel {
 
         // Restore state if available, otherwise use injected values
         let state = vscode.getState();
-        let currentSettings = state?.currentSettings ?? ${JSON.stringify(this._currentSettings)};
-        let expandedCategories = state?.expandedCategories ?? ${JSON.stringify(expandedCategories)};
+        let currentSettings = state?.currentSettings ?? ${JSON.stringify(
+            this._currentSettings
+        )};
+        let expandedCategories = state?.expandedCategories ?? ${JSON.stringify(
+            expandedCategories
+        )};
 
         function saveState() {
             vscode.setState({
@@ -769,7 +828,9 @@ export class FormatterPreviewPanel {
             html += `<div class="setting-item">`;
 
             if (setting.type === "boolean") {
-                const checked = this._currentSettings[setting.key] ? "checked" : "";
+                const checked = this._currentSettings[setting.key]
+                    ? "checked"
+                    : "";
                 html += `
                     <label>
                         <input type="checkbox" class="setting-checkbox" 
@@ -781,14 +842,17 @@ export class FormatterPreviewPanel {
                 html += `
                     <label>${setting.label}</label>
                     <select class="setting-enum" data-key="${setting.key}">
-                        ${setting.enum!.map(
-                            (opt) =>
-                                `<option value="${opt}" ${
-                                    this._currentSettings[setting.key] === opt
-                                        ? "selected"
-                                        : ""
-                                }>${opt}</option>`
-                        ).join("")}
+                        ${setting
+                            .enum!.map(
+                                (opt) =>
+                                    `<option value="${opt}" ${
+                                        this._currentSettings[setting.key] ===
+                                        opt
+                                            ? "selected"
+                                            : ""
+                                    }>${opt}</option>`
+                            )
+                            .join("")}
                     </select>
                 `;
             }
@@ -807,22 +871,38 @@ export class FormatterPreviewPanel {
         this._panel.dispose();
 
         setTimeout(() => {
-        const previewUri = vscode.Uri.parse("abl-preview://preview");
-        const previewEditors = vscode.window.visibleTextEditors
-            .filter(editor => editor.document.uri.toString() === previewUri.toString());
+            const previewUri = vscode.Uri.parse("abl-preview://preview");
+            const previewEditors = vscode.window.visibleTextEditors.filter(
+                (editor) =>
+                    editor.document.uri.toString() === previewUri.toString()
+            );
 
-        if (previewEditors.length > 0) {
-            previewEditors.forEach(editor => {
-                vscode.window.showTextDocument(editor.document, editor.viewColumn, false)
-                    .then(() => vscode.commands.executeCommand('workbench.action.closeActiveEditor'));
-            });
+            if (previewEditors.length > 0) {
+                previewEditors.forEach((editor) => {
+                    vscode.window
+                        .showTextDocument(
+                            editor.document,
+                            editor.viewColumn,
+                            false
+                        )
+                        .then(() =>
+                            vscode.commands.executeCommand(
+                                "workbench.action.closeActiveEditor"
+                            )
+                        );
+                });
 
-            // Optionally, open a new Untitled file to prevent VS Code from re-opening the preview
-            if (previewEditors.length === vscode.window.visibleTextEditors.length) {
-                vscode.commands.executeCommand('workbench.action.files.newUntitledFile');
+                // Optionally, open a new Untitled file to prevent VS Code from re-opening the preview
+                if (
+                    previewEditors.length ===
+                    vscode.window.visibleTextEditors.length
+                ) {
+                    vscode.commands.executeCommand(
+                        "workbench.action.files.newUntitledFile"
+                    );
+                }
             }
-        }
-    }, 200);
+        }, 200);
 
         while (this._disposables.length) {
             const disposable = this._disposables.pop();

@@ -100,6 +100,7 @@ export async function activate(context: vscode.ExtensionContext) {
             });
         }
     );
+    context.subscriptions.push(excludeCodeCommand);
 
     const previewProvider = new FormatterPreviewProvider();
     context.subscriptions.push(
@@ -108,7 +109,6 @@ export async function activate(context: vscode.ExtensionContext) {
             previewProvider
         )
     );
-    context.subscriptions.push(excludeCodeCommand);
 
     const openSettingsPreviewCommand = vscode.commands.registerCommand(
         "openedgeAblFormatter.openSettingsPreview",
