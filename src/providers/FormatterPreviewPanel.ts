@@ -239,7 +239,7 @@ export class FormatterPreviewPanel {
         // Convert camelCase to Title Case with spaces
         return key
             .replaceAll(/([A-Z])/g, " $1")
-            .replaceAll(/^./, (str) => str.toUpperCase())
+            .replaceAll(/^./g, (str) => str.toUpperCase())
             .trim();
     }
 
@@ -258,7 +258,7 @@ export class FormatterPreviewPanel {
             category
                 .toLowerCase()
                 .replaceAll(/\s+/g, "-") // spaces to dashes
-                .replaceAll(/[^a-z0-9-]/g, "") + // remove non-alphanum/dash
+                .replaceAll(/[^a-z0-9\-]/g, "") + // remove non-alphanum/dash
             ".p";
         const workspaceFolders = vscode.workspace.workspaceFolders;
 
