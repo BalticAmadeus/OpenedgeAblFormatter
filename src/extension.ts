@@ -159,6 +159,19 @@ export async function activate(context: vscode.ExtensionContext) {
         "Report a bug or issue for OpenEdge ABL Formatter";
     bugStatusBarItem.show();
     context.subscriptions.push(bugStatusBarItem);
+
+    // Show preview only once on first install
+    const PREVIEW_SHOWN_KEY = "openedgeAblFormatter.previewShown";
+    if (!context.globalState.get(PREVIEW_SHOWN_KEY)) {
+        // Open the preview panel
+        FormatterPreviewPanel.createOrShow(
+            vscode.Uri.file(context.extensionPath),
+            parserHelper,
+            previewProvider
+        );
+        // Mark as shown so it doesn't show again
+        await context.globalState.update(PREVIEW_SHOWN_KEY, true);
+    }
 }
 
 function runPeriodicTask() {
