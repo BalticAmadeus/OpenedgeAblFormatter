@@ -16,7 +16,6 @@ import { BaseEngineOutput } from "./mtest/EngineParams";
 import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 
-
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
     undefined //no excessive logging
 );
@@ -102,6 +101,27 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    const previewProvider = new FormatterPreviewProvider();
+    context.subscriptions.push(
+        vscode.workspace.registerTextDocumentContentProvider(
+            "abl-preview",
+            previewProvider
+        )
+    );
+    context.subscriptions.push(excludeCodeCommand);
+
+    const openSettingsPreviewCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.openSettingsPreview",
+        () => {
+            FormatterPreviewPanel.createOrShow(
+                vscode.Uri.file(context.extensionPath),
+                parserHelper,
+                previewProvider
+            );
+        }
+    );
+    context.subscriptions.push(openSettingsPreviewCommand);
+
     const previewCommand = vscode.commands.registerCommand(
         "openedgeAblFormatter.openFormatterPreview",
         () => {
@@ -112,15 +132,7 @@ export async function activate(context: vscode.ExtensionContext) {
             );
         }
     );
-    
-    const previewProvider = new FormatterPreviewProvider();
-    context.subscriptions.push(
-        vscode.workspace.registerTextDocumentContentProvider("abl-preview", previewProvider)
-    );
-    
     context.subscriptions.push(previewCommand);
-
-    context.subscriptions.push(excludeCodeCommand);
 
     setInterval(runPeriodicTask, 20_000);
 

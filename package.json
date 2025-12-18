@@ -32,11 +32,22 @@
       },
       {
         "command": "openedgeAblFormatter.openFormatterPreview",
-        "title": "Open Formatter Preview",
-        "category": "OpenEdge ABL Formatter"
+        "title": "Formatter Settings Preview",
+        "category": "OpenEdge ABL Formatter",
+        "icon": {
+          "light": "resources/Formatter_LOGO_32x32.png",
+          "dark": "resources/Formatter_LOGO_32x32.png"
+        }
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "openedgeAblFormatter.openFormatterPreview",
+          "when": "resourceExtname =~ /\\.(p|cls|i|w)$/i",
+          "group": "navigation"
+        }
+      ],
       "editor/context": [
         {
           "command": "openedgeAblFormatter.excludeCode",
