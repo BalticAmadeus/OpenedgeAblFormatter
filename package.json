@@ -74,7 +74,7 @@
     "walkthroughs": [
       {
         "id": "ablFormatter",
-        "title": "AblFormatter",
+        "title": "Abl Formatter",
         "description": "OpenEdge ABL Formatter is a OpenEdge (ABL) code formatter.",
         "steps": [
           {
@@ -102,29 +102,13 @@
               "image": "resources/walkthrough/DisableFormatterTelemetry.png",
               "altText": "Settings for disabling telemetry sent by OpenEdge ABL Formatter can be found in settings with @tag:telemetry tag"
             }
-          },
-          {
-            "id": "OpenFormatterPreview",
-            "title": "Try the Formatter Preview",
-            "description": "You can interactively preview and configure formatting settings.\n\n[Open Settings Preview](command:openedgeAblFormatter.openFormatterPreview)",
-            "media": {
-              "image": "resources/walkthrough/SettingsPreview.png",
-              "altText": "Interactive preview of formatter settings"
-            }
           }
         ]
       }
     ],
     "configuration": {
-      "title": "AblFormatter",
+      "title": "Abl Formatter",
       "properties": {
-        "openFormatterPreview": {
-          "order": 0,
-          "type": "boolean",
-          "default": true,
-          "category": "General",
-          "markdownDescription": "[Settings Preview](command:openedgeAblFormatter.openFormatterPreview)"
-        },
         "AblFormatter.assignFormatting": {
           "order": 100,
           "type": "boolean",
