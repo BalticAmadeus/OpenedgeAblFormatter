@@ -151,10 +151,8 @@ adeuib__inscal8.r
 adeuib__intpxpt.r
 adeuib__linkadd.r
 adeuib__newcalcv.r
-adeuib__newfunc.r
 adeuib__newobj.r
 adeuib__newobject.r
-adeuib__newproc.r
 adeuib__ocxevnt.r
 adeuib__oeidepref.r
 adeuib__oeidesync.r

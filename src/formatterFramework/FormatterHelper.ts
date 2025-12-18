@@ -4,6 +4,10 @@ import { FullText } from "../model/FullText";
 import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 
+type ParentState = {
+    currentlyInsideParentheses: boolean
+}
+
 export class FormatterHelper {
     public static getActualTextIndentation(
         input: string,
@@ -157,26 +161,21 @@ export class FormatterHelper {
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
+        let state: ParentState = { currentlyInsideParentheses: false };
+        node.children.forEach((child) => {
+            resultString = resultString.concat(
+                this.getExpressionString(child, fullText, state)
+            );
+        });
 
+        // Clean up spacing for parenthesized expressions
         if (node.type === SyntaxNodeType.ParenthesizedExpression) {
-            node.children.forEach((child) => {
-                resultString = resultString.concat(
-                    this.getParenthesizedExpressionString(child, fullText)
-                );
-            });
-            return resultString;
-        } else {
-            let currentlyInsideParentheses = new Boolean(false);
-            node.children.forEach((child) => {
-                resultString = resultString.concat(
-                    this.getExpressionString(
-                        child,
-                        fullText,
-                        currentlyInsideParentheses
-                    )
-                );
-            });
-            if (node.type === SyntaxNodeType.Assignment) {
+            resultString = resultString
+                .replace(/\(\s+/g, "(")
+                .replace(/\s+\)/g, ")");
+        }
+
+        if (node.type === SyntaxNodeType.Assignment) {
                 // In this case, we need to trim the spaces at the start of the string as well
                 resultString = resultString.trimStart();
             } else if (node.type === SyntaxNodeType.VariableAssignment) {
@@ -200,36 +199,60 @@ export class FormatterHelper {
             } else {
                 return resultString.trimEnd();
             }
-        }
     }
 
     private static getExpressionString(
         node: SyntaxNode,
         fullText: Readonly<FullText>,
-        currentlyInsideParentheses: Boolean
+        state: ParentState
     ): string {
-        if (currentlyInsideParentheses === true) {
+        if (state.currentlyInsideParentheses === true) {
             return this.getParenthesizedExpressionString(node, fullText);
         }
         let newString = "";
 
         switch (node.type) {
-            case SyntaxNodeType.ParenthesizedExpression:
-                node.children.forEach((child) => {
-                    newString = newString.concat(
-                        this.getParenthesizedExpressionString(child, fullText)
+            case SyntaxNodeType.ParenthesizedExpression: {
+                // CRITICAL FIX: Check if children have corrupted positions
+                // Maximum expected span for a single parenthesis character
+                // Values exceeding this indicate corrupted parser data
+                const maxParenthesisSpan = 5;
+                
+                const hasCorruptedChildren = node.children.some((child) => {
+                    const childSpan = child.endIndex - child.startIndex;
+                    return (
+                        child.startIndex > child.endIndex ||
+                        child.startIndex < node.startIndex ||
+                        child.endIndex > node.endIndex ||
+                        ((child.type === SyntaxNodeType.LeftParenthesis ||
+                            child.type === SyntaxNodeType.RightParenthesis) &&
+                            childSpan > maxParenthesisSpan)
                     );
                 });
+
+                if (hasCorruptedChildren) {
+                    newString = this.getCurrentText(node, fullText);
+                } else {
+                    node.children.forEach((child) => {
+                        newString = newString.concat(
+                            this.getParenthesizedExpressionString(
+                                child,
+                                fullText
+                            )
+                        );
+                    });
+                }
                 break;
+            }
             case SyntaxNodeType.LeftParenthesis:
-                currentlyInsideParentheses = true;
+                state.currentlyInsideParentheses = true;
                 newString = this.getParenthesizedExpressionString(
                     node,
                     fullText
                 );
                 break;
             case SyntaxNodeType.RightParenthesis:
-                currentlyInsideParentheses = false;
+                state.currentlyInsideParentheses = false;
                 newString = this.getParenthesizedExpressionString(
                     node,
                     fullText
