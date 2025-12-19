@@ -5,10 +5,12 @@ import { join } from "path";
 import Parser from "web-tree-sitter";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
+import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "./ConfigurationManager";
 import { DebugManagerMock } from "../test-ast/suite/DebugManagerMock";
 import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { ISuiteConfig } from "./ISuiteConfig";
+import { EOL } from "../model/EOL";
 
 // Shared constants
 export const extensionDevelopmentPath = path.resolve(__dirname, "../../");
@@ -24,27 +26,20 @@ export const stabilityTestCases = getFilesWithExtensions(
     extensionsToFind
 );
 
-export async function runGenericTest<
-    TResult extends { tree: any; text: string }
->(
+export function runGenericTest<TResult>(
     name: string,
     parserHelper: AblParserHelper,
     config: ISuiteConfig<TResult>,
     metamorphicEngine?: MetamorphicEngine<any>
-): Promise<void> {
+): void {
     ConfigurationManager.getInstance();
 
     const beforeText = settingsOverride + getInput(name);
-    const beforeResult = await config.processBeforeText(
-        beforeText,
-        parserHelper
-    );
+    const beforeResult = config.processBeforeText(beforeText);
+    const afterText = format(beforeText, name, parserHelper);
+    const afterResult = config.processAfterText(afterText, parserHelper);
 
-    // Await the async format function
-    const afterText = await format(beforeText, name, parserHelper);
-    const afterResult = await config.processAfterText(afterText, parserHelper);
-
-    if (beforeResult === undefined || afterResult === undefined) {
+    if (beforeResult == null || afterResult == null) {
         return;
     }
 
@@ -53,20 +48,17 @@ export async function runGenericTest<
         : name;
 
     const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
-    const fileNameNorm = fileName.trim().toLowerCase();
-    const knownFailures = getKnownFailures(config.knownFailuresFile).map((f) =>
-        f.trim().toLowerCase()
-    );
+    const knownFailures = getKnownFailures(config.knownFailuresFile);
     const currentTestRunDir = getTestRunDir(config.testType + "Tests");
 
-    const hasMismatch = await config.compareResults(
+    const hasMismatch = config.compareResults(
         beforeResult,
         afterResult,
         parserHelper
     );
 
     if (hasMismatch) {
-        if (knownFailures.includes(fileNameNorm)) {
+        if (knownFailures.includes(fileName)) {
             console.log("Known issue");
             return;
         }
@@ -93,24 +85,30 @@ export async function runGenericTest<
         fs.writeFileSync(beforeFilePath, beforeText);
         fs.writeFileSync(afterFilePath, afterText);
 
-        assert.fail(
-            `${config.testType} mismatch\n        Before: ${beforeFilePath}\n        After: ${afterFilePath}\n        `
-        );
+        assert.fail(`${config.testType} mismatch
+        Before: ${beforeFilePath}
+        After: ${afterFilePath}
+        `);
     }
 
-    if (knownFailures.includes(fileNameNorm)) {
+    if (knownFailures.includes(fileName)) {
         addFailedTestCase(currentTestRunDir, "_new_passes.txt", fileName);
         config.cleanup?.(beforeResult, afterResult);
         assert.fail(`File should fail ${fileName}`);
     }
 
     if (metamorphicEngine) {
-        metamorphicEngine.addNameInputAndOutputPair(
-            name,
-            { eolDel: getFileEOL(beforeText) },
-            beforeResult,
-            afterResult
-        );
+        // Type guard to check if value is TextTree
+        const isTextTree = (val: any): val is { text: string; tree: any } =>
+            val && typeof val.text === "string" && val.tree !== undefined;
+        if (isTextTree(beforeResult) && isTextTree(afterResult)) {
+            metamorphicEngine.addNameInputAndOutputPair(
+                name,
+                { eolDel: getFileEOL(beforeText) },
+                beforeResult,
+                afterResult
+            );
+        }
     }
 
     config.cleanup?.(beforeResult, afterResult);
@@ -162,7 +160,7 @@ export async function setupParserHelper(): Promise<AblParserHelper> {
         extensionDevelopmentPath,
         new DebugManagerMock()
     );
-    await parserHelper.startWorker();
+    await parserHelper.awaitLanguage();
     return parserHelper;
 }
 
@@ -171,16 +169,24 @@ export function getInput(fileName: string): string {
     return readFile(fileName);
 }
 
-export async function format(
+export function format(
     text: string,
     name: string,
-    parserHelper: AblParserHelper
-): Promise<string> {
-    // Use the worker-based format method
-    const result = await parserHelper.format(
+    parserHelper: AblParserHelper,
+    isMetamorphicEnabled: boolean = false
+): string {
+    const configurationManager = ConfigurationManager.getInstance();
+
+    const codeFormatter = new FormattingEngine(
+        parserHelper,
         new FileIdentifier(name, 1),
+        configurationManager,
+        new DebugManagerMock()
+    );
+    const result = codeFormatter.formatText(
         text,
-        { eol: { eolDel: getFileEOL(text) } }
+        new EOL(getFileEOL(text)),
+        isMetamorphicEnabled
     );
     return result;
 }

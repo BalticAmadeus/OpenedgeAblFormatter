@@ -9,7 +9,6 @@ import { RegisterFormatter } from "../../formatterFramework/formatterDecorator";
 import { IConfigurationManager } from "../../utils/IConfigurationManager";
 import { BlockSettings } from "./BlockSettings";
 
-
 @RegisterFormatter
 export class BlockFormater extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "blockFormatting";
@@ -260,14 +259,13 @@ export class BlockFormater extends AFormatter implements IFormatter {
         let n = 0;
         let lineChangeDelta = 0;
 
-        const nonRelatviveExcludedRanges = FormatterHelper.getExcludedRanges(parent);
+        const nonRelatviveExcludedRanges =
+            FormatterHelper.getExcludedRanges(parent);
 
         const excludedRanges = nonRelatviveExcludedRanges.map((range) => ({
             start: range.start - parent.startPosition.row,
             end: range.end - parent.startPosition.row,
         }));
-
-        console.log("[Extension Host] Excluded ranges:", excludedRanges);
 
         codeLines.forEach((codeLine, index) => {
             const lineNumber = parent.startPosition.row + index;
@@ -467,7 +465,6 @@ export class BlockFormater extends AFormatter implements IFormatter {
         const pattern = /^[^.]*end[^.]*\.[^.]*$/i;
         return pattern.test(str);
     }
-
 }
 
 interface IndentationEdits {

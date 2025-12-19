@@ -13,7 +13,6 @@ import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { BaseEngineOutput } from "../mtest/EngineParams";
 import { bodyBlockKeywords, SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
-import { FormattingEngineMock } from "./FormattingEngineMock";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -64,7 +63,12 @@ export class FormattingEngine {
             this.metamorphicTestingEngine !== undefined
         ) {
             this.metamorphicTestingEngine.setFormattingEngine(
-                new FormattingEngineMock(this.parserHelper)
+                new FormattingEngine(
+                    this.parserHelper,
+                    this.fileIdentifier,
+                    this.configurationManager,
+                    this.debugManager
+                )
             );
 
             const parseResult2 = this.parserHelper.parse(

@@ -6,6 +6,7 @@ import * as fs from "node:fs";
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
+import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
@@ -17,8 +18,8 @@ import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
-import { FormattingEngineMock } from "../../formatterFramework/FormattingEngineMock";
 import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
+import { format } from "../../utils/suitesUtils";
 
 let parserHelper: AblParserHelper;
 let metamorphicEngine: MetamorphicEngine<DebugTestingEngineOutput> | undefined;
@@ -71,10 +72,6 @@ for (const dir of treeSitterErrorTestDirs) {
 // testCases = ["assign/1formattingFalse"];
 
 suite("Extension Test Suite", () => {
-    suiteTeardown(() => {
-        vscode.window.showInformationMessage("All tests done!");
-    });
-
     suiteSetup(async () => {
         await Parser.init().then(() => {
             console.log("Parser initialized");
@@ -89,6 +86,7 @@ suite("Extension Test Suite", () => {
             extensionDevelopmentPath,
             new DebugManagerMock()
         );
+        await parserHelper.awaitLanguage();
 
         if (isMetamorphicEnabled) {
             metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>(
@@ -100,7 +98,12 @@ suite("Extension Test Suite", () => {
                 .addMR(new IdempotenceMR(parserHelper));
 
             metamorphicEngine.setFormattingEngine(
-                new FormattingEngineMock(parserHelper)
+                new FormattingEngine(
+                    parserHelper,
+                    new FileIdentifier("metamorphicEngine", 1),
+                    ConfigurationManager.getInstance(),
+                    new DebugManagerMock()
+                )
             );
         }
 
@@ -117,14 +120,14 @@ suite("Extension Test Suite", () => {
     });
 
     for (const cases of functionalTestCases) {
-        test(`Functional test: ${cases}`, async () => {
-            await functionalTest(cases);
+        test(`Functional test: ${cases}`, () => {
+            functionalTest(cases);
         }).timeout(10000);
     }
 
     for (const cases of treeSitterTestCases) {
-        test(`Tree Sitter Error test: ${cases}`, async () => {
-            await treeSitterTest(cases);
+        test(`Tree Sitter Error test: ${cases}`, () => {
+            treeSitterTest(cases);
         }).timeout(10000);
     }
 
@@ -147,7 +150,7 @@ suite("Extension Test Suite", () => {
                     if (!metamorphicEngine) {
                         throw new Error("metamorphicEngine is undefined");
                     }
-                    const result = await metamorphicEngine.runOne(
+                    const result = metamorphicEngine.runOne(
                         cases.fileName,
                         cases.mrName
                     );
@@ -163,24 +166,25 @@ suite("Extension Test Suite", () => {
     });
 });
 
-async function functionalTest(name: string): Promise<void> {
+function functionalTest(name: string): void {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const inputText = getInput(name);
 
-    const resultText = await parserHelper.format(
-        new FileIdentifier(name, 1),
+    const resultText = format(
         inputText,
-        { eol: new EOL(getFileEOL(inputText)) }
+        name,
+        parserHelper,
+        isMetamorphicEnabled
     );
 
-    const inputTree = await parserHelper.parseAsync(
+    const inputTree = parserHelper.parse(
         new FileIdentifier(name, 1),
         inputText
     );
 
-    const resultTree = await parserHelper.parseAsync(
+    const resultTree = parserHelper.parse(
         new FileIdentifier(name, 1),
         resultText
     );
@@ -293,26 +297,23 @@ function getFileEOL(fileText: string): string {
     }
 }
 
-async function treeSitterTest(name: string): Promise<void> {
+function treeSitterTest(name: string): void {
     ConfigurationManager.getInstance();
     enableFormatterDecorators();
 
     const errorText = getError(name);
-    const errors = await parseAndCheckForErrors(errorText, name);
+    const errors = parseAndCheckForErrors(errorText, name);
 
     const errorMessage = formatErrorMessage(errors, name);
 
     assert.strictEqual(errors.length, 0, errorMessage);
 }
 
-async function parseAndCheckForErrors(
+function parseAndCheckForErrors(
     text: string,
     name: string
-): Promise<Parser.SyntaxNode[]> {
-    const parseResult = await parserHelper.parseAsync(
-        new FileIdentifier(name, 1),
-        text
-    );
+): Parser.SyntaxNode[] {
+    const parseResult = parserHelper.parse(new FileIdentifier(name, 1), text);
 
     const rootNode = parseResult.tree.rootNode;
     const errors = getNodesWithErrors(rootNode);
