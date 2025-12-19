@@ -1,17 +1,16 @@
 import * as fs from "node:fs";
-import * as vscode from "vscode";
 import assert from "node:assert";
 import { join } from "node:path";
 import { Tree, SyntaxNode } from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import {
-    extensionDevelopmentPath,
+    setupParserHelper,
     stabilityTestCases,
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
 } from "../../utils/suitesUtils";
-import Parser from "web-tree-sitter";
+import { TextTree } from "../../mtest/OriginalTestCase";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { ISuiteConfig } from "../../utils/ISuiteConfig";
@@ -36,20 +35,11 @@ suite("AST Stability Test Suite", () => {
     suiteSetup(async () => {
         console.log("AST Test Suite setup");
 
-        await Parser.init().then(() => {
-            console.log("Parser initialized");
-        });
-
         const astTestRunDir = getTestRunDir("astTests");
         fs.mkdirSync(astTestRunDir, { recursive: true });
 
-        parserHelper = new AblParserHelper(
-            extensionDevelopmentPath,
-            new DebugManagerMock()
-        );
-        await parserHelper.awaitLanguage();
-        console.log(isMetamorphicEnabled);
-        // Create metamorphic engine AFTER parserHelper is available
+        parserHelper = await setupParserHelper();
+
         if (isMetamorphicEnabled) {
             metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>(
                 console
@@ -79,6 +69,12 @@ suite("AST Stability Test Suite", () => {
         logKnownFailures("AST", "_ast_failures.txt");
     });
 
+    for (const cases of stabilityTestCases) {
+        test(`AST test: ${cases}`, () => {
+            astTest(cases, parserHelper);
+        }).timeout(20000);
+    }
+
     suiteTeardown(() => {
         if (metamorphicEngine === undefined) {
             return;
@@ -105,55 +101,56 @@ suite("AST Stability Test Suite", () => {
                 }).timeout(10000);
             });
         });
-
-        vscode.window.showInformationMessage("All tests done!");
     });
-
-    for (const cases of stabilityTestCases) {
-        test(`AST test: ${cases}`, () => {
-            astTest(cases, parserHelper);
-        }).timeout(20000);
-    }
 });
 
 function astTest(name: string, parserHelper: AblParserHelper): void {
     enableFormatterDecorators();
 
-    const config: ISuiteConfig<Tree | undefined> = {
+    const config: ISuiteConfig<TextTree | undefined> = {
         testType: "ast",
         knownFailuresFile: "_ast_failures.txt",
         resultFailuresFile: "_ast_failures.txt",
-        processBeforeText: (text: string) => generateAst(text),
-        processAfterText: (text: string) => generateAst(text),
+        processBeforeText: (text: string) =>
+            generateTextTree(text, name, parserHelper),
+        processAfterText: (text: string) =>
+            generateTextTree(text, name, parserHelper),
         compareResults: (
-            before: Tree | undefined,
-            after: Tree | undefined,
+            before: TextTree | undefined,
+            after: TextTree | undefined,
             parserHelper?: AblParserHelper
         ) => {
-            if (!before || !after || !parserHelper) return false;
-            return compareAst(before, after);
+            if (!before || !after) return false;
+            return compareAst(before.tree, after.tree);
         },
         onMismatch: (
-            before: Tree | undefined,
-            after: Tree | undefined,
+            before: TextTree | undefined,
+            after: TextTree | undefined,
             fileName: string
         ) => {
             if (before && after) {
-                analyzeAstDifferences(before, after, fileName);
+                analyzeAstDifferences(before.tree, after.tree, fileName);
             }
         },
-        cleanup: (before: Tree | undefined, after: Tree | undefined) => {
-            before?.delete();
-            after?.delete();
+        cleanup: (
+            before: TextTree | undefined,
+            after: TextTree | undefined
+        ) => {
+            before?.tree.delete();
+            after?.tree.delete();
         },
     };
 
-    runGenericTest(name, parserHelper, config);
+    runGenericTest(name, parserHelper, config, metamorphicEngine);
 }
 
-function generateAst(text: string): Tree | undefined {
-    const tree = parserHelper.parse(new FileIdentifier("test", 1), text).tree;
-    return tree;
+function generateTextTree(
+    text: string,
+    name: string,
+    parserHelper: AblParserHelper
+): TextTree {
+    const tree = parserHelper.parse(new FileIdentifier(name, 1), text).tree;
+    return { text, tree };
 }
 
 function compareAst(ast1: Tree, ast2: Tree): boolean {

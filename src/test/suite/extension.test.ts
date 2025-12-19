@@ -19,7 +19,7 @@ import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
 import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
-import { format } from "../../utils/suitesUtils";
+import { format, setupParserHelper } from "../../utils/suitesUtils";
 
 let parserHelper: AblParserHelper;
 let metamorphicEngine: MetamorphicEngine<DebugTestingEngineOutput> | undefined;
@@ -73,20 +73,14 @@ for (const dir of treeSitterErrorTestDirs) {
 
 suite("Extension Test Suite", () => {
     suiteSetup(async () => {
-        await Parser.init().then(() => {
-            console.log("Parser initialized");
-        });
+        console.log("Functional Test Suite setup");
 
         if (fs.existsSync(testResultsDir)) {
             fs.rmSync(testResultsDir, { recursive: true, force: true });
         }
         fs.mkdirSync(testResultsDir, { recursive: true });
 
-        parserHelper = new AblParserHelper(
-            extensionDevelopmentPath,
-            new DebugManagerMock()
-        );
-        await parserHelper.awaitLanguage();
+        parserHelper = await setupParserHelper();
 
         if (isMetamorphicEnabled) {
             metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>(
