@@ -1,7 +1,7 @@
-import * as assert from "assert";
-import * as fs from "fs";
-import * as path from "path";
-import { join } from "path";
+import * as assert from "node:assert";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { join } from "node:path";
 import Parser from "web-tree-sitter";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
@@ -47,7 +47,7 @@ export function runGenericTest<TResult>(
         ? name.slice(stabilityTestDir.length + 1)
         : name;
 
-    const fileName = nameWithRelativePath.replace(/[\s\/\\:*?"<>|]+/g, "_");
+    const fileName = nameWithRelativePath.replaceAll(/[\s/\\:*?"<>|]+/g, "_");
     const knownFailures = getKnownFailures(config.knownFailuresFile);
     const currentTestRunDir = getTestRunDir(config.testType + "Tests");
 
@@ -116,7 +116,7 @@ export function runGenericTest<TResult>(
 
 export const testRunTimestamp = new Date()
     .toISOString()
-    .replace(/[:.T-]/g, "_")
+    .replaceAll(/[:.T-]/g, "_")
     .substring(0, 19);
 
 export function getTestRunDir(testType: string): string {
@@ -177,13 +177,13 @@ export function format(
 ): string {
     const configurationManager = ConfigurationManager.getInstance();
 
-    const codeFormatter = new FormattingEngine(
+    const formattingEngine = new FormattingEngine(
         parserHelper,
         new FileIdentifier(name, 1),
         configurationManager,
         new DebugManagerMock()
     );
-    const result = codeFormatter.formatText(
+    const result = formattingEngine.formatText(
         text,
         new EOL(getFileEOL(text)),
         isMetamorphicEnabled

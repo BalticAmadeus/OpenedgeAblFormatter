@@ -1,7 +1,6 @@
 import { TextTree } from "../OriginalTestCase";
 import { MR } from "../MR";
 import { AblParserHelper } from "../../parser/AblParserHelper";
-import { FileIdentifier } from "../../model/FileIdentifier";
 import { format } from "../../utils/suitesUtils";
 
 export class IdempotenceMR implements MR {
@@ -13,7 +12,6 @@ export class IdempotenceMR implements MR {
         if (!this.parserHelper) {
             throw new Error("ParserHelper is not initialized in IdempotenceMR");
         }
-        const eol = this.getEOL(input.text);
 
         const firstFormat = format(
             input.text,
@@ -29,14 +27,5 @@ export class IdempotenceMR implements MR {
 
     checkIfApplicable(input: TextTree): boolean {
         return true;
-    }
-
-    private getEOL(text: string): string {
-        if (text.includes("\r\n")) {
-            return "\r\n";
-        } else if (text.includes("\n")) {
-            return "\n";
-        }
-        return "\n";
     }
 }

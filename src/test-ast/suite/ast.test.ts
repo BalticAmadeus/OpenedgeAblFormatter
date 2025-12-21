@@ -120,7 +120,9 @@ function astTest(name: string, parserHelper: AblParserHelper): void {
             after: TextTree | undefined,
             parserHelper?: AblParserHelper
         ) => {
-            if (!before || !after) return false;
+            if (!before || !after) {
+                return false;
+            }
             return compareAst(before.tree, after.tree);
         },
         onMismatch: (

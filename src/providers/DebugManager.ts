@@ -31,7 +31,7 @@ export class DebugManager implements IDebugManager {
     ): DebugManager {
         if (!DebugManager.instance && extensionContext !== undefined) {
             if (extensionContext === undefined) {
-                throw Error("No Context");
+                throw new Error("No Context");
             }
 
             DebugManager.instance = new DebugManager(extensionContext);
@@ -44,10 +44,9 @@ export class DebugManager implements IDebugManager {
             StatusBarAlignment.Right,
             101
         );
-        this.statusBarItem.text = "ABL Formatter • Ready";
+        this.statusBarItem.text = "ABL Formatter • Loading.....";
         this.statusBarItem.show();
-        this.statusBarItem.tooltip =
-            "No parser errors. Click to ENABLE debug mode.";
+        this.statusBarItem.tooltip = "Loading";
         this.statusBarItem.command = this.debugModeCommandName;
         extensionContext.subscriptions.push(this.statusBarItem);
 
