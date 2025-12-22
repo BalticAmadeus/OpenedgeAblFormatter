@@ -178,6 +178,11 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                     fullText
                 ).trim();
 
+                // Add "from propath" if needed
+                if (currentNode.childCount <= 2 && this.settings.usingFormattingFromPropath() === "Add") {
+                     optionalDefinitions = "from propath";
+                }
+
                 if (currentNode.childCount > 2) {
                     for (let i = 2; i < currentNode.childCount; ++i) {
                         const currentChild = currentNode.child(i);
@@ -215,6 +220,11 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                 }
             }
 
+            // Remove "from propath" if needed
+            if (optionalDefinitions == "from propath"  && this.settings.usingFormattingFromPropath() === "Remove") {
+                optionalDefinitions = "";
+            }
+            
             usingStatements.push({
                 identifier: keyword + " " + identifier,
                 optionalDefinitions,

@@ -226,7 +226,7 @@
           "default": "true",
           "description": "Enable TEMP-TABLE formatting"
         },
-         "AblFormatter.temptableFormattingEndDotLocation": {
+        "AblFormatter.temptableFormattingEndDotLocation": {
           "order": 801,
           "type": "string",
           "default": "Same",
@@ -241,6 +241,17 @@
           "type": "boolean",
           "default": "true",
           "description": "Enable USING formatting"
+        },
+        "AblFormatter.usingFormattingFromPropath": {
+          "order": 901,
+          "type": "string",
+          "default": "Default",
+          "enum": [
+            "Default",
+            "Add",
+            "Remove"
+          ],
+          "description": "Should 'from propath' be added or removed in USING statements automatically?"
         },
         "AblFormatter.bodyFormatting": {
           "order": 1000,
