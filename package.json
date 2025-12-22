@@ -409,15 +409,7 @@
           "order": 1900,
           "type": "boolean",
           "default": "true",
-          "category": "Statement",
           "description": "Enable STATEMENT formatting"
-        },
-        "AblFormatter.variableAssignmentFormatting": {
-          "order": 2000,
-          "type": "boolean",
-          "default": "true",
-          "category": "Variable Assignment",
-          "description": "Enable VARIABLE ASSIGNMENT formatting"
         },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 99,
