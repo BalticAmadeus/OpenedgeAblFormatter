@@ -48,11 +48,12 @@ export class FormattingEngine {
 
         this.iterateTree(parseResult.tree, fullText, formatters);
 
-        const newTree = this.parserHelper.parse(
+        const newTreeResult = this.parserHelper.parse(
             this.fileIdentifier,
             fullText.text,
             parseResult.tree
-        ).tree;
+        );
+        const newTree = newTreeResult.tree;
 
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
 
@@ -82,7 +83,14 @@ export class FormattingEngine {
                 { text: fulfullTextString, tree: parseResult.tree },
                 { text: fullText.text, tree: parseResult2.tree }
             );
+
+            // Delete parseResult2.tree after use
+            parseResult2.tree.delete();
         }
+
+        // Always delete trees after use to prevent WASM memory leaks
+        parseResult.tree.delete();
+        newTree.delete();
 
         return fullText.text;
     }
