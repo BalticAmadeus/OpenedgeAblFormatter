@@ -5,7 +5,7 @@ import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 
 type ParentState = {
-    currentlyInsideParentheses: boolean
+    currentlyInsideParentheses: boolean;
 }
 
 export class FormatterHelper {

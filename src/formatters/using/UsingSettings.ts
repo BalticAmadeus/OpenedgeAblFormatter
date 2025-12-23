@@ -7,6 +7,6 @@ export class UsingSettings extends ASettings {
     }
 
     public usingFormattingFromPropath() {
-        return this.configurationManager.get("usingFormattingFromPropath")
+        return this.configurationManager.get("usingFormattingFromPropath");
     }
 }
