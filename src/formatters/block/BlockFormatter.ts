@@ -25,7 +25,13 @@ export class BlockFormater extends AFormatter implements IFormatter {
         }
 
         let parent = node.parent;
+        // Guard: do not match if parent is null or parent is a for statement
         if (parent === null || parent.type === SyntaxNodeType.ForStatement) {
+            return false;
+        }
+
+        // Guard: do not match if parent is also a 'body' node (prevents recursion on synthetic/intermediate nodes)
+        if (parent.type === "body") {
             return false;
         }
 
