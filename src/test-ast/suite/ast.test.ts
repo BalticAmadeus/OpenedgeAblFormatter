@@ -5,7 +5,7 @@ import { Tree, SyntaxNode } from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import {
     setupParserHelper,
-    stabilityTestCases,
+    getStabilityTestCases,
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
@@ -61,7 +61,7 @@ suite("AST Stability Test Suite", () => {
 
         console.log(
             "AST StabilityTests: ",
-            stabilityTestCases.length,
+            getStabilityTestCases().length,
             "test cases"
         );
 
@@ -69,7 +69,7 @@ suite("AST Stability Test Suite", () => {
         logKnownFailures("AST", "_ast_failures.txt");
     });
 
-    for (const cases of stabilityTestCases) {
+    for (const cases of getStabilityTestCases()) {
         test(`AST test: ${cases}`, () => {
             astTest(cases, parserHelper);
         }).timeout(20000);

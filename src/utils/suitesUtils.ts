@@ -21,10 +21,13 @@ export function getTestResultsDir(endpoint: string): string {
 
 export const stabilityTestDir = join(extensionDevelopmentPath, "resources/ade");
 export const extensionsToFind = [".p", ".w", ".cls", ".i"];
-export const stabilityTestCases = getFilesWithExtensions(
-    stabilityTestDir,
-    extensionsToFind
-);
+
+export function getStabilityTestCases(): string[] {
+    if (!fs.existsSync(stabilityTestDir)) {
+        return [];
+    }
+    return getFilesWithExtensions(stabilityTestDir, extensionsToFind);
+}
 
 export function runGenericTest<TResult>(
     name: string,

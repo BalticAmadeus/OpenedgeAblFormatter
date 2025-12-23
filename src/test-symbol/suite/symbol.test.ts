@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import {
     setupParserHelper,
-    stabilityTestCases,
+    getStabilityTestCases,
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
@@ -24,7 +24,7 @@ suite("Symbol Stability Test Suite", () => {
 
         console.log(
             "Symbol StabilityTests: ",
-            stabilityTestCases.length,
+            getStabilityTestCases().length,
             "test cases"
         );
 
@@ -40,7 +40,7 @@ suite("Symbol Stability Test Suite", () => {
         vscode.window.showInformationMessage("Symbol tests done!");
     });
 
-    for (const cases of stabilityTestCases) {
+    for (const cases of getStabilityTestCases()) {
         test(`Symbol test: ${cases}`, () => {
             symbolTest(cases, parserHelper);
         }).timeout(20000);
