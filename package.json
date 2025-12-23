@@ -245,9 +245,9 @@
         "AblFormatter.usingFormattingFromPropath": {
           "order": 901,
           "type": "string",
-          "default": "Default",
+          "default": "DoNothing",
           "enum": [
-            "Default",
+            "DoNothing",
             "Add",
             "Remove"
           ],
