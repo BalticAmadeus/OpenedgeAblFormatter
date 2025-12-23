@@ -221,7 +221,7 @@ export class UsingFormatter extends AFormatter implements IFormatter {
             }
 
             // Remove "from propath" if needed
-            if (optionalDefinitions == "from propath"  && this.settings.usingFormattingFromPropath() === "Remove") {
+            if (optionalDefinitions.toLowerCase() === "from propath"  && this.settings.usingFormattingFromPropath() === "Remove") {
                 optionalDefinitions = "";
             }
             
