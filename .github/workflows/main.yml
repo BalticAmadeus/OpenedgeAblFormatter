@@ -76,6 +76,40 @@ jobs:
                   path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults/symbolTests
                   retention-days: 7
 
+    error-test:
+        needs: test # Runs only if 'test' job is successful
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20.x
+
+            - run: npm install
+
+            - name: Compile
+              run: xvfb-run -a npm run compile
+              if: runner.os == 'Linux'
+
+            - name: Get ADE Repo
+              run: xvfb-run -a npm run get-ade-test
+              if: runner.os == 'Linux'
+
+            - name: Run Error Test
+              run: xvfb-run -a npm run test-error
+              if: runner.os == 'Linux'
+
+            - name: Save Error Test Results as Artifact
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: error-test-results
+                  path: /home/runner/work/OpenedgeAblFormatter/OpenedgeAblFormatter/resources/testResults/errorlTests
+                  retention-days: 7
+
     ast-test:
         needs: test # Runs only if 'test' job is successful
         runs-on: ubuntu-latest
