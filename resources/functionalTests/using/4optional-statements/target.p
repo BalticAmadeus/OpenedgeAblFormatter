@@ -1,9 +1,9 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.usingFormatting": true}*/
 
-using A from propath.
+USING a.
 //define variable c as integer no-undo.
 USING b.
-using c FROM aSsemblY.
+using A from propath.
 //message ".".
-USING a.
+using c FROM aSsemblY.
