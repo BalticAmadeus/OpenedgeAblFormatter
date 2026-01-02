@@ -169,8 +169,7 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                 keyword = FormatterHelper.getCurrentText(
                     keywordChild,
                     fullText
-                );
-                keyword = keyword.trim().toLowerCase();
+                ).trim();
                 identifier = FormatterHelper.getCurrentText(
                     identifierChild,
                     fullText
@@ -188,13 +187,10 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                                 fullText
                             ).trim() + " ";
                     }
-                    optionalDefinitions = optionalDefinitions
-                        .trim()
-                        .toLowerCase();
+                    optionalDefinitions = optionalDefinitions.trim();
                 }
             } else {
                 keyword = keywordChild.text.trim();
-                keyword = keyword.toLowerCase();
                 identifier = identifierChild.text.trim();
 
                 if (currentNode.childCount > 2) {
@@ -205,9 +201,7 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                                 currentChild.text.trim() + " ";
                         }
                     }
-                    optionalDefinitions = optionalDefinitions
-                        .trim()
-                        .toLowerCase();
+                    optionalDefinitions = optionalDefinitions.trim();
                 }
             }
 
