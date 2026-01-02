@@ -170,9 +170,7 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                     keywordChild,
                     fullText
                 );
-                keyword = this.settings.casing()
-                    ? keyword.trim().toUpperCase()
-                    : keyword.trim().toLowerCase();
+                keyword = keyword.trim().toLowerCase();
                 identifier = FormatterHelper.getCurrentText(
                     identifierChild,
                     fullText
@@ -190,15 +188,13 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                                 fullText
                             ).trim() + " ";
                     }
-                    optionalDefinitions = this.settings.casing()
-                        ? optionalDefinitions.trim().toUpperCase()
-                        : optionalDefinitions.trim().toLowerCase();
+                    optionalDefinitions = optionalDefinitions
+                        .trim()
+                        .toLowerCase();
                 }
             } else {
                 keyword = keywordChild.text.trim();
-                keyword = this.settings.casing()
-                    ? keyword.toUpperCase()
-                    : keyword.toLowerCase();
+                keyword = keyword.toLowerCase();
                 identifier = identifierChild.text.trim();
 
                 if (currentNode.childCount > 2) {
@@ -209,9 +205,9 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                                 currentChild.text.trim() + " ";
                         }
                     }
-                    optionalDefinitions = this.settings.casing()
-                        ? optionalDefinitions.trim().toUpperCase()
-                        : optionalDefinitions.trim().toLowerCase();
+                    optionalDefinitions = optionalDefinitions
+                        .trim()
+                        .toLowerCase();
                 }
             }
 

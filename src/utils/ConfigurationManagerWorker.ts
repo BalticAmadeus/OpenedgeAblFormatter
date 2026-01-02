@@ -7,16 +7,12 @@ import { IConfigurationManager } from "./IConfigurationManager";
 export class WorkerConfigurationManager implements IConfigurationManager {
     private settings: Record<string, any> = {};
     private tabSize: number = 4;
-    private casing: any = undefined;
     private overridingSettings: any = {};
 
     public setAll(settings: Record<string, any>) {
         this.settings = { ...this.settings, ...settings };
         if (typeof settings.tabSize === "number") {
             this.tabSize = settings.tabSize;
-        }
-        if (settings["abl.completion.upperCase"] !== undefined) {
-            this.casing = settings["abl.completion.upperCase"];
         }
         this.overridingSettings = { ...this.overridingSettings, ...settings };
     }
@@ -49,13 +45,6 @@ export class WorkerConfigurationManager implements IConfigurationManager {
 
     public getTabSize(): number {
         return this.tabSize || 4; // Default to 4 if not set
-    }
-
-    public getCasing(): any {
-        if (this.overridingSettings && this.overridingSettings["abl.completion.upperCase"] !== undefined) {
-            return this.overridingSettings["abl.completion.upperCase"];
-        }
-        return this.settings["abl.completion.upperCase"];
     }
 
     public setOverridingSettings(settings: any): void {
