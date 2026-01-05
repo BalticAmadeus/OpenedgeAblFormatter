@@ -178,8 +178,7 @@ export class VariableDefinitionFormatter
                     0,
                     this.alignVariableTuning - typeTuningText.length
                 );
-                newString =
-                    typeTuningText + " ".repeat(spaceCount);
+                newString = typeTuningText + " ".repeat(spaceCount);
                 break;
             }
             case SyntaxNodeType.AccessTuning: {
@@ -202,20 +201,20 @@ export class VariableDefinitionFormatter
                 ).trim();
                 const shouldAlign =
                     !this.hasAccessTuning && this.alignVariableKeyword !== 0;
-                let spacesCount = 1;
+                let spaceCount = 1;
 
                 if (shouldAlign) {
                     if (
                         this.hasStaticWithoutAccess ||
                         this.hasScopeTuningWithoutAccess
                     ) {
-                        spacesCount = 1;
+                        spaceCount = 1;
                     } else {
-                        spacesCount = 2 + this.alignVariableKeyword;
+                        spaceCount = 2 + this.alignVariableKeyword;
                         this.hasAccessTuning = true;
                     }
                 }
-                newString = " ".repeat(Math.max(0, spacesCount)) + text;
+                newString = " ".repeat(Math.max(0, spaceCount)) + text;
                 break;
             }
             case SyntaxNodeType.Identifier: {
@@ -275,7 +274,7 @@ export class VariableDefinitionFormatter
             }
             case SyntaxNodeType.VariableTuning:
                 let variableTuningText = "";
-                let spacesCount = 0;
+                let spaceCount = 0;
                 const noUndoKeyword = node.children.find(
                     (child) => child.type === SyntaxNodeType.NoUndoKeyword
                 );
@@ -289,7 +288,7 @@ export class VariableDefinitionFormatter
                         fullText
                     );
                     if (previousExtent && node.previousSibling) {
-                        spacesCount =
+                        spaceCount =
                             this.alignExtent -
                             FormatterHelper.getCurrentText(
                                 node.previousSibling,
@@ -297,10 +296,10 @@ export class VariableDefinitionFormatter
                             ).trim().length -
                             1;
                     } else {
-                        spacesCount = Math.max(0, this.alignExtent);
+                        spaceCount = Math.max(0, this.alignExtent);
                     }
                     newString =
-                        " ".repeat(Math.max(0, spacesCount)) +
+                        " ".repeat(Math.max(0, spaceCount)) +
                         variableTuningText;
                     break;
                 }
