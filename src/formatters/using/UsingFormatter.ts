@@ -90,7 +90,9 @@ export class UsingFormatter extends AFormatter implements IFormatter {
         } else {
             return (
                 statement.identifier +
-                " ".repeat(maxAlignment - statement.identifier.length) +
+                " ".repeat(
+                    Math.max(0, maxAlignment - statement.identifier.length)
+                ) +
                 statement.optionalDefinitions +
                 "."
             );

@@ -134,8 +134,11 @@ export class ProcedureParameterFormatter
                 newString =
                     typeTuningText +
                     " ".repeat(
-                        ProcedureParameterFormatter.alignNoUndo -
-                            typeTuningText.length
+                        Math.max(
+                            0,
+                            ProcedureParameterFormatter.alignNoUndo -
+                                typeTuningText.length
+                        )
                     );
                 break;
             case SyntaxNodeType.Identifier:
@@ -147,7 +150,10 @@ export class ProcedureParameterFormatter
                     " " +
                     text +
                     " ".repeat(
-                        ProcedureParameterFormatter.alignType - text.length
+                        Math.max(
+                            0,
+                            ProcedureParameterFormatter.alignType - text.length
+                        )
                     );
                 break;
             case parameterTypes.hasFancy(node.type, ""): {
@@ -159,7 +165,11 @@ export class ProcedureParameterFormatter
                     " " +
                     text +
                     " ".repeat(
-                        ProcedureParameterFormatter.alignParameter - text.length
+                        Math.max(
+                            0,
+                            ProcedureParameterFormatter.alignParameter -
+                                text.length
+                        )
                     );
                 break;
             }

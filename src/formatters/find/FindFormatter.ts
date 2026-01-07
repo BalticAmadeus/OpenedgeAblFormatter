@@ -125,7 +125,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
                         " ",
                         FormatterHelper.getCurrentText(child, fullText).trim(),
                         fullText.eolDelimiter,
-                        " ".repeat(alignColumn)
+                        " ".repeat(Math.max(0, alignColumn))
                     );
                     break;
                 case SyntaxNodeType.Error:
