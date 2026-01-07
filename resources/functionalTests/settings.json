@@ -32,6 +32,5 @@
     "expressionFormatting": true,
     "expressionFormattingLogicalLocation": "New",
     "statementFormatting": true,
-    "variableAssignmentFormatting": true,
-    "abl.completion.upperCase": true
+    "variableAssignmentFormatting": true
 }

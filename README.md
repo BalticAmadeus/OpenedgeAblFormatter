@@ -113,8 +113,7 @@ Example:
 /* formatterSettingsOverride */
 /* {
 "AblFormatter.blockFormatting": true,
-"AblFormatter.assignFormatting": true,
-"abl.completion.upperCase": false
+"AblFormatter.assignFormatting": true
 } */
 def var a as integer no-undo init 1.
 
