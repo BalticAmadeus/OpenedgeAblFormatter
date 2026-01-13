@@ -131,8 +131,15 @@ export class ProcedureParameterFormatter
                     node,
                     fullText
                 );
-                const pad = this.alignNoUndo - typeTuningText.length;
-                newString = typeTuningText + " ".repeat(pad > 0 ? pad : 0);
+                newString =
+                    typeTuningText +
+                    " ".repeat(
+                        Math.max(
+                            0,
+                            this.alignNoUndo -
+                                typeTuningText.length
+                        )
+                    );
                 break;
             }
             case SyntaxNodeType.Identifier: {
@@ -140,8 +147,15 @@ export class ProcedureParameterFormatter
                     node,
                     fullText
                 ).trim();
-                const pad = this.alignType - text.length;
-                newString = " " + text + " ".repeat(pad > 0 ? pad : 0);
+                newString =
+                    " " +
+                    text +
+                    " ".repeat(
+                        Math.max(
+                            0,
+                            this.alignType - text.length
+                        )
+                    );
                 break;
             }
             case parameterTypes.hasFancy(node.type, ""): {
@@ -149,8 +163,16 @@ export class ProcedureParameterFormatter
                     node,
                     fullText
                 ).trim();
-                const pad = this.alignParameter - text.length;
-                newString = " " + text + " ".repeat(pad > 0 ? pad : 0);
+                newString =
+                    " " +
+                    text +
+                    " ".repeat(
+                        Math.max(
+                            0,
+                            this.alignParameter -
+                                text.length
+                        )
+                    );
                 break;
             }
             case SyntaxNodeType.Error:

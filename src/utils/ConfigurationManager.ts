@@ -19,12 +19,6 @@ export class ConfigurationManager implements IConfigurationManager {
                     "ABL Formatter settings were changed!"
                 );
             }
-            if (e.affectsConfiguration("abl.completion")) {
-                this.reloadExternalConfig = true;
-                window.showInformationMessage(
-                    "ABL completion settings were changed!"
-                );
-            }
         });
     }
 
@@ -50,7 +44,7 @@ export class ConfigurationManager implements IConfigurationManager {
     public getTabSize(): number {
         return this.tabSize || 4; // Default to 4 if not set
     }
-
+    
     public getCasing() {
         if (this.reloadExternalConfig) {
             this.reloadExternalConfig = false;
@@ -96,6 +90,47 @@ export class ConfigurationManager implements IConfigurationManager {
             }
         }
         return config;
+    }
+    
+    /**
+     * Collect all relevant settings for formatting, including overrides and editor options.
+     * Returns a plain object with all settings needed by the worker.
+     */
+    public getAll(): Record<string, any> {
+        if (this.reloadConfig) {
+            this.reloadConfig = false;
+            this.configuration = workspace.getConfiguration("AblFormatter");
+        }
+        if (this.reloadExternalConfig) {
+            this.reloadExternalConfig = false;
+            this.externalConfiguration =
+                workspace.getConfiguration("abl.completion");
+        }
+        const allSettings: Record<string, any> = {};
+        // Collect all AblFormatter settings
+        if (this.configuration) {
+            for (const key of Object.keys(this.configuration)) {
+                allSettings[key] = this.configuration.get(key);
+            }
+        }
+        // Collect abl.completion.upperCase
+        if (this.externalConfiguration) {
+            allSettings["abl.completion.upperCase"] =
+                this.externalConfiguration.get("upperCase");
+        }
+        // Add tabSize if set
+        if (this.tabSize !== undefined) {
+            allSettings["tabSize"] = this.tabSize;
+        }
+        // Apply overrides if present
+        if (this.overridingSettings) {
+            for (const [key, value] of Object.entries(
+                this.overridingSettings
+            )) {
+                allSettings[key] = value;
+            }
+        }
+        return allSettings;
     }
 
     private getConfig(name: string): any {

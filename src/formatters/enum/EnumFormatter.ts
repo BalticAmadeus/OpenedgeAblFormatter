@@ -123,7 +123,7 @@ export class EnumFormatter extends AFormatter implements IFormatter {
                         const trimmedChild = childString.trim();
                         const toAdd =
                             fullText.eolDelimiter +
-                            " ".repeat(this.alignColumn) +
+                            " ".repeat(Math.max(0, this.alignColumn)) +
                             trimmedChild;
                         resultString += toAdd;
                         return;
@@ -136,7 +136,9 @@ export class EnumFormatter extends AFormatter implements IFormatter {
 
         if (this.settings.endDotNewLine()) {
             resultString +=
-                fullText.eolDelimiter + " ".repeat(this.alignColumn) + ".";
+                fullText.eolDelimiter +
+                " ".repeat(Math.max(0, this.alignColumn)) +
+                ".";
         } else {
             resultString += ".";
         }
@@ -171,7 +173,7 @@ export class EnumFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.EnumMember:
                 newString = foundFirstMember
                     ? fullText.eolDelimiter +
-                      " ".repeat(this.alignColumn) +
+                      " ".repeat(Math.max(0, this.alignColumn)) +
                       FormatterHelper.getCurrentText(node, fullText).trim()
                     : " " +
                       FormatterHelper.getCurrentText(node, fullText).trim();
