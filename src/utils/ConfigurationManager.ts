@@ -45,7 +45,7 @@ export class ConfigurationManager implements IConfigurationManager {
     public setOverridingSettings(settings: any): void {
         this.overridingSettings = settings;
     }
-    
+
     /**
      * Collect all relevant settings for formatting, including overrides and editor options.
      * Returns a plain object with all settings needed by the worker.
@@ -53,7 +53,6 @@ export class ConfigurationManager implements IConfigurationManager {
     public getAll(): Record<string, any> {
         if (this.reloadConfig) {
             this.reloadConfig = false;
-        
             this.configuration = workspace.getConfiguration("AblFormatter");
         }
         const allSettings: Record<string, any> = {};
@@ -63,7 +62,6 @@ export class ConfigurationManager implements IConfigurationManager {
                 allSettings[key] = this.configuration.get(key);
             }
         }
-
         // Add tabSize if set
         if (this.tabSize !== undefined) {
             allSettings["tabSize"] = this.tabSize;
