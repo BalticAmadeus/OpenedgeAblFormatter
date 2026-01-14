@@ -42,7 +42,11 @@ export function runGenericTest<TResult>(
     const afterText = format(beforeText, name, parserHelper);
     const afterResult = config.processAfterText(afterText, parserHelper);
 
-    if (beforeResult == null || afterResult == null) {
+    if (beforeResult === null || afterResult === null) {
+        return;
+    }
+    
+    if (beforeResult === undefined || afterResult === undefined) {
         return;
     }
 
