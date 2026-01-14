@@ -538,3 +538,4 @@ workshop__seedit.w
 //010 issues <--
 adeuib__accsect.p
 adeuib__advprop.w
+adecomp_compvars.i
