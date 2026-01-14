@@ -4,10 +4,7 @@ import { IConfigurationManager } from "./IConfigurationManager";
 export class ConfigurationManager implements IConfigurationManager {
     private static instance: ConfigurationManager;
     private reloadConfig = true;
-    private reloadExternalConfig = true;
     private configuration: WorkspaceConfiguration | undefined = undefined;
-    private externalConfiguration: WorkspaceConfiguration | undefined =
-        undefined;
     private overridingSettings: any | undefined;
     private tabSize: number | undefined;
 
@@ -44,52 +41,9 @@ export class ConfigurationManager implements IConfigurationManager {
     public getTabSize(): number {
         return this.tabSize || 4; // Default to 4 if not set
     }
-    
-    public getCasing() {
-        if (this.reloadExternalConfig) {
-            this.reloadExternalConfig = false;
-            this.externalConfiguration =
-                workspace.getConfiguration("abl.completion");
-        }
-        return this.getCassingConfig();
-    }
 
     public setOverridingSettings(settings: any): void {
         this.overridingSettings = settings;
-    }
-
-    private getCassingConfig(): any {
-        const config = this.externalConfiguration?.get("upperCase");
-
-        if (config === undefined || (config !== true && config !== false)) {
-            window
-                .showErrorMessage(
-                    `abl.completion.upperCase setting not set or set incorrectly. Update settings file. Current value - ${config}. Expected values - true or false `,
-                    "Settings"
-                )
-                .then((selection) => {
-                    switch (selection) {
-                        case "Settings":
-                            commands.executeCommand(
-                                "workbench.action.openWorkspaceSettingsFile"
-                            );
-                            return;
-                        default:
-                            return;
-                    }
-                });
-        }
-
-        if (this.overridingSettings !== undefined) {
-            const overridingConfig =
-                this.overridingSettings["abl.completion.upperCase"];
-
-            if (overridingConfig !== undefined) {
-                window.showInformationMessage("Found overriding settings!");
-                return overridingConfig;
-            }
-        }
-        return config;
     }
     
     /**
@@ -99,12 +53,8 @@ export class ConfigurationManager implements IConfigurationManager {
     public getAll(): Record<string, any> {
         if (this.reloadConfig) {
             this.reloadConfig = false;
+        
             this.configuration = workspace.getConfiguration("AblFormatter");
-        }
-        if (this.reloadExternalConfig) {
-            this.reloadExternalConfig = false;
-            this.externalConfiguration =
-                workspace.getConfiguration("abl.completion");
         }
         const allSettings: Record<string, any> = {};
         // Collect all AblFormatter settings
@@ -113,11 +63,7 @@ export class ConfigurationManager implements IConfigurationManager {
                 allSettings[key] = this.configuration.get(key);
             }
         }
-        // Collect abl.completion.upperCase
-        if (this.externalConfiguration) {
-            allSettings["abl.completion.upperCase"] =
-                this.externalConfiguration.get("upperCase");
-        }
+
         // Add tabSize if set
         if (this.tabSize !== undefined) {
             allSettings["tabSize"] = this.tabSize;
