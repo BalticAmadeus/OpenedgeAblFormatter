@@ -70,7 +70,10 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
         for (const child of children) {
             if (child.type === "comment") {
-                const commentText = FormatterHelper.getCurrentText(child, fullText);
+                const commentText = FormatterHelper.getCurrentText(
+                    child,
+                    fullText
+                );
 
                 // Check if comment contains newlines (block comment on own line)
                 if (commentText.includes("\n") || commentText.includes("\r")) {
@@ -81,7 +84,10 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                         const trimmedLine = line.trim();
 
                         // Skip empty lines at the beginning
-                        if (trimmedLine.length === 0 && !foundFirstCommentLine) {
+                        if (
+                            trimmedLine.length === 0 &&
+                            !foundFirstCommentLine
+                        ) {
                             continue;
                         }
 
@@ -105,19 +111,25 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 // Format the non-comment child
                 resultString += this.getTemptableExpressionString(
                     child,
-                    fullText.eolDelimiter.concat(" ".repeat(this.temptableValueColumn)),
+                    fullText.eolDelimiter.concat(
+                        " ".repeat(Math.max(0, this.temptableValueColumn))
+                    ),
                     fullText
                 );
             }
         }
 
-        resultString += this.getFormattedEndDot(fullText.eolDelimiter.concat(" ".repeat(this.startColumn)));
+        resultString += this.getFormattedEndDot(
+            fullText.eolDelimiter.concat(
+                " ".repeat(Math.max(0, this.startColumn))
+            )
+        );
         return resultString;
     }
 
-    private getFormattedEndDot(separator: string,): string {
+    private getFormattedEndDot(separator: string): string {
         if (this.settings.endDotLocationNew()) {
-            return separator + "."; 
+            return separator + ".";
         } else {
             return ".";
         }
@@ -191,12 +203,16 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 if (this.hasFieldOptions) {
                     newString =
                         newString +
-                        " ".repeat(this.alignFieldOptions - text.length);
+                        " ".repeat(
+                            Math.max(0, this.alignFieldOptions - text.length)
+                        );
                 }
                 break;
             case SyntaxNodeType.Identifier:
                 newString =
-                    " " + text + " ".repeat(this.alignType - text.length);
+                    " " +
+                    text +
+                    " ".repeat(Math.max(0, this.alignType - text.length));
                 break;
 
             case SyntaxNodeType.Error:
@@ -259,7 +275,9 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                         this.getTemptableExpressionString(
                             child,
                             fullText.eolDelimiter.concat(
-                                " ".repeat(this.temptableValueColumn)
+                                " ".repeat(
+                                    Math.max(0, this.temptableValueColumn)
+                                )
                             ),
                             fullText
                         )

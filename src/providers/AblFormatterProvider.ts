@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { IParserHelper } from "../parser/IParserHelper";
 import { FileIdentifier } from "../model/FileIdentifier";
+import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { ConfigurationManager } from "../utils/ConfigurationManager";
 import { EOL } from "../model/EOL";
 import { DebugManager } from "./DebugManager";
@@ -36,49 +37,38 @@ export class AblFormatterProvider
 
         configurationManager.setTabSize(options.tabSize);
 
-        // Return a promise for async formatting
-        return this.performAsyncDocumentFormatting(
-            document,
-            configurationManager,
-            debugManager
-        );
-    }
-
-    private async performAsyncDocumentFormatting(
-        document: vscode.TextDocument,
-        configurationManager: ConfigurationManager,
-        debugManager: DebugManager
-    ): Promise<vscode.TextEdit[]> {
         try {
-            const allSettings = configurationManager.getAll();
-            
-            const formattedText = await this.parserHelper.format(
+            const codeFormatter = new FormattingEngine(
+                this.parserHelper,
                 new FileIdentifier(document.fileName, document.version),
-                document.getText(),
-                {
-                    settings: allSettings,
-                    eol: new EOL(document.eol),
-                    tabSize: 4
-                }
+                configurationManager,
+                debugManager,
+                this.metamorphicTestingEngine
             );
 
-            // Return the TextEdit for the whole document
-            return [
-                vscode.TextEdit.replace(
-                    new vscode.Range(
-                        new vscode.Position(0, 0),
-                        new vscode.Position(document.lineCount, 0)
-                    ),
-                    formattedText
-                ),
-            ];
-        } catch (error) {
-            vscode.window.showErrorMessage(
-                `ABL Formatter: Failed to format document - ${
-                    error instanceof Error ? error.message : String(error)
-                }`
+            const initialText = document.getText();
+            const outputText = codeFormatter.formatText(
+                initialText,
+                new EOL(document.eol),
+                true
             );
-            return [];
+
+            const editor = vscode.window.activeTextEditor;
+            editor!.edit(
+                (edit: vscode.TextEditorEdit) => {
+                    edit.replace(
+                        new vscode.Range(
+                            new vscode.Position(0, 0),
+                            new vscode.Position(10000000, 10000000)
+                        ),
+                        outputText
+                    );
+                },
+                { undoStopBefore: false, undoStopAfter: false }
+            );
+        } catch (e) {
+            console.log(e);
+            return;
         }
     }
 
@@ -95,42 +85,30 @@ export class AblFormatterProvider
 
         configurationManager.setTabSize(options.tabSize);
 
-        // Return a promise for async formatting
-        return this.performAsyncRangeFormatting(
-            document,
-            range,
-            configurationManager,
-            debugManager
-        );
-    }
-
-    private async performAsyncRangeFormatting(
-        document: vscode.TextDocument,
-        range: vscode.Range,
-        configurationManager: ConfigurationManager,
-        debugManager: DebugManager
-    ): Promise<vscode.TextEdit[]> {
         try {
-            const allSettings = configurationManager.getAll();
-
-            const formattedText = await this.parserHelper.format(
+            const codeFormatter = new FormattingEngine(
+                this.parserHelper,
                 new FileIdentifier(document.fileName, document.version),
-                document.getText(range),
-                {
-                    settings: allSettings,
-                    eol: new EOL(document.eol),
-                    tabSize: 4
-                }
+                configurationManager,
+                debugManager,
+                this.metamorphicTestingEngine
             );
 
-            return [vscode.TextEdit.replace(range, formattedText)];
-        } catch (error) {
-            vscode.window.showErrorMessage(
-                `ABL Formatter: Failed to format range - ${
-                    error instanceof Error ? error.message : String(error)
-                }`
+            const str = codeFormatter.formatText(
+                document.getText(range),
+                new EOL(document.eol)
             );
-            return [];
+
+            const editor = vscode.window.activeTextEditor;
+            editor!.edit(
+                (edit: vscode.TextEditorEdit) => {
+                    edit.replace(range, str);
+                },
+                { undoStopBefore: false, undoStopAfter: false }
+            );
+        } catch (e) {
+            console.log(e);
+            return;
         }
     }
 

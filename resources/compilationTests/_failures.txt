@@ -1373,3 +1373,8 @@ prores_a-read.r
 prores_l-verify.r
 prores_l-write.r
 workshop__preproc.r
+adeuib__putpref.r
+adeweb__cdread.r
+adm2_sbologic.r
+webtools_promsgs.r
+workshop__cdread.r

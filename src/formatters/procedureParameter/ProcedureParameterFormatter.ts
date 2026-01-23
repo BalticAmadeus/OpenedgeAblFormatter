@@ -20,10 +20,10 @@ export class ProcedureParameterFormatter
 {
     public static readonly formatterLabel = "procedureParameterFormatting";
     private readonly settings: ProcedureParameterSettings;
-    private static visitedNodes: Set<number> = new Set();
-    private static alignType = 0;
-    private static alignNoUndo = 0;
-    private static alignParameter = 0;
+    private visitedNodes: Set<number> = new Set();
+    private alignType = 0;
+    private alignNoUndo = 0;
+    private alignParameter = 0;
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
@@ -46,12 +46,12 @@ export class ProcedureParameterFormatter
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
-        if (ProcedureParameterFormatter.visitedNodes.has(node.id)) {
+        if (this.visitedNodes.has(node.id)) {
             const newText = this.collectString(node, fullText);
             return this.getCodeEdit(node, oldText, newText, fullText);
         }
 
-        this.resetStaticVariables();
+        this.resetAlignmentVariables();
         let currentNode: SyntaxNode | null = node;
         for (
             currentNode;
@@ -65,7 +65,7 @@ export class ProcedureParameterFormatter
                 break;
             }
             this.collectStructure(currentNode, fullText);
-            ProcedureParameterFormatter.visitedNodes.add(currentNode.id);
+            this.visitedNodes.add(currentNode.id);
         }
         const newText = this.collectString(node, fullText);
         return this.getCodeEdit(node, oldText, newText, fullText);
@@ -95,20 +95,20 @@ export class ProcedureParameterFormatter
     private getStructure(node: SyntaxNode, fullText: Readonly<FullText>): void {
         switch (node.type) {
             case SyntaxNodeType.TypeTuning:
-                ProcedureParameterFormatter.alignNoUndo = Math.max(
-                    ProcedureParameterFormatter.alignNoUndo,
+                this.alignNoUndo = Math.max(
+                    this.alignNoUndo,
                     this.collectTypeTuningString(node, fullText).length
                 );
                 break;
             case SyntaxNodeType.Identifier:
-                ProcedureParameterFormatter.alignType = Math.max(
-                    ProcedureParameterFormatter.alignType,
+                this.alignType = Math.max(
+                    this.alignType,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
                 );
                 break;
             case parameterTypes.hasFancy(node.type, ""):
-                ProcedureParameterFormatter.alignParameter = Math.max(
-                    ProcedureParameterFormatter.alignParameter,
+                this.alignParameter = Math.max(
+                    this.alignParameter,
                     FormatterHelper.getCurrentText(node, fullText).trim().length
                 );
                 break;
@@ -126,7 +126,7 @@ export class ProcedureParameterFormatter
                     fullText
                 ).trimEnd();
                 break;
-            case SyntaxNodeType.TypeTuning:
+            case SyntaxNodeType.TypeTuning: {
                 const typeTuningText = this.collectTypeTuningString(
                     node,
                     fullText
@@ -134,11 +134,15 @@ export class ProcedureParameterFormatter
                 newString =
                     typeTuningText +
                     " ".repeat(
-                        ProcedureParameterFormatter.alignNoUndo -
-                            typeTuningText.length
+                        Math.max(
+                            0,
+                            this.alignNoUndo -
+                                typeTuningText.length
+                        )
                     );
                 break;
-            case SyntaxNodeType.Identifier:
+            }
+            case SyntaxNodeType.Identifier: {
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
@@ -147,9 +151,13 @@ export class ProcedureParameterFormatter
                     " " +
                     text +
                     " ".repeat(
-                        ProcedureParameterFormatter.alignType - text.length
+                        Math.max(
+                            0,
+                            this.alignType - text.length
+                        )
                     );
                 break;
+            }
             case parameterTypes.hasFancy(node.type, ""): {
                 const text = FormatterHelper.getCurrentText(
                     node,
@@ -159,7 +167,11 @@ export class ProcedureParameterFormatter
                     " " +
                     text +
                     " ".repeat(
-                        ProcedureParameterFormatter.alignParameter - text.length
+                        Math.max(
+                            0,
+                            this.alignParameter -
+                                text.length
+                        )
                     );
                 break;
             }
@@ -208,9 +220,10 @@ export class ProcedureParameterFormatter
         return newString;
     }
 
-    private resetStaticVariables() {
-        ProcedureParameterFormatter.alignType = 0;
-        ProcedureParameterFormatter.alignNoUndo = 0;
-        ProcedureParameterFormatter.alignParameter = 0;
+    private resetAlignmentVariables() {
+        this.alignType = 0;
+        this.alignNoUndo = 0;
+        this.alignParameter = 0;
+        this.visitedNodes.clear();
     }
 }

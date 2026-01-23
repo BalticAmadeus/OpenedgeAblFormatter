@@ -64,7 +64,9 @@ We implemented extensive settings configuration to allow users to easly tailor t
 | if formatting do location                           | string  | Same        | New, Same              | Should DO block be on a new line or the same line as the THEN keyword                   |
 | if formatting statement location                    | string  | Same        | New, Same              | Should the first statement in an IF block be on a new line or the same line             |
 | temptable formatting                                | boolean | true        | true,false             | Enable TEMP-TABLE formatting                                                            |
+| temptable formatting end dot location               | string  | Same        | New, Same              | Should end dot be located on a new line or the same line as the last TEMP-TABLE line    |
 | using formatting                                    | boolean | true        | true,false             | Enable USING formatting                                                                 |
+| using formatting from propath                       | string  | DoNothing   | DoNothing, add, remove | Should 'from propath' be added or removed in USING statements automatically             |
 | body formatting                                     | boolean | true        | true,false             | Enable BODY formatting                                                                  |
 | property formatting                                 | boolean | true        | true,false             | Enable property formatting                                                              |
 | if function formatting                              | boolean | true        | true,false             | Enable IF FUNCTION formatting                                                           |
@@ -113,8 +115,7 @@ Example:
 /* formatterSettingsOverride */
 /* {
 "AblFormatter.blockFormatting": true,
-"AblFormatter.assignFormatting": true,
-"abl.completion.upperCase": false
+"AblFormatter.assignFormatting": true
 } */
 def var a as integer no-undo init 1.
 

@@ -2,10 +2,10 @@ import { EOL } from "../model/EOL";
 import { BaseEngineOutput, DebugTestingEngineOutput } from "./EngineParams";
 import { OriginalTestCase, TextTree } from "./OriginalTestCase";
 import { MR } from "./MR";
-import { FormattingEngineMock } from "../formatterFramework/FormattingEngineMock";
+import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 
 export class MetamorphicEngine<T extends BaseEngineOutput> {
-    private formattingEngineMock: FormattingEngineMock | undefined = undefined;
+    private formattingEngine: FormattingEngine | undefined = undefined;
     private resultsList: (T | boolean)[] = [];
 
     private readonly metamorphicRelations: MR[] = [];
@@ -17,8 +17,8 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         this.engineConsole = engineConsole;
     }
 
-    public setFormattingEngine(formattingEngineMock: FormattingEngineMock) {
-        this.formattingEngineMock = formattingEngineMock;
+    public setFormattingEngine(formattingEngine: FormattingEngine) {
+        this.formattingEngine = formattingEngine;
     }
 
     public addNameInputAndOutputPair(
@@ -47,23 +47,23 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         }
     }
 
-    private async test(
+    private test(
         mr: MR,
         pair: OriginalTestCase
-    ): Promise<undefined | DebugTestingEngineOutput> {
-        if (this.formattingEngineMock === undefined) {
+    ): undefined | DebugTestingEngineOutput {
+        if (this.formattingEngine === undefined) {
             throw new Error(
-                `Missing FormattingEngineMock in Metamorphic test engine.`
+                `Missing FormattingEngine in Metamorphic test engine.`
             );
         }
 
-        const folowUpInput = await mr.inputFunction(pair.input);
-        const actualFolowUpOutput = await this.formattingEngineMock.formatText(
+        const folowUpInput = mr.inputFunction(pair.input);
+        const actualFolowUpOutput = this.formattingEngine.formatText(
             folowUpInput,
             pair.eol,
             false
         );
-        const expectedFolowUpOutput = await mr.outputFunction(pair.output);
+        const expectedFolowUpOutput = mr.outputFunction(pair.output);
 
         const pass = actualFolowUpOutput === expectedFolowUpOutput;
 
@@ -89,10 +89,7 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         return matrix;
     }
 
-    public async runOne(
-        fileName: string,
-        mrName: string
-    ): Promise<T | undefined> {
+    public runOne(fileName: string, mrName: string): T | undefined {
         const pair = this.inputAndOutputPairs.find(
             (pair) => pair.name === fileName
         );
@@ -112,7 +109,7 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
             );
         }
 
-        return (await this.test(mr, pair)) as T | undefined;
+        return this.test(mr, pair) as T | undefined;
     }
 
     public runAll(): (T | boolean)[] {
