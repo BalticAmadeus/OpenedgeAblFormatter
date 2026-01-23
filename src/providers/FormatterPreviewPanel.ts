@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import { IParserHelper } from "../parser/IParserHelper";
-import { FileIdentifier } from "../model/FileIdentifier";
+import { AblParserHelper } from "../parser/AblParserHelper";
 import { FormatterPreviewProvider } from "./FormatterPreviewProvider";
+import { format } from "../utils/suitesUtils";
 import * as path from "node:path";
 import * as fs from "node:fs";
 
@@ -20,7 +20,7 @@ export class FormatterPreviewPanel {
     public static currentPanel: FormatterPreviewPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
-    private readonly _parserHelper: IParserHelper;
+    private readonly _parserHelper: AblParserHelper;
     private readonly _disposables: vscode.Disposable[] = [];
     private readonly _previewProvider: FormatterPreviewProvider;
     private _currentSettings: Record<string, any> = {};
@@ -30,7 +30,7 @@ export class FormatterPreviewPanel {
     private constructor(
         panel: vscode.WebviewPanel,
         extensionUri: vscode.Uri,
-        parserHelper: IParserHelper,
+        parserHelper: AblParserHelper,
         previewProvider: FormatterPreviewProvider
     ) {
         this._panel = panel;
@@ -115,7 +115,7 @@ export class FormatterPreviewPanel {
 
     public static createOrShow(
         extensionUri: vscode.Uri,
-        parserHelper: IParserHelper,
+        parserHelper: AblParserHelper,
         previewProvider: FormatterPreviewProvider
     ) {
         const column = vscode.ViewColumn.One;
@@ -303,14 +303,11 @@ export class FormatterPreviewPanel {
             tempSettings.eol = { eolDel: "\r\n" };
             const { eol, tabSize, ...formatterSettings } = tempSettings;
 
-            const formattedCode = await this._parserHelper.format(
-                new FileIdentifier("preview.p", 1),
+            const formattedCode = format(
                 previewCode,
-                {
-                    settings: formatterSettings,
-                    eol: eol,
-                    tabSize: tabSize,
-                }
+                "preview.p",
+                this._parserHelper,
+                false // isMetamorphicEnabled, adjust if needed
             );
 
             // Update the virtual document for the preview
