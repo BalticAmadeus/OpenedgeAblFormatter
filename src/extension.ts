@@ -40,10 +40,6 @@ export async function activate(context: vscode.ExtensionContext) {
     ];
     metamorphicTestingEngine.addMRs(metamorphicRelationsList);
 
-    debugManager.setParserHelper(parserHelper);
-    // Start the parser worker ONCE when the extension is enabled
-    await parserHelper.startWorker();
-
     vscode.window.onDidChangeActiveTextEditor(() => {
         if (debugManager) {
             debugManager.handleErrorRanges([]);

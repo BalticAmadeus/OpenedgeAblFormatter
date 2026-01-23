@@ -2,6 +2,7 @@ import {
     CancellationToken,
     Hover,
     HoverProvider,
+    ProviderResult,
     Position,
     TextDocument,
 } from "vscode";
@@ -24,14 +25,12 @@ export class AblDebugHoverProvider implements HoverProvider {
         this.parserHelper = parserHelper;
     }
 
-    async provideHover(
+    provideHover(
         document: TextDocument,
         position: Position,
         token: CancellationToken
-    ): Promise<Hover | undefined> {
-        const showTreeOnHover = DebugManager.getInstance().isShowTreeOnHover();
-
-        if (!showTreeOnHover) {
+    ): ProviderResult<Hover> {
+        if (!DebugManager.getInstance().isShowTreeOnHover()) {
             return;
         }
 
@@ -40,40 +39,19 @@ export class AblDebugHoverProvider implements HoverProvider {
             column: position.character,
         };
 
-        const node = await this.getNodeForPoint(document, point);
+        const node = this.getNodeForPoint(document, point);
 
-        if (!node) {
-            return;
-        }
-
-        const hoverText =
+        return new Hover(
             "| ID | TYPE | START POS | END POS | INDEX | TEXT | \n | ---- | ---- | ---- | ---- | ---- | ---- | \n" +
-            this.fillTreeWithAcendantsInfo(node);
-
-        return new Hover(hoverText);
+                this.fillTreeWithAcendantsInfo(node)
+        );
     }
 
-    private async getNodeForPoint(
-        document: TextDocument,
-        point: Point
-    ): Promise<SyntaxNode | undefined> {
-        if (!this.parserHelper.isParserAvailable()) {
-            // Parser is not available (worker not started and no direct parser)
-            return undefined;
-        }
+    private getNodeForPoint(document: TextDocument, point: Point): SyntaxNode {
         let result = this.getResultIfDocumentWasAlreadyParsed(document);
 
         if (result === undefined) {
-            try {
-                result = await this.parseDocumentAndAddToInstances(document);
-            } catch (err) {
-                // If parser fails, return undefined
-                return undefined;
-            }
-        }
-
-        if (!result) {
-            return undefined;
+            result = this.parseDocumentAndAddToInstances(document);
         }
 
         return result.tree.rootNode.descendantForPosition(point);
@@ -94,10 +72,10 @@ export class AblDebugHoverProvider implements HoverProvider {
         return instance?.parseResult;
     }
 
-    private async parseDocumentAndAddToInstances(
+    private parseDocumentAndAddToInstances(
         document: TextDocument
-    ): Promise<ParseResult> {
-        const parseResult = await this.parserHelper.parseAsync(
+    ): ParseResult {
+        const parseResult = this.parserHelper.parse(
             new FileIdentifier(document.fileName, document.version),
             document.getText()
         );
@@ -144,9 +122,8 @@ export class AblDebugHoverProvider implements HoverProvider {
             " \n";
 
         if (node.parent === null) {
-            return str;
-        } else {
-            return str + this.fillTreeWithAcendantsInfo(node.parent);
+            return "";
         }
+        return str + this.fillTreeWithAcendantsInfo(node.parent);
     }
 }
