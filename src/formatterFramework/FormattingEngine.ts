@@ -17,23 +17,20 @@ import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
     private skipFormatting = false;
-    private skipSettingsOverride: boolean;
 
     constructor(
         private parserHelper: IParserHelper,
         private fileIdentifier: FileIdentifier,
         private configurationManager: IConfigurationManager,
         private debugManager: IDebugManager,
-        private metamorphicTestingEngine?: MetamorphicEngine<BaseEngineOutput>,
-        skipSettingsOverride: boolean = false
-    ) {
-        this.skipSettingsOverride = skipSettingsOverride;
-    }
+        private metamorphicTestingEngine?: MetamorphicEngine<BaseEngineOutput>
+    ) {}
 
     public formatText(
         fulfullTextString: string,
         eol: EOL,
-        metemorphicEngineIsEnabled: boolean = false
+        metemorphicEngineIsEnabled: boolean = false,
+        isPreview?: boolean
     ): string {
         const fullText: FullText = {
             text: fulfullTextString,
@@ -45,7 +42,8 @@ export class FormattingEngine {
             fullText.text
         );
 
-        if (!this.skipSettingsOverride) {
+        // Only apply settings override if not preview
+        if (!isPreview) {
             this.settingsOverride(parseResult);
         }
 

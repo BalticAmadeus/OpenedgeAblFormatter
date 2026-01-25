@@ -20,6 +20,11 @@ const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
     undefined //no excessive logging
 );
 
+// Add a type-safe global declaration for the extension context
+declare global {
+    var __ablFormatterExtensionContext: vscode.ExtensionContext | undefined;
+}
+
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
 
@@ -155,6 +160,9 @@ export async function activate(context: vscode.ExtensionContext) {
         "Report a bug or issue for OpenEdge ABL Formatter";
     bugStatusBarItem.show();
     context.subscriptions.push(bugStatusBarItem);
+
+    // Pass context down to test suites via global or export
+    globalThis.__ablFormatterExtensionContext = context;
 
     // Show preview only once on first install
     const PREVIEW_SHOWN_KEY = "openedgeAblFormatter.previewShown";

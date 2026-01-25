@@ -15,6 +15,14 @@ import { EOL } from "../model/EOL";
 // Shared constants
 export const extensionDevelopmentPath = path.resolve(__dirname, "../../");
 
+// Determine extension resource path
+export function getExtensionResourcePath(): string {
+    if (globalThis.__ablFormatterExtensionContext?.extensionPath) {
+        return globalThis.__ablFormatterExtensionContext.extensionPath;
+    }
+    return extensionDevelopmentPath;
+}
+
 export function getTestResultsDir(endpoint: string): string {
     return join(extensionDevelopmentPath, `resources/testResults/${endpoint}`);
 }
@@ -37,7 +45,7 @@ export function runGenericTest<TResult>(
 ): void {
     ConfigurationManager.getInstance();
 
-    const beforeText = settingsOverride + getInput(name);
+    const beforeText = getSettingsOverride(true) + getInput(name);
     const beforeResult = config.processBeforeText(beforeText);
     const afterText = format(beforeText, name, parserHelper);
     const afterResult = config.processAfterText(afterText, parserHelper);
@@ -150,15 +158,19 @@ export function logKnownFailures(
     );
 }
 
-export const settingsOverride =
-    "/* formatterSettingsOverride */\n/*" +
-    readFile(
-        join(
-            extensionDevelopmentPath,
-            "resources/stabilityTests/.vscode/settings.json"
-        )
-    ) +
-    "*/\n";
+export function getSettingsOverride(forPreview?: boolean): string {
+    const basePath = forPreview ? getExtensionResourcePath() : extensionDevelopmentPath;
+    return (
+        "/* formatterSettingsOverride */\n/*" +
+        readFile(
+            join(
+                basePath,
+                "resources/stabilityTests/.vscode/settings.json"
+            )
+        ) +
+        "*/\n"
+    );
+}
 
 // Shared setup function
 export async function setupParserHelper(): Promise<AblParserHelper> {
@@ -180,7 +192,8 @@ export function format(
     text: string,
     name: string,
     parserHelper: AblParserHelper,
-    isMetamorphicEnabled: boolean = false
+    isMetamorphicEnabled: boolean = false,
+    isPreview?: boolean
 ): string {
     const configurationManager = ConfigurationManager.getInstance();
 
@@ -188,12 +201,14 @@ export function format(
         parserHelper,
         new FileIdentifier(name, 1),
         configurationManager,
-        new DebugManagerMock()
+        new DebugManagerMock(),
+        undefined
     );
     const result = formattingEngine.formatText(
         text,
         new EOL(getFileEOL(text)),
-        isMetamorphicEnabled
+        isMetamorphicEnabled,
+        isPreview
     );
     return result;
 }

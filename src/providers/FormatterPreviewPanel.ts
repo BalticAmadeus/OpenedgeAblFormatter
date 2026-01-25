@@ -4,6 +4,7 @@ import { FormatterPreviewProvider } from "./FormatterPreviewProvider";
 import { format } from "../utils/suitesUtils";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { ConfigurationManager } from "../utils/ConfigurationManager";
 
 interface FormatterSetting {
     key: string;
@@ -303,11 +304,16 @@ export class FormatterPreviewPanel {
             tempSettings.eol = { eolDel: "\r\n" };
             const { eol, tabSize, ...formatterSettings } = tempSettings;
 
+            // Inject live settings into ConfigurationManager
+            const configManager = ConfigurationManager.getInstance();
+            configManager.setOverridingSettings(tempSettings);
+
             const formattedCode = format(
                 previewCode,
                 "preview.p",
                 this._parserHelper,
-                false // isMetamorphicEnabled, adjust if needed
+                false, // isMetamorphicEnabled, adjust if needed
+                true // isPreview
             );
 
             // Update the virtual document for the preview
