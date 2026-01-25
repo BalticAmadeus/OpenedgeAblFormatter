@@ -42,7 +42,7 @@ There are no additional dependencies needed to launch this extension.
 
 ## Configuration and Setup
 
-We implemented extensive settings configuration to allow users to easly tailor the experience to their needs. This might not be the case in the future. You can access the settings via VS Code settings or clicking ABL Formatter icon at the far right of an ABL files editor title bar.
+We implemented extensive settings configuration to allow users to easily tailor the experience to their needs. This might not be the case in the future. You can access the settings via VS Code settings or clicking ABL Formatter icon at the far right of an ABL files editor title bar.
 
 ### Settings
 
@@ -98,7 +98,7 @@ Also, you can enable or disable formatting on save:
 "editor.formatOnSave": true
 ```
 
-Alowed file extensions:
+Allowed file extensions:
 
 -   **.p**
 -   **.cls**
