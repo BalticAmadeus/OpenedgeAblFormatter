@@ -677,18 +677,6 @@ export class FormatterPreviewPanel {
                 expandedCategories
             });
         }
-        
-        // On any change:
-        function onSettingChange(key, value) {
-            currentSettings[key] = value;
-            saveState();
-            vscode.postMessage({ type: 'settingsChanged', settings: currentSettings, expandedCategories });
-        }
-        function onCategoryToggle(cat) {
-            // ...update expandedCategories...
-            saveState();
-            vscode.postMessage({ type: 'categoriesChanged', expandedCategories });
-        }
 
         function restoreUI() {
             // Set checkboxes/selects to currentSettings
