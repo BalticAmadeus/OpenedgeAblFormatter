@@ -27,6 +27,7 @@ export class FormatterPreviewPanel {
     private _currentSettings: Record<string, any> = {};
     private _expandedCategories: Set<string> = new Set();
     private _ignoreNextVisibleEditorsEvent = false;
+    private _settingsScope: "user" | "workspace" | null = null;
 
     private constructor(
         panel: vscode.WebviewPanel,
@@ -86,6 +87,16 @@ export class FormatterPreviewPanel {
                         break;
                     case "resetSettings":
                         this.resetSettings();
+                        break;
+                    case "scopeChanged":
+                        this._settingsScope = message.scope as "user" | "workspace";
+                        this._currentSettings = this.getAllFormatterSettings();
+                        this._panel.webview.postMessage({
+                            type: "settingsReset",
+                            settings: this._currentSettings,
+                            scopeSelected: true,
+                        });
+                        this.updatePreview(Array.from(this._expandedCategories));
                         break;
                 }
             },
@@ -185,7 +196,17 @@ export class FormatterPreviewPanel {
 
         const allSettings = this.getFormatterSettingsMetadata();
         for (const setting of allSettings) {
-            settings[setting.key] = config.get(setting.key, setting.default);
+            if (this._settingsScope === null) {
+                // Return defaults when no scope selected
+                settings[setting.key] = setting.default;
+            } else {
+                const inspection = config.inspect(setting.key);
+                if (this._settingsScope === "workspace") {
+                    settings[setting.key] = inspection?.workspaceValue ?? setting.default;
+                } else {
+                    settings[setting.key] = inspection?.globalValue ?? setting.default;
+                }
+            }
         }
 
         return settings;
@@ -338,14 +359,43 @@ export class FormatterPreviewPanel {
     }
 
     private async applySettings(settings: Record<string, any>) {
+        if (this._settingsScope === null) {
+            vscode.window.showWarningMessage("Please select a settings scope first.");
+            return;
+        }
         const config = vscode.workspace.getConfiguration("AblFormatter");
+        const target = this._settingsScope === "workspace"
+            ? vscode.ConfigurationTarget.Workspace
+            : vscode.ConfigurationTarget.Global;
+        
+        // Get metadata to compare against defaults
+        const settingsMetadata = this.getFormatterSettingsMetadata();
+        const defaultsMap = new Map<string, any>();
+        for (const meta of settingsMetadata) {
+            defaultsMap.set(meta.key, meta.default);
+        }
+        
         try {
             for (const [key, value] of Object.entries(settings)) {
-                await config.update(
-                    key,
-                    value,
-                    vscode.ConfigurationTarget.Global
-                );
+                const defaultValue = defaultsMap.get(key);
+                
+                // Ensure boolean values are actual booleans, not strings
+                let normalizedValue = value;
+                if (typeof defaultValue === "boolean") {
+                    if (value === "true" || value === true) {
+                        normalizedValue = true;
+                    } else if (value === "false" || value === false) {
+                        normalizedValue = false;
+                    }
+                }
+                
+                // Only write if different from default
+                if (normalizedValue === defaultValue) {
+                    // Remove the setting (revert to default)
+                    await config.update(key, undefined, target);
+                } else {
+                    await config.update(key, normalizedValue, target);
+                }
             }
             this._currentSettings = this.getAllFormatterSettings();
             this._panel.webview.postMessage({
@@ -423,6 +473,28 @@ export class FormatterPreviewPanel {
             flex-direction: column;
         }
 
+        .scope-bar {
+            display: flex;
+            gap: 10px;
+            padding: 10px 15px;
+            background-color: var(--vscode-sideBar-background);
+            border-bottom: 1px solid var(--vscode-panel-border);
+            align-items: center;
+        }
+
+        .scope-bar select {
+            background-color: var(--vscode-dropdown-background);
+            color: var(--vscode-dropdown-foreground);
+            border: 1px solid var(--vscode-dropdown-border);
+            padding: 4px 8px;
+            font-size: 13px;
+            min-width: 150px;
+        }
+
+        .scope-bar select option.hidden-placeholder {
+            display: none;
+        }
+
         .toolbar {
             display: flex;
             gap: 10px;
@@ -451,6 +523,24 @@ export class FormatterPreviewPanel {
 
         .toolbar button:hover {
             background-color: var(--vscode-button-hoverBackground);
+        }
+
+        .toolbar button:disabled {
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-disabledForeground);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .toolbar button:disabled:hover {
+            background-color: var(--vscode-button-secondaryBackground);
+        }
+
+        .main-container.blurred {
+            filter: blur(3px);
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.5;
         }
 
         .main-container {
@@ -629,11 +719,19 @@ export class FormatterPreviewPanel {
     </style>
 </head>
 <body>
-    <div class="toolbar">
-        <button id="applyBtn">Apply Settings</button>
-        <button id="resetBtn">Reset to Defaults</button>
+    <div class="scope-bar">
+        <label for="scopeSelect" style="font-size: 13px; font-weight: bold;">Settings Scope:</label>
+        <select id="scopeSelect">
+            <option id="scopePlaceholder" value="" disabled${this._settingsScope === null ? " selected" : " class=\"hidden-placeholder\""}>Select Scope</option>
+            <option value="user"${this._settingsScope === "user" ? " selected" : ""}>User</option>
+            <option value="workspace"${this._settingsScope === "workspace" ? " selected" : ""}>Workspace</option>
+        </select>
     </div>
-    <div class="main-container">
+    <div class="toolbar">
+        <button id="applyBtn"${this._settingsScope === null ? " disabled" : ""}>Apply Settings</button>
+        <button id="resetBtn"${this._settingsScope === null ? " disabled" : ""}>Reset to Defaults</button>
+    </div>
+    <div class="main-container${this._settingsScope === null ? " blurred" : ""}">
         <div class="settings-panel">
             <div class="section-header">Formatter Settings</div>
             ${categories
@@ -670,12 +768,43 @@ export class FormatterPreviewPanel {
         let expandedCategories = state?.expandedCategories ?? ${JSON.stringify(
             expandedCategories
         )};
+        let currentScope = state?.currentScope ?? ${this._settingsScope === null ? "null" : `"${this._settingsScope}"`};
+        let scopeSelected = currentScope !== null;
 
         function saveState() {
             vscode.setState({
                 currentSettings,
-                expandedCategories
+                expandedCategories,
+                currentScope
             });
+        }
+
+        function updateScopeUI() {
+            const mainContainer = document.querySelector('.main-container');
+            const applyBtn = document.getElementById('applyBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const scopeSelect = document.getElementById('scopeSelect');
+            const placeholder = document.getElementById('scopePlaceholder');
+            
+            if (scopeSelected) {
+                mainContainer.classList.remove('blurred');
+                applyBtn.disabled = false;
+                resetBtn.disabled = false;
+                // Hide the placeholder option and set the dropdown value
+                if (placeholder) {
+                    placeholder.classList.add('hidden-placeholder');
+                }
+                if (scopeSelect && currentScope) {
+                    scopeSelect.value = currentScope;
+                }
+            } else {
+                mainContainer.classList.add('blurred');
+                applyBtn.disabled = true;
+                resetBtn.disabled = true;
+                if (placeholder) {
+                    placeholder.classList.remove('hidden-placeholder');
+                }
+            }
         }
 
         function restoreUI() {
@@ -699,6 +828,7 @@ export class FormatterPreviewPanel {
             });
         }
         restoreUI();
+        updateScopeUI();
 
         document.querySelectorAll('.category-toggle').forEach(toggle => {
             toggle.addEventListener('click', (e) => {
@@ -735,6 +865,17 @@ export class FormatterPreviewPanel {
             });
         });
 
+        document.getElementById('scopeSelect').addEventListener('change', (e) => {
+            currentScope = e.target.value;
+            scopeSelected = true;
+            updateScopeUI();
+            saveState();
+            vscode.postMessage({
+                type: 'scopeChanged',
+                scope: currentScope
+            });
+        });
+
         let updateTimeout = null;
         document.querySelectorAll('.setting-checkbox, .setting-enum').forEach(el => {
             el.addEventListener('change', (e) => {
@@ -764,6 +905,10 @@ export class FormatterPreviewPanel {
             if (message.type === 'settingsReset') {
                 currentSettings = message.settings;
                 expandedCategories = message.expandedCategories ?? expandedCategories;
+                if (message.scopeSelected !== undefined) {
+                    scopeSelected = message.scopeSelected;
+                    updateScopeUI();
+                }
                 restoreUI();
                 saveState();
             }
