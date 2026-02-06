@@ -14,4 +14,5 @@ DEFINE {&ACCESS} TEMP-TABLE eSTPDataRequest NO-UNDO {&REFERENCE-ONLY}
     FIELD MaxAge           AS INTEGER  
     FIELD VLANs            AS CHARACTER
     FIELD ConfigFields     AS CLOB      SERIALIZE-NAME "STPConfigFields":U
-    INDEX idx IS UNIQUE VLANs.
+    INDEX idx IS UNIQUE
+          VLANs.
