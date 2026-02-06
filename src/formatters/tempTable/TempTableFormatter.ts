@@ -42,6 +42,8 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>,
     ): CodeEdit | CodeEdit[] | undefined {
+        /* Reset since the same formatter instance is reused for multiple temp-tables */
+        this.resetAlignmentState();
         this.hasFieldOptions = false;
         this.collectTemptableStructure(node, fullText);
         const text = FormatterHelper.getCurrentText(node, fullText);
@@ -382,5 +384,12 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 break;
         }
         return newString;
+    }
+
+    private resetAlignmentState(): void {
+        this.alignType = 0;
+        this.alignFieldOptions = 0;
+        this.alignIndexSortOrder = 0;
+        this.indexKeywordLength = 0;
     }
 }
