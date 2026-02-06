@@ -24,15 +24,15 @@ DEFINE TEMP-TABLE tDataSource
 /** Producer temp-tables **/
 /* Register all datasource/methods that update nodes with out parameters */ 
 DEFINE TEMP-TABLE tMethodNode
-    FIELD TargetProc   AS HANDLE
-    FIELD DataSource   AS HANDLE
-    FIELD Method       AS CHAR
-    FIELD MethodNode   AS DEC
-    FIELD NumParam     AS INT
+    FIELD TargetProc AS HANDLE
+    FIELD DataSource AS HANDLE
+    FIELD Method     AS CHAR
+    FIELD MethodNode AS DEC
+    FIELD NumParam   AS INT
     INDEX Method AS UNIQUE
-          TargetProc  
-          DataSource  
-          Method      
+          TargetProc
+          DataSource
+          Method    
     INDEX Node
-          TargetProc  
-          MethodNode  . 
+          TargetProc
+          MethodNode. 
