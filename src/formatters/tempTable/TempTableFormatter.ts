@@ -16,7 +16,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     private alignType = 0;
     private hasFieldOptions = false;
     private alignFieldOptions = 0;
-    private alignIndexSortOrder = 0;
+    private maxIndexFieldNameLen = 0;
     private indexKeywordLength = 0;
     private startColumn = 0;
     private temptableValueColumn = 0;
@@ -28,10 +28,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
-        if (node.type === SyntaxNodeType.TemptableDefinition) {
-            return true;
-        }
-        return false;
+        return node.type === SyntaxNodeType.TemptableDefinition;
     }
 
     compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
@@ -198,8 +195,8 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     private getIndexFieldStructure(node: SyntaxNode, fullText: FullText): void {
         switch (node.type) {
             case SyntaxNodeType.Identifier:
-                this.alignIndexSortOrder = Math.max(
-                    this.alignIndexSortOrder,
+                this.maxIndexFieldNameLen = Math.max(
+                    this.maxIndexFieldNameLen,
                     FormatterHelper.getCurrentText(node, fullText).trim()
                         .length,
                 );
@@ -298,7 +295,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         switch (node.type) {
             case SyntaxNodeType.Identifier:
                 newString =
-                    text + " ".repeat(this.alignIndexSortOrder - text.length);
+                    text + " ".repeat(this.maxIndexFieldNameLen - text.length);
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -355,8 +352,9 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 break;
             case SyntaxNodeType.LikeKeyword:
                 if (
-                    node.parent!.type.trim() === SyntaxNodeType.FieldClause ||
-                    node.parent!.type.trim() === SyntaxNodeType.IndexClause
+                    node.parent &&
+                    (node.parent.type === SyntaxNodeType.FieldClause ||
+                        node.parent.type === SyntaxNodeType.IndexClause)
                 ) {
                     newString =
                         " " +
@@ -389,7 +387,11 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     private resetAlignmentState(): void {
         this.alignType = 0;
         this.alignFieldOptions = 0;
-        this.alignIndexSortOrder = 0;
+        this.maxIndexFieldNameLen = 0;
         this.indexKeywordLength = 0;
+        this.startColumn = 0;
+        this.temptableValueColumn = 0;
+        this.temptableBodyValue = "";
+        this.hasFieldOptions = false;
     }
 }
