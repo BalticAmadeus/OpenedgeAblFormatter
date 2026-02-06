@@ -10,9 +10,12 @@ import * as readline from "node:readline";
 import * as vscode from "vscode";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
+import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
+import { ConfigurationManager } from "../../utils/ConfigurationManager";
 import Parser from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import { DebugManagerMock } from "./DebugManagerMock";
+import { EOL } from "../../model/EOL";
 
 const execAsync = promisify(exec);
 
@@ -49,8 +52,6 @@ console.log(`📋 Loaded ${knownFailures.length} known compilation failures`);
 let expectedFiles: string[] = [];
 let createdFiles: Set<string> = new Set();
 let testRunDir: string = "";
-
-let parserHelper: AblParserHelper;
 
 suite("Compilation Tests", function () {
     // Increase timeout for Docker operations
@@ -375,13 +376,13 @@ async function formatAdeSrc(): Promise<void> {
         enableFormatterDecorators(); // This is crucial for formatter initialization!
 
         const debugManager = new DebugManagerMock();
-        parserHelper = new AblParserHelper(
+        const parserHelper = new AblParserHelper(
             __dirname + "/../../../",
             debugManager
         );
 
-        // Start the worker process for parserHelper
-        await parserHelper.startWorker();
+        // Wait for parser to be fully loaded
+        await parserHelper.awaitLanguage();
 
         // ABL file extensions to format
         const ablExtensions = new Set([".p", ".i", ".cls", ".w"]);
@@ -400,11 +401,19 @@ async function formatAdeSrc(): Promise<void> {
                     // Read file content
                     const content = fs.readFileSync(fullPath, "utf-8");
 
-                    // Format the content using parserHelper (worker-based)
-                    const formattedContent = await parserHelper.format(
+                    // Create formatting engine
+                    const formatter = new FormattingEngine(
+                        parserHelper,
                         new FileIdentifier(fullPath, 1),
+                        ConfigurationManager.getInstance(),
+                        debugManager
+                    );
+
+                    // Format the content (using detected EOL)
+                    const detectedEOL = getFileEOL(content);
+                    const formattedContent = formatter.formatText(
                         content,
-                        { eol: { eolDel: getFileEOL(content) } }
+                        new EOL(detectedEOL)
                     );
 
                     // Write formatted content back to file

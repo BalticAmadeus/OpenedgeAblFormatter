@@ -90,7 +90,9 @@ export class UsingFormatter extends AFormatter implements IFormatter {
         } else {
             return (
                 statement.identifier +
-                " ".repeat(maxAlignment - statement.identifier.length) +
+                " ".repeat(
+                    Math.max(0, maxAlignment - statement.identifier.length)
+                ) +
                 statement.optionalDefinitions +
                 "."
             );
@@ -169,14 +171,16 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                 keyword = FormatterHelper.getCurrentText(
                     keywordChild,
                     fullText
-                );
-                keyword = this.settings.casing()
-                    ? keyword.trim().toUpperCase()
-                    : keyword.trim().toLowerCase();
+                ).trim();
                 identifier = FormatterHelper.getCurrentText(
                     identifierChild,
                     fullText
                 ).trim();
+
+                // Add "from propath" if needed
+                if (currentNode.childCount <= 2 && this.settings.usingFormattingFromPropath() === "Add") {
+                     optionalDefinitions = "from propath";
+                }
 
                 if (currentNode.childCount > 2) {
                     for (let i = 2; i < currentNode.childCount; ++i) {
@@ -190,15 +194,10 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                                 fullText
                             ).trim() + " ";
                     }
-                    optionalDefinitions = this.settings.casing()
-                        ? optionalDefinitions.trim().toUpperCase()
-                        : optionalDefinitions.trim().toLowerCase();
+                    optionalDefinitions = optionalDefinitions.trim();
                 }
             } else {
                 keyword = keywordChild.text.trim();
-                keyword = this.settings.casing()
-                    ? keyword.toUpperCase()
-                    : keyword.toLowerCase();
                 identifier = identifierChild.text.trim();
 
                 if (currentNode.childCount > 2) {
@@ -209,12 +208,15 @@ export class UsingFormatter extends AFormatter implements IFormatter {
                                 currentChild.text.trim() + " ";
                         }
                     }
-                    optionalDefinitions = this.settings.casing()
-                        ? optionalDefinitions.trim().toUpperCase()
-                        : optionalDefinitions.trim().toLowerCase();
+                    optionalDefinitions = optionalDefinitions.trim();
                 }
             }
 
+            // Remove "from propath" if needed
+            if (optionalDefinitions.toLowerCase() === "from propath"  && this.settings.usingFormattingFromPropath() === "Remove") {
+                optionalDefinitions = "";
+            }
+            
             usingStatements.push({
                 identifier: keyword + " " + identifier,
                 optionalDefinitions,
