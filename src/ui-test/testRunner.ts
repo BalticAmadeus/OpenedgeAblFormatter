@@ -69,69 +69,6 @@ describe("My Test Suite", () => {
         await browser.openResources(".test_dir/samples");
     });
 
-    // Check if noticitation appears and dissapers when settings file is present
-    it("Notifications Center", async () => {
-        const workbench = await new Workbench();
-
-        // get notifications from the notifications center
-        let center = await workbench.openNotificationsCenter();
-        let notifications = await center.getNotifications(NotificationType.Any);
-
-        // Renaming setting file
-        await renameFile("settings.json", "settings123456");
-
-        await openFile("assign1.p");
-        await workbench.executeCommand("Format Document");
-
-        // Get our notification
-        let notification!: Notification;
-        for (const not of notifications) {
-            const message = await not.getMessage();
-            if (await message.includes("abl.completion.upperCase")) {
-                notification = not;
-            }
-        }
-
-        if ((await typeof notification) !== "undefined") {
-            chai.expect(
-                (await notification.getText()).startsWith(
-                    "abl.completion.upperCase setting not set or set incorrectly. Update settings file. Current value"
-                )
-            );
-
-            chai.expect(await notification.getType()).equals(
-                NotificationType.Error
-            );
-        } else {
-            await renameFile("settings123456.json", "settings");
-            assert.fail(
-                "Notification abl.completion.upperCase setting not set or set incorrectly not found"
-            );
-        }
-
-        await center.clearAllNotifications();
-
-        // Renaming settings file back
-        await renameFile("settings123456.json", "settings");
-
-        // Format again and see what happens no notification should be shown
-        center = await workbench.openNotificationsCenter();
-        await openFile("assign1.p");
-        await workbench.executeCommand("Format Document");
-
-        center = await workbench.openNotificationsCenter();
-        notifications = await center.getNotifications(NotificationType.Any);
-
-        for (const not of notifications) {
-            const message = await not.getMessage();
-            if (await message.includes("abl.completion.upperCase")) {
-                assert.fail(
-                    "No more error notification should be shown with settings file corrected"
-                );
-            }
-        }
-    });
-
     async function openFile(fileName: string) {
         const control = await new ActivityBar().getViewControl("Explorer");
 

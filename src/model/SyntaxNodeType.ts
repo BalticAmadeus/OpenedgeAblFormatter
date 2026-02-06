@@ -72,6 +72,7 @@ export enum SyntaxNodeType {
     RepeatStatement = "repeat_statement",
     OnStatement = "on_statement",
     EnumStatement = "enum_statement",
+    UpdateStatement = "update_statement",
     EnumMember = "enum_member",
     EnumDefinition = "enum_definition",
     TypeTuning = "type_tuning",
@@ -170,6 +171,7 @@ export const afterThenStatements = new MyFancySet<string>([
     SyntaxNodeType.AssignStatement,
     SyntaxNodeType.VariableAssignment,
     SyntaxNodeType.UndoStatement,
+    SyntaxNodeType.UpdateStatement,
 ]);
 
 export const definitionKeywords = new MyFancySet<string>([

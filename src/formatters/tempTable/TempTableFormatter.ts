@@ -60,22 +60,81 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     private getTemptableBlock(node: SyntaxNode, fullText: FullText): string {
         let resultString = "";
+        const children: SyntaxNode[] = [];
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getTemptableExpressionString(
+        // Collect all children
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child) {
+                children.push(child);
+            }
+        }
+
+        for (const child of children) {
+            if (child.type === "comment") {
+                const commentText = FormatterHelper.getCurrentText(
+                    child,
+                    fullText
+                );
+
+                // Check if comment contains newlines (block comment on own line)
+                if (commentText.includes("\n") || commentText.includes("\r")) {
+                    const lines = commentText.split(fullText.eolDelimiter);
+                    let foundFirstCommentLine = false;
+
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+
+                        // Skip empty lines at the beginning
+                        if (
+                            trimmedLine.length === 0 &&
+                            !foundFirstCommentLine
+                        ) {
+                            continue;
+                        }
+
+                        // Once we find a non-empty line, add this and all subsequent lines
+                        if (trimmedLine.length > 0) {
+                            if (!foundFirstCommentLine) {
+                                // First line - add with newline prefix
+                                foundFirstCommentLine = true;
+                                resultString += fullText.eolDelimiter + line;
+                            } else {
+                                // Continuation lines - add with newline
+                                resultString += fullText.eolDelimiter + line;
+                            }
+                        }
+                    }
+                } else {
+                    // Comment was inline (no newlines) - keep it inline
+                    resultString += commentText;
+                }
+            } else {
+                // Format the non-comment child
+                resultString += this.getTemptableExpressionString(
                     child,
                     fullText.eolDelimiter.concat(
-                        " ".repeat(this.temptableValueColumn),
+                        " ".repeat(Math.max(0, this.temptableValueColumn))
                     ),
-                    fullText,
-                ),
-            );
-        });
+                    fullText
+                );
+            }
+        }
 
-        resultString += ".";
-
+        resultString += this.getFormattedEndDot(
+            fullText.eolDelimiter.concat(
+                " ".repeat(Math.max(0, this.startColumn))
+            )
+        );
         return resultString;
+    }
+
+    private getFormattedEndDot(separator: string): string {
+        if (this.settings.endDotLocationNew()) {
+            return separator + ".";
+        } else {
+            return ".";
+        }
     }
 
     private collectTemptableStructure(
@@ -175,12 +234,16 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 if (this.hasFieldOptions) {
                     newString =
                         newString +
-                        " ".repeat(this.alignFieldOptions - text.length);
+                        " ".repeat(
+                            Math.max(0, this.alignFieldOptions - text.length)
+                        );
                 }
                 break;
             case SyntaxNodeType.Identifier:
                 newString =
-                    " " + text + " ".repeat(this.alignType - text.length);
+                    " " +
+                    text +
+                    " ".repeat(Math.max(0, this.alignType - text.length));
                 break;
 
             case SyntaxNodeType.Error:
@@ -265,7 +328,9 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                         this.getTemptableExpressionString(
                             child,
                             fullText.eolDelimiter.concat(
-                                " ".repeat(this.temptableValueColumn),
+                                " ".repeat(
+                                    Math.max(0, this.temptableValueColumn)
+                                )
                             ),
                             fullText,
                         ),

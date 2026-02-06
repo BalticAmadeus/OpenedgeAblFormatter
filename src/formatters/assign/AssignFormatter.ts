@@ -56,13 +56,55 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>
     ): string {
         let resultString = "";
-        let longestLeft = this.getLongestLeft(node.children, fullText);
+        const longestLeft = this.getLongestLeft(node.children, fullText);
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getAssignStatementString(child, fullText, longestLeft)
-            );
-        });
+        const children: SyntaxNode[] = [];
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (child) {
+                children.push(child);
+            }
+        }
+
+        for (const child of children) {
+            if (child.type === "comment") {
+                const commentText = FormatterHelper.getCurrentText(child, fullText);
+
+                // Check if comment contains newlines (block comment on own line)
+                if (commentText.includes("\n") || commentText.includes("\r")) {
+                    const lines = commentText.split(fullText.eolDelimiter);
+                    let foundFirstCommentLine = false;
+
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+
+                        // Skip empty lines at the beginning
+                        if (trimmedLine.length === 0 && !foundFirstCommentLine) {
+                            continue;
+                        }
+
+                        // Once we find a non-empty line, add this and all subsequent lines
+                        if (trimmedLine.length > 0) {
+                            if (!foundFirstCommentLine) {
+                                // First line - add with newline prefix
+                                foundFirstCommentLine = true;
+                                resultString += fullText.eolDelimiter + line;
+                            } else {
+                                // Continuation lines - add with newline
+                                resultString += fullText.eolDelimiter + line;
+                            }
+                        }
+                    }
+
+                } else {
+                    resultString += commentText;
+                }
+            } else {
+                const assignString = this.getAssignStatementString(child, fullText, longestLeft);
+
+                resultString += assignString;
+            }
+        }
 
         resultString += this.getFormattedEndDot(fullText);
 
@@ -101,8 +143,9 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText
                 ).trim();
+                break;
             case SyntaxNodeType.Assignment:
-                assignString += this.getAssignmentString(
+                assignString = this.getAssignmentString(
                     node,
                     fullText,
                     longestLeft

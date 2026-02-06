@@ -2,7 +2,7 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
@@ -226,11 +226,32 @@
           "default": "true",
           "description": "Enable TEMP-TABLE formatting"
         },
+        "AblFormatter.temptableFormattingEndDotLocation": {
+          "order": 801,
+          "type": "string",
+          "default": "Same",
+          "enum": [
+            "New",
+            "Same"
+          ],
+          "description": "Should end dot be located on a new line or the same line as the last TEMP-TABLE line?"
+        },
         "AblFormatter.usingFormatting": {
           "order": 900,
           "type": "boolean",
           "default": "true",
           "description": "Enable USING formatting"
+        },
+        "AblFormatter.usingFormattingFromPropath": {
+          "order": 901,
+          "type": "string",
+          "default": "DoNothing",
+          "enum": [
+            "DoNothing",
+            "Add",
+            "Remove"
+          ],
+          "description": "Should 'from propath' be added or removed in USING statements automatically?"
         },
         "AblFormatter.bodyFormatting": {
           "order": 1000,
@@ -351,12 +372,6 @@
           "default": "true",
           "description": "Enable STATEMENT formatting"
         },
-        "AblFormatter.variableAssignmentFormatting": {
-          "order": 2000,
-          "type": "boolean",
-          "default": "true",
-          "description": "Enable STATEMENT formatting"
-        },
         "AblFormatter.showTreeInfoOnHover": {
           "order": 99,
           "type": "boolean",
@@ -380,10 +395,9 @@
     "inject-telemetry-key": "replace-in-file \"__TELEMETRY_KEY__\"  \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" ./out/extension.js",
     "reset-telemetry-key": "replace-in-file \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" \"__TELEMETRY_KEY__\" ./out/extension.js",
     "copy-wasm": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out",
-    "copy-wasm-parser": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out/parser",
     "package": "npx vsce package && npm run reset-telemetry-key",
     "delete-out": "rimraf out",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && esbuild ./src/parser/ParserWorker.ts --bundle --outfile=out/parser/ParserWorker.js --format=cjs --platform=node && npm run copy-wasm && npm run copy-wasm-parser && npm run inject-telemetry-key",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && npm run copy-wasm && npm run inject-telemetry-key",
     "build": "npm run esbuild",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
@@ -421,7 +435,6 @@
     "mocha": "^10.8.2",
     "replace-in-file": "^8.3.0",
     "rimraf": "^5.0.5",
-    "ts-node": "^10.9.2",
     "typescript": "^5.2.2",
     "vscode-extension-tester": "^8.13.0"
   },
