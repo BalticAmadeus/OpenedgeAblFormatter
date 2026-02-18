@@ -282,13 +282,8 @@ export class FormatterPreviewPanel {
                 .replaceAll(/\s+/g, "-") // spaces to dashes
                 .replaceAll(/[^a-z0-9\-]/g, "") + // remove non-alphanum/dash
             ".p";
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-            return "";
-        }
         const examplePath = path.join(
-            workspaceFolders[0].uri.fsPath,
+            this._extensionUri.fsPath,
             "resources",
             "samples",
             "settingsPreview",
