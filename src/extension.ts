@@ -21,6 +21,11 @@ const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
 
+    if (vscode.version < "1.107") {
+        debugManager.disableExtension();
+        return;
+    }
+
     await Parser.init().then(() => {});
 
     ConfigurationManager.getInstance();
