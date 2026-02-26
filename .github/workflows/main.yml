@@ -18,7 +18,7 @@ jobs:
             matrix:
                 os: [ubuntu-latest, windows-latest, macos-latest]
         env:
-            VSCODE_VERSION: "1.109"
+            VSCODE_VERSION: "1.109.5"
         runs-on: ${{ matrix.os }}
         steps:
             - name: Checkout
@@ -47,7 +47,7 @@ jobs:
     symbol-test:
         needs: test # Runs only if 'test' job is successful
         env:
-            VSCODE_VERSION: "1.109"
+            VSCODE_VERSION: "1.109.5"
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -83,7 +83,7 @@ jobs:
     ast-test:
         needs: test # Runs only if 'test' job is successful
         env:
-            VSCODE_VERSION: "1.109"
+            VSCODE_VERSION: "1.109.5"
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
