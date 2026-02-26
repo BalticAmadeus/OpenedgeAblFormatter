@@ -67,7 +67,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         }
 
         for (const child of children) {
-            if (child.type === "comment") {
+            if (child.type === SyntaxNodeType.Comment) {
                 const commentText = FormatterHelper.getCurrentText(child, fullText);
 
                 // Check if comment contains newlines (block comment on own line)
@@ -145,6 +145,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                 ).trim();
                 break;
             case SyntaxNodeType.Assignment:
+                // assignString = FormatterHelper.getCurrentText(node, fullText).trim();
                 assignString = this.getAssignmentString(
                     node,
                     fullText,
@@ -170,57 +171,43 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>,
         longestLeft: number
     ): string {
-        let newString = "";
+        const { leftText, middleText, rightText, whenNode } =
+            this.getAssignmentDetails(node, fullText);
 
-        const [leftNode, middleNode, rightNode, whenExpressionNode] =
-            node.children;
-        if (leftNode && middleNode && rightNode) {
-            const leftText = FormatterHelper.getCurrentText(
-                leftNode,
-                fullText
-            ).trim();
-            const middleText = FormatterHelper.getCurrentText(
-                middleNode,
-                fullText
-            ).trim();
-            const rightText = FormatterHelper.getCurrentText(
-                rightNode,
-                fullText
-            ).trim();
-
-            let paddedLeftText = this.settings.alignRightExpression()
-                ? leftText.padEnd(longestLeft)
-                : leftText;
-
-            newString = this.settings.newLineAfterAssign()
-                ? fullText.eolDelimiter +
-                  " ".repeat(this.startColumn + this.settings.tabSize()) +
-                  paddedLeftText +
-                  " " +
-                  middleText +
-                  " " +
-                  rightText
-                : (node.previousSibling?.type === SyntaxNodeType.AssignKeyword // is it first assignment?
-                      ? " "
-                      : fullText.eolDelimiter +
-                        " ".repeat(
-                            this.startColumn +
-                                SyntaxNodeType.AssignKeyword.length +
-                                1
-                        )) +
-                  paddedLeftText +
-                  " " +
-                  middleText +
-                  " " +
-                  rightText;
+        if (
+            leftText.length === 0 &&
+            middleText.length === 0 &&
+            rightText.length === 0
+        ) {
+            return "";
         }
-        if (whenExpressionNode) {
-            newString += this.formatWhenExpression(
-                whenExpressionNode,
-                fullText
-            );
+
+        let paddedLeftText = this.settings.alignRightExpression()
+            ? leftText.padEnd(longestLeft)
+            : leftText;
+
+        let assignText = this.settings.newLineAfterAssign()
+            ? fullText.eolDelimiter +
+              " ".repeat(this.startColumn + this.settings.tabSize()) +
+              paddedLeftText +
+              (middleText ? " " + middleText : "") +
+              (rightText ? " " + rightText : "")
+            : (node.previousSibling?.type === SyntaxNodeType.AssignKeyword // is it first assignment?
+                  ? " "
+                  : fullText.eolDelimiter +
+                    " ".repeat(
+                        this.startColumn +
+                            SyntaxNodeType.AssignKeyword.length +
+                            1
+                    )) +
+              paddedLeftText +
+              (middleText ? " " + middleText : "") +
+              (rightText ? " " + rightText : "");
+
+        if (whenNode) {
+            assignText += this.formatWhenExpression(whenNode, fullText);
         }
-        return newString;
+        return assignText;
     }
 
     private formatWhenExpression(
@@ -244,18 +231,62 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         let longestLeft = 0;
 
         assignments.forEach((assignment) => {
-            const leftChild = assignment.child(0);
-
-            const leftLength = leftChild
-                ? FormatterHelper.getCurrentText(leftChild, fullText).trim()
-                      .length
-                : 0;
-
-            if (leftLength > longestLeft) {
-                longestLeft = leftLength;
+            if (assignment.type === SyntaxNodeType.Assignment) {
+                const { leftText } = this.getAssignmentDetails(
+                    assignment,
+                    fullText
+                );
+                if (leftText.length > longestLeft) {
+                    longestLeft = leftText.length;
+                }
             }
         });
         return longestLeft;
+    }
+
+    private getAssignmentDetails(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ) {
+        const leftNodes: SyntaxNode[] = [];
+        let operatorNode: SyntaxNode | undefined;
+        const rightNodes: SyntaxNode[] = [];
+        let whenNode: SyntaxNode | undefined;
+
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i)!;
+            if (child.type === SyntaxNodeType.WhenExpression) {
+                whenNode = child;
+                break;
+            }
+            if (
+                child.type === SyntaxNodeType.AssignmentOperator ||
+                child.text.trim() === "="
+            ) {
+                operatorNode = child;
+                continue;
+            }
+
+            if (!operatorNode) {
+                leftNodes.push(child);
+            } else {
+                rightNodes.push(child);
+            }
+        }
+
+        const leftText = leftNodes
+            .map((n) => FormatterHelper.getCurrentText(n, fullText).trim())
+            .filter((t) => t.length > 0)
+            .join(" ");
+        const middleText = operatorNode
+            ? FormatterHelper.getCurrentText(operatorNode, fullText).trim()
+            : "";
+        const rightText = rightNodes
+            .map((n) => FormatterHelper.getCurrentText(n, fullText).trim())
+            .filter((t) => t.length > 0)
+            .join(" ");
+
+        return { leftText, middleText, rightText, whenNode };
     }
 
     private getStartColumn(node: SyntaxNode): number {
