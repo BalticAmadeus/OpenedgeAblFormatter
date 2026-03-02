@@ -13,6 +13,7 @@ import { ReplaceEQ } from "./mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "./mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "./mtest/mrs/RemoveNoError";
 import { BaseEngineOutput } from "./mtest/EngineParams";
+import { lt } from "semver";
 
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
     undefined //no excessive logging
@@ -21,7 +22,7 @@ const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
 
-    if (vscode.version < "1.107") {
+    if (lt(vscode.version, "1.107.0")) {
         debugManager.disableExtension();
         return;
     }
