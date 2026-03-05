@@ -90,7 +90,8 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
         });
 
         if (
-            this.settings.newLineAfterLogical() &&
+            (this.settings.newLineAfterLogical() ||
+                this.settings.newLineBeforeLogical()) &&
             !this.hasLogicalExpressionParent(node)
         ) {
             const parent = node.parent;
@@ -129,7 +130,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
                 } else if (this.settings.newLineBeforeLogical()) {
                     newString =
                         fullText.eolDelimiter +
-                        FormatterHelper.getCurrentText(node, fullText);
+                        FormatterHelper.getCurrentText(node, fullText).trim();
                 } else {
                     newString =
                         " " +

@@ -7,18 +7,16 @@ export class ExpressionSettings extends ASettings {
     }
 
     public newLineAfterLogical() {
-        return (
-            this.configurationManager.get(
-                "expressionFormattingLogicalLocation"
-            ) === "New"
+        const value = this.configurationManager.get(
+            "expressionFormattingLogicalLocation"
         );
+        return value === "New" || value === "New after";
     }
 
     public newLineBeforeLogical() {
-        return (
-            this.configurationManager.get(
-                "expressionFormattingLogicalLocation"
-            ) === "Before"
+        const value = this.configurationManager.get(
+            "expressionFormattingLogicalLocation"
         );
+        return value === "Before" || value === "New before";
     }
 }

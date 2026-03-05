@@ -30,7 +30,7 @@
     "arrayAccessFormatting": true,
     "arrayAccessFormattingAddSpaceAfterComma": "Yes",
     "expressionFormatting": true,
-    "expressionFormattingLogicalLocation": "New",
+    "expressionFormattingLogicalLocation": "New after",
     "statementFormatting": true,
     "variableAssignmentFormatting": true
 }
