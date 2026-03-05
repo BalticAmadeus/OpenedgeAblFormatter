@@ -5,7 +5,7 @@
     "AblFormatter.propertyFormatting": true,
     "AblFormatter.ifFunctionFormatting": true,
     "AblFormatter.enumFormatting": true,
-    "AblFormatter.variableDefinitionFormatting": false,
+    "AblFormatter.variableDefinitionFormatting": true,
     "AblFormatter.procedureParameterFormatting": true,
     "AblFormatter.showTreeInfoOnHover": false,
     "AblFormatter.ifFormatting": true,
@@ -13,5 +13,10 @@
     "AblFormatter.caseFormatting": true,
     "AblFormatter.forFormatting": true,
     "AblFormatter.findFormatting": true,
-    "AblFormatter.assignFormatting": true
+    "AblFormatter.assignFormatting": true,
+    "AblFormatter.functionParameterFormatting": true,
+    "AblFormatter.arrayAccessFormatting": true,
+    "AblFormatter.expressionFormatting": true,
+    "AblFormatter.statementFormatting": true,
+    "AblFormatter.variableAssignmentFormatting": true
 }

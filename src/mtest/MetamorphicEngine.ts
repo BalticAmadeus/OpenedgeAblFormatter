@@ -1,8 +1,8 @@
-import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 import { EOL } from "../model/EOL";
 import { BaseEngineOutput, DebugTestingEngineOutput } from "./EngineParams";
 import { OriginalTestCase, TextTree } from "./OriginalTestCase";
 import { MR } from "./MR";
+import { FormattingEngine } from "../formatterFramework/FormattingEngine";
 
 export class MetamorphicEngine<T extends BaseEngineOutput> {
     private formattingEngine: FormattingEngine | undefined = undefined;
@@ -11,14 +11,14 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     private readonly metamorphicRelations: MR[] = [];
     private inputAndOutputPairs: OriginalTestCase[] = [];
 
-    public setFormattingEngine(formattingEngine: FormattingEngine) {
-        this.formattingEngine = formattingEngine;
-    }
-
     private readonly engineConsole: Console | undefined;
 
     public constructor(engineConsole: Console | undefined) {
         this.engineConsole = engineConsole;
+    }
+
+    public setFormattingEngine(formattingEngine: FormattingEngine) {
+        this.formattingEngine = formattingEngine;
     }
 
     public addNameInputAndOutputPair(
@@ -27,7 +27,6 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
         input: TextTree,
         output: TextTree
     ): this {
-        this.engineConsole?.log("Added test case:", name);
         this.inputAndOutputPairs.push({
             name: name,
             eol: eol,
@@ -38,15 +37,14 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     }
 
     public addMR(mr: MR): this {
-        this.engineConsole?.log("Added mr:", mr.mrName);
         this.metamorphicRelations.push(mr);
         return this;
     }
 
     public addMRs(mrs: MR[]): void {
-        mrs.forEach((mr) => {
+        for (const mr of mrs) {
             this.addMR(mr);
-        });
+        }
     }
 
     private test(
@@ -55,7 +53,7 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
     ): undefined | DebugTestingEngineOutput {
         if (this.formattingEngine === undefined) {
             throw new Error(
-                `Missing Formatting engine in Metamorphic test engine.`
+                `Missing FormattingEngine in Metamorphic test engine.`
             );
         }
 
@@ -69,26 +67,24 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
 
         const pass = actualFolowUpOutput === expectedFolowUpOutput;
 
-        // console.log(pass ? "PASS -" : "FAIL -", mr.mrName, pair.name);
-
-        return !pass
-            ? {
+        return pass
+            ? undefined
+            : {
                   fileName: pair.name,
                   mrName: mr.mrName,
                   actual: actualFolowUpOutput,
                   expected: expectedFolowUpOutput,
-              }
-            : undefined;
+              };
     }
 
     public getMatrix(): { fileName: string; mrName: string }[] {
         const matrix: { fileName: string; mrName: string }[] = [];
 
-        this.inputAndOutputPairs.forEach((pair) => {
-            this.metamorphicRelations.forEach((mr) => {
+        for (const pair of this.inputAndOutputPairs) {
+            for (const mr of this.metamorphicRelations) {
                 matrix.push({ fileName: pair.name, mrName: mr.mrName });
-            });
-        });
+            }
+        }
 
         return matrix;
     }
@@ -113,24 +109,22 @@ export class MetamorphicEngine<T extends BaseEngineOutput> {
             );
         }
 
-        const result = this.test(mr, pair);
-
-        return result as T | undefined;
+        return this.test(mr, pair) as T | undefined;
     }
 
     public runAll(): (T | boolean)[] {
         let results: (T | boolean)[] = [];
 
-        this.inputAndOutputPairs.forEach((pair) => {
-            this.metamorphicRelations.forEach((mr) => {
+        for (const pair of this.inputAndOutputPairs) {
+            for (const mr of this.metamorphicRelations) {
                 const result = this.test(mr, pair);
-                if (result !== undefined) {
-                    results.push(result as unknown as T);
-                } else {
+                if (result === undefined) {
                     results.push(true);
+                } else {
+                    results.push(result as unknown as T);
                 }
-            });
-        });
+            }
+        }
 
         // Clear
         this.inputAndOutputPairs = [];

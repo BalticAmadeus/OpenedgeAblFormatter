@@ -159,7 +159,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.SortClause:
                 newString =
                     fullText.eolDelimiter +
-                    " ".repeat(alignColumn) +
+                    " ".repeat(Math.max(0, alignColumn)) +
                     this.getSortClauseText(node, fullText, alignColumn);
                 break;
             case SyntaxNodeType.ForPhrase:
@@ -194,27 +194,12 @@ export class ForFormatter extends AFormatter implements IFormatter {
         node.children.forEach((child) => {
             switch (child.type) {
                 case SyntaxNodeType.WhereKeyword:
-                    if (true || this.settings.whereClauseLocation()) {
-                        resultString = resultString.concat(
-                            fullText.eolDelimiter,
-                            " ".repeat(this.alignEach),
-                            FormatterHelper.getCurrentText(
-                                child,
-                                fullText
-                            ).trim()
-                        );
-                        break;
-                    } else {
-                        resultString = resultString.concat(
-                            " ",
-                            FormatterHelper.getCurrentText(
-                                child,
-                                fullText
-                            ).trim(),
-                            fullText.eolDelimiter,
-                            " ".repeat(alignColumn)
-                        );
-                    }
+                    resultString = resultString.concat(
+                        " ",
+                        FormatterHelper.getCurrentText(child, fullText).trim(),
+                        fullText.eolDelimiter,
+                        " ".repeat(Math.max(0, alignColumn))
+                    );
                     break;
                 default:
                     const text = FormatterHelper.getCurrentText(
@@ -328,7 +313,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
                 case SyntaxNodeType.SortClause:
                     resultString = resultString.concat(
                         fullText.eolDelimiter,
-                        " ".repeat(alignColumn),
+                        " ".repeat(Math.max(0, alignColumn)),
                         this.getSortClauseText(child, fullText, alignColumn)
                     );
                     break;

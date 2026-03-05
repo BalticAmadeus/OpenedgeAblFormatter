@@ -1,10 +1,9 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.usingFormatting": true,
-      "abl.completion.upperCase": false}*/
+/*  { "AblFormatter.usingFormatting": true}*/
 
-using A from propath.
+USING a.
 //define variable c as integer no-undo.
-using a.
-using b.
+USING b.
+using A from propath.
 //message ".".
-using c from assembly.
+using c FROM aSsemblY.

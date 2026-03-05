@@ -1,6 +1,6 @@
 assign
-    cMessage = "Hello" 
-    /* comment, */ 
+    cMessage = "Hello"
+    /* comment, */
     /* comment  */
     cMessage = "Hello"
     .

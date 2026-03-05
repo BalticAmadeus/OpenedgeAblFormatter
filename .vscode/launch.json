@@ -90,6 +90,22 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
+			"name": "AST Tests (Metamorphic)",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-ast/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-ast/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"TEST_MODE": "metamorphic"
+			}
+		},
+		{
 			"name": "Compilation Tests",
 			"type": "extensionHost",
 			"request": "launch",
@@ -101,7 +117,7 @@
 				"${workspaceFolder}/out/test-compilation/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
-		}
+		},
 	],
 	"folders": [
 		{
