@@ -421,6 +421,7 @@
           "order": 1900,
           "type": "boolean",
           "default": "true",
+          "category": "Statement",
           "description": "Enable STATEMENT formatting"
         },
         "AblFormatter.showTreeInfoOnHover": {
