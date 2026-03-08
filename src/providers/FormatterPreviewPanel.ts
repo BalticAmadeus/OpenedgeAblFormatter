@@ -17,6 +17,8 @@ interface FormatterSetting {
     category: string;
 }
 
+const SETTINGS_SCOPE_KEY = "openedgeAblFormatter.settingsScope";
+
 export class FormatterPreviewPanel {
     public static currentPanel: FormatterPreviewPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
@@ -39,6 +41,13 @@ export class FormatterPreviewPanel {
         this._extensionUri = extensionUri;
         this._parserHelper = parserHelper;
         this._previewProvider = previewProvider;
+        
+        // Load persisted scope
+        const savedScope = globalThis.__ablFormatterExtensionContext?.globalState.get<string>(SETTINGS_SCOPE_KEY);
+        if (savedScope === "user" || savedScope === "workspace") {
+            this._settingsScope = savedScope;
+        }
+        
         this._panel.onDidChangeViewState(
             (e) => {
                 if (this._panel.visible) {
@@ -90,6 +99,8 @@ export class FormatterPreviewPanel {
                         break;
                     case "scopeChanged":
                         this._settingsScope = message.scope as "user" | "workspace";
+                        // Persist the scope selection
+                        globalThis.__ablFormatterExtensionContext?.globalState.update(SETTINGS_SCOPE_KEY, this._settingsScope);
                         this._currentSettings = this.getAllFormatterSettings();
                         this._panel.webview.postMessage({
                             type: "settingsReset",
