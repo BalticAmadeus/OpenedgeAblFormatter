@@ -164,17 +164,54 @@ export async function activate(context: vscode.ExtensionContext) {
     // Pass context down to test suites via global or export
     globalThis.__ablFormatterExtensionContext = context;
 
-    // Show preview only once on first install
-    const PREVIEW_SHOWN_KEY = "openedgeAblFormatter.previewShown";
-    if (!context.globalState.get(PREVIEW_SHOWN_KEY)) {
-        // Open the preview panel
-        FormatterPreviewPanel.createOrShow(
-            vscode.Uri.file(context.extensionPath),
-            parserHelper,
-            previewProvider
-        );
-        // Mark as shown so it doesn't show again
-        await context.globalState.update(PREVIEW_SHOWN_KEY, true);
+    // Show setup prompt once when ABL file is opened for the first time after install
+    const SETUP_PROMPT_SHOWN_KEY = "openedgeAblFormatter.setupPromptShown";
+    if (!context.globalState.get(SETUP_PROMPT_SHOWN_KEY)) {
+        let promptShowing = false;
+        
+        const showSetupPrompt = async () => {
+            if (promptShowing) {
+                return;
+            }
+            promptShowing = true;
+            
+            const result = await vscode.window.showInformationMessage(
+                "Would you like to configure ABL Formatter settings?",
+                "Configure Settings",
+                "Don't Show Again"
+            );
+            
+            promptShowing = false;
+            
+            if (result === "Configure Settings") {
+                FormatterPreviewPanel.createOrShow(
+                    vscode.Uri.file(context.extensionPath),
+                    parserHelper,
+                    previewProvider
+                );
+                await context.globalState.update(SETUP_PROMPT_SHOWN_KEY, true);
+            } else if (result === "Don't Show Again") {
+                await context.globalState.update(SETUP_PROMPT_SHOWN_KEY, true);
+            }
+            // If dismissed (result undefined), don't mark as shown - it will appear again
+        };
+
+        // Check if an ABL file is already open
+        if (vscode.window.activeTextEditor?.document.languageId === Constants.ablId) {
+            showSetupPrompt();
+        }
+        
+        // Listen for ABL file opens (keep listening until user makes a choice)
+        const disposable = vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+            if (editor?.document.languageId === Constants.ablId) {
+                if (!context.globalState.get(SETUP_PROMPT_SHOWN_KEY)) {
+                    showSetupPrompt();
+                } else {
+                    disposable.dispose();
+                }
+            }
+        });
+        context.subscriptions.push(disposable);
     }
 }
 
