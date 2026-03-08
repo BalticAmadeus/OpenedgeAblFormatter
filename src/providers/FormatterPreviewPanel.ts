@@ -760,6 +760,7 @@ export class FormatterPreviewPanel {
         let currentSettings = state?.currentSettings ?? ${JSON.stringify(
             this._currentSettings
         )};
+        let originalSettings = state?.originalSettings ?? JSON.parse(JSON.stringify(currentSettings));
         let expandedCategories = state?.expandedCategories ?? ${JSON.stringify(
             expandedCategories
         )};
@@ -769,9 +770,28 @@ export class FormatterPreviewPanel {
         function saveState() {
             vscode.setState({
                 currentSettings,
+                originalSettings,
                 expandedCategories,
                 currentScope
             });
+        }
+
+        function hasSettingsChanged() {
+            for (const key of Object.keys(currentSettings)) {
+                if (currentSettings[key] !== originalSettings[key]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function updateApplyButton() {
+            const applyBtn = document.getElementById('applyBtn');
+            if (!scopeSelected) {
+                applyBtn.disabled = true;
+            } else {
+                applyBtn.disabled = !hasSettingsChanged();
+            }
         }
 
         function updateScopeUI() {
@@ -783,7 +803,7 @@ export class FormatterPreviewPanel {
             
             if (scopeSelected) {
                 mainContainer.classList.remove('blurred');
-                applyBtn.disabled = false;
+                applyBtn.disabled = !hasSettingsChanged();
                 resetBtn.disabled = false;
                 // Hide the placeholder option and set the dropdown value
                 if (placeholder) {
@@ -878,6 +898,7 @@ export class FormatterPreviewPanel {
                 let value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
                 if (key) {
                     currentSettings[key] = value;
+                    updateApplyButton();
                     saveState();
                     triggerUpdate();
                 }
@@ -899,12 +920,14 @@ export class FormatterPreviewPanel {
             const message = event.data;
             if (message.type === 'settingsReset') {
                 currentSettings = message.settings;
+                originalSettings = JSON.parse(JSON.stringify(message.settings));
                 expandedCategories = message.expandedCategories ?? expandedCategories;
                 if (message.scopeSelected !== undefined) {
                     scopeSelected = message.scopeSelected;
                     updateScopeUI();
                 }
                 restoreUI();
+                updateApplyButton();
                 saveState();
             }
             switch (message.type) {
