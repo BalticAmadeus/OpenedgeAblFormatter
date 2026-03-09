@@ -543,3 +543,8 @@ workshop__seedit.w
 adeuib__accsect.p
 adeuib__advprop.w
 adecomp_compvars.i
+auditing_include__xmlsec.i
+corelib_OpenEdge_Core_EncodedString.cls
+corelib_OpenEdge_Core_EncodingTypeEnum.cls
+netlib_OpenEdge_Net_HTTP_Filter_Auth_DigestAuthenticationFilter.cls
+netlib_OpenEdge_Web_DataObject_Writer_StatusCodeElementWriter.cls

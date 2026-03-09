@@ -3,5 +3,7 @@
       "abl.completion.upperCase": true}*/
 
 DEFINE SERIALIZABLE TEMP-TABLE ttCustomer NO-UNDO REFERENCE-ONLY LIKE Customer
-    INDEX CustNum I PRIMARY UNIQUE ustNum
-    INDEX CustNum IS PRIMARY UNIQUE CustNum.
+    INDEX CustNum IS PRIMARY UNIQUE
+          ustNum 
+    INDEX CustNum IS PRIMARY UNIQUE
+          CustNum.

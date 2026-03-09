@@ -4,6 +4,14 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.5.0 (2026-02-06)
+
+- Returned to synchronous one worker implementation
+- Improved ASSIGN statement formatting
+- Improved UPDATE statement formatting
+- Added configuration for TEMP-TABLE formatting
+- **tree-sitter-abl** version bump and other Improvements [See all](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/19?closed=1)
+
 ## 0.4.6 (2025-12-01)
 
 - Improved ASSIGN statement formatting

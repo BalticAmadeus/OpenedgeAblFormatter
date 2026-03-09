@@ -25,6 +25,7 @@ export enum SyntaxNodeType {
     FieldClause = "field_clause",
     FieldOption = "field_option",
     IndexClause = "index_clause",
+    IndexField = "index_field",
     InputOutputStatement = "input_output_statement",
     VariableDefinition = "variable_definition",
     ParameterDefinition = "parameter_definition",

@@ -80,3 +80,4 @@ prodict_pro__pro_int64.p
 prodict_sec__sec-pol-edit.p
 prodict_user__usershw.p
 protools_as-partn.w
+prodict_dump__lodsec.p

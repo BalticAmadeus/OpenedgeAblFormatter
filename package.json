@@ -2,7 +2,7 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.5.1",
+  "version": "0.5.0",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
@@ -470,7 +470,7 @@
     "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade"
   },
   "devDependencies": {
-    "@electron/rebuild": "^3.3.1",
+    "@electron/rebuild": "^0.0.0",
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.10",
     "@types/node": "18.x",
