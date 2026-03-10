@@ -13,6 +13,7 @@ import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
 export class ExpressionFormatter extends AFormatter implements IFormatter {
     public static readonly formatterLabel = "expressionFormatting";
     private readonly settings: ExpressionSettings;
+    private longestLogicalKeyword = 0;
     private lastComparisonExpressionColumn = 0;
     private currentlyInsideParentheses = false;
 
@@ -51,7 +52,7 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
 
     parse(
         node: Readonly<SyntaxNode>,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): CodeEdit | CodeEdit[] | undefined {
         const text = FormatterHelper.getCurrentText(node, fullText);
 
@@ -79,13 +80,23 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
     }
     private collectLogicalStructure(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let resultString = "";
 
         node.children.forEach((child) => {
+            if (logicalKeywords.hasFancy(child.type, "")) {
+                this.longestLogicalKeyword = Math.max(
+                    this.longestLogicalKeyword,
+                    FormatterHelper.getCurrentText(child, fullText).trim()
+                        .length,
+                );
+            }
+        });
+
+        node.children.forEach((child) => {
             resultString = resultString.concat(
-                this.getLogicalExpressionString(child, fullText)
+                this.getLogicalExpressionString(child, fullText),
             );
         });
 
@@ -104,17 +115,27 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
                 resultString = FormatterHelper.addIndentation(
                     resultString,
                     node.startPosition.column,
-                    fullText.eolDelimiter
+                    fullText.eolDelimiter,
                 );
             }
         }
+
+        if (this.settings.newLineBeforeLogical()) {
+            resultString = FormatterHelper.addIndentation(
+                resultString,
+                -this.longestLogicalKeyword,
+                fullText.eolDelimiter,
+            );
+            console.log("logical before:\n" + resultString + this.longestLogicalKeyword);
+        }
+
 
         return resultString;
     }
 
     private getLogicalExpressionString(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let newString = "";
         switch (node.type) {
@@ -142,15 +163,15 @@ export class ExpressionFormatter extends AFormatter implements IFormatter {
                     newString = newString.concat(
                         FormatterHelper.getParenthesizedExpressionString(
                             child,
-                            fullText
-                        )
+                            fullText,
+                        ),
                     );
                 });
                 break;
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
