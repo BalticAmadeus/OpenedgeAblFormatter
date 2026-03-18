@@ -29,9 +29,25 @@
         "command": "openedgeAblFormatter.reportBug",
         "title": "Report Bug",
         "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.openFormatterPreview",
+        "title": "Formatter Settings Preview",
+        "category": "OpenEdge ABL Formatter",
+        "icon": {
+          "light": "resources/Formatter_LOGO_32x32.png",
+          "dark": "resources/Formatter_LOGO_32x32.png"
+        }
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "openedgeAblFormatter.openFormatterPreview",
+          "when": "resourceExtname =~ /\\.(p|cls|i|w)$/i",
+          "group": "navigation"
+        }
+      ],
       "editor/context": [
         {
           "command": "openedgeAblFormatter.excludeCode",
@@ -58,7 +74,7 @@
     "walkthroughs": [
       {
         "id": "ablFormatter",
-        "title": "AblFormatter",
+        "title": "Abl Formatter",
         "description": "OpenEdge ABL Formatter is a OpenEdge (ABL) code formatter.",
         "steps": [
           {
@@ -91,12 +107,13 @@
       }
     ],
     "configuration": {
-      "title": "AblFormatter",
+      "title": "Abl Formatter",
       "properties": {
         "AblFormatter.assignFormatting": {
           "order": 100,
           "type": "boolean",
           "default": "true",
+          "category": "Assign",
           "markdownDescription": "Enable/disable ASSIGN statement formatting."
         },
         "AblFormatter.assignFormattingAssignLocation": {
@@ -107,6 +124,7 @@
             "New",
             "Same"
           ],
+          "category": "Assign",
           "description": "Should assigns be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.assignFormattingAlignRightExpression": {
@@ -117,6 +135,7 @@
             "Yes",
             "No"
           ],
+          "category": "Assign",
           "description": "Should right expression be aligned by longest one?"
         },
         "AblFormatter.assignFormattingEndDotLocation": {
@@ -128,24 +147,28 @@
             "New aligned",
             "Same"
           ],
+          "category": "Assign",
           "description": "Should end dot be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.findFormatting": {
           "order": 300,
           "type": "boolean",
           "default": "true",
+          "category": "Find",
           "description": "Enable FIND formatting"
         },
         "AblFormatter.forFormatting": {
           "order": 400,
           "type": "boolean",
           "default": "true",
+          "category": "For",
           "description": "Enable FOR formatting"
         },
         "AblFormatter.caseFormatting": {
           "order": 500,
           "type": "boolean",
           "default": "true",
+          "category": "Case",
           "description": "Enable CASE formatting"
         },
         "AblFormatter.caseFormattingThenLocation": {
@@ -156,6 +179,7 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should THEN clause be on a new line or the same line as the CASE keyword?"
         },
         "AblFormatter.caseFormattingDoLocation": {
@@ -166,6 +190,7 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should DO block be on a new line or the same line as the THEN keyword?"
         },
         "AblFormatter.caseFormattingStatementLocation": {
@@ -176,18 +201,21 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should the first statement in a WHEN block be on a new line or the same line?"
         },
         "AblFormatter.blockFormatting": {
           "order": 600,
           "type": "boolean",
           "default": "true",
+          "category": "Block",
           "description": "Enable block formatting"
         },
         "AblFormatter.ifFormatting": {
           "order": 700,
           "type": "boolean",
           "default": "true",
+          "category": "If Statement",
           "description": "Enable IF formatting"
         },
         "AblFormatter.ifFormattingThenLocation": {
@@ -198,6 +226,7 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should THEN clause be on a new line or the same line as the IF keyword?"
         },
         "AblFormatter.ifFormattingDoLocation": {
@@ -208,6 +237,7 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should DO block be on a new line or the same line as the THEN keyword?"
         },
         "AblFormatter.ifFormattingStatementLocation": {
@@ -218,12 +248,14 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should the first statement in an IF block be on a new line or the same line?"
         },
         "AblFormatter.temptableFormatting": {
           "order": 800,
           "type": "boolean",
           "default": "true",
+          "category": "Temp Table",
           "description": "Enable TEMP-TABLE formatting"
         },
         "AblFormatter.temptableFormattingEndDotLocation": {
@@ -234,12 +266,14 @@
             "New",
             "Same"
           ],
+          "category": "Temp Table",
           "description": "Should end dot be located on a new line or the same line as the last TEMP-TABLE line?"
         },
         "AblFormatter.usingFormatting": {
           "order": 900,
           "type": "boolean",
           "default": "true",
+          "category": "Using",
           "description": "Enable USING formatting"
         },
         "AblFormatter.usingFormattingFromPropath": {
@@ -251,24 +285,28 @@
             "Add",
             "Remove"
           ],
+          "category": "Using",
           "description": "Should 'from propath' be added or removed in USING statements automatically?"
         },
         "AblFormatter.bodyFormatting": {
           "order": 1000,
           "type": "boolean",
           "default": "true",
+          "category": "Body",
           "description": "Enable BODY formatting"
         },
         "AblFormatter.propertyFormatting": {
           "order": 1100,
           "type": "boolean",
           "default": "true",
-          "description": "Enable property formatting"
+          "category": "Property",
+          "description": "Enable PROPERTY formatting"
         },
         "AblFormatter.ifFunctionFormatting": {
           "order": 1200,
           "type": "boolean",
           "default": "true",
+          "category": "If Function",
           "description": "Enable IF FUNCTION formatting"
         },
         "AblFormatter.ifFunctionFormattingAddParentheses": {
@@ -279,6 +317,7 @@
             "Yes",
             "No"
           ],
+          "category": "If Function",
           "description": "Add parentheses around the expression?"
         },
         "AblFormatter.ifFunctionFormattingElseLocation": {
@@ -289,12 +328,14 @@
             "New",
             "Same"
           ],
+          "category": "If Function",
           "description": "Should ELSE clause be on a new line or the same line as the IF FUNCTION keyword?"
         },
         "AblFormatter.enumFormatting": {
           "order": 1300,
           "type": "boolean",
           "default": "true",
+          "category": "Enum",
           "description": "Enable ENUM formatting"
         },
         "AblFormatter.enumFormattingEndDotLocation": {
@@ -304,24 +345,29 @@
           "enum": [
             "New",
             "Same"
-          ]
+          ],
+          "category": "Enum",
+          "description": "Should end dot be located on a new line?"
         },
         "AblFormatter.variableDefinitionFormatting": {
           "order": 1400,
           "type": "boolean",
           "default": "true",
+          "category": "Variable",
           "description": "Enable DEFINE VARIABLE formatting"
         },
         "AblFormatter.procedureParameterFormatting": {
           "order": 1500,
           "type": "boolean",
           "default": "true",
+          "category": "Procedure Parameter",
           "description": "Enable PROCEDURE PARAMETER formatting"
         },
         "AblFormatter.functionParameterFormatting": {
           "order": 1600,
           "type": "boolean",
           "default": "true",
+          "category": "Function Parameter",
           "description": "Enable FUNCTION PARAMETER formatting"
         },
         "AblFormatter.functionParameterFormattingAlignParameterTypes": {
@@ -332,12 +378,14 @@
             "Yes",
             "No"
           ],
+          "category": "Function Parameter",
           "description": "Align parameter types?"
         },
         "AblFormatter.arrayAccessFormatting": {
           "order": 1700,
           "type": "boolean",
           "default": "true",
+          "category": "Array Access",
           "description": "Enable ARRAY ACCESS formatting"
         },
         "AblFormatter.arrayAccessFormattingAddSpaceAfterComma": {
@@ -348,12 +396,14 @@
             "Yes",
             "No"
           ],
+          "category": "Array Access",
           "description": "Add space after comma?"
         },
         "AblFormatter.expressionFormatting": {
           "order": 1800,
           "type": "boolean",
           "default": "true",
+          "category": "Expression",
           "description": "Enable EXPRESSION formatting"
         },
         "AblFormatter.expressionFormattingLogicalLocation": {
@@ -364,12 +414,14 @@
             "New",
             "Same"
           ],
+          "category": "Expression",
           "description": "Should logical operators be on a new line or the same line as the expression?"
         },
         "AblFormatter.statementFormatting": {
           "order": 1900,
           "type": "boolean",
           "default": "true",
+          "category": "Statement",
           "description": "Enable STATEMENT formatting"
         },
         "AblFormatter.showTreeInfoOnHover": {
