@@ -13,6 +13,7 @@ import { ReplaceEQ } from "./mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "./mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "./mtest/mrs/RemoveNoError";
 import { BaseEngineOutput } from "./mtest/EngineParams";
+import { lt } from "semver";
 import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 
@@ -27,6 +28,11 @@ declare global {
 
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
+
+    if (lt(vscode.version, "1.107.0")) {
+        debugManager.disableExtension();
+        return;
+    }
 
     await Parser.init().then(() => {});
 
