@@ -42,7 +42,7 @@ There are no additional dependencies needed to launch this extension.
 
 ## Configuration and Setup
 
-We implemented extensive settings configuration to allow users to easly tailor the experience to their needs. This might not be the case in the future.
+We implemented extensive settings configuration to allow users to easily tailor the experience to their needs. This might not be the case in the future. You can access the settings via VS Code settings or clicking ABL Formatter icon at the far right of an ABL files editor title bar. You can also access settings UI via the **Command Palette** (Ctrl+Shift+P) by typing "Formatter Settings Preview"
 
 ### Settings
 
@@ -98,7 +98,7 @@ Also, you can enable or disable formatting on save:
 "editor.formatOnSave": true
 ```
 
-Alowed file extensions:
+Allowed file extensions:
 
 -   **.p**
 -   **.cls**
@@ -157,6 +157,6 @@ If you wish to contribute, see our guidelines [here](CONTRIBUTING.md).
 
 This project is licensed under the APACHE 2.0 License - see the LICENSE file for details.
 
-## Sponsored by [Baltic Amadeus](https://www.ba.lt/en)
+## Sponsored by [Baltic Amadeus](https://www.baltic-amadeus.com)
 
-[![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.ba.lt/en)
+[![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.baltic-amadeus.com)
