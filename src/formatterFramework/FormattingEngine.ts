@@ -29,7 +29,8 @@ export class FormattingEngine {
     public formatText(
         fulfullTextString: string,
         eol: EOL,
-        metemorphicEngineIsEnabled: boolean = false
+        metemorphicEngineIsEnabled: boolean = false,
+        isPreview?: boolean
     ): string {
         const fullText: FullText = {
             text: fulfullTextString,
@@ -41,7 +42,11 @@ export class FormattingEngine {
             fullText.text
         );
 
-        this.settingsOverride(parseResult);
+        // Only apply settings override if not preview
+        if (!isPreview) {
+            this.settingsOverride(parseResult);
+        }
+
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
         );
