@@ -59,6 +59,7 @@ export enum SyntaxNodeType {
     BooleanLiteral = "boolean_literal",
     ElseIfStatement = "else_if_statement",
     ReturnStatement = "return_statement",
+    DeleteObjectStatement = "delete_object_statement",
     MessageStatement = "message_statement",
     ReleaseStatement = "release_statement",
     FunctionCallStatement = "function_call_statement",
@@ -172,6 +173,7 @@ export const afterThenStatements = new MyFancySet<string>([
     SyntaxNodeType.VariableAssignment,
     SyntaxNodeType.UndoStatement,
     SyntaxNodeType.UpdateStatement,
+    SyntaxNodeType.DeleteObjectStatement,
 ]);
 
 export const definitionKeywords = new MyFancySet<string>([
