@@ -18,6 +18,8 @@ interface FormatterSetting {
 }
 
 const SETTINGS_SCOPE_KEY = "openedgeAblFormatter.settingsScope";
+const WEBINAR_INFO_URL =
+    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions";
 
 export class FormatterPreviewPanel {
     public static currentPanel: FormatterPreviewPanel | undefined;
@@ -108,6 +110,9 @@ export class FormatterPreviewPanel {
                             scopeSelected: true,
                         });
                         this.updatePreview(Array.from(this._expandedCategories));
+                        break;
+                    case "openWebinarLink":
+                        vscode.env.openExternal(vscode.Uri.parse(WEBINAR_INFO_URL));
                         break;
                 }
             },
@@ -510,6 +515,55 @@ export class FormatterPreviewPanel {
             align-items: center;
         }
 
+        .webinar-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            background-color: var(--vscode-textBlockQuote-background);
+            border-bottom: 1px solid var(--vscode-panel-border);
+            border-left: 4px solid var(--vscode-charts-orange);
+        }
+
+        .webinar-banner.hidden {
+            display: none;
+        }
+
+        .webinar-banner-title {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .webinar-banner-subtitle {
+            margin-top: 2px;
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+        }
+
+        .webinar-banner-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .webinar-banner button {
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid var(--vscode-button-border);
+        }
+
+        .webinar-cta {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        .webinar-dismiss {
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
         .toolbar select {
             background-color: var(--vscode-dropdown-background);
             color: var(--vscode-dropdown-foreground);
@@ -725,6 +779,16 @@ export class FormatterPreviewPanel {
     </style>
 </head>
 <body>
+    <div id="webinarBanner" class="webinar-banner">
+        <div>
+            <div class="webinar-banner-title">Upcoming Webinar: OpenEdge ABL Formatter</div>
+            <div class="webinar-banner-subtitle">Join our FREE webinar on April 30th for a live demo, setup walkthrough, and Q&A with developer Gustas.</div>
+        </div>
+        <div class="webinar-banner-actions">
+            <button id="webinarCta" class="webinar-cta">Follow Webinar Updates</button>
+            <button id="webinarDismiss" class="webinar-dismiss">Dismiss</button>
+        </div>
+    </div>
     <div class="scope-bar">
         <label for="scopeSelect" style="font-size: 13px; font-weight: bold;">Settings Scope:</label>
         <select id="scopeSelect">
@@ -900,6 +964,19 @@ export class FormatterPreviewPanel {
                 type: 'scopeChanged',
                 scope: currentScope
             });
+        });
+
+        document.getElementById('webinarCta').addEventListener('click', () => {
+            vscode.postMessage({
+                type: 'openWebinarLink'
+            });
+        });
+
+        document.getElementById('webinarDismiss').addEventListener('click', () => {
+            const banner = document.getElementById('webinarBanner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
         });
 
         let updateTimeout = null;
