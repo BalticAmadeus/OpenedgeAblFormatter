@@ -19,7 +19,7 @@ interface FormatterSetting {
 
 const SETTINGS_SCOPE_KEY = "openedgeAblFormatter.settingsScope";
 const WEBINAR_INFO_URL =
-    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions";
+    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions/682";
 
 export class FormatterPreviewPanel {
     public static currentPanel: FormatterPreviewPanel | undefined;

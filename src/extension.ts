@@ -17,7 +17,7 @@ import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 
 const WEBINAR_INFO_URL =
-    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions";
+    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions/682";
 const WEBINAR_DATE_LABEL = "April 30th";
 
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
