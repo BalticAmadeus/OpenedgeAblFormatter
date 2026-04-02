@@ -4,6 +4,12 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.5.2 (2026-04-02)
+
+- Improved USING statement formatting
+- Added formatting for DELETE statement
+- Added information about upcoming Free Webinar
+
 ## 0.5.1 (2026-03-19)
 
 - Implemented new UI experience for changing Formatter settings
