@@ -438,6 +438,13 @@
           "default": "false",
           "description": "Enable table view with tree info on hover"
         },
+        "AblFormatter.showPromotionalNotifications": {
+          "order": 1950,
+          "type": "boolean",
+          "default": true,
+          "category": "General",
+          "description": "Enable webinar and marketing announcements."
+        },
         "Telemetry.ablFormatterTelemetry": {
           "order": 10200,
           "type": "boolean",
