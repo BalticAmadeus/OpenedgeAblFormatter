@@ -4,6 +4,10 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.5.3 (2026-04-03)
+
+- Added option to disable marketing information
+
 ## 0.5.2 (2026-04-02)
 
 - Improved USING statement formatting
