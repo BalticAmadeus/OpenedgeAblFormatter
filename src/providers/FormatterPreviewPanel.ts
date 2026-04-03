@@ -450,6 +450,9 @@ export class FormatterPreviewPanel {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
+        const showPromotionalNotifications = vscode.workspace
+            .getConfiguration("AblFormatter")
+            .get<boolean>("showPromotionalNotifications", true);
         const settings = this.getFormatterSettingsMetadata();
         const categories = this.getAllCategories(settings);
         let expandedCategories = Array.from(this._expandedCategories);
@@ -779,7 +782,9 @@ export class FormatterPreviewPanel {
     </style>
 </head>
 <body>
-    <div id="webinarBanner" class="webinar-banner">
+    ${
+        showPromotionalNotifications
+            ? `<div id="webinarBanner" class="webinar-banner">
         <div>
             <div class="webinar-banner-title">Upcoming Webinar: OpenEdge ABL Formatter</div>
             <div class="webinar-banner-subtitle">Join our FREE webinar on April 30th for a live demo, setup walkthrough, and Q&A with developer Gustas.</div>
@@ -788,7 +793,9 @@ export class FormatterPreviewPanel {
             <button id="webinarCta" class="webinar-cta">Follow Webinar Updates</button>
             <button id="webinarDismiss" class="webinar-dismiss">Dismiss</button>
         </div>
-    </div>
+    </div>`
+            : ""
+    }
     <div class="scope-bar">
         <label for="scopeSelect" style="font-size: 13px; font-weight: bold;">Settings Scope:</label>
         <select id="scopeSelect">
@@ -966,18 +973,24 @@ export class FormatterPreviewPanel {
             });
         });
 
-        document.getElementById('webinarCta').addEventListener('click', () => {
-            vscode.postMessage({
-                type: 'openWebinarLink'
+        const webinarCta = document.getElementById('webinarCta');
+        if (webinarCta) {
+            webinarCta.addEventListener('click', () => {
+                vscode.postMessage({
+                    type: 'openWebinarLink'
+                });
             });
-        });
+        }
 
-        document.getElementById('webinarDismiss').addEventListener('click', () => {
-            const banner = document.getElementById('webinarBanner');
-            if (banner) {
-                banner.classList.add('hidden');
-            }
-        });
+        const webinarDismiss = document.getElementById('webinarDismiss');
+        if (webinarDismiss) {
+            webinarDismiss.addEventListener('click', () => {
+                const banner = document.getElementById('webinarBanner');
+                if (banner) {
+                    banner.classList.add('hidden');
+                }
+            });
+        }
 
         let updateTimeout = null;
         document.querySelectorAll('.setting-checkbox, .setting-enum').forEach(el => {

@@ -32,6 +32,9 @@ declare global {
 
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
+    const showPromotionalNotifications = vscode.workspace
+        .getConfiguration("AblFormatter")
+        .get<boolean>("showPromotionalNotifications", true);
 
     if (lt(vscode.version, "1.107.0")) {
         debugManager.disableExtension();
@@ -179,16 +182,18 @@ export async function activate(context: vscode.ExtensionContext) {
     bugStatusBarItem.show();
     context.subscriptions.push(bugStatusBarItem);
 
-    const webinarStatusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        98
-    );
-    webinarStatusBarItem.text = "$(megaphone) Webinar: Apr 30";
-    webinarStatusBarItem.command = "openedgeAblFormatter.openWebinarInfo";
-    webinarStatusBarItem.tooltip =
-        `Join our free OpenEdge ABL Formatter webinar on ${WEBINAR_DATE_LABEL}`;
-    webinarStatusBarItem.show();
-    context.subscriptions.push(webinarStatusBarItem);
+    if (showPromotionalNotifications) {
+        const webinarStatusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Right,
+            98
+        );
+        webinarStatusBarItem.text = "$(megaphone) Webinar: Apr 30";
+        webinarStatusBarItem.command = "openedgeAblFormatter.openWebinarInfo";
+        webinarStatusBarItem.tooltip =
+            `Join our free OpenEdge ABL Formatter webinar on ${WEBINAR_DATE_LABEL}`;
+        webinarStatusBarItem.show();
+        context.subscriptions.push(webinarStatusBarItem);
+    }
 
     // Pass context down to test suites via global or export
     globalThis.__ablFormatterExtensionContext = context;
@@ -246,7 +251,10 @@ export async function activate(context: vscode.ExtensionContext) {
     // Show one-time promo popup for upcoming webinar.
     const WEBINAR_PROMO_SHOWN_KEY =
         "openedgeAblFormatter.webinarPromoApril302026Shown";
-    if (!context.globalState.get(WEBINAR_PROMO_SHOWN_KEY)) {
+    if (
+        showPromotionalNotifications &&
+        !context.globalState.get(WEBINAR_PROMO_SHOWN_KEY)
+    ) {
         const result = await vscode.window.showInformationMessage(
             `Join our FREE OpenEdge ABL Formatter webinar on ${WEBINAR_DATE_LABEL}. Live demo, setup walkthrough, and Q&A with developer Gustas.`,
             "Follow Webinar Updates",
