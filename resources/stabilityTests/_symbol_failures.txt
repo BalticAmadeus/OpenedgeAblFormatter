@@ -27,7 +27,6 @@ protools__prospy.w
 prodict_dump__dmpsec.p
 //0050 issues <--
 //010 issues -->
-auditing__auditmainw.w
 OpenEdge_DataAdmin_DataSource_IndexDataSource.cls
 prodict_dump__lodsec.p
 prodict_gui__guiuchg.p
