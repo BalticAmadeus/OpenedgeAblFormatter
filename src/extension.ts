@@ -17,6 +17,10 @@ import { lt } from "semver";
 import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 
+const WEBINAR_INFO_URL =
+    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions/682";
+const WEBINAR_DATE_LABEL = "April 30th";
+
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
     undefined //no excessive logging
 );
@@ -28,6 +32,9 @@ declare global {
 
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
+    const showPromotionalNotifications = vscode.workspace
+        .getConfiguration("AblFormatter")
+        .get<boolean>("showPromotionalNotifications", true);
 
     if (lt(vscode.version, "1.107.0")) {
         debugManager.disableExtension();
@@ -155,6 +162,14 @@ export async function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(reportBugCommand);
 
+    const webinarInfoCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.openWebinarInfo",
+        () => {
+            vscode.env.openExternal(vscode.Uri.parse(WEBINAR_INFO_URL));
+        }
+    );
+    context.subscriptions.push(webinarInfoCommand);
+
     const bugStatusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
         99
@@ -166,6 +181,19 @@ export async function activate(context: vscode.ExtensionContext) {
         "Report a bug or issue for OpenEdge ABL Formatter";
     bugStatusBarItem.show();
     context.subscriptions.push(bugStatusBarItem);
+
+    if (showPromotionalNotifications) {
+        const webinarStatusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Right,
+            98
+        );
+        webinarStatusBarItem.text = "$(megaphone) Webinar: Apr 30";
+        webinarStatusBarItem.command = "openedgeAblFormatter.openWebinarInfo";
+        webinarStatusBarItem.tooltip =
+            `Join our free OpenEdge ABL Formatter webinar on ${WEBINAR_DATE_LABEL}`;
+        webinarStatusBarItem.show();
+        context.subscriptions.push(webinarStatusBarItem);
+    }
 
     // Pass context down to test suites via global or export
     globalThis.__ablFormatterExtensionContext = context;
@@ -218,6 +246,26 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         });
         context.subscriptions.push(disposable);
+    }
+
+    // Show one-time promo popup for upcoming webinar.
+    const WEBINAR_PROMO_SHOWN_KEY =
+        "openedgeAblFormatter.webinarPromoApril302026Shown";
+    if (
+        showPromotionalNotifications &&
+        !context.globalState.get(WEBINAR_PROMO_SHOWN_KEY)
+    ) {
+        const result = await vscode.window.showInformationMessage(
+            `Join our FREE OpenEdge ABL Formatter webinar on ${WEBINAR_DATE_LABEL}. Live demo, setup walkthrough, and Q&A with developer Gustas.`,
+            "Follow Webinar Updates",
+            "Dismiss"
+        );
+
+        if (result === "Follow Webinar Updates") {
+            await vscode.env.openExternal(vscode.Uri.parse(WEBINAR_INFO_URL));
+        }
+
+        await context.globalState.update(WEBINAR_PROMO_SHOWN_KEY, true);
     }
 }
 

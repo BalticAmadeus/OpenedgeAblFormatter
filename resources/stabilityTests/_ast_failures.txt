@@ -527,16 +527,6 @@ workshop_qbuild.i
 workshop__secomm.w
 //013 issues <--
 //014 issues -->
-adebuild_nogatewy.p
-adedict__delete.p
-adeuib__semain.w
-adeuib__vrfyqry.p
-adm_support__wizfld.w
-OpenEdge_DataAdmin_DataSource_TableDataSource.cls
-prodict_gate_gat_mdi1.i
-prodict_gate__gat_trg.p
-prodict_mss__mss_fix.p
-prodict_odb__odb_fix.p
-prodict_ora__ora_fix.p
-prores_u-load.p
+corelib_OpenEdge_Core_Assert.cls
+prodict_ora__ora_lkg.p
 //014 issues <--
