@@ -145,11 +145,13 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 if (text.length === 0) {
                     newString = "";
                 } else if (this.isAfterStandaloneComment(node, fullText)) {
-                    const nodeStart = node.startIndex;
-                    const lineStart = fullText.text.lastIndexOf("\n", nodeStart - 1) + 1;
-                    const indentMatch = fullText.text.substring(lineStart, nodeStart).match(/^\s*/);
-                    const indent = indentMatch ? indentMatch[0] : "";
-                    newString = fullText.eolDelimiter + indent + text;
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(startPos, node.endIndex);
                 } else {
                     newString = " " + text;
                 }
@@ -209,11 +211,13 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 if (text.length === 0) {
                     newString = "";
                 } else if (this.isAfterStandaloneComment(node, fullText)) {
-                    const nodeStart = node.startIndex;
-                    const lineStart = fullText.text.lastIndexOf("\n", nodeStart - 1) + 1;
-                    const indentMatch = fullText.text.substring(lineStart, nodeStart).match(/^\s*/);
-                    const indent = indentMatch ? indentMatch[0] : "";
-                    newString = fullText.eolDelimiter + indent + text;
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(startPos, node.endIndex);
                 } else {
                     newString = " " + text;
                 }
@@ -259,11 +263,13 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 if (text.length === 0) {
                     newString = "";
                 } else if (this.isAfterStandaloneComment(node, fullText)) {
-                    const nodeStart = node.startIndex;
-                    const lineStart = fullText.text.lastIndexOf("\n", nodeStart - 1) + 1;
-                    const indentMatch = fullText.text.substring(lineStart, nodeStart).match(/^\s*/);
-                    const indent = indentMatch ? indentMatch[0] : "";
-                    newString = fullText.eolDelimiter + indent + text;
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(startPos, node.endIndex);
                 } else {
                     newString = " " + text;
                 }
