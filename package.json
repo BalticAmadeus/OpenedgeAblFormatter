@@ -2,13 +2,13 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.5.0",
+  "version": "0.5.3",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
   },
   "engines": {
-    "vscode": "^1.84.0"
+    "vscode": "^1.107.0"
   },
   "categories": [
     "Formatters"
@@ -101,6 +101,14 @@
             "media": {
               "image": "resources/walkthrough/DisableFormatterTelemetry.png",
               "altText": "Settings for disabling telemetry sent by OpenEdge ABL Formatter can be found in settings with @tag:telemetry tag"
+            }
+          },
+          {
+            "id": "UpcomingWebinar",
+            "title": "OpenEdge ABL Formatter Webinar - April 30th",
+            "description": "Join our free April 30th webinar for a live demo, setup walkthrough, and Q&A.",
+            "media": {
+              "markdown": "resources/walkthrough/UpcomingWebinar.md"
             }
           }
         ]
@@ -430,6 +438,13 @@
           "default": "false",
           "description": "Enable table view with tree info on hover"
         },
+        "AblFormatter.showPromotionalNotifications": {
+          "order": 1950,
+          "type": "boolean",
+          "default": true,
+          "category": "General",
+          "description": "Enable webinar and marketing announcements."
+        },
         "Telemetry.ablFormatterTelemetry": {
           "order": 10200,
           "type": "boolean",
@@ -474,9 +489,10 @@
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.10",
     "@types/node": "18.x",
+    "@types/semver": "^7.7.1",
     "@types/vscode": "^1.84.0",
-    "@typescript-eslint/eslint-plugin": "^6.9.0",
-    "@typescript-eslint/parser": "^6.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.3.2",
     "chai": "^4.3.11",
@@ -484,14 +500,16 @@
     "esbuild": "^0.25.2",
     "eslint": "^8.52.0",
     "glob": "^11.0.1",
-    "mocha": "^10.8.2",
+    "mocha": "^11.3.0",
     "replace-in-file": "^8.3.0",
     "rimraf": "^5.0.5",
+    "semver": "^7.7.4",
     "typescript": "^5.2.2",
     "vscode-extension-tester": "^8.13.0"
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.9.8",
+    "serialize-javascript": "^7.0.4",
     "web-tree-sitter": "^0.20.8"
   }
 }

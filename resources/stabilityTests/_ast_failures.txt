@@ -218,7 +218,6 @@ businesscomponents_OpenEdge_BusinessLogic_Filter_JfpFilterParser.cls
 businesscomponents_OpenEdge_BusinessLogic_Query_QueryBuilder.cls
 businesscomponents_OpenEdge_BusinessLogic_QueryOperatorHelper.cls
 businesscomponents_OpenEdge_BusinessLogic_QueryPredicate.cls
-corelib_OpenEdge_Core_Assert.cls
 corelib_OpenEdge_Core_Assertion_assertisunknown.i
 corelib_OpenEdge_Core_Assertion_assertnotunknown.i
 corelib_OpenEdge_Core_ByteBucket.cls
@@ -527,3 +526,7 @@ protools_widattrs.w
 workshop_qbuild.i
 workshop__secomm.w
 //013 issues <--
+//014 issues -->
+corelib_OpenEdge_Core_Assert.cls
+prodict_ora__ora_lkg.p
+//014 issues <--

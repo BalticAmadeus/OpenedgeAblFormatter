@@ -157,6 +157,6 @@ If you wish to contribute, see our guidelines [here](CONTRIBUTING.md).
 
 This project is licensed under the APACHE 2.0 License - see the LICENSE file for details.
 
-## Sponsored by [Baltic Amadeus](https://www.ba.lt/en)
+## Sponsored by [Baltic Amadeus](https://www.baltic-amadeus.com)
 
-[![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.ba.lt/en)
+[![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.baltic-amadeus.com)

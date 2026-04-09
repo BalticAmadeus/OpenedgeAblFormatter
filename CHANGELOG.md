@@ -4,6 +4,22 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.5.3 (2026-04-03)
+
+- Added option to disable marketing information
+
+## 0.5.2 (2026-04-02)
+
+- Improved USING statement formatting
+- Added formatting for DELETE statement
+- Added information about upcoming Free Webinar
+
+## 0.5.1 (2026-03-19)
+
+- Implemented new UI experience for changing Formatter settings
+- Improved Array formatting
+- **tree-sitter-abl** version bump and other Improvements [See all](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/20?closed=1)
+
 ## 0.5.0 (2026-02-06)
 
 - Returned to synchronous one worker implementation
