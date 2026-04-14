@@ -9,6 +9,6 @@ case pOperator:
         return ?.
     otherwise
          // if this is an actual operator then return the enum
-        if x eq 0 thenreturn ?.
-        as sign x = 1.
+        if x eq 0 then return ?.
+        else return ?.
 end case.
