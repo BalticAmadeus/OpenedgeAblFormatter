@@ -36,6 +36,13 @@ npx mocha ./out/test/suite/extension.test.js
 
 Mocha timeout is 20 seconds (`.mocharc.js`). Test fixtures live in `resources/functionalTests/`.
 
+## Running Tests (Agent Workflow)
+
+When asked to run tests, use this pattern (tests require VS Code host and take ~30s):
+
+1. Build and start tests in background: `npm run build 2>&1 | tail -3 && npm test 2>&1` with `run_in_background: true`
+2. Monitor for completion: poll the output file until `passing|failing` appears, then print the summary line
+
 ## Architecture
 
 The extension activates on `onLanguage:abl` and follows a three-layer design:
@@ -82,7 +89,8 @@ User triggers format
 
 **Settings override**: A file can override VS Code settings by including a leading comment:
 ```abl
-/* formatterSettingsOverride */ { "ablFormatter.assign.enabled": false } */
+/* formatterSettingsOverride */
+/*  { "ablFormatter.assignFormatting": false } */
 ```
 
 **Test fixtures**: Functional tests use `.abl` input/output pairs in `resources/functionalTests/<FormatterName>/`. Add a new subfolder + file pair to test a formatter.
