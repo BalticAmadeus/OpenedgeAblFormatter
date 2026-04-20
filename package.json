@@ -38,6 +38,21 @@
           "light": "resources/Formatter_LOGO_32x32.png",
           "dark": "resources/Formatter_LOGO_32x32.png"
         }
+      },
+      {
+        "command": "openedgeAblFormatter.showCoverageReport",
+        "title": "Show Parser Coverage Report",
+        "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.showCoverageOutput",
+        "title": "Show Parser Coverage in Output",
+        "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.showCoverageSummary",
+        "title": "Show Parser Coverage Summary",
+        "category": "OpenEdge ABL Formatter"
       }
     ],
     "menus": {
