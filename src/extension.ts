@@ -17,6 +17,7 @@ import { lt } from "semver";
 import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 import { CoverageReportPanel } from "./providers/CoverageReportPanel";
+import { FormatterCoveragePanel } from "./providers/FormatterCoveragePanel";
 
 const WEBINAR_INFO_URL =
     "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions/682";
@@ -175,6 +176,16 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(showCoverageSummaryCommand);
+
+    const showFormatterCoverageCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.showFormatterCoverageReport",
+        () => {
+            FormatterCoveragePanel.createOrShow(
+                vscode.Uri.file(context.extensionPath)
+            );
+        }
+    );
+    context.subscriptions.push(showFormatterCoverageCommand);
 
     setInterval(runPeriodicTask, 20_000);
 

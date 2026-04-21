@@ -53,6 +53,11 @@
         "command": "openedgeAblFormatter.showCoverageSummary",
         "title": "Show Parser Coverage Summary",
         "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.showFormatterCoverageReport",
+        "title": "Show Formatter Coverage Report",
+        "category": "OpenEdge ABL Formatter"
       }
     ],
     "menus": {

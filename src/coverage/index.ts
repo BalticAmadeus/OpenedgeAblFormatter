@@ -49,5 +49,17 @@ export {
     getUnsupportedFeatures,
     getUnsupportedKeywords,
     generateTextReport,
-    generateHtmlReport,
+    generateParserHtmlReport,
+    generateFormatterHtmlReport,
 } from "./ParserCoverageCalculator";
+
+// Formatter coverage data and stats
+export {
+    FormatterCoverage,
+    FormatterOption,
+    FormatterEntry,
+    FormatterCoverageStats,
+    formatterEntries,
+    calculateFormatterStats,
+    getOverallFormatterCoverage,
+} from "./FormatterCoverageData";

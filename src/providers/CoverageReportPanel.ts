@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { generateHtmlReport, generateTextReport, calculateParserCoverage } from "../coverage/ParserCoverageCalculator";
+import { generateParserHtmlReport, generateTextReport, calculateParserCoverage } from "../coverage/ParserCoverageCalculator";
 
 /**
  * Webview panel for displaying tree-sitter-abl parser coverage report
@@ -66,7 +66,7 @@ export class CoverageReportPanel {
         // Otherwise, create a new panel
         const panel = vscode.window.createWebviewPanel(
             CoverageReportPanel.viewType,
-            "ABL Formatter Coverage",
+            "ABL Parser Coverage",
             column || vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -128,7 +128,7 @@ export class CoverageReportPanel {
 
     private _update() {
         this._panel.title = "ABL Parser Coverage";
-        this._panel.webview.html = generateHtmlReport();
+        this._panel.webview.html = generateParserHtmlReport();
     }
 
     public dispose() {

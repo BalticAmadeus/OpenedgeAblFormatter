@@ -32,6 +32,12 @@ import {
     definitionsNotSupported,
     countKeywordSupport,
 } from "./ParserCoverageData";
+import {
+    formatterEntries,
+    FormatterCoverage,
+    calculateFormatterStats,
+    getOverallFormatterCoverage,
+} from "./FormatterCoverageData";
 
 export interface ParserCoverageStats {
     /** Total number of applicable documented features */
@@ -326,10 +332,89 @@ export function generateTextReport(): string {
     return report;
 }
 
+function sharedStyles(): string {
+    return `
+        :root {
+            --vscode-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            font-family: var(--vscode-foreground, var(--vscode-font-family));
+            background-color: var(--vscode-editor-background, #1e1e1e);
+            color: var(--vscode-editor-foreground, #d4d4d4);
+            padding: 20px;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--vscode-panel-border, #454545);
+        }
+        .header h1 { color: var(--vscode-textLink-foreground, #3794ff); margin-bottom: 5px; }
+        .header p { color: var(--vscode-descriptionForeground, #858585); margin: 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        .stat-card { background: var(--vscode-input-background, #3c3c3c); border-radius: 8px; padding: 12px; text-align: center; }
+        .stat-card .number { font-size: 1.8em; font-weight: bold; }
+        .stat-card .label { color: var(--vscode-descriptionForeground, #858585); font-size: 0.8em; }
+        .stat-card.full .number { color: #4caf50; }
+        .stat-card.partial .number { color: #8bc34a; }
+        .stat-card.generic .number { color: #ff9800; }
+        .stat-card.none .number { color: #f44336; }
+        .stat-card.blue .number { color: #3794ff; }
+        .progress-container { background: var(--vscode-input-background, #3c3c3c); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .progress-bar { height: 30px; border-radius: 15px; overflow: hidden; display: flex; background: #333; }
+        .progress-segment { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75em; font-weight: bold; overflow: hidden; }
+        .segment-full { background: #4caf50; }
+        .segment-partial { background: #8bc34a; }
+        .segment-generic { background: #ff9800; }
+        .segment-none { background: #f44336; }
+        .legend { display: flex; gap: 20px; margin: 15px 0; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.85em; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+        .section-title { color: var(--vscode-textLink-foreground, #3794ff); margin: 25px 0 15px 0; padding-bottom: 5px; border-bottom: 1px solid var(--vscode-panel-border, #454545); }
+        .category-card { background: var(--vscode-input-background, #3c3c3c); border-radius: 8px; padding: 15px; margin-bottom: 12px; }
+        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .category-name { font-weight: bold; }
+        .category-progress { height: 8px; border-radius: 4px; display: flex; overflow: hidden; background: #333; }
+        .category-stats { display: flex; gap: 15px; margin-top: 8px; font-size: 0.85em; color: var(--vscode-descriptionForeground, #858585); }
+        details { margin-top: 12px; }
+        details summary { cursor: pointer; color: var(--vscode-textLink-foreground, #3794ff); font-size: 0.9em; }
+        details summary:hover { text-decoration: underline; }
+        .feature-list { max-height: 400px; overflow-y: auto; margin-top: 10px; padding: 10px; background: var(--vscode-editor-background, #1e1e1e); border-radius: 6px; }
+        .feature-item { padding: 8px 5px; border-bottom: 1px solid var(--vscode-panel-border, #333); }
+        .feature-item:last-child { border-bottom: none; }
+        .feature-header { display: flex; align-items: center; gap: 10px; }
+        .feature-name { font-weight: 500; min-width: 200px; }
+        .feature-rule { color: var(--vscode-descriptionForeground, #858585); font-family: monospace; font-size: 0.85em; }
+        .feature-notes { color: var(--vscode-descriptionForeground, #858585); font-size: 0.85em; font-style: italic; }
+        .feature-link { color: var(--vscode-textLink-foreground, #3794ff); text-decoration: none; font-size: 0.85em; margin-left: auto; }
+        .status-full { color: #4caf50; }
+        .status-partial { color: #8bc34a; }
+        .status-generic { color: #ff9800; }
+        .status-none { color: #f44336; }
+        .status-na { color: #858585; }
+        .keyword-container { margin-top: 8px; padding-left: 20px; }
+        .keyword-section { margin: 5px 0; }
+        .keyword-label { font-size: 0.8em; margin-right: 8px; }
+        .supported-label { color: #4caf50; }
+        .unsupported-label { color: #f44336; }
+        .keyword-list { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+        .keyword-tag { padding: 2px 6px; border-radius: 3px; font-size: 0.75em; font-family: monospace; }
+        .keyword-tag.supported { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+        .keyword-tag.unsupported { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+        .info-box { background: var(--vscode-input-background, #3c3c3c); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .info-box.warning { border-left: 4px solid #ff9800; }
+        .info-box h4 { margin: 0 0 8px 0; color: #ff9800; }
+        .info-box p { margin: 0; font-size: 0.9em; color: var(--vscode-descriptionForeground, #858585); }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--vscode-panel-border, #454545); text-align: center; color: var(--vscode-descriptionForeground, #858585); font-size: 0.85em; }
+        .footer a { color: var(--vscode-textLink-foreground, #3794ff); }
+    `;
+}
+
 /**
- * Generate HTML report for webview
+ * Generate HTML report for webview (parser coverage only)
  */
-export function generateHtmlReport(): string {
+export function generateParserHtmlReport(): string {
     const overall = calculateParserCoverage();
     const byCategory = calculateParserCoverageByCategory();
     const genericFeatures = getGenericFeatures();
@@ -386,261 +471,7 @@ export function generateHtmlReport(): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parser Coverage Report</title>
-    <style>
-        :root {
-            --vscode-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        body {
-            font-family: var(--vscode-foreground, var(--vscode-font-family));
-            background-color: var(--vscode-editor-background, #1e1e1e);
-            color: var(--vscode-editor-foreground, #d4d4d4);
-            padding: 20px;
-            margin: 0;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--vscode-panel-border, #454545);
-        }
-        .header h1 {
-            color: var(--vscode-textLink-foreground, #3794ff);
-            margin-bottom: 5px;
-        }
-        .header p {
-            color: var(--vscode-descriptionForeground, #858585);
-            margin: 0;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 12px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: var(--vscode-input-background, #3c3c3c);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-        }
-        .stat-card .number {
-            font-size: 1.8em;
-            font-weight: bold;
-        }
-        .stat-card .label {
-            color: var(--vscode-descriptionForeground, #858585);
-            font-size: 0.8em;
-        }
-        .stat-card.full .number { color: #4caf50; }
-        .stat-card.partial .number { color: #8bc34a; }
-        .stat-card.generic .number { color: #ff9800; }
-        .stat-card.none .number { color: #f44336; }
-        .stat-card.blue .number { color: #3794ff; }
-        
-        .progress-container {
-            background: var(--vscode-input-background, #3c3c3c);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .progress-bar {
-            height: 30px;
-            border-radius: 15px;
-            overflow: hidden;
-            display: flex;
-            background: #333;
-        }
-        .progress-segment {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.75em;
-            font-weight: bold;
-            overflow: hidden;
-        }
-        .segment-full { background: #4caf50; }
-        .segment-partial { background: #8bc34a; }
-        .segment-generic { background: #ff9800; }
-        .segment-none { background: #f44336; }
-        
-        .legend {
-            display: flex;
-            gap: 20px;
-            margin: 15px 0;
-            flex-wrap: wrap;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.85em;
-        }
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-        }
-        
-        .section-title {
-            color: var(--vscode-textLink-foreground, #3794ff);
-            margin: 25px 0 15px 0;
-            padding-bottom: 5px;
-            border-bottom: 1px solid var(--vscode-panel-border, #454545);
-        }
-        
-        .category-card {
-            background: var(--vscode-input-background, #3c3c3c);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 12px;
-        }
-        .category-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .category-name { font-weight: bold; }
-        .category-progress {
-            height: 8px;
-            border-radius: 4px;
-            display: flex;
-            overflow: hidden;
-            background: #333;
-        }
-        .category-stats {
-            display: flex;
-            gap: 15px;
-            margin-top: 8px;
-            font-size: 0.85em;
-            color: var(--vscode-descriptionForeground, #858585);
-        }
-        
-        details {
-            margin-top: 12px;
-        }
-        details summary {
-            cursor: pointer;
-            color: var(--vscode-textLink-foreground, #3794ff);
-            font-size: 0.9em;
-        }
-        details summary:hover {
-            text-decoration: underline;
-        }
-        
-        .feature-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 10px;
-            padding: 10px;
-            background: var(--vscode-editor-background, #1e1e1e);
-            border-radius: 6px;
-        }
-        .feature-item {
-            padding: 8px 5px;
-            border-bottom: 1px solid var(--vscode-panel-border, #333);
-        }
-        .feature-item:last-child {
-            border-bottom: none;
-        }
-        .feature-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .feature-name {
-            font-weight: 500;
-            min-width: 200px;
-        }
-        .feature-rule {
-            color: var(--vscode-descriptionForeground, #858585);
-            font-family: monospace;
-            font-size: 0.85em;
-        }
-        .feature-notes {
-            color: var(--vscode-descriptionForeground, #858585);
-            font-size: 0.85em;
-            font-style: italic;
-        }
-        .feature-link {
-            color: var(--vscode-textLink-foreground, #3794ff);
-            text-decoration: none;
-            font-size: 0.85em;
-            margin-left: auto;
-        }
-        
-        .status-full { color: #4caf50; }
-        .status-partial { color: #8bc34a; }
-        .status-generic { color: #ff9800; }
-        .status-none { color: #f44336; }
-        .status-na { color: #858585; }
-        
-        .keyword-container {
-            margin-top: 8px;
-            padding-left: 20px;
-        }
-        .keyword-section {
-            margin: 5px 0;
-        }
-        .keyword-label {
-            font-size: 0.8em;
-            margin-right: 8px;
-        }
-        .supported-label { color: #4caf50; }
-        .unsupported-label { color: #f44336; }
-        .keyword-list {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        .keyword-tag {
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.75em;
-            font-family: monospace;
-        }
-        .keyword-tag.supported {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4caf50;
-        }
-        .keyword-tag.unsupported {
-            background: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-        }
-        
-        .info-box {
-            background: var(--vscode-input-background, #3c3c3c);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .info-box.warning {
-            border-left: 4px solid #ff9800;
-        }
-        .info-box h4 {
-            margin: 0 0 8px 0;
-            color: #ff9800;
-        }
-        .info-box p {
-            margin: 0;
-            font-size: 0.9em;
-            color: var(--vscode-descriptionForeground, #858585);
-        }
-        
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid var(--vscode-panel-border, #454545);
-            text-align: center;
-            color: var(--vscode-descriptionForeground, #858585);
-            font-size: 0.85em;
-        }
-        .footer a {
-            color: var(--vscode-textLink-foreground, #3794ff);
-        }
-    </style>
+    <style>${sharedStyles()}</style>
 </head>
 <body>
     <div class="header">
@@ -832,4 +663,123 @@ export function generateHtmlReport(): string {
     </div>
 </body>
 </html>`;
+}
+
+/**
+ * Generate standalone HTML report for formatter coverage
+ */
+export function generateFormatterHtmlReport(): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatter Coverage Report</title>
+    <style>${sharedStyles()}</style>
+</head>
+<body>
+    <div class="header">
+        <h1>ABL Formatter Coverage</h1>
+        <p>Approximate coverage of each formatter against documented ABL constructs</p>
+    </div>
+    ${generateFormatterHtmlSection()}
+    <div class="footer">
+        <p>Report generated: ${new Date().toISOString()}</p>
+    </div>
+</body>
+</html>`;
+}
+
+function generateFormatterHtmlSection(): string {
+    const stats = calculateFormatterStats();
+    const overallScore = getOverallFormatterCoverage();
+
+    const coverageIcon = (coverage: FormatterCoverage): string => {
+        switch (coverage) {
+            case FormatterCoverage.Covered: return '<span class="status-full">✓</span>';
+            case FormatterCoverage.PassThrough: return '<span class="status-generic">⚬</span>';
+            case FormatterCoverage.Missing: return '<span class="status-none">○</span>';
+        }
+    };
+
+    const scoreColor = (score: number): string => {
+        if (score >= 80) { return 'var(--status-full-color, #4ec9b0)'; }
+        if (score >= 60) { return 'var(--status-partial-color, #dcdcaa)'; }
+        if (score >= 40) { return 'var(--status-generic-color, #9cdcfe)'; }
+        return 'var(--status-none-color, #f44747)';
+    };
+
+    return `
+    <h2 class="section-title">Formatter Coverage (Approximation)</h2>
+    <div class="info-box">
+        <p>
+            <strong>Overall approximate formatter coverage: ${overallScore}%</strong><br>
+            Each formatter is scored based on how many of the ABL construct's documented 
+            keywords/options are actively formatted vs passed through unchanged or missing.
+        </p>
+        <p>
+            <span class="status-full">✓</span> Covered — formatter actively handles and reformats this option.<br>
+            <span class="status-generic">⚬</span> Pass-through — formatter preserves but does not reformat this option.<br>
+            <span class="status-none">○</span> Missing — option is not handled; output may be malformatted.
+        </p>
+        <p style="font-size: 0.85em; color: var(--vscode-descriptionForeground, #858585);">
+            Note: These scores are manual approximations based on source code inspection.
+        </p>
+    </div>
+
+    <div class="stats-grid">
+        ${stats.map(s => `
+            <div class="stat-card" style="border-left: 3px solid ${scoreColor(s.approximateScore)};">
+                <div class="stat-value" style="color: ${scoreColor(s.approximateScore)};">${s.approximateScore}%</div>
+                <div class="stat-label">${s.formatterDir}</div>
+            </div>
+        `).join('')}
+    </div>
+
+    ${formatterEntries.map(entry => {
+        const coveredCount = entry.options.filter(o => o.coverage === FormatterCoverage.Covered).length;
+        const ptCount = entry.options.filter(o => o.coverage === FormatterCoverage.PassThrough).length;
+        const missingCount = entry.options.filter(o => o.coverage === FormatterCoverage.Missing).length;
+        const score = entry.approximateScore;
+        const color = scoreColor(score);
+        const barFull = ((coveredCount / entry.options.length) * 100).toFixed(1);
+        const barPt = ((ptCount / entry.options.length) * 100).toFixed(1);
+        const barMissing = ((missingCount / entry.options.length) * 100).toFixed(1);
+        return `
+        <div class="category-card">
+            <div class="category-header">
+                <span class="category-name">${entry.formatterName}</span>
+                <span style="color: ${color}; font-weight: bold;">${score}%</span>
+            </div>
+            <div class="category-progress">
+                <div class="segment-full" style="width: ${barFull}%"></div>
+                <div class="segment-generic" style="width: ${barPt}%"></div>
+                <div class="segment-none" style="width: ${barMissing}%"></div>
+            </div>
+            <div class="category-stats">
+                <span class="status-full">✓ ${coveredCount} covered</span>
+                <span class="status-generic">⚬ ${ptCount} pass-through</span>
+                ${missingCount > 0 ? `<span class="status-none">○ ${missingCount} missing</span>` : ''}
+            </div>
+            ${entry.notes ? `<div class="feature-notes" style="margin-top: 6px;">${entry.notes}</div>` : ''}
+            <details>
+                <summary>View ${entry.options.length} options for ${entry.formatterDir}</summary>
+                <div class="feature-list">
+                    ${entry.options.map(opt => `
+                        <div class="feature-item">
+                            <div class="feature-header">
+                                ${coverageIcon(opt.coverage)}
+                                <span class="feature-name">${opt.name}</span>
+                                ${opt.notes ? `<span class="feature-notes">${opt.notes}</span>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </details>
+            <div style="margin-top: 4px; font-size: 0.8em; color: var(--vscode-descriptionForeground, #858585);">
+                Handles: ${entry.handlesNodeTypes.join(', ')}
+            </div>
+        </div>
+        `;
+    }).join('')}`;
 }
