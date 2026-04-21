@@ -99,7 +99,7 @@ export class CoverageReportPanel {
     public static showQuickSummary() {
         const overall = calculateParserCoverage();
         vscode.window.showInformationMessage(
-            `Parser Coverage: ${overall.percentage}% of ABL (${overall.supported} of ${overall.total} documented features supported by grammar)`
+            `Parser Coverage: ${overall.dedicatedRulePercentage}% with dedicated rules (${overall.full} full + ${overall.partial} partial), ${overall.generic} generic parse, ${overall.none} not supported (${overall.total} total features)`
         );
     }
 

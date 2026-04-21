@@ -1,1901 +1,893 @@
 /**
  * Progress OpenEdge ABL Language Reference - Parser Coverage
  * 
- * This file contains the comprehensive list of ABL language features
- * from official Progress OpenEdge documentation, mapped to whether
- * tree-sitter-abl grammar supports parsing them.
+ * This file contains detailed coverage tracking of ABL language features
+ * from official Progress OpenEdge documentation, showing:
+ * 1. Whether tree-sitter-abl has a dedicated grammar rule
+ * 2. Which keywords/options within each statement are supported
+ * 3. What falls through to the generic abl_statement catch-all
  * 
  * Source: Progress OpenEdge ABL Reference
  * https://docs.progress.com/bundle/abl-reference/
- * 
- * Purpose: Track how complete the tree-sitter-abl parser is compared
- * to the official language specification.
  */
 
-export enum ParserCoverage {
-    /** Grammar fully supports this feature */
-    Supported = "supported",
-    /** Grammar partially supports this feature */
+export enum ParserSupport {
+    /** Has dedicated grammar rule with full/most keyword support */
+    Full = "full",
+    /** Has dedicated grammar rule but missing some keywords/options */
     Partial = "partial",
-    /** Grammar does not support this feature */
-    NotSupported = "not-supported",
+    /** Parses via generic abl_statement (no structural understanding) */
+    Generic = "generic",
+    /** Cannot be parsed at all */
+    None = "none",
     /** Not applicable for parsing (runtime-only, deprecated, etc.) */
     NotApplicable = "not-applicable",
 }
 
 export enum DocCategory {
-    /** Statements from ABL Reference */
     Statement = "statement",
-    /** Built-in functions */
-    BuiltInFunction = "built-in-function",
-    /** Data types */
+    Definition = "definition",
+    Block = "block",
     DataType = "data-type",
-    /** Operators */
     Operator = "operator",
-    /** Preprocessor directives */
     Preprocessor = "preprocessor",
-    /** Object-oriented constructs */
     ObjectOriented = "object-oriented",
-    /** Widgets and UI */
-    Widget = "widget",
-    /** Database operations */
-    Database = "database",
-    /** Error handling */
     ErrorHandling = "error-handling",
-    /** System handles and attributes */
-    SystemHandle = "system-handle",
-    /** Events */
-    Event = "event",
-    /** Other language elements */
+    Expression = "expression",
     Other = "other",
 }
 
-export interface DocumentedFeature {
-    /** Feature name as in Progress documentation */
-    name: string;
-    /** Category of the feature */
-    category: DocCategory;
-    /** Parser support status */
-    parserStatus: ParserCoverage;
-    /** Grammar rule that handles this (if supported) */
+export interface KeywordSupport {
+    keyword: string;
+    supported: boolean;
     grammarRule?: string;
-    /** Notes about support level or limitations */
     notes?: string;
-    /** Link to Progress documentation */
+}
+
+export interface DocumentedFeature {
+    name: string;
+    category: DocCategory;
+    support: ParserSupport;
+    grammarRule?: string;
+    supportedKeywords?: KeywordSupport[];
+    notes?: string;
     docLink?: string;
 }
 
 // =============================================================================
-// STATEMENTS (from ABL Reference - Statements section)
+// STATEMENTS WITH DEDICATED GRAMMAR RULES (Full or Partial support)
 // =============================================================================
-export const documentedStatements: DocumentedFeature[] = [
-    // A
+
+export const statementsWithDedicatedRules: DocumentedFeature[] = [
     {
         name: "ACCUMULATE",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "accumulate_statement",
+        supportedKeywords: [
+            { keyword: "AVERAGE", supported: true },
+            { keyword: "COUNT", supported: true },
+            { keyword: "MAXIMUM", supported: true },
+            { keyword: "MINIMUM", supported: true },
+            { keyword: "TOTAL", supported: true },
+            { keyword: "SUB-AVERAGE", supported: true },
+            { keyword: "SUB-COUNT", supported: true },
+            { keyword: "SUB-MAXIMUM", supported: true },
+            { keyword: "SUB-MINIMUM", supported: true },
+            { keyword: "SUB-TOTAL", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/ACCUMULATE-statement.html",
-    },
-    {
-        name: "APPLY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Event application to widgets",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/APPLY-statement.html",
     },
     {
         name: "ASSIGN",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "assign_statement",
+        supportedKeywords: [
+            { keyword: "NO-ERROR", supported: true },
+            { keyword: "Multiple assignments", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/ASSIGN-statement.html",
-    },
-
-    // B
-    {
-        name: "BELL",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Terminal bell",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/BELL-statement.html",
-    },
-    {
-        name: "BLOCK-LEVEL ON ERROR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "error_scope_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/BLOCK-LEVEL-statement.html",
-    },
-    {
-        name: "BUFFER-COMPARE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/BUFFER-COMPARE-statement.html",
-    },
-    {
-        name: "BUFFER-COPY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/BUFFER-COPY-statement.html",
-    },
-
-    // C
-    {
-        name: "CALL",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "External procedure call (legacy)",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CALL-statement.html",
     },
     {
         name: "CASE",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "case_statement",
+        supportedKeywords: [
+            { keyword: "WHEN", supported: true },
+            { keyword: "OR WHEN", supported: true },
+            { keyword: "THEN", supported: true },
+            { keyword: "OTHERWISE", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/CASE-statement.html",
     },
     {
         name: "CATCH",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        category: DocCategory.ErrorHandling,
+        support: ParserSupport.Full,
         grammarRule: "catch_statement",
+        supportedKeywords: [
+            { keyword: "AS", supported: true },
+            { keyword: "CLASS", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/CATCH-statement.html",
     },
     {
-        name: "CHOOSE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Menu selection",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CHOOSE-statement.html",
-    },
-    {
-        name: "CLASS",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "class_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CLASS-statement.html",
-    },
-    {
-        name: "CLEAR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Clear frame fields",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CLEAR-statement.html",
-    },
-    {
-        name: "CLOSE QUERY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CLOSE-QUERY-statement.html",
-    },
-    {
-        name: "CLOSE STORED-PROCEDURE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "DataServer feature",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CLOSE-STORED-PROCEDURE-statement.html",
-    },
-    {
-        name: "COLOR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Terminal colors",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/COLOR-statement.html",
-    },
-    {
-        name: "COMPILE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Runtime compilation",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/COMPILE-statement.html",
-    },
-    {
-        name: "CONNECT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Database connection",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CONNECT-statement.html",
-    },
-    {
-        name: "CONSTRUCTOR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "constructor_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CONSTRUCTOR-statement.html",
-    },
-    {
-        name: "COPY-LOB",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/COPY-LOB-statement.html",
-    },
-    {
-        name: "CREATE (record)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Create database record",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-statement.html",
-    },
-    {
-        name: "CREATE (widget)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Dynamic widget creation",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-widget-statement.html",
-    },
-    {
-        name: "CREATE ALIAS",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-ALIAS-statement.html",
-    },
-    {
-        name: "CREATE BROWSE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-BROWSE-statement.html",
-    },
-    {
-        name: "CREATE BUFFER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-BUFFER-statement.html",
-    },
-    {
-        name: "CREATE CALL",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-CALL-statement.html",
-    },
-    {
-        name: "CREATE CLIENT-PRINCIPAL",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-CLIENT-PRINCIPAL-statement.html",
-    },
-    {
-        name: "CREATE DATABASE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-DATABASE-statement.html",
-    },
-    {
-        name: "CREATE DATASET",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-DATASET-statement.html",
-    },
-    {
-        name: "CREATE DATA-SOURCE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-DATA-SOURCE-statement.html",
-    },
-    {
-        name: "CREATE QUERY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-QUERY-statement.html",
-    },
-    {
-        name: "CREATE SAX-ATTRIBUTES",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-SAX-ATTRIBUTES-statement.html",
-    },
-    {
-        name: "CREATE SAX-READER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-SAX-READER-statement.html",
-    },
-    {
-        name: "CREATE SAX-WRITER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-SAX-WRITER-statement.html",
-    },
-    {
-        name: "CREATE SERVER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-SERVER-statement.html",
-    },
-    {
-        name: "CREATE SERVER-SOCKET",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-SERVER-SOCKET-statement.html",
-    },
-    {
-        name: "CREATE SOAP-HEADER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-SOAP-HEADER-statement.html",
-    },
-    {
-        name: "CREATE SOAP-HEADER-ENTRYREF",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-SOAP-HEADER-ENTRYREF-statement.html",
-    },
-    {
-        name: "CREATE SOCKET",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-SOCKET-statement.html",
-    },
-    {
-        name: "CREATE TEMP-TABLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Dynamic temp-table creation (runtime)",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-TEMP-TABLE-statement.html",
-    },
-    {
-        name: "CREATE X-DOCUMENT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-X-DOCUMENT-statement.html",
-    },
-    {
-        name: "CREATE X-NODEREF",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-X-NODEREF-statement.html",
-    },
-
-    // D
-    {
-        name: "DEFINE BROWSE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "browse_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-BROWSE-statement.html",
-    },
-    {
-        name: "DEFINE BUFFER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "buffer_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-BUFFER-statement.html",
-    },
-    {
-        name: "DEFINE BUTTON",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Button widget definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-BUTTON-statement.html",
-    },
-    {
-        name: "DEFINE DATASET",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "dataset_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-DATASET-statement.html",
-    },
-    {
-        name: "DEFINE DATA-SOURCE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "data_source_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-DATA-SOURCE-statement.html",
-    },
-    {
-        name: "DEFINE EVENT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "event_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-EVENT-statement.html",
-    },
-    {
-        name: "DEFINE FRAME",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "frame_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-FRAME-statement.html",
-    },
-    {
-        name: "DEFINE IMAGE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Image widget definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-IMAGE-statement.html",
-    },
-    {
-        name: "DEFINE MENU",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Menu definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-MENU-statement.html",
-    },
-    {
-        name: "DEFINE PARAMETER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "parameter_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-PARAMETER-statement.html",
-    },
-    {
-        name: "DEFINE PROPERTY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "property_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-PROPERTY-statement.html",
-    },
-    {
-        name: "DEFINE QUERY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "query_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-QUERY-statement.html",
-    },
-    {
-        name: "DEFINE RECTANGLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "rectangle_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-RECTANGLE-statement.html",
-    },
-    {
-        name: "DEFINE STREAM",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "stream_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-STREAM-statement.html",
-    },
-    {
-        name: "DEFINE SUB-MENU",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Sub-menu definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-SUB-MENU-statement.html",
-    },
-    {
-        name: "DEFINE TEMP-TABLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "temp_table_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-TEMP-TABLE-statement.html",
-    },
-    {
-        name: "DEFINE VARIABLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "variable_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-VARIABLE-statement.html",
-    },
-    {
-        name: "DEFINE WORK-TABLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "workfile_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-WORK-TABLE-statement.html",
-    },
-    {
-        name: "DELETE (record)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Partial,
-        grammarRule: "abl_statement",
-        notes: "Parsed as generic abl_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DELETE-statement.html",
-    },
-    {
-        name: "DELETE ALIAS",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DELETE-ALIAS-statement.html",
-    },
-    {
-        name: "DELETE OBJECT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DELETE-OBJECT-statement.html",
-    },
-    {
-        name: "DELETE PROCEDURE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DELETE-PROCEDURE-statement.html",
-    },
-    {
-        name: "DELETE WIDGET",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DELETE-WIDGET-statement.html",
-    },
-    {
-        name: "DELETE WIDGET-POOL",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DELETE-WIDGET-POOL-statement.html",
-    },
-    {
-        name: "DESTRUCTOR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "destructor_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DESTRUCTOR-statement.html",
-    },
-    {
-        name: "DISABLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Disable widgets/triggers",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DISABLE-statement.html",
-    },
-    {
-        name: "DISABLE TRIGGERS",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DISABLE-TRIGGERS-statement.html",
-    },
-    {
-        name: "DISCONNECT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Database disconnect",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DISCONNECT-statement.html",
-    },
-    {
-        name: "DISPLAY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Display data in frame",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DISPLAY-statement.html",
-    },
-    {
         name: "DO",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        category: DocCategory.Block,
+        support: ParserSupport.Full,
         grammarRule: "do_block",
+        supportedKeywords: [
+            { keyword: "FOR", supported: true },
+            { keyword: "PRESELECT", supported: true },
+            { keyword: "TO/BY", supported: true },
+            { keyword: "WHILE", supported: true },
+            { keyword: "STOP-AFTER", supported: true },
+            { keyword: "TRANSACTION", supported: true },
+            { keyword: "ON ERROR", supported: true },
+            { keyword: "ON STOP", supported: true },
+            { keyword: "ON QUIT", supported: true },
+            { keyword: "ON ENDKEY", supported: true },
+            { keyword: "WITH FRAME", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/DO-statement.html",
     },
     {
-        name: "DOWN",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Move cursor down in frame",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DOWN-statement.html",
-    },
-
-    // E
-    {
-        name: "EMPTY TEMP-TABLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/EMPTY-TEMP-TABLE-statement.html",
-    },
-    {
-        name: "ENABLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Enable widgets",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/ENABLE-statement.html",
-    },
-    {
-        name: "ENTRY (function)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotApplicable,
-        notes: "Built-in function, not statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/ENTRY-function.html",
-    },
-    {
-        name: "ENUM",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "enum_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/ENUM-statement.html",
-    },
-    {
-        name: "EXPORT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Export data to stream",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/EXPORT-statement.html",
-    },
-
-    // F
-    {
         name: "FINALLY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        category: DocCategory.ErrorHandling,
+        support: ParserSupport.Full,
         grammarRule: "finally_statement",
         docLink: "https://docs.progress.com/bundle/abl-reference/page/FINALLY-statement.html",
     },
     {
         name: "FIND",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "find_statement",
+        supportedKeywords: [
+            { keyword: "FIRST", supported: true },
+            { keyword: "LAST", supported: true },
+            { keyword: "NEXT", supported: true },
+            { keyword: "PREV", supported: true },
+            { keyword: "CURRENT", supported: true },
+            { keyword: "WHERE", supported: true },
+            { keyword: "OF", supported: true },
+            { keyword: "NO-LOCK", supported: true },
+            { keyword: "SHARE-LOCK", supported: true },
+            { keyword: "EXCLUSIVE-LOCK", supported: true },
+            { keyword: "NO-WAIT", supported: true },
+            { keyword: "NO-ERROR", supported: true },
+            { keyword: "USE-INDEX", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/FIND-statement.html",
     },
     {
-        name: "FIX-CODEPAGE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/FIX-CODEPAGE-statement.html",
-    },
-    {
         name: "FOR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        category: DocCategory.Block,
+        support: ParserSupport.Full,
         grammarRule: "for_statement",
+        supportedKeywords: [
+            { keyword: "EACH/FIRST/LAST", supported: true },
+            { keyword: "WHERE", supported: true },
+            { keyword: "BY (sort)", supported: true },
+            { keyword: "BREAK BY", supported: true },
+            { keyword: "WHILE", supported: true },
+            { keyword: "ON ERROR/STOP/QUIT/ENDKEY", supported: true },
+            { keyword: "WITH FRAME", supported: true },
+            { keyword: "Query tuning (locks)", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/FOR-statement.html",
-    },
-    {
-        name: "FORM",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Form definition for frames",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/FORM-statement.html",
-    },
-    {
-        name: "FORMAT (phrase)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_format",
-        notes: "Supported as phrase within definitions",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/FORMAT-phrase.html",
     },
     {
         name: "FUNCTION",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "function_statement",
+        supportedKeywords: [
+            { keyword: "RETURNS/RETURN", supported: true },
+            { keyword: "FORWARD", supported: true },
+            { keyword: "IN <procedure>", supported: true },
+            { keyword: "EXTENT", supported: true },
+            { keyword: "Parameters", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/FUNCTION-statement.html",
     },
-    {
-        name: "FUNCTION (FORWARD)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "function_statement",
-        notes: "FORWARD option supported",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/FUNCTION-statement.html",
-    },
-
-    // G
-    {
-        name: "GET",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Get record from query",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/GET-statement.html",
-    },
-    {
-        name: "GET-KEY-VALUE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/GET-KEY-VALUE-statement.html",
-    },
-
-    // H
-    {
-        name: "HIDE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Hide widget/frame",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/HIDE-statement.html",
-    },
-
-    // I
     {
         name: "IF...THEN...ELSE",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "if_statement",
+        supportedKeywords: [
+            { keyword: "IF", supported: true },
+            { keyword: "THEN", supported: true },
+            { keyword: "ELSE", supported: true },
+            { keyword: "ELSE IF", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/IF...THEN...ELSE-statement.html",
     },
     {
-        name: "IMPORT",
+        name: "INPUT/OUTPUT",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Import data from stream",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/IMPORT-statement.html",
-    },
-    {
-        name: "INPUT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Partial,
         grammarRule: "input_output_statement",
+        supportedKeywords: [
+            { keyword: "STREAM", supported: true },
+            { keyword: "STREAM-HANDLE", supported: true },
+            { keyword: "CLOSE", supported: true },
+            { keyword: "FROM/TO", supported: true },
+            { keyword: "APPEND", supported: true },
+            { keyword: "BINARY", supported: true },
+            { keyword: "PAGED", supported: true },
+            { keyword: "THROUGH", supported: false, notes: "Piping not supported" },
+            { keyword: "TERMINAL", supported: false },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/INPUT-statement.html",
     },
     {
-        name: "INPUT-OUTPUT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "input_output_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/INPUT-OUTPUT-statement.html",
-    },
-    {
-        name: "INSERT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Insert record with UI",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/INSERT-statement.html",
-    },
-    {
-        name: "INTERFACE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "interface_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/INTERFACE-statement.html",
-    },
-
-    // L
-    {
-        name: "LEAVE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "action_phrase",
-        notes: "Part of UNDO statement or standalone",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/LEAVE-statement.html",
-    },
-    {
-        name: "LENGTH (function)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotApplicable,
-        notes: "Built-in function, not statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/LENGTH-function.html",
-    },
-    {
-        name: "LOAD",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Load INI file settings",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/LOAD-statement.html",
-    },
-    {
-        name: "LOAD-PICTURE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/LOAD-PICTURE-statement.html",
-    },
-    {
-        name: "LOG-MANAGER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Logging configuration",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/LOG-MANAGER-statement.html",
-    },
-
-    // M
-    {
         name: "MESSAGE",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "message_statement",
+        supportedKeywords: [
+            { keyword: "SKIP", supported: true },
+            { keyword: "VIEW-AS ALERT-BOX", supported: true },
+            { keyword: "BUTTONS", supported: true },
+            { keyword: "TITLE", supported: true },
+            { keyword: "UPDATE/SET", supported: true },
+            { keyword: "IN WINDOW", supported: true },
+            { keyword: "NO-ERROR", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/MESSAGE-statement.html",
     },
     {
-        name: "METHOD",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "method_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/METHOD-statement.html",
-    },
-
-    // N
-    {
-        name: "NEXT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "action_phrase",
-        notes: "Part of UNDO statement or standalone",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/NEXT-statement.html",
-    },
-    {
-        name: "NEXT-PROMPT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Set next input field",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/NEXT-PROMPT-statement.html",
-    },
-
-    // O
-    {
         name: "ON",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "on_statement",
+        supportedKeywords: [
+            { keyword: "Widget events", supported: true },
+            { keyword: "Database triggers", supported: true },
+            { keyword: "CREATE/DELETE/FIND/WRITE/ASSIGN OF", supported: true },
+            { keyword: "REFERENCING NEW/OLD", supported: true },
+            { keyword: "OVERRIDE", supported: true },
+            { keyword: "REVERT", supported: true },
+            { keyword: "PERSISTENT RUN", supported: true },
+            { keyword: "ANYWHERE", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/ON-statement.html",
-    },
-    {
-        name: "OPEN QUERY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OPEN-QUERY-statement.html",
-    },
-    {
-        name: "OS-APPEND",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OS-APPEND-statement.html",
-    },
-    {
-        name: "OS-COMMAND",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OS-COMMAND-statement.html",
-    },
-    {
-        name: "OS-COPY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OS-COPY-statement.html",
-    },
-    {
-        name: "OS-CREATE-DIR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OS-CREATE-DIR-statement.html",
-    },
-    {
-        name: "OS-DELETE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OS-DELETE-statement.html",
-    },
-    {
-        name: "OS-RENAME",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OS-RENAME-statement.html",
-    },
-    {
-        name: "OUTPUT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "input_output_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OUTPUT-statement.html",
-    },
-    {
-        name: "OVERLAY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "String overlay assignment",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/OVERLAY-statement.html",
-    },
-
-    // P
-    {
-        name: "PAGE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Page break in stream",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/PAGE-statement.html",
-    },
-    {
-        name: "PAUSE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/PAUSE-statement.html",
     },
     {
         name: "PROCEDURE",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Partial,
         grammarRule: "procedure_statement",
+        supportedKeywords: [
+            { keyword: "PRIVATE", supported: true },
+            { keyword: "EXTERNAL", supported: false, notes: "DLL calls not supported" },
+            { keyword: "IN SUPER", supported: false },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/PROCEDURE-statement.html",
-    },
-    {
-        name: "PROCESS EVENTS",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/PROCESS-EVENTS-statement.html",
-    },
-    {
-        name: "PROMPT-FOR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "prompt_for_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/PROMPT-FOR-statement.html",
-    },
-    {
-        name: "PUBLISH",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Publish event",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/PUBLISH-statement.html",
-    },
-    {
-        name: "PUT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Write to stream",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/PUT-statement.html",
-    },
-    {
-        name: "PUT CURSOR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/PUT-CURSOR-statement.html",
-    },
-    {
-        name: "PUT-KEY-VALUE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/PUT-KEY-VALUE-statement.html",
-    },
-
-    // Q
-    {
-        name: "QUIT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/QUIT-statement.html",
-    },
-
-    // R
-    {
-        name: "RAW-TRANSFER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/RAW-TRANSFER-statement.html",
-    },
-    {
-        name: "READKEY",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/READKEY-statement.html",
     },
     {
         name: "RELEASE",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "release_statement",
+        supportedKeywords: [
+            { keyword: "NO-ERROR", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/RELEASE-statement.html",
     },
     {
-        name: "RELEASE EXTERNAL",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/RELEASE-EXTERNAL-statement.html",
-    },
-    {
-        name: "RELEASE OBJECT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/RELEASE-OBJECT-statement.html",
-    },
-    {
         name: "REPEAT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        category: DocCategory.Block,
+        support: ParserSupport.Full,
         grammarRule: "repeat_statement",
+        supportedKeywords: [
+            { keyword: "TO/BY", supported: true },
+            { keyword: "WHILE", supported: true },
+            { keyword: "PRESELECT", supported: true },
+            { keyword: "WITH FRAME", supported: true },
+            { keyword: "ON ERROR/STOP/QUIT/ENDKEY", supported: true },
+            { keyword: "Label:", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/REPEAT-statement.html",
-    },
-    {
-        name: "REPOSITION",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/REPOSITION-statement.html",
     },
     {
         name: "RETURN",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "return_statement",
+        supportedKeywords: [
+            { keyword: "ERROR", supported: true },
+            { keyword: "NO-APPLY", supported: true },
+            { keyword: "Return value (all types)", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/RETURN-statement.html",
-    },
-    {
-        name: "REVERT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "on_statement",
-        notes: "Supported as part of ON statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/REVERT-statement.html",
-    },
-    {
-        name: "ROUTINE-LEVEL ON ERROR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "error_scope_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/ROUTINE-LEVEL-statement.html",
     },
     {
         name: "RUN",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "run_statement",
+        supportedKeywords: [
+            { keyword: "Arguments", supported: true },
+            { keyword: "PERSISTENT", supported: true },
+            { keyword: "SINGLE-RUN", supported: true },
+            { keyword: "SINGLETON", supported: true },
+            { keyword: "ASYNCHRONOUS", supported: true },
+            { keyword: "SET <handle>", supported: true },
+            { keyword: "ON SERVER", supported: true },
+            { keyword: "IN <procedure>", supported: true },
+            { keyword: "EVENT-PROCEDURE", supported: true },
+            { keyword: "NO-ERROR", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/RUN-statement.html",
     },
     {
-        name: "RUN STORED-PROCEDURE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "DataServer feature",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/RUN-STORED-PROCEDURE-statement.html",
-    },
-    {
-        name: "RUN SUPER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "run_statement",
-        notes: "Supported via run_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/RUN-SUPER-statement.html",
-    },
-
-    // S
-    {
-        name: "SAVE CACHE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SAVE-CACHE-statement.html",
-    },
-    {
-        name: "SCROLL",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Scroll frame",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SCROLL-statement.html",
-    },
-    {
-        name: "SEEK",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Seek position in stream",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SEEK-statement.html",
-    },
-    {
-        name: "SET",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Set variable from user input",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SET-statement.html",
-    },
-    {
-        name: "SET-BREAK-TABLE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SET-BREAK-TABLE-statement.html",
-    },
-    {
-        name: "STOP",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/STOP-statement.html",
-    },
-    {
-        name: "STATUS",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Set status line",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/STATUS-statement.html",
-    },
-    {
-        name: "SUBSCRIBE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Subscribe to event",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SUBSCRIBE-statement.html",
-    },
-    {
-        name: "SUBSTRING (statement)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Substring assignment",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SUBSTRING-statement.html",
-    },
-    {
-        name: "SUPER",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "function_call",
-        notes: "Parsed as function call",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SUPER-statement.html",
-    },
-    {
-        name: "SYSTEM-DIALOG COLOR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SYSTEM-DIALOG-COLOR-statement.html",
-    },
-    {
-        name: "SYSTEM-DIALOG FONT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SYSTEM-DIALOG-FONT-statement.html",
-    },
-    {
-        name: "SYSTEM-DIALOG GET-DIR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SYSTEM-DIALOG-GET-DIR-statement.html",
-    },
-    {
-        name: "SYSTEM-DIALOG GET-FILE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SYSTEM-DIALOG-GET-FILE-statement.html",
-    },
-    {
-        name: "SYSTEM-DIALOG PRINTER-SETUP",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SYSTEM-DIALOG-PRINTER-SETUP-statement.html",
-    },
-
-    // T
-    {
-        name: "THIS-OBJECT",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "function_call",
-        notes: "Parsed as identifier/function call",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/THIS-OBJECT-statement.html",
-    },
-    {
-        name: "THROW",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "undo_statement",
-        notes: "Supported as part of UNDO...THROW",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/THROW-statement.html",
-    },
-    {
-        name: "TRIGGERS (phrase/block)",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "TRIGGERS block for browse",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/TRIGGERS-phrase.html",
-    },
-
-    // U
-    {
         name: "UNDO",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        category: DocCategory.ErrorHandling,
+        support: ParserSupport.Full,
         grammarRule: "undo_statement",
+        supportedKeywords: [
+            { keyword: "LEAVE", supported: true },
+            { keyword: "NEXT", supported: true },
+            { keyword: "RETRY", supported: true },
+            { keyword: "RETURN", supported: true },
+            { keyword: "THROW", supported: true },
+            { keyword: "Label reference", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/UNDO-statement.html",
-    },
-    {
-        name: "UNDERLINE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Underline output",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/UNDERLINE-statement.html",
-    },
-    {
-        name: "UNLOAD",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Unload INI settings",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/UNLOAD-statement.html",
-    },
-    {
-        name: "UNSUBSCRIBE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Unsubscribe from event",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/UNSUBSCRIBE-statement.html",
-    },
-    {
-        name: "UP",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Move cursor up in frame",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/UP-statement.html",
-    },
-    {
-        name: "UPDATE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "update_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/UPDATE-statement.html",
-    },
-    {
-        name: "USE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Use index for query",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/USE-statement.html",
     },
     {
         name: "USING",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "using_statement",
+        supportedKeywords: [
+            { keyword: "FROM ASSEMBLY", supported: true },
+            { keyword: "FROM PROPATH", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/USING-statement.html",
     },
-
-    // V
-    {
-        name: "VALIDATE",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Validate record",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/VALIDATE-statement.html",
-    },
-    {
-        name: "VIEW",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "View frame/widget",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/VIEW-statement.html",
-    },
-
-    // W
-    {
-        name: "WAIT-FOR",
-        category: DocCategory.Statement,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Wait for event",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/WAIT-FOR-statement.html",
-    },
-
-    // Assignment shorthand
     {
         name: "Variable Assignment (=)",
         category: DocCategory.Statement,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "variable_assignment",
+        supportedKeywords: [
+            { keyword: "= (equals)", supported: true },
+            { keyword: "+= -= *= /=", supported: true },
+            { keyword: "WHEN", supported: true },
+            { keyword: "IN FRAME", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/Assignment-statement.html",
     },
 ];
 
 // =============================================================================
-// DATA TYPES (from ABL Reference)
+// DEFINITIONS WITH DEDICATED GRAMMAR RULES
 // =============================================================================
-export const documentedDataTypes: DocumentedFeature[] = [
+
+export const definitionsWithDedicatedRules: DocumentedFeature[] = [
     {
-        name: "CHARACTER",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CHARACTER.html",
+        name: "DEFINE BROWSE",
+        category: DocCategory.Definition,
+        support: ParserSupport.Partial,
+        grammarRule: "browse_definition",
+        supportedKeywords: [
+            { keyword: "QUERY", supported: true },
+            { keyword: "DISPLAY", supported: true },
+            { keyword: "WITH options", supported: true },
+            { keyword: "ENABLE", supported: false },
+            { keyword: "Columns definition", supported: false, notes: "Limited column options" },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-BROWSE-statement.html",
     },
     {
-        name: "COM-HANDLE",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/COM-HANDLE.html",
+        name: "DEFINE BUFFER",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "buffer_definition",
+        supportedKeywords: [
+            { keyword: "FOR", supported: true },
+            { keyword: "TEMP-TABLE", supported: true },
+            { keyword: "Access tuning", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-BUFFER-statement.html",
     },
     {
-        name: "DATE",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DATE.html",
+        name: "DEFINE DATASET",
+        category: DocCategory.Definition,
+        support: ParserSupport.Partial,
+        grammarRule: "dataset_definition",
+        supportedKeywords: [
+            { keyword: "FOR", supported: true },
+            { keyword: "DATA-RELATION", supported: true },
+            { keyword: "RELATION-FIELDS", supported: true },
+            { keyword: "NAMESPACE-URI", supported: false },
+            { keyword: "NAMESPACE-PREFIX", supported: false },
+            { keyword: "PARENT-ID-RELATION", supported: false },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-DATASET-statement.html",
     },
     {
-        name: "DATETIME",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DATETIME.html",
+        name: "DEFINE DATA-SOURCE",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "data_source_definition",
+        supportedKeywords: [
+            { keyword: "FOR", supported: true },
+            { keyword: "QUERY", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-DATA-SOURCE-statement.html",
     },
     {
-        name: "DATETIME-TZ",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DATETIME-TZ.html",
+        name: "DEFINE EVENT",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "event_definition",
+        supportedKeywords: [
+            { keyword: "SIGNATURE VOID", supported: true },
+            { keyword: "DELEGATE", supported: true },
+            { keyword: "Parameters", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-EVENT-statement.html",
     },
     {
-        name: "DECIMAL",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DECIMAL.html",
+        name: "DEFINE FRAME",
+        category: DocCategory.Definition,
+        support: ParserSupport.Partial,
+        grammarRule: "frame_definition",
+        supportedKeywords: [
+            { keyword: "WITH SIZE", supported: true },
+            { keyword: "SIZE-PIXELS", supported: true },
+            { keyword: "NO-BOX", supported: true },
+            { keyword: "FONT/BGCOLOR/FGCOLOR", supported: true },
+            { keyword: "AT COLUMN/ROW", supported: true },
+            { keyword: "Field definitions", supported: false, notes: "Limited field layout" },
+            { keyword: "Header/footer", supported: false },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-FRAME-statement.html",
     },
     {
-        name: "HANDLE",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/HANDLE.html",
+        name: "DEFINE PARAMETER",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "parameter_definition",
+        supportedKeywords: [
+            { keyword: "INPUT/OUTPUT/INPUT-OUTPUT/RETURN", supported: true },
+            { keyword: "AS/LIKE", supported: true },
+            { keyword: "BUFFER", supported: true },
+            { keyword: "TABLE/TABLE-HANDLE", supported: true },
+            { keyword: "DATASET/DATASET-HANDLE", supported: true },
+            { keyword: "APPEND/BIND/BY-VALUE/BY-REFERENCE", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-PARAMETER-statement.html",
     },
     {
-        name: "INT64",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/INT64.html",
+        name: "DEFINE PROPERTY",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "property_definition",
+        supportedKeywords: [
+            { keyword: "AS/LIKE", supported: true },
+            { keyword: "GET", supported: true },
+            { keyword: "SET", supported: true },
+            { keyword: "Access modifiers", supported: true },
+            { keyword: "INITIAL", supported: true },
+            { keyword: "EXTENT", supported: true },
+            { keyword: "NO-UNDO", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-PROPERTY-statement.html",
     },
     {
-        name: "INTEGER",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/INTEGER.html",
+        name: "DEFINE QUERY",
+        category: DocCategory.Definition,
+        support: ParserSupport.Partial,
+        grammarRule: "query_definition",
+        supportedKeywords: [
+            { keyword: "FOR", supported: true },
+            { keyword: "FIELDS/EXCEPT", supported: true },
+            { keyword: "CACHE", supported: true },
+            { keyword: "SCROLLING", supported: true },
+            { keyword: "PRESELECT", supported: false },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-QUERY-statement.html",
     },
     {
-        name: "LOGICAL",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/LOGICAL.html",
+        name: "DEFINE STREAM",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "stream_definition",
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-STREAM-statement.html",
     },
     {
-        name: "LONGCHAR",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/LONGCHAR.html",
+        name: "DEFINE TEMP-TABLE",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "temp_table_definition",
+        supportedKeywords: [
+            { keyword: "NO-UNDO", supported: true },
+            { keyword: "SERIALIZE-NAME", supported: true },
+            { keyword: "REFERENCE-ONLY", supported: true },
+            { keyword: "LIKE", supported: true },
+            { keyword: "LIKE-SEQUENTIAL", supported: true },
+            { keyword: "USE-INDEX", supported: true },
+            { keyword: "BEFORE-TABLE", supported: true },
+            { keyword: "FIELD", supported: true },
+            { keyword: "INDEX", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-TEMP-TABLE-statement.html",
     },
     {
-        name: "MEMPTR",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/MEMPTR.html",
+        name: "DEFINE VARIABLE",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "variable_definition",
+        supportedKeywords: [
+            { keyword: "AS/LIKE", supported: true },
+            { keyword: "INITIAL/INIT", supported: true },
+            { keyword: "EXTENT", supported: true },
+            { keyword: "NO-UNDO", supported: true },
+            { keyword: "FORMAT", supported: true },
+            { keyword: "LABEL/COLUMN-LABEL", supported: true },
+            { keyword: "SERIALIZE-HIDDEN", supported: true },
+            { keyword: "SERIALIZE-NAME", supported: true },
+            { keyword: "VIEW-AS widgets", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-VARIABLE-statement.html",
     },
     {
-        name: "RAW",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/RAW.html",
-    },
-    {
-        name: "RECID",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/RECID.html",
-    },
-    {
-        name: "ROWID",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "primitive_type",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/ROWID.html",
-    },
-    {
-        name: "Class types",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "class_type",
-        notes: "User-defined class types",
-    },
-    {
-        name: "BLOB",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Partial,
-        notes: "Recognized in field definitions",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/BLOB.html",
-    },
-    {
-        name: "CLOB",
-        category: DocCategory.DataType,
-        parserStatus: ParserCoverage.Partial,
-        notes: "Recognized in field definitions",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CLOB.html",
+        name: "DEFINE WORK-TABLE",
+        category: DocCategory.Definition,
+        support: ParserSupport.Full,
+        grammarRule: "workfile_definition",
+        supportedKeywords: [
+            { keyword: "FIELD", supported: true },
+            { keyword: "AS/LIKE", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-WORK-TABLE-statement.html",
     },
 ];
 
 // =============================================================================
-// OPERATORS (from ABL Reference)
+// OBJECT-ORIENTED WITH DEDICATED GRAMMAR RULES
 // =============================================================================
-export const documentedOperators: DocumentedFeature[] = [
-    // Arithmetic
-    {
-        name: "+ (addition)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_additive_operator",
-    },
-    {
-        name: "- (subtraction)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_additive_operator",
-    },
-    {
-        name: "* (multiplication)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_multiplicative_operator",
-    },
-    {
-        name: "/ (division)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_multiplicative_operator",
-    },
-    {
-        name: "MODULO",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_multiplicative_operator",
-    },
 
-    // Comparison
-    {
-        name: "= (equals)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "<> (not equals)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "< (less than)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "> (greater than)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "<= (less or equal)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: ">= (greater or equal)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "EQ",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "NE",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "LT",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "GT",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "LE",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "GE",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "BEGINS",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "MATCHES",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-    {
-        name: "CONTAINS",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_comparison_operator",
-    },
-
-    // Logical
-    {
-        name: "AND",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_logical_operator",
-    },
-    {
-        name: "OR",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_logical_operator",
-    },
-    {
-        name: "NOT",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "unary_expression",
-    },
-
-    // String
-    {
-        name: "+ (string concat)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "additive_expression",
-        notes: "Same as arithmetic +",
-    },
-
-    // Assignment
-    {
-        name: "= (assignment)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "assignment_operator",
-    },
-    {
-        name: "+= (add assign)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_augmented_assignment",
-    },
-    {
-        name: "-= (subtract assign)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_augmented_assignment",
-    },
-    {
-        name: "*= (multiply assign)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_augmented_assignment",
-    },
-    {
-        name: "/= (divide assign)",
-        category: DocCategory.Operator,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "_augmented_assignment",
-    },
-];
-
-// =============================================================================
-// PREPROCESSOR DIRECTIVES
-// =============================================================================
-export const documentedPreprocessor: DocumentedFeature[] = [
-    {
-        name: "&GLOBAL-DEFINE",
-        category: DocCategory.Preprocessor,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "preprocessor_directive",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/GLOBAL-DEFINE-preprocessor-directive.html",
-    },
-    {
-        name: "&SCOPED-DEFINE",
-        category: DocCategory.Preprocessor,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "preprocessor_directive",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/SCOPED-DEFINE-preprocessor-directive.html",
-    },
-    {
-        name: "&UNDEFINE",
-        category: DocCategory.Preprocessor,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "preprocessor_directive",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/UNDEFINE-preprocessor-directive.html",
-    },
-    {
-        name: "&IF...&THEN...&ELSE...&ENDIF",
-        category: DocCategory.Preprocessor,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "preprocessor_directive",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/IF-preprocessor-directive.html",
-    },
-    {
-        name: "&MESSAGE",
-        category: DocCategory.Preprocessor,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "preprocessor_directive",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/MESSAGE-preprocessor-directive.html",
-    },
-    {
-        name: "&ANALYZE-SUSPEND/RESUME",
-        category: DocCategory.Preprocessor,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "preprocessor_directive",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/ANALYZE-SUSPEND-preprocessor-directive.html",
-    },
-    {
-        name: "{ } Include",
-        category: DocCategory.Preprocessor,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "include",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/Include-file-reference.html",
-    },
-    {
-        name: "{ } Named arguments",
-        category: DocCategory.Preprocessor,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "include_argument",
-        notes: "{&name} style references",
-    },
-];
-
-// =============================================================================
-// OBJECT-ORIENTED FEATURES
-// =============================================================================
-export const documentedOOFeatures: DocumentedFeature[] = [
+export const ooWithDedicatedRules: DocumentedFeature[] = [
     {
         name: "CLASS",
         category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "class_statement",
+        supportedKeywords: [
+            { keyword: "INHERITS", supported: true },
+            { keyword: "IMPLEMENTS", supported: true },
+            { keyword: "USE-WIDGET-POOL", supported: true },
+            { keyword: "ABSTRACT", supported: true },
+            { keyword: "FINAL", supported: true },
+            { keyword: "SERIALIZABLE", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/CLASS-statement.html",
-    },
-    {
-        name: "INTERFACE",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "interface_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/INTERFACE-statement.html",
-    },
-    {
-        name: "ENUM",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "enum_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/ENUM-statement.html",
-    },
-    {
-        name: "INHERITS",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "inherits",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/INHERITS-option.html",
-    },
-    {
-        name: "IMPLEMENTS",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "implements",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/IMPLEMENTS-option.html",
-    },
-    {
-        name: "METHOD",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "method_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/METHOD-statement.html",
     },
     {
         name: "CONSTRUCTOR",
         category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "constructor_statement",
+        supportedKeywords: [
+            { keyword: "PUBLIC/PRIVATE/PROTECTED", supported: true },
+            { keyword: "STATIC", supported: true },
+            { keyword: "Parameters", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/CONSTRUCTOR-statement.html",
     },
     {
         name: "DESTRUCTOR",
         category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "destructor_statement",
+        supportedKeywords: [
+            { keyword: "PUBLIC", supported: true },
+        ],
         docLink: "https://docs.progress.com/bundle/abl-reference/page/DESTRUCTOR-statement.html",
     },
     {
-        name: "PROPERTY (GET/SET)",
+        name: "ENUM",
         category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "property_definition",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-PROPERTY-statement.html",
+        support: ParserSupport.Full,
+        grammarRule: "enum_statement",
+        supportedKeywords: [
+            { keyword: "FLAGS", supported: true },
+            { keyword: "DEFINE ENUM members", supported: true },
+            { keyword: "Member values (=)", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/ENUM-statement.html",
     },
     {
-        name: "NEW (object creation)",
+        name: "INTERFACE",
         category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "new_expression",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/NEW-function.html",
+        support: ParserSupport.Full,
+        grammarRule: "interface_statement",
+        supportedKeywords: [
+            { keyword: "INHERITS", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/INTERFACE-statement.html",
     },
     {
-        name: "DYNAMIC-NEW",
+        name: "METHOD",
         category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "new_expression",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/DYNAMIC-NEW-statement.html",
+        support: ParserSupport.Full,
+        grammarRule: "method_statement",
+        supportedKeywords: [
+            { keyword: "PUBLIC/PRIVATE/PROTECTED", supported: true },
+            { keyword: "STATIC", supported: true },
+            { keyword: "ABSTRACT", supported: true },
+            { keyword: "OVERRIDE", supported: true },
+            { keyword: "FINAL", supported: true },
+            { keyword: "EXTENT", supported: true },
+            { keyword: "Return type", supported: true },
+            { keyword: "Parameters", supported: true },
+        ],
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/METHOD-statement.html",
     },
     {
-        name: "CAST",
+        name: "VAR statement",
         category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.NotSupported,
-        notes: "Type casting",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CAST-function.html",
-    },
-    {
-        name: ": (object access)",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "object_access",
-        notes: "obj:property syntax",
-    },
-    {
-        name: ":: (static access)",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "member_access",
-        notes: "Class::member syntax",
-    },
-    {
-        name: "THIS-OBJECT",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "identifier",
-        notes: "Keyword recognized",
-    },
-    {
-        name: "SUPER",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "function_call",
-        notes: "Parsed as identifier",
-    },
-    {
-        name: "ABSTRACT",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "member_modifier",
-    },
-    {
-        name: "OVERRIDE",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "member_modifier",
-    },
-    {
-        name: "FINAL",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "member_modifier",
-    },
-    {
-        name: "STATIC",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "scope_tuning",
-    },
-    {
-        name: "Access modifiers (PUBLIC/PRIVATE/PROTECTED)",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "access_tuning",
-    },
-    {
-        name: "SERIALIZABLE",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "serialization_tuning",
-    },
-    {
-        name: "Generic types (<T>)",
-        category: DocCategory.ObjectOriented,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "generic_type",
-        notes: "Progress.Collections.List<T>",
+        support: ParserSupport.Full,
+        grammarRule: "var_statement",
+        supportedKeywords: [
+            { keyword: "NEW/GLOBAL/SHARED/STATIC", supported: true },
+            { keyword: "PUBLIC/PRIVATE/PROTECTED", supported: true },
+            { keyword: "SERIALIZABLE", supported: true },
+            { keyword: "Array extents", supported: true },
+            { keyword: "Multiple variables", supported: true },
+        ],
+        notes: "Modern ABL variable declaration syntax",
     },
 ];
 
 // =============================================================================
-// ERROR HANDLING
+// ERROR HANDLING WITH DEDICATED RULES
 // =============================================================================
-export const documentedErrorHandling: DocumentedFeature[] = [
-    {
-        name: "CATCH",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "catch_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/CATCH-statement.html",
-    },
-    {
-        name: "FINALLY",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "finally_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/FINALLY-statement.html",
-    },
-    {
-        name: "THROW",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "undo_statement",
-        notes: "Part of UNDO...THROW",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/THROW-statement.html",
-    },
-    {
-        name: "UNDO",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "undo_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/UNDO-statement.html",
-    },
-    {
-        name: "ROUTINE-LEVEL ON ERROR",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "error_scope_statement",
-        docLink: "https://docs.progress.com/bundle/abl-reference/page/ROUTINE-LEVEL-statement.html",
-    },
+
+export const errorHandlingWithRules: DocumentedFeature[] = [
     {
         name: "BLOCK-LEVEL ON ERROR",
         category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
+        support: ParserSupport.Full,
         grammarRule: "error_scope_statement",
         docLink: "https://docs.progress.com/bundle/abl-reference/page/BLOCK-LEVEL-statement.html",
     },
     {
-        name: "ON ERROR phrase",
+        name: "ROUTINE-LEVEL ON ERROR",
         category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "on_error_phrase",
+        support: ParserSupport.Full,
+        grammarRule: "error_scope_statement",
+        docLink: "https://docs.progress.com/bundle/abl-reference/page/ROUTINE-LEVEL-statement.html",
     },
-    {
-        name: "ON STOP phrase",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "on_stop_phrase",
-    },
-    {
-        name: "ON QUIT phrase",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "on_quit_phrase",
-    },
-    {
-        name: "ON ENDKEY phrase",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "on_endkey_phrase",
-    },
-    {
-        name: "NO-ERROR option",
-        category: DocCategory.ErrorHandling,
-        parserStatus: ParserCoverage.Supported,
-        grammarRule: "query_tuning",
-        notes: "Supported in various contexts",
-    },
+];
+
+// =============================================================================
+// STATEMENTS THAT FALL THROUGH TO abl_statement (Generic parsing)
+// =============================================================================
+
+export const statementsWithGenericParsing: DocumentedFeature[] = [
+    { name: "APPLY", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Event application", docLink: "https://docs.progress.com/bundle/abl-reference/page/APPLY-statement.html" },
+    { name: "BELL", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Terminal bell", docLink: "https://docs.progress.com/bundle/abl-reference/page/BELL-statement.html" },
+    { name: "BUFFER-COMPARE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/BUFFER-COMPARE-statement.html" },
+    { name: "BUFFER-COPY", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/BUFFER-COPY-statement.html" },
+    { name: "CALL", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Legacy external call", docLink: "https://docs.progress.com/bundle/abl-reference/page/CALL-statement.html" },
+    { name: "CHOOSE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Menu selection", docLink: "https://docs.progress.com/bundle/abl-reference/page/CHOOSE-statement.html" },
+    { name: "CLEAR", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/CLEAR-statement.html" },
+    { name: "CLOSE QUERY", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/CLOSE-QUERY-statement.html" },
+    { name: "COLOR", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/COLOR-statement.html" },
+    { name: "COMPILE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Runtime compilation", docLink: "https://docs.progress.com/bundle/abl-reference/page/COMPILE-statement.html" },
+    { name: "CONNECT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/CONNECT-statement.html" },
+    { name: "COPY-LOB", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/COPY-LOB-statement.html" },
+    { name: "CREATE (record)", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Database record creation", docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-statement.html" },
+    { name: "CREATE (widget/object)", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Dynamic widget creation", docLink: "https://docs.progress.com/bundle/abl-reference/page/CREATE-widget-statement.html" },
+    { name: "DELETE (record)", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/DELETE-statement.html" },
+    { name: "DELETE OBJECT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/DELETE-OBJECT-statement.html" },
+    { name: "DISABLE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/DISABLE-statement.html" },
+    { name: "DISABLE TRIGGERS", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/DISABLE-TRIGGERS-statement.html" },
+    { name: "DISCONNECT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/DISCONNECT-statement.html" },
+    { name: "DISPLAY", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Major UI statement - no frame structure", docLink: "https://docs.progress.com/bundle/abl-reference/page/DISPLAY-statement.html" },
+    { name: "DOWN", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/DOWN-statement.html" },
+    { name: "EMPTY TEMP-TABLE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/EMPTY-TEMP-TABLE-statement.html" },
+    { name: "ENABLE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/ENABLE-statement.html" },
+    { name: "EXPORT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/EXPORT-statement.html" },
+    { name: "FIX-CODEPAGE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/FIX-CODEPAGE-statement.html" },
+    { name: "FORM", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Form definition", docLink: "https://docs.progress.com/bundle/abl-reference/page/FORM-statement.html" },
+    { name: "GET", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Query cursor movement", docLink: "https://docs.progress.com/bundle/abl-reference/page/GET-statement.html" },
+    { name: "GET-KEY-VALUE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/GET-KEY-VALUE-statement.html" },
+    { name: "HIDE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/HIDE-statement.html" },
+    { name: "IMPORT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/IMPORT-statement.html" },
+    { name: "INSERT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/INSERT-statement.html" },
+    { name: "LOAD", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/LOAD-statement.html" },
+    { name: "NEXT-PROMPT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/NEXT-PROMPT-statement.html" },
+    { name: "OPEN QUERY", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/OPEN-QUERY-statement.html" },
+    { name: "OS-* statements", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "OS-COMMAND, OS-COPY, etc.", docLink: "https://docs.progress.com/bundle/abl-reference/page/OS-COMMAND-statement.html" },
+    { name: "OVERLAY", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/OVERLAY-statement.html" },
+    { name: "PAGE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/PAGE-statement.html" },
+    { name: "PAUSE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/PAUSE-statement.html" },
+    { name: "PROCESS EVENTS", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/PROCESS-EVENTS-statement.html" },
+    { name: "PUBLISH", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/PUBLISH-statement.html" },
+    { name: "PUT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/PUT-statement.html" },
+    { name: "PUT-KEY-VALUE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/PUT-KEY-VALUE-statement.html" },
+    { name: "QUIT", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/QUIT-statement.html" },
+    { name: "RAW-TRANSFER", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/RAW-TRANSFER-statement.html" },
+    { name: "READKEY", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/READKEY-statement.html" },
+    { name: "REPOSITION", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/REPOSITION-statement.html" },
+    { name: "SCROLL", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/SCROLL-statement.html" },
+    { name: "SEEK", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/SEEK-statement.html" },
+    { name: "SET", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/SET-statement.html" },
+    { name: "STATUS", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/STATUS-statement.html" },
+    { name: "STOP", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/STOP-statement.html" },
+    { name: "SUBSCRIBE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/SUBSCRIBE-statement.html" },
+    { name: "SUBSTRING (statement)", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/SUBSTRING-statement.html" },
+    { name: "SYSTEM-DIALOG (all)", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "COLOR, FONT, GET-DIR, GET-FILE", docLink: "https://docs.progress.com/bundle/abl-reference/page/SYSTEM-DIALOG-GET-FILE-statement.html" },
+    { name: "UNLOAD", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/UNLOAD-statement.html" },
+    { name: "UNSUBSCRIBE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/UNSUBSCRIBE-statement.html" },
+    { name: "UP", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/UP-statement.html" },
+    { name: "UPDATE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "UI record update", docLink: "https://docs.progress.com/bundle/abl-reference/page/UPDATE-statement.html" },
+    { name: "VALIDATE", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/VALIDATE-statement.html" },
+    { name: "VIEW", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", docLink: "https://docs.progress.com/bundle/abl-reference/page/VIEW-statement.html" },
+    { name: "WAIT-FOR", category: DocCategory.Statement, support: ParserSupport.Generic, grammarRule: "abl_statement", notes: "Event loop", docLink: "https://docs.progress.com/bundle/abl-reference/page/WAIT-FOR-statement.html" },
+];
+
+// =============================================================================
+// DATA TYPES
+// =============================================================================
+
+export const dataTypes: DocumentedFeature[] = [
+    { name: "CHARACTER/CHAR", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "COM-HANDLE", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "DATE", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "DATETIME", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "DATETIME-TZ", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "DECIMAL", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "HANDLE", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "INT64", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "INTEGER/INT", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "LOGICAL", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "LONGCHAR", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "MEMPTR", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "RAW", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "RECID", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "ROWID", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "VOID", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "primitive_type" },
+    { name: "Class types", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "class_type" },
+    { name: "Generic types (<T>)", category: DocCategory.DataType, support: ParserSupport.Full, grammarRule: "generic_type" },
+];
+
+// =============================================================================
+// OPERATORS
+// =============================================================================
+
+export const operators: DocumentedFeature[] = [
+    { name: "+ (addition)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_additive_operator" },
+    { name: "- (subtraction)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_additive_operator" },
+    { name: "* (multiplication)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_multiplicative_operator" },
+    { name: "/ (division)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_multiplicative_operator" },
+    { name: "MODULO/MOD", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_multiplicative_operator" },
+    { name: "= < > <> <= >=", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
+    { name: "EQ NE LT GT LE GE", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
+    { name: "BEGINS", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
+    { name: "MATCHES", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
+    { name: "CONTAINS", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
+    { name: "AND", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_logical_operator" },
+    { name: "OR", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_logical_operator" },
+    { name: "NOT", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "unary_expression" },
+    { name: "= (assignment)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "assignment_operator" },
+    { name: "+= -= *= /=", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_augmented_assignment" },
+];
+
+// =============================================================================
+// PREPROCESSOR
+// =============================================================================
+
+export const preprocessor: DocumentedFeature[] = [
+    { name: "&GLOBAL-DEFINE", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "preprocessor_directive" },
+    { name: "&SCOPED-DEFINE", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "preprocessor_directive" },
+    { name: "&UNDEFINE", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "preprocessor_directive" },
+    { name: "&IF...&THEN...&ELSE...&ENDIF", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "preprocessor_directive" },
+    { name: "&MESSAGE", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "preprocessor_directive" },
+    { name: "&ANALYZE-SUSPEND/RESUME", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "preprocessor_directive" },
+    { name: "{ } Include files", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "include" },
+    { name: "{&name} Named arguments", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "include_argument" },
+    { name: "{{ }} Constants", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "constant" },
+];
+
+// =============================================================================
+// EXPRESSIONS
+// =============================================================================
+
+export const expressions: DocumentedFeature[] = [
+    { name: "Ternary (IF...THEN...ELSE)", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "ternary_expression" },
+    { name: "CAN-FIND", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "can_find_expression" },
+    { name: "AVAILABLE/AVAIL", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "available_expression" },
+    { name: "NEW (object creation)", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "new_expression" },
+    { name: "DYNAMIC-NEW", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "new_expression" },
+    { name: "AMBIGUOUS", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "ambiguous_expression" },
+    { name: "CURRENT-CHANGED", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "current_changed_expression" },
+    { name: "LOCKED", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "locked_expression" },
+    { name: "ACCUM (accumulate)", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "accumulate_expression" },
+    { name: "INPUT expression", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "input_expression" },
+    { name: "Object access (: colon)", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "object_access" },
+    { name: "Static access (::)", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "member_access" },
+    { name: "Array access [n]", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "array_access" },
+    { name: "Function calls", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "function_call" },
+    { name: "Parenthesized", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "parenthesized_expression" },
+    { name: "TEMP-TABLE expression", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "temp_table_expression" },
+    { name: "DATASET expression", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "dataset_expression" },
+    { name: "QUERY expression", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "query_expression" },
+    { name: "STREAM expression", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "stream_expression" },
+    { name: "BUFFER expression", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "buffer_expression" },
+    { name: "CAST", category: DocCategory.Expression, support: ParserSupport.Generic, notes: "Parses as function call" },
+    { name: "THIS-OBJECT", category: DocCategory.Expression, support: ParserSupport.Full, grammarRule: "identifier" },
+];
+
+// =============================================================================
+// DEFINITIONS NOT SUPPORTED
+// =============================================================================
+
+export const definitionsNotSupported: DocumentedFeature[] = [
+    { name: "DEFINE BUTTON", category: DocCategory.Definition, support: ParserSupport.None, notes: "Button widget not implemented", docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-BUTTON-statement.html" },
+    { name: "DEFINE IMAGE", category: DocCategory.Definition, support: ParserSupport.None, notes: "Image widget not implemented", docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-IMAGE-statement.html" },
+    { name: "DEFINE MENU", category: DocCategory.Definition, support: ParserSupport.None, notes: "Menu not implemented", docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-MENU-statement.html" },
+    { name: "DEFINE SUB-MENU", category: DocCategory.Definition, support: ParserSupport.None, notes: "Sub-menu not implemented", docLink: "https://docs.progress.com/bundle/abl-reference/page/DEFINE-SUB-MENU-statement.html" },
 ];
 
 // =============================================================================
 // ALL DOCUMENTED FEATURES
 // =============================================================================
+
 export const allDocumentedFeatures: DocumentedFeature[] = [
-    ...documentedStatements,
-    ...documentedDataTypes,
-    ...documentedOperators,
-    ...documentedPreprocessor,
-    ...documentedOOFeatures,
-    ...documentedErrorHandling,
+    ...statementsWithDedicatedRules,
+    ...definitionsWithDedicatedRules,
+    ...ooWithDedicatedRules,
+    ...errorHandlingWithRules,
+    ...statementsWithGenericParsing,
+    ...dataTypes,
+    ...operators,
+    ...preprocessor,
+    ...expressions,
+    ...definitionsNotSupported,
 ];
 
-/**
- * Get features by category
- */
-export function getDocFeaturesByCategory(category: DocCategory): DocumentedFeature[] {
-    return allDocumentedFeatures.filter((f) => f.category === category);
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+export function getFeaturesByCategory(category: DocCategory): DocumentedFeature[] {
+    return allDocumentedFeatures.filter(f => f.category === category);
 }
 
-/**
- * Get features by parser status
- */
-export function getDocFeaturesByStatus(status: ParserCoverage): DocumentedFeature[] {
-    return allDocumentedFeatures.filter((f) => f.parserStatus === status);
+export function getFeaturesBySupport(support: ParserSupport): DocumentedFeature[] {
+    return allDocumentedFeatures.filter(f => f.support === support);
 }
 
-/**
- * Get applicable features (excludes NotApplicable)
- */
-export function getApplicableDocFeatures(): DocumentedFeature[] {
-    return allDocumentedFeatures.filter((f) => f.parserStatus !== ParserCoverage.NotApplicable);
+export function getFeaturesWithDedicatedRules(): DocumentedFeature[] {
+    return allDocumentedFeatures.filter(f => 
+        f.support === ParserSupport.Full || f.support === ParserSupport.Partial
+    );
 }
 
-/**
- * Get missing features from documentation
- */
-export function getMissingDocFeatures(): DocumentedFeature[] {
-    return allDocumentedFeatures.filter((f) => f.parserStatus === ParserCoverage.NotSupported);
+export function getFeaturesWithGenericParsing(): DocumentedFeature[] {
+    return allDocumentedFeatures.filter(f => f.support === ParserSupport.Generic);
+}
+
+export function getUnsupportedFeatures(): DocumentedFeature[] {
+    return allDocumentedFeatures.filter(f => f.support === ParserSupport.None);
+}
+
+export function countKeywordSupport(feature: DocumentedFeature): { supported: number; total: number } {
+    if (!feature.supportedKeywords) {
+        return { supported: 0, total: 0 };
+    }
+    const supported = feature.supportedKeywords.filter(k => k.supported).length;
+    return { supported, total: feature.supportedKeywords.length };
 }
