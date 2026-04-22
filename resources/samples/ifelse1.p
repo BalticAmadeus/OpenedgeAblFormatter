@@ -2,7 +2,6 @@
 /* {
 "AblFormatter.blockFormatting": true,
 "AblFormatter.ifFormatting": true,
-"abl.completion.upperCase": false
 } */
 define variable a as integer no-undo.
 define variable b as integer no-undo.

@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.findFormatting": true,
-    "abl.completion.upperCase": false}*/
+/*  { "AblFormatter.findFormatting": true}*/
 procedure myProc:
 
     DEFINE buffer b_vac for Vacation.
