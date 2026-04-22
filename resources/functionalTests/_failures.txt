@@ -1,9 +1,10 @@
+enum_1-formatting-false
 issuesGithub_153 - fixed
 issuesGithub_163_1 - fixed
 issuesGithub_163_2 - fixed
 issuesGithub_163_3 - fixed
 issuesGithub_163_4 - fixed
-issuesGithub_196_1
+issuesGithub_196_1 - fixed
 issuesGithub_196_2 - fixed
 issuesGithub_226 - fixed
 issuesGithub_291 - fixed
