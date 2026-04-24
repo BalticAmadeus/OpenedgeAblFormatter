@@ -40,6 +40,7 @@ export enum SyntaxNodeType {
     VariableAssignment = "variable_assignment",
     VariableTuning = "variable_tuning",
     Identifier = "identifier",
+    QualifiedName = "qualified_name",
     SourceCode = "source_code",
     Argument = "argument",
     Arguments = "arguments",
