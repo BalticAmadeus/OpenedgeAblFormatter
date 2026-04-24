@@ -65,46 +65,10 @@ export class IfFormatter extends AFormatter implements IFormatter {
     ): string {
         let resultString = "";
 
-        node.children.forEach((child, index) => {
-            if (child.type === "comment") {
-                const commentText = FormatterHelper.getCurrentText(child, fullText);
-
-                // Check if this comment is inline with the previous node
-                let isInline = false;
-                if (index > 0) {
-                    const prev = node.children[index - 1];
-                    if (prev) {
-                        const between = fullText.text.substring(prev.endIndex, child.startIndex);
-                        if (!between.includes("\n")) {
-                            isInline = true;
-                        }
-                    }
-                }
-
-                if (isInline) {
-                    resultString += " " + commentText.trim();
-                } else {
-                    // Get the original indentation from the first line of the comment in the source
-                    const commentStart = child.startIndex;
-                    const lineStart = fullText.text.lastIndexOf('\n', commentStart - 1) + 1;
-                    const indentMatch = fullText.text.substring(lineStart, commentStart).match(/^\s*/);
-                    const baseIndent = indentMatch ? indentMatch[0] : "";
-
-                    const lines = commentText.split(fullText.eolDelimiter);
-                    lines.forEach((line, idx) => {
-                        // Only add baseIndent if the line does not already start with it (or is empty)
-                        let outLine = line;
-                        if (line.trim().length > 0 && !line.startsWith(baseIndent)) {
-                            outLine = baseIndent + line.trimStart();
-                        }
-                        resultString += fullText.eolDelimiter + outLine.trimEnd();
-                    });
-                }
-            } else {
-                resultString = resultString.concat(
-                    this.getIfExpressionString(child, fullText)
-                );
-            }
+        node.children.forEach((child) => {
+            resultString = resultString.concat(
+                this.getIfExpressionString(child, fullText)
+            );
         });
 
         return resultString.trim();
@@ -117,6 +81,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
+            case SyntaxNodeType.Comment:
+                newString = this.formatComment(node, fullText);
+                break;
             case SyntaxNodeType.ThenKeyword:
                 newString = this.settings.newLineBeforeThen()
                     ? fullText.eolDelimiter +
@@ -175,7 +142,19 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText
                 ).trim();
-                newString = text.length === 0 ? "" : " " + text;
+                if (text.length === 0) {
+                    newString = "";
+                } else if (this.isAfterStandaloneComment(node, fullText)) {
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(startPos, node.endIndex);
+                } else {
+                    newString = " " + text;
+                }
                 break;
         }
 
@@ -186,6 +165,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
+            case SyntaxNodeType.Comment:
+                newString = this.formatComment(node, fullText);
+                break;
             case SyntaxNodeType.ThenKeyword:
                 newString = this.settings.newLineBeforeThen()
                     ? fullText.eolDelimiter +
@@ -226,7 +208,19 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText
                 ).trim();
-                newString = text.length === 0 ? "" : " " + text;
+                if (text.length === 0) {
+                    newString = "";
+                } else if (this.isAfterStandaloneComment(node, fullText)) {
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(startPos, node.endIndex);
+                } else {
+                    newString = " " + text;
+                }
                 break;
         }
 
@@ -240,6 +234,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
+            case SyntaxNodeType.Comment:
+                newString = this.formatComment(node, fullText);
+                break;
             case SyntaxNodeType.ElseKeyword:
                 newString =
                     fullText.eolDelimiter +
@@ -263,11 +260,80 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText
                 ).trim();
-                newString = text.length === 0 ? "" : " " + text;
+                if (text.length === 0) {
+                    newString = "";
+                } else if (this.isAfterStandaloneComment(node, fullText)) {
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(startPos, node.endIndex);
+                } else {
+                    newString = " " + text;
+                }
                 break;
         }
 
         return newString;
+    }
+
+    private formatComment(node: SyntaxNode, fullText: FullText): string {
+        const commentText = FormatterHelper.getCurrentText(node, fullText);
+
+        let isInline = false;
+        const prevSibling = node.previousSibling;
+        if (prevSibling) {
+            const between = fullText.text.substring(
+                prevSibling.endIndex,
+                node.startIndex
+            );
+            if (!between.includes("\n")) {
+                isInline = true;
+            }
+        }
+
+        if (isInline) {
+            return " " + commentText.trim();
+        } else {
+            const commentStart = node.startIndex;
+            const lineStart =
+                fullText.text.lastIndexOf("\n", commentStart - 1) + 1;
+            const indentMatch = fullText.text
+                .substring(lineStart, commentStart)
+                .match(/^\s*/);
+            const baseIndent = indentMatch ? indentMatch[0] : "";
+
+            const lines = commentText.split(fullText.eolDelimiter);
+            let result = "";
+            lines.forEach((line) => {
+                let outLine = line;
+                if (line.trim().length > 0 && !line.startsWith(baseIndent)) {
+                    outLine = baseIndent + line.trimStart();
+                }
+                result += fullText.eolDelimiter + outLine.trimEnd();
+            });
+            return result;
+        }
+    }
+
+    private isAfterStandaloneComment(
+        node: SyntaxNode,
+        fullText: FullText
+    ): boolean {
+        const prevSibling = node.previousSibling;
+        if (
+            prevSibling &&
+            prevSibling.type === SyntaxNodeType.Comment
+        ) {
+            const between = fullText.text.substring(
+                prevSibling.endIndex,
+                node.startIndex
+            );
+            return between.includes("\n");
+        }
+        return false;
     }
 
     private getStartColumn(node: SyntaxNode): number {
