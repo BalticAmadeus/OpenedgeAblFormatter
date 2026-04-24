@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.caseFormatting": true,
-    "abl.completion.upperCase": true}*/
+/*  { "AblFormatter.caseFormatting": true}*/
 VAR CHAR qtr.
 VAR INT iQuarter.
 

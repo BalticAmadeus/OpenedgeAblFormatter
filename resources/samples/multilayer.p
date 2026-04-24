@@ -4,7 +4,6 @@
 "AblFormatter.forFormatting": true,
 "AblFormatter.caseFormatting": true,
 "AblFormatter.assignFormatting": true,
-"abl.completion.upperCase": true
 } */
 DEFINE VARIABLE pay-stat AS INTEGER NO-UNDO INITIAL 1.
 

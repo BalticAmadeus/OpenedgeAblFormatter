@@ -1,7 +1,6 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.forFormatting": true,
-"AblFormatter.blockFormatting": true,
-"abl.completion.upperCase": true}*/
+"AblFormatter.blockFormatting": true}*/
 
 FOR EACH Customer NO-LOCK,
     EACH Order OF Customer NO-LOCK,

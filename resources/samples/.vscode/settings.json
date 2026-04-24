@@ -1,6 +1,5 @@
 // By default disable all formatters for UI tests
 {
-    "abl.completion.upperCase": false,
     "AblFormatter.assignFormatting": true,
     "AblFormatter.findFormatting": false,
     "AblFormatter.forFormatting": false,
