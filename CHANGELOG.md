@@ -4,6 +4,13 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.5.4 (2026-04-24)
+
+- Improved Method Call formatting
+- Improved USING statement formatting
+- Fixed some issues with the Includes
+- Other Improvements [See all](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/22?closed=1)
+
 ## 0.5.3 (2026-04-03)
 
 - Added option to disable marketing information
