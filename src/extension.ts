@@ -256,7 +256,19 @@ export async function activate(context: vscode.ExtensionContext) {
         !context.globalState.get(WEBINAR_PROMO_SHOWN_KEY)
     ) {
         const result = await vscode.window.showInformationMessage(
-            `Join our FREE OpenEdge ABL Formatter webinar on ${WEBINAR_DATE_LABEL}. Live demo, setup walkthrough, and Q&A with developer Gustas.`,
+            `🚀 Friendly reminder – don’t miss out! Join our FREE webinar on ${WEBINAR_DATE_LABEL} and get a behind-the-scenes look at the OpenEdge ABL Formatter for VS Code.`,
+            {
+                detail: `Our developer Gustas will walk you through:
+• How the formatter was built
+• The challenges faced along the way
+• How it helps make your code cleaner and easier to work with
+• How to install and set it up
+
+🕒 14:00–15:00 (EET)
+📍 Online event
+👉 Sign up via the form to receive your access link before the webinar.
+✨ Attend live or get the recording – we’ll send it to everyone who registers.`
+            },
             "Follow Webinar Updates",
             "Dismiss"
         );
