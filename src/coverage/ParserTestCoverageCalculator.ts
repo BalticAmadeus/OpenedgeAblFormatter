@@ -257,6 +257,45 @@ export async function generateParserTestHtmlReport(
             margin: 16px 0 8px 0;
             color: var(--vscode-textLink-foreground, #3794ff);
         }
+        details.section {
+            margin: 12px 0;
+            border: 1px solid var(--vscode-panel-border, #3c3c3c);
+            border-radius: 8px;
+            background: var(--vscode-editor-background, #1e1e1e);
+            overflow: hidden;
+        }
+        details.section > summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 10px 12px;
+            font-weight: 600;
+            color: var(--vscode-textLink-foreground, #3794ff);
+            background: var(--vscode-input-background, #2f2f2f);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+        details.section > summary::-webkit-details-marker {
+            display: none;
+        }
+        .summary-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chevron {
+            transition: transform 0.15s ease-in-out;
+            color: var(--vscode-descriptionForeground, #9d9d9d);
+        }
+        details.section[open] .chevron {
+            transform: rotate(90deg);
+        }
+        .section-content {
+            padding: 10px;
+            max-height: 55vh;
+            overflow: auto;
+        }
         .feature-item {
             background: var(--vscode-input-background, #2f2f2f);
             border-radius: 7px;
@@ -306,29 +345,42 @@ export async function generateParserTestHtmlReport(
         <div class="bar-fill" style="width:${report.summary.percentage}%"></div>
     </div>
 
-    <h2 class="section-title">Tested Features (${tested.length})</h2>
-    ${tested
-        .slice(0, 120)
-        .map(
-            (item) => `
-        <div class="feature-item">
-            <div class="row"><strong class="status-tested">✓ ${escapeHtml(item.feature.name)}</strong><span class="rule">${escapeHtml(item.feature.grammarRule ?? "(no grammar rule)")}</span><span class="muted">${item.testFileCount} test file(s)</span></div>
-            <div>${item.matchedKeywords.slice(0, 10).map((keyword) => `<span class="tag">${escapeHtml(keyword)}</span>`).join("")}</div>
+    <details class="section" open>
+        <summary>
+            <span class="summary-label">Tested Features (${tested.length})</span>
+            <span class="chevron">▶</span>
+        </summary>
+        <div class="section-content">
+            ${tested
+                .slice(0, 120)
+                .map(
+                    (item) => `
+                <div class="feature-item">
+                    <div class="row"><strong class="status-tested">✓ ${escapeHtml(item.feature.name)}</strong><span class="rule">${escapeHtml(item.feature.grammarRule ?? "(no grammar rule)")}</span><span class="muted">${item.testFileCount} test file(s)</span></div>
+                </div>
+            `
+                )
+                .join("")}
         </div>
-    `
-        )
-        .join("")}
+    </details>
 
-    <h2 class="section-title">Untested Features (${untested.length})</h2>
-    ${untested
-        .map(
-            (item) => `
-        <div class="feature-item">
-            <div class="row"><strong class="status-untested">○ ${escapeHtml(item.feature.name)}</strong><span class="rule">${escapeHtml(item.feature.grammarRule ?? "(no grammar rule)")}</span></div>
+    <details class="section">
+        <summary>
+            <span class="summary-label">Untested Features (${untested.length})</span>
+            <span class="chevron">▶</span>
+        </summary>
+        <div class="section-content">
+            ${untested
+                .map(
+                    (item) => `
+                <div class="feature-item">
+                    <div class="row"><strong class="status-untested">○ ${escapeHtml(item.feature.name)}</strong><span class="rule">${escapeHtml(item.feature.grammarRule ?? "(no grammar rule)")}</span></div>
+                </div>
+            `
+                )
+                .join("")}
         </div>
-    `
-        )
-        .join("")}
+    </details>
 </body>
 </html>`;
 }
