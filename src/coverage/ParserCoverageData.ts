@@ -768,21 +768,21 @@ export const dataTypes: DocumentedFeature[] = [
 // =============================================================================
 
 export const operators: DocumentedFeature[] = [
-    { name: "+ (addition)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_additive_operator" },
-    { name: "- (subtraction)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_additive_operator" },
-    { name: "* (multiplication)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_multiplicative_operator" },
-    { name: "/ (division)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_multiplicative_operator" },
-    { name: "MODULO/MOD", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_multiplicative_operator" },
-    { name: "= < > <> <= >=", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
-    { name: "EQ NE LT GT LE GE", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
+    { name: "+ (addition)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "+" },
+    { name: "- (subtraction)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "-" },
+    { name: "* (multiplication)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "*" },
+    { name: "/ (division)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "/" },
+    { name: "MODULO/MOD", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_multiplicative_operator", supportedKeywords: [{ keyword: "MODULO", supported: true }, { keyword: "MOD", supported: true }] },
+    { name: "= < > <> <= >=", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "<" },
+    { name: "EQ NE LT GT LE GE", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator", supportedKeywords: [{ keyword: "EQ", supported: true }, { keyword: "NE", supported: true }, { keyword: "LT", supported: true }, { keyword: "GT", supported: true }, { keyword: "LE", supported: true }, { keyword: "GE", supported: true }] },
     { name: "BEGINS", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
     { name: "MATCHES", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
     { name: "CONTAINS", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_comparison_operator" },
     { name: "AND", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_logical_operator" },
     { name: "OR", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_logical_operator" },
     { name: "NOT", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "unary_expression" },
-    { name: "= (assignment)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "assignment_operator" },
-    { name: "+= -= *= /=", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "_augmented_assignment" },
+    { name: "= (assignment)", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "=" },
+    { name: "+= -= *= /=", category: DocCategory.Operator, support: ParserSupport.Full, grammarRule: "assignment_operator" },
 ];
 
 // =============================================================================
@@ -797,7 +797,7 @@ export const preprocessor: DocumentedFeature[] = [
     { name: "&MESSAGE", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "preprocessor_directive" },
     { name: "&ANALYZE-SUSPEND/RESUME", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "preprocessor_directive" },
     { name: "{ } Include files", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "include" },
-    { name: "{&name} Named arguments", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "include_argument" },
+    { name: "{&name} Named arguments", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "constant" },
     { name: "{{ }} Constants", category: DocCategory.Preprocessor, support: ParserSupport.Full, grammarRule: "constant" },
 ];
 

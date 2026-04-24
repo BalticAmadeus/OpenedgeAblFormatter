@@ -63,3 +63,12 @@ export {
     calculateFormatterStats,
     getOverallFormatterCoverage,
 } from "./FormatterCoverageData";
+
+// Parser grammar coverage against functional tests
+export {
+    FeatureTestCoverage,
+    ParserTestCoverageSummary,
+    ParserTestCoverageReport,
+    calculateParserTestCoverage,
+    generateParserTestHtmlReport,
+} from "./ParserTestCoverageCalculator";

@@ -58,6 +58,11 @@
         "command": "openedgeAblFormatter.showFormatterCoverageReport",
         "title": "Show Formatter Coverage Report",
         "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.showParserTestCoverageReport",
+        "title": "Show Parser vs Tests Coverage Report",
+        "category": "OpenEdge ABL Formatter"
       }
     ],
     "menus": {

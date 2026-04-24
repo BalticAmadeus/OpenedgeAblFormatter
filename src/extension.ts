@@ -18,6 +18,7 @@ import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 import { CoverageReportPanel } from "./providers/CoverageReportPanel";
 import { FormatterCoveragePanel } from "./providers/FormatterCoveragePanel";
+import { ParserTestCoveragePanel } from "./providers/ParserTestCoveragePanel";
 
 const WEBINAR_INFO_URL =
     "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions/682";
@@ -186,6 +187,16 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(showFormatterCoverageCommand);
+
+    const showParserTestCoverageCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.showParserTestCoverageReport",
+        () => {
+            ParserTestCoveragePanel.createOrShow(
+                vscode.Uri.file(context.extensionPath)
+            );
+        }
+    );
+    context.subscriptions.push(showParserTestCoverageCommand);
 
     setInterval(runPeriodicTask, 20_000);
 
