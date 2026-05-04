@@ -4,6 +4,7 @@ import * as path from "node:path";
 // Mock 'vscode' module so we can run this outside the extension host
 const Module = require("module");
 const originalRequire = Module.prototype.require;
+
 Module.prototype.require = function (request: string) {
     if (request === "vscode") {
         return {
@@ -22,113 +23,29 @@ Module.prototype.require = function (request: string) {
     return originalRequire.apply(this, arguments);
 };
 
-import { setupParserHelper, extensionDevelopmentPath, readFile, format, getSettingsOverride } from "./suitesUtils";
+import { setupParserHelper, extensionDevelopmentPath, readFile, format, getSettingsOverride, runGenericTest } from "./suitesUtils";
 import { FileIdentifier } from "../model/FileIdentifier";
-import { SyntaxNodeType } from "../model/SyntaxNodeType";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { enableFormatterDecorators } from "../formatterFramework/enableFormatterDecorators";
-import type Parser from "web-tree-sitter";
 import { IStrategy } from "./strategies/IStrategy";
 import { ProcedureStrategy } from "./strategies/ProcedureStrategy";
 import { CommentsRemoveStrategy } from "./strategies/CommentsRemoveStrategy";
-import { FunctionStrategy } from "./strategies/FunctionStrategy";
 import { ClassStrategy } from "./strategies/ClassStrategy";
-import { MethodStrategy } from "./strategies/MethodStrategy";
 
-// ----------------------------------------------------
-// 1. Core Reduction Strategies Interface and Classes
-// ----------------------------------------------------
-// Strategies are now imported from the src/utils/strategies directory
-
-// ----------------------------------------------------
-// 2. The Delta Debugging (Reduction) Algorithm
-// ----------------------------------------------------
-
-const onlyTestFail = true;
 
 
 let strategies: IStrategy[] = [];
 let globalParserHelper: AblParserHelper;
 
-function countActualSymbols(text: string): number {
-    let count = 0;
-    for (const element of text) {
-        const char = element;
-        // Exclude spaces, newlines, carriage returns, and tabs
-        if (char !== " " && char !== "\n" && char !== "\r" && char !== "\t") {
-            count++;
-        }
-    }
-    return count;
-}
-
-// Checking if the candidate fails the Symbol test
 async function fails(input: string): Promise<boolean> {
-    if (!onlyTestFail) {
-        // Shrik perfectly to the smallest pieces by always failing
-        return true; 
-    }
-
-    try {
-        // Force the settings override onto every isolated candidate we test
-        const settingsOverride = getSettingsOverride(true);
-        const testPayload = settingsOverride + input;
-
-        // 1. Run the snippet through the formatter
-        const formattedText = format(testPayload, "temp.p", globalParserHelper);
-        
-        // 2. Count the symbols before and after (make sure we count the testPayload which has the overrides!)
-        const beforeCount = countActualSymbols(testPayload);
-        const afterCount = countActualSymbols(formattedText);
-        
-        // 3. If counts don't match, this chunk fails the symbol test!
-        return beforeCount !== afterCount;
-    } catch (e) {
-        // If the formatter throws an exception, assume it's a structural failure that should be investigated
-        console.error("Formatter threw an error: ", e);
-        return true;
-    }
+    return true;
+    // would need to add symbol test here
 }
 
-async function reduce(input: string): Promise<string[]> {
-    if (!(await fails(input))) {
-        return [];
+export async function runDeltaReduction(targetFile?: string) {
+    if (!targetFile) {
+        targetFile = "resources\\ade\\adedict\\TRIG\\_trigdlg.p";
     }
-
-    for (const strategy of strategies) {
-        if (!strategy.applicable(input)) {
-            continue;
-        }
-
-        const candidates = strategy.generate(input);
-        let anyFailing = false;
-        let currentReduced: string[] = [];
-
-        for (const candidate of candidates) {
-            if (await fails(candidate)) {
-                anyFailing = true;
-                // Recursively break down the candidate further
-                const reduced = await reduce(candidate);
-                currentReduced.push(...reduced);
-            }
-        }
-        
-        // If this strategy successfully broke down the problem into smaller failing parts,
-        // we return those parts. We don't need to try other strategies on the whole input.
-        if (anyFailing) {
-            return Array.from(new Set(currentReduced)); // Return unique minimal candidates
-        }
-    }
-
-    return [input];
-}
-
-// ----------------------------------------------------
-// 3. Script Execution
-// ----------------------------------------------------
-
-export async function runDeltaReduction() {
-    const targetFile = "resources\\ade\\adedict\\TRIG\\_trigdlg.p";
     const targetFilePath = path.join(extensionDevelopmentPath, targetFile);
     
     if (!fs.existsSync(targetFilePath)) {
@@ -136,48 +53,143 @@ export async function runDeltaReduction() {
         return;
     }
 
-    const baseName = path.parse(targetFilePath).name;
-    const extName = path.parse(targetFilePath).ext || ".p";
-    const beforeText = readFile(targetFilePath);
+    const parsedPath = path.parse(targetFilePath);
+    const extName = parsedPath.ext || ".p";
+    const baseName = parsedPath.name;
+    let beforeText = readFile(targetFilePath);
 
     // Initialize dependencies
     globalParserHelper = await setupParserHelper();
     enableFormatterDecorators();
     
-    strategies = [
-        new CommentsRemoveStrategy(globalParserHelper),
-        new ProcedureStrategy(globalParserHelper),
-        new FunctionStrategy(globalParserHelper),
-        new ClassStrategy(globalParserHelper),
-        new MethodStrategy(globalParserHelper)
-    ];
+    // Fully Strip comments
+    const commentsStrategy = new CommentsRemoveStrategy(globalParserHelper);
+    const parseForComments = globalParserHelper.parse(new FileIdentifier("temp.p", 1), beforeText);
+    if (commentsStrategy.applicable(beforeText, parseForComments)) {
+        const commentBlocks = commentsStrategy.generate(beforeText, parseForComments);
+        // Sort descending so splicing from the back doesn't affect earlier offsets
+        const sortedBlocks = [...commentBlocks].sort((a,b) => b.start - a.start);
+        for (const b of sortedBlocks) {
+            beforeText = beforeText.substring(0, b.start) + beforeText.substring(b.end);
+        }
+    }
+    const strategy = extName.toLowerCase() === ".cls"
+    ? new ClassStrategy(globalParserHelper)
+    : new ProcedureStrategy(globalParserHelper);
 
     console.log(`Starting reduction on ${targetFile} (size: ${beforeText.length} chars)...`);
     
-    // Execute reduction algorithm
-    const minCandidates = await reduce(beforeText);
+    // Setup track blocks output directory
+    const trackBlocksDir = path.join(extensionDevelopmentPath, "resources/failedTestsReducted/trackBlocks", baseName);
+    const blocksDir = path.join(trackBlocksDir, "blocks");
+    const failingBlocksDir = path.join(trackBlocksDir, "failingBlocks");
 
-    if (!minCandidates || minCandidates.length === 0) {
-        console.log("No failing condition detected in the original input.");
-        return;
+    if (!fs.existsSync(trackBlocksDir)) {
+        fs.mkdirSync(trackBlocksDir, { recursive: true });
+    }
+    if (!fs.existsSync(blocksDir)) {
+        fs.mkdirSync(blocksDir, { recursive: true });
+    }
+    if (!fs.existsSync(failingBlocksDir)) {
+        fs.mkdirSync(failingBlocksDir, { recursive: true });
     }
 
-    // Setup output directory
-    const outputDir = path.join(extensionDevelopmentPath, "resources/failedTestsReducted");
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    console.log(`Delta reduction complete! Found ${minCandidates.length} minimal reproducible cases.`);
+    const initialParseResult = globalParserHelper.parse(new FileIdentifier("temp.p", 1), beforeText);
     
-    minCandidates.forEach((candidate, index) => {
-        const outPath = path.join(outputDir, `${baseName}_minimized_${index + 1}${extName}`);
-        fs.writeFileSync(outPath, candidate, "utf-8");
-        console.log(`- Result ${index + 1} saved to ${outPath} (reduced size: ${candidate.length} chars)`);
+    // Collect all generated blocks from all strategies
+    const allTrackedBlocks: { start: number, end: number, strategyName: string, snippet?: string, id?: number }[] = [];
+    
+    let sub: IStrategy | undefined;
+    while ((sub = strategy.getNextSubStrategy()) !== undefined) {
+        if (sub.applicable(beforeText, initialParseResult)) {
+            const blocks = sub.generate(beforeText, initialParseResult);
+            const strategyName = sub.name || sub.constructor.name;
+            for (const b of blocks) {
+                allTrackedBlocks.push({ start: b.start, end: b.end, strategyName });
+            }
+        }
+    }
+
+    // Sort by 'start' index ascending. If starts are identical, sort 'end' descending (outer blocks first)
+    allTrackedBlocks.sort((a, b) => {
+        if (a.start === b.start) {
+            return b.end - a.end;
+        }
+        return a.start - b.start;
     });
+
+    let blockId = 1;
+    for (const b of allTrackedBlocks) {
+        b.snippet = beforeText.substring(b.start, b.end);
+        b.id = blockId;
+        const safeName = b.strategyName.replace(/\./g, '_');
+        fs.writeFileSync(path.join(blocksDir, `block_${blockId}_${safeName}${extName}`), b.snippet, "utf-8");
+        blockId++;
+    }
+
+    console.log(`\nTesting ${allTrackedBlocks.length} blocks for failures...`);
+    let skipUntil = -1;
+    for (const b of allTrackedBlocks) {
+        if (b.start < skipUntil && b.end <= skipUntil) {
+            console.log(`Skipping testing Block ${b.id} (contained in passing block).`);
+            continue;
+        }
+
+        const snippet = b.snippet!;
+        const safeName = b.strategyName.replace(/\./g, '_');
+        
+        const isFailing = await fails(snippet);
+
+        if (isFailing) {
+            console.log(`Block ${b.id} (${b.strategyName}) FAILED! Saving to failingBlocks...`);
+            fs.writeFileSync(path.join(failingBlocksDir, `failing_block_${b.id}_${safeName}${extName}`), snippet, "utf-8");
+        } else {
+            console.log(`Block ${b.id} (${b.strategyName}) PASSED. Skipping all its children.`);
+            skipUntil = Math.max(skipUntil, b.end);
+        }
+    }
+
+    // Extract and save untouched code
+    const mergedBlocks: { start: number, end: number }[] = [];
+    for (const b of allTrackedBlocks) {
+        if (mergedBlocks.length === 0) {
+            mergedBlocks.push({ start: b.start, end: b.end });
+        } else {
+            const last = mergedBlocks[mergedBlocks.length - 1];
+            if (b.start <= last.end) {
+                last.end = Math.max(last.end, b.end);
+            } else {
+                mergedBlocks.push({ start: b.start, end: b.end });
+            }
+        }
+    }
+
+    let untouchedCode = "";
+    let currentIndex = 0;
+    for (const mb of mergedBlocks) {
+        if (mb.start > currentIndex) {
+            const gap = beforeText.substring(currentIndex, mb.start).trim();
+            if (gap) {
+                untouchedCode += gap + "\n\n/* --- END OF UNTOUCHED BLOCK --- */\n\n";
+            }
+        }
+        currentIndex = Math.max(currentIndex, mb.end);
+    }
+    if (currentIndex < beforeText.length) {
+        const gap = beforeText.substring(currentIndex).trim();
+        if (gap) {
+            untouchedCode += gap;
+        }
+    }
+
+    if (untouchedCode.trim()) {
+        const untouchedPath = path.join(trackBlocksDir, `untouched_code${extName}`);
+        fs.writeFileSync(untouchedPath, untouchedCode, "utf-8");
+        console.log(`Untouched code saved to trackBlocks/untouched_code${extName}`);
+    }
+    
 }
 
-// Execute if run directly via ts-node or node
 if (require.main === module) {
     runDeltaReduction().catch(console.error);
 }

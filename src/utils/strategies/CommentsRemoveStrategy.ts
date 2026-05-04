@@ -1,7 +1,8 @@
-import { IStrategy } from "./IStrategy";
+import { IStrategy, CodeBlock } from "./IStrategy";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { SyntaxNodeType } from "../../model/SyntaxNodeType";
+import { ParseResult } from "../../model/ParseResult";
 import type Parser from "web-tree-sitter";
 
 export class CommentsRemoveStrategy implements IStrategy {
@@ -11,7 +12,7 @@ export class CommentsRemoveStrategy implements IStrategy {
         this.parserHelper = parserHelper;
     }
 
-    applicable(input: string): boolean {
+    applicable(input: string, parseResult?: ParseResult): boolean {
         // Quick string check before expensive parsing
         if (!input.includes("/*")) {
             return false;
@@ -19,8 +20,7 @@ export class CommentsRemoveStrategy implements IStrategy {
 
         // Deep check: parse and ensure there's an actual comment node 
         // (rather than '/*' being inside a string literal)
-        const fileIdentifier = new FileIdentifier("temp.p", 1);
-        const parseResult = this.parserHelper.parse(fileIdentifier, input);
+        if (!parseResult) parseResult = this.parserHelper.parse(new FileIdentifier("temp.p", 1), input);
 
         let hasComment = false;
 
@@ -42,12 +42,11 @@ export class CommentsRemoveStrategy implements IStrategy {
         return hasComment;
     }
 
-    generate(input: string): string[] {
-        const fileIdentifier = new FileIdentifier("temp.p", 1);
-        const parseResult = this.parserHelper.parse(fileIdentifier, input);
+    generate(input: string, parseResult?: ParseResult): CodeBlock[] {
+        if (!parseResult) parseResult = this.parserHelper.parse(new FileIdentifier("temp.p", 1), input);
 
         // Collect start and end indices of all comment nodes
-        const commentRanges: { start: number; end: number }[] = [];
+        const commentRanges: CodeBlock[] = [];
 
         function collectCommentNodes(node: Parser.SyntaxNode) {
             if (node.type === SyntaxNodeType.Comment) {
@@ -69,19 +68,20 @@ export class CommentsRemoveStrategy implements IStrategy {
         // Sort just in case, though tree traversal naturally tends to be ordered
         commentRanges.sort((a, b) => a.start - b.start);
 
-        // Build the new string excluding all comment ranges
-        let resultString = "";
-        let lastPos = 0;
+        // Optional: you can keep the logic to calculate expanded start/end if you want to include whitespace.
+        // For now, since refactoring asks just for the pairs, let's process the pairs to swallow whitespace
+        // as the CommentsRemoveStrategy specifically requires.
+        const adjustedRanges: CodeBlock[] = [];
 
         for (const range of commentRanges) {
             let start = range.start;
             let end = range.end;
 
             let walkBack = start - 1;
-            while (walkBack >= lastPos && (input[walkBack] === ' ' || input[walkBack] === '\t')) {
+            while (walkBack >= 0 && (input[walkBack] === ' ' || input[walkBack] === '\t')) {
                 walkBack--;
             }
-            const isStartOfLine = (walkBack < lastPos || input[walkBack] === '\n');
+            const isStartOfLine = (walkBack < 0 || input[walkBack] === '\n');
 
             let walkForward = end;
             while (walkForward < input.length && (input[walkForward] === ' ' || input[walkForward] === '\t')) {
@@ -91,7 +91,6 @@ export class CommentsRemoveStrategy implements IStrategy {
             const isEndOfLine = (walkForward === input.length || input[walkForward] === '\n' || (input[walkForward] === '\r' && input[walkForward+1] === '\n'));
             
             if (isStartOfLine && isEndOfLine) {
-                // Comment is entirely on its own line: remove the leading spaces and the trailing newline
                 start = walkBack + 1;
                 if (input[walkForward] === '\r' && input[walkForward+1] === '\n') {
                     end = walkForward + 2;
@@ -101,22 +100,13 @@ export class CommentsRemoveStrategy implements IStrategy {
                     end = walkForward;
                 }
             } else if (isEndOfLine) {
-                // Comment is at the end of a line containing code: swallow the spaces before it
                 start = walkBack + 1;
             } else if (isStartOfLine) {
-                // Comment is at the start of a line containing code: swallow the spaces/tabs after it
                 end = walkForward;
             }
-
-            // Append the code before the comment
-            resultString += input.substring(lastPos, start);
-            lastPos = end;
+            adjustedRanges.push({ start, end });
         }
-        
-        // Append any remaining code after the last comment
-        resultString += input.substring(lastPos);
 
-        // Return as a single candidate
-        return [resultString];
+        return adjustedRanges;
     }
 }
