@@ -1,10 +1,14 @@
+defineVariable_14-dataset
+defineVariable_15-event
 enum_1-formatting-false
+expression_12-not-complex
+for_13-outer-join
 issuesGithub_153 - fixed
 issuesGithub_163_1 - fixed
 issuesGithub_163_2 - fixed
 issuesGithub_163_3 - fixed
 issuesGithub_163_4 - fixed
-issuesGithub_196_1 - fixed
+issuesGithub_196_1
 issuesGithub_196_2 - fixed
 issuesGithub_226 - fixed
 issuesGithub_291 - fixed
@@ -67,3 +71,10 @@ issuesGithub_544 - fixed
 issuesGithub_556 - fixed
 issuesGithub_557
 issuesGithub_558
+statement_20accumulate
+statement_22ambiguous
+statement_25run
+statement_32-can-find
+statement_33-cast
+statement_35-class-types
+temptable_20-before-table
