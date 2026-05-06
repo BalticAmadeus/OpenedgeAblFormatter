@@ -75,3 +75,7 @@ prodict_sec__sec-pol-edit.p
 prodict_user__usershw.p
 protools_as-partn.w
 prodict_dump__lodsec.p
+//015 issues -->
+adedict_menutrig.i
+prodict_user__usrquot.p
+//015 issues <--

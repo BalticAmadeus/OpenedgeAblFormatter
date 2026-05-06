@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.findFormatting": true,
-    "abl.completion.upperCase": false}*/
+/*  { "AblFormatter.findFormatting": true}*/
 @AblFormatterExcludeStart.
 procedure myProc:
 

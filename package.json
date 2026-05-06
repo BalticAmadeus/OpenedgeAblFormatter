@@ -2,7 +2,7 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
@@ -494,7 +494,7 @@
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.3.2",
+    "@vscode/vsce": "^2.25.0",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
     "esbuild": "^0.25.2",
@@ -505,11 +505,12 @@
     "rimraf": "^5.0.5",
     "semver": "^7.7.4",
     "typescript": "^5.2.2",
-    "vscode-extension-tester": "^8.13.0"
+    "vscode-extension-tester": "^8.0.2"
   },
   "dependencies": {
-    "@vscode/extension-telemetry": "^0.9.8",
-    "serialize-javascript": "^7.0.4",
+    "@microsoft/applicationinsights-common": "^3.4.1",
+    "@vscode/extension-telemetry": "^1.5.1",
+    "serialize-javascript": "^7.0.5",
     "web-tree-sitter": "^0.20.8"
   }
 }
