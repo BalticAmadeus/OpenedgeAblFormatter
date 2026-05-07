@@ -1,6 +1,5 @@
 ablunit_ABLUnitCore.r
 adecomm__getdbs.r
-
 adecomm__resolvepath.r
 adecomm__wincolr.r
 adecomm_dirsrch.r
@@ -53,6 +52,7 @@ aderes__asecure.r
 aderes__atalias.r
 aderes__atool.r
 aderes__awhere.r
+aderes__fbframe.r
 aderes__fbprop.r
 aderes__fbresiz.r
 aderes__gotopag.r
@@ -1267,13 +1267,12 @@ prores_r-calc.r
 prores_r-column.r
 prores_r-extra.r
 prores_r-file.r
-prores_r-header.r
 prores_r-label.r
 prores_r-main.r
+prores_r-total.r
 prores_r-write.r
 prores_s-ask.r
 prores_s-edit.r
-prores_s-field.r
 prores_s-page.r
 prores_s-vector.r
 prores_s-where.r
@@ -1304,6 +1303,9 @@ protools_dappsrv_cl.r
 protools_vappsrv.r
 protools_vjmssrv.r
 protools_widattrs.r
+rmc_rmcutil.r
+rmc__ascompile.r
+rmc__wscompile.r
 serveradmin_OpenEdge_ApplicationServer_Util_convert_spring_properties.r
 web_objects_stateaware.r
 web_support_printval.r
@@ -1336,11 +1338,13 @@ webutil__webmsgs.r
 webutil_conve4gl.r
 webutil_e4gl-gen.r
 webutil_tagextr.r
+workshop__cdread.r
 workshop__dbinfo.r
 workshop__file.r
 workshop__gen4gl.r
 workshop__gendefs.r
 workshop__genrt.r
+workshop__jfind2.r
 workshop__jgenlst.r
 workshop__list.r
 workshop__loadhtm.r
