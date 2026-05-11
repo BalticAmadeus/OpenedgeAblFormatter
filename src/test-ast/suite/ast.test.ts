@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { Tree, SyntaxNode } from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import {
+    format,
     setupParserHelper,
     getStabilityTestCases,
     getTestRunDir,
@@ -23,9 +24,11 @@ import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
 import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
+import { runDeltaReduction } from "../../utils/deltaReduct";
 
 let parserHelper: AblParserHelper;
 let metamorphicEngine: MetamorphicEngine<DebugTestingEngineOutput> | undefined;
+const isDeltaReductionEnabled = true;
 
 const isMetamorphicEnabled =
     process.argv.includes("--metamorphic") ||
@@ -64,14 +67,18 @@ suite("AST Stability Test Suite", () => {
             getStabilityTestCases().length,
             "test cases"
         );
+        console.log(
+            "AST delta reduction:",
+            isDeltaReductionEnabled ? "enabled" : "disabled"
+        );
 
         // Log known failures count once at suite setup
         logKnownFailures("AST", "_ast_failures.txt");
     });
 
     for (const cases of getStabilityTestCases()) {
-        test(`AST test: ${cases}`, () => {
-            astTest(cases, parserHelper);
+        test(`AST test: ${cases}`, async () => {
+            await astTest(cases, parserHelper);
         }).timeout(20000);
     }
 
@@ -104,7 +111,7 @@ suite("AST Stability Test Suite", () => {
     });
 });
 
-function astTest(name: string, parserHelper: AblParserHelper): void {
+async function astTest(name: string, parserHelper: AblParserHelper): Promise<void> {
     enableFormatterDecorators();
 
     const config: ISuiteConfig<TextTree | undefined> = {
@@ -134,6 +141,23 @@ function astTest(name: string, parserHelper: AblParserHelper): void {
                 analyzeAstDifferences(before.tree, after.tree, fileName);
             }
         },
+        onMismatchAsync: async (
+            _before: TextTree | undefined,
+            _after: TextTree | undefined,
+            fileName: string
+        ) => {
+            if (!isDeltaReductionEnabled) {
+                return;
+            }
+
+            console.log(`Running delta reduction for AST mismatch: ${fileName}`);
+            await runDeltaReduction(name, {
+                parserHelper,
+                shouldKeepAsFailing: async (snippet: string) => {
+                    return hasAstMismatch(snippet, name, parserHelper);
+                },
+            });
+        },
         cleanup: (
             before: TextTree | undefined,
             after: TextTree | undefined
@@ -143,7 +167,28 @@ function astTest(name: string, parserHelper: AblParserHelper): void {
         },
     };
 
-    runGenericTest(name, parserHelper, config, metamorphicEngine);
+    await runGenericTest(name, parserHelper, config, metamorphicEngine);
+}
+
+function hasAstMismatch(
+    text: string,
+    name: string,
+    parserHelper: AblParserHelper
+): boolean {
+    let beforeTree: TextTree | undefined;
+    let afterTree: TextTree | undefined;
+
+    try {
+        beforeTree = generateTextTree(text, name, parserHelper);
+        const afterText = format(text, name, parserHelper);
+        afterTree = generateTextTree(afterText, name, parserHelper);
+        return compareAst(beforeTree.tree, afterTree.tree);
+    } catch {
+        return false;
+    } finally {
+        beforeTree?.tree.delete();
+        afterTree?.tree.delete();
+    }
 }
 
 function generateTextTree(

@@ -1,29 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-
-// Mock 'vscode' module so we can run this outside the extension host
-const Module = require("module");
-const originalRequire = Module.prototype.require;
-
-Module.prototype.require = function (request: string) {
-    if (request === "vscode") {
-        return {
-            Range: class Range { constructor() {} },
-            Position: class Position { constructor() {} },
-            workspace: { 
-                getConfiguration: () => ({ get: () => undefined, update: () => {} }),
-                onDidChangeConfiguration: () => ({ dispose: () => {} })
-            },
-            window: { 
-                showErrorMessage: () => {},
-                showInformationMessage: () => {}
-            }
-        };
-    }
-    return originalRequire.apply(this, arguments);
-};
-
-import { setupParserHelper, extensionDevelopmentPath, readFile, format, getSettingsOverride, runGenericTest } from "./suitesUtils";
+import Parser from "web-tree-sitter";
 import { FileIdentifier } from "../model/FileIdentifier";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { enableFormatterDecorators } from "../formatterFramework/enableFormatterDecorators";
@@ -32,25 +9,55 @@ import { ProcedureStrategy } from "./strategies/ProcedureStrategy";
 import { CommentsRemoveStrategy } from "./strategies/CommentsRemoveStrategy";
 import { ClassStrategy } from "./strategies/ClassStrategy";
 
+const extensionDevelopmentPath = path.resolve(__dirname, "../../");
 
-
-let strategies: IStrategy[] = [];
-let globalParserHelper: AblParserHelper;
-
-async function fails(input: string): Promise<boolean> {
-    return true;
-    // would need to add symbol test here
+function readFile(fileUri: string): string {
+    return fs.readFileSync(fileUri, "utf-8");
 }
 
-export async function runDeltaReduction(targetFile?: string) {
-    if (!targetFile) {
-        targetFile = "resources\\ade\\adedict\\TRIG\\_trigdlg.p";
-    }
-    const targetFilePath = path.join(extensionDevelopmentPath, targetFile);
+async function setupParserHelper(): Promise<AblParserHelper> {
+    await Parser.init();
+
+    const debugManager: any = {
+        handleErrors: () => {},
+        handleErrorRanges: () => {},
+        parserReady: () => {},
+        fileFormattedSuccessfully: () => {},
+        isInDebugMode: () => false,
+    };
+
+    const parserHelper = new AblParserHelper(
+        extensionDevelopmentPath,
+        debugManager
+    );
+    await parserHelper.awaitLanguage();
+    return parserHelper;
+}
+
+export interface DeltaReductionOptions {
+    parserHelper?: AblParserHelper;
+    shouldKeepAsFailing?: (snippet: string) => Promise<boolean> | boolean;
+    trackBlocksRootDir?: string;
+}
+
+export interface DeltaReductionResult {
+    targetFilePath: string;
+    trackBlocksDir: string;
+    totalBlocks: number;
+    failingBlocks: number;
+}
+
+export async function runDeltaReduction(
+    targetFile: string = "resources\\ade\\adedict\\TRIG\\_trigdlg.p",
+    options: DeltaReductionOptions = {}
+): Promise<DeltaReductionResult | undefined> {
+    const targetFilePath = path.isAbsolute(targetFile)
+        ? targetFile
+        : path.join(extensionDevelopmentPath, targetFile);
     
     if (!fs.existsSync(targetFilePath)) {
         console.error(`Target file not found: ${targetFilePath}`);
-        return;
+        return undefined;
     }
 
     const parsedPath = path.parse(targetFilePath);
@@ -59,12 +66,13 @@ export async function runDeltaReduction(targetFile?: string) {
     let beforeText = readFile(targetFilePath);
 
     // Initialize dependencies
-    globalParserHelper = await setupParserHelper();
+    const parserHelper = options.parserHelper ?? (await setupParserHelper());
     enableFormatterDecorators();
+    const shouldKeepAsFailing = options.shouldKeepAsFailing ?? (async () => true);
     
     // Fully Strip comments
-    const commentsStrategy = new CommentsRemoveStrategy(globalParserHelper);
-    const parseForComments = globalParserHelper.parse(new FileIdentifier("temp.p", 1), beforeText);
+    const commentsStrategy = new CommentsRemoveStrategy(parserHelper);
+    const parseForComments = parserHelper.parse(new FileIdentifier("temp.p", 1), beforeText);
     if (commentsStrategy.applicable(beforeText, parseForComments)) {
         const commentBlocks = commentsStrategy.generate(beforeText, parseForComments);
         // Sort descending so splicing from the back doesn't affect earlier offsets
@@ -74,13 +82,14 @@ export async function runDeltaReduction(targetFile?: string) {
         }
     }
     const strategy = extName.toLowerCase() === ".cls"
-    ? new ClassStrategy(globalParserHelper)
-    : new ProcedureStrategy(globalParserHelper);
+    ? new ClassStrategy(parserHelper)
+    : new ProcedureStrategy(parserHelper);
 
     console.log(`Starting reduction on ${targetFile} (size: ${beforeText.length} chars)...`);
     
     // Setup track blocks output directory
-    const trackBlocksDir = path.join(extensionDevelopmentPath, "resources/failedTestsReducted/trackBlocks", baseName);
+    const trackBlocksRootDir = options.trackBlocksRootDir ?? path.join(extensionDevelopmentPath, "resources/failedTestsReducted/trackBlocks");
+    const trackBlocksDir = path.join(trackBlocksRootDir, baseName);
     const blocksDir = path.join(trackBlocksDir, "blocks");
     const failingBlocksDir = path.join(trackBlocksDir, "failingBlocks");
 
@@ -94,7 +103,7 @@ export async function runDeltaReduction(targetFile?: string) {
         fs.mkdirSync(failingBlocksDir, { recursive: true });
     }
 
-    const initialParseResult = globalParserHelper.parse(new FileIdentifier("temp.p", 1), beforeText);
+    const initialParseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), beforeText);
     
     // Collect all generated blocks from all strategies
     const allTrackedBlocks: { start: number, end: number, strategyName: string, snippet?: string, id?: number }[] = [];
@@ -138,7 +147,7 @@ export async function runDeltaReduction(targetFile?: string) {
         const snippet = b.snippet!;
         const safeName = b.strategyName.replace(/\./g, '_');
         
-        const isFailing = await fails(snippet);
+        const isFailing = await shouldKeepAsFailing(snippet);
 
         if (isFailing) {
             console.log(`Block ${b.id} (${b.strategyName}) FAILED! Saving to failingBlocks...`);
@@ -187,7 +196,17 @@ export async function runDeltaReduction(targetFile?: string) {
         fs.writeFileSync(untouchedPath, untouchedCode, "utf-8");
         console.log(`Untouched code saved to trackBlocks/untouched_code${extName}`);
     }
-    
+
+    const failingBlocksCount = fs.existsSync(failingBlocksDir)
+        ? fs.readdirSync(failingBlocksDir).length
+        : 0;
+
+    return {
+        targetFilePath,
+        trackBlocksDir,
+        totalBlocks: allTrackedBlocks.length,
+        failingBlocks: failingBlocksCount,
+    };
 }
 
 if (require.main === module) {
