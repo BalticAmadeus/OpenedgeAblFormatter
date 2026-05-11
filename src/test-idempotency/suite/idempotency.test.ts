@@ -32,7 +32,7 @@ suite("Idempotency Test Suite", () => {
         console.log(
             "Idempotency StabilityTests: ",
             idempotencyTestCases.length,
-            "test cases"
+            "test cases",
         );
 
         logKnownFailures("Idempotency", resultFailuresFile);
@@ -52,7 +52,7 @@ function idempotencyTest(name: string, parserHelper: AblParserHelper): void {
     const testRunDir = getTestRunDir("idempotencyTests");
     const knownFailures = getFailedTestCases(
         path.join(extensionDevelopmentPath, "resources/stabilityTests"),
-        resultFailuresFile
+        resultFailuresFile,
     );
     const fileName = name.replaceAll(/[\s/\\:*?"<>|]+/g, "_");
     const baseInput = getSettingsOverride(true) + getInput(name);
@@ -76,13 +76,13 @@ function idempotencyTest(name: string, parserHelper: AblParserHelper): void {
                     `Idempotency mismatch after pass ${iteration} for ${name}`,
                     `Before: ${path.join(
                         testRunDir,
-                        `${fileName}_pass_${iteration - 1}.p`
+                        `${fileName}_pass_${iteration - 1}.p`,
                     )}`,
                     `After: ${path.join(
                         testRunDir,
-                        `${fileName}_pass_${iteration}.p`
+                        `${fileName}_pass_${iteration}.p`,
                     )}`,
-                ].join("\n")
+                ].join("\n"),
             );
         }
 
@@ -99,15 +99,18 @@ function writePassResult(
     testRunDir: string,
     fileName: string,
     iteration: number,
-    resultText: string
+    resultText: string,
 ): void {
-    const passFilePath = path.join(testRunDir, `${fileName}_pass_${iteration}.p`);
+    const passFilePath = path.join(
+        testRunDir,
+        `${fileName}_pass_${iteration}.p`,
+    );
     fs.writeFileSync(passFilePath, resultText, "utf-8");
 }
 
 function getIdempotencyRuns(): number {
     const cliArg = process.argv.find((arg) =>
-        arg.startsWith("--idempotency-runs=")
+        arg.startsWith("--idempotency-runs="),
     );
     const rawRuns = cliArg?.split("=")[1] ?? process.env.IDEMPOTENCY_RUNS;
     const parsedRuns = Number.parseInt(rawRuns ?? "2", 10);

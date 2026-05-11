@@ -4,7 +4,7 @@ import { runTests } from "@vscode/test-electron";
 
 function getIdempotencyRuns(): number {
     const cliArg = process.argv.find((arg) =>
-        arg.startsWith("--idempotency-runs=")
+        arg.startsWith("--idempotency-runs="),
     );
     const rawRuns = cliArg?.split("=")[1] ?? process.env.IDEMPOTENCY_RUNS;
     const parsedRuns = Number.parseInt(rawRuns ?? "2", 10);
@@ -27,9 +27,7 @@ async function main() {
             extensionDevelopmentPath,
             extensionTestsPath,
             launchArgs,
-            version:
-                process.env.VSCODE_VERSION ||
-                "1.109.5", //TODO: change to 'stable'. this is workaround for the pipeline issue, probably at some point MS will fix it and we'll be able to switch back to the latest
+            version: process.env.VSCODE_VERSION || "1.109.5", //TODO: change to 'stable'. this is workaround for the pipeline issue, probably at some point MS will fix it and we'll be able to switch back to the latest
         });
     } catch (err) {
         console.error("Failed to run idempotency tests", err);
