@@ -24,8 +24,6 @@ adecomm__pwcreat.p
 adecomm__pweditor.i
 adecomm__pwmain.p
 adecomm__pwmbar.p
-adecomm__pwopen.p
-adecomm__pwsrch.p
 adecomm__qfldrpt.p
 adecomm__qidxrpt.p
 adecomm__qseqrpt.p
@@ -47,7 +45,6 @@ adecomm__winmenu.w
 adecomm__y-logic.p
 adecomm_cbcdropx.i
 adecomm__qinit.p
-adecomm_psearch.i
 adecomm_toolmenu.i
 adecomm_toolrun.i
 adecomp__compile.p
@@ -66,7 +63,6 @@ adedict_FLD__fldgate.p
 adedict_FLD__newfld.p
 adedict_FLD_fdprop.i
 adedict_menutrig.i
-adedict_SEQ_seqtrig.i
 adedict_TBL__newtbl.p
 adedict_TBL__savetbl.p
 adedict_TRIG__trigdlg.p
@@ -78,7 +74,6 @@ aderes__atalias.p
 aderes_aderes.p
 aderes_b-write.p
 aderes_c-header.p
-aderes_e-write.p
 aderes_f-format.p
 aderes_f-motion.p
 aderes_f-write.p
@@ -89,7 +84,6 @@ aderes_l-layout.p
 aderes_r-label.p
 aderes_r-write.p
 aderes_restrict.i
-aderes_s-exp.p
 aderes_s-zap.p
 aderes_u-logo.p
 aderes_y-format.p
@@ -111,7 +105,6 @@ adeuib__cr_cmnu.p
 adeuib__cr_npop.p
 adeuib__cr_pal.p
 adeuib__datasrc.w
-adeuib__drwdfld.p
 adeuib__drwradi.p
 adeuib__fclasnewbasic.w
 adeuib__genpro2.i
@@ -138,7 +131,6 @@ adeuib__seprocs.i
 adeuib__setdesignwin.p
 adeuib__showlbl.p
 adeuib__smoupg.w
-adeuib__so-prvw.w
 adeuib__tempdb.w
 adeuib__ttmaint.w
 adeuib__ttyss.i
@@ -187,12 +179,9 @@ adm_template_bstates.i
 adm_template_pustates.i
 adm2_admmsgs.i
 adm2_cobuildp.p
-adm2_exportdata.p
 adm2_support__wizard.w
-adm2_support__wizdo.w
 adm2_support__wizhref.w
 adm2_support__wizstyl.w
-adm2_support_b2bd.w
 adm2_support_datad.w
 adm2_support_dataviewd.w
 adm2_support_folderd.w
@@ -203,7 +192,6 @@ adm2_support_vb2b.w
 adm2_support_vb2bdata.w
 adm2_support_viewerd.w
 adm2_timesdfv.w
-adm2_folder.w
 auditing_include__xmlsec.i
 auditing__auditmainw.w
 auditing_src_adm2_admmsgs.i
@@ -211,13 +199,11 @@ auditing_ui__addmultevents.w
 auditing_ui__audeventmaintw.w
 auditing_ui__audfileselectw.w
 auditing_ui__audmultfields.w
-auditing_adm2_aud_folder.w
 businesscomponents_OpenEdge_BusinessLogic_BusinessEntity.cls
 businesscomponents_OpenEdge_BusinessLogic_Filter_AblFilterParser.cls
 businesscomponents_OpenEdge_BusinessLogic_Filter_JfpFilterParser.cls
 businesscomponents_OpenEdge_BusinessLogic_Query_QueryBuilder.cls
 businesscomponents_OpenEdge_BusinessLogic_QueryOperatorHelper.cls
-businesscomponents_OpenEdge_BusinessLogic_QueryPredicate.cls
 corelib_OpenEdge_Core_Assertion_assertisunknown.i
 corelib_OpenEdge_Core_Assertion_assertnotunknown.i
 corelib_OpenEdge_Core_ByteBucket.cls
@@ -249,7 +235,6 @@ corelib_OpenEdge_Core_Util_UTF8Encoder.cls
 corelib_OpenEdge_Core_WidgetHandle.cls
 corelib_OpenEdge_Logging_ConfigFileLoggerBuilder.cls
 corelib_OpenEdge_Logging_Filter_LogFilterBuilder.cls
-corelib_OpenEdge_Logging_Format_ABLSubstituteFormat.cls
 corelib_OpenEdge_Logging_Format_AnonymizedTokenFormat.cls
 corelib_OpenEdge_Logging_Format_MDCTokenFormat.cls
 corelib_OpenEdge_Logging_Format_TokenContextFormat.cls
@@ -347,7 +332,6 @@ OpenEdge_DataAdmin_PartitionPolicy.cls
 OpenEdge_DataAdmin_PartitionPolicyDetailSet.cls
 OpenEdge_DataAdmin_PartitionPolicySet.cls
 OpenEdge_DataAdmin_ServerCommand_TableDataCommand.cls
-OpenEdge_DataAdmin_ServerCommand_ProCommand.cls
 OpenEdge_DataAdmin_TenantGroupSet.cls
 OpenEdge_DataAdmin_TenantSet.cls
 OpenEdge_DataAdmin_Util_dbCanMigrate.p
@@ -376,7 +360,6 @@ prodict_gate_gat_pul.i
 prodict_gui__guiauto.p
 prodict_gui__guisecu.p
 prodict_gui__guiuchg.p
-prodict_load_cdc.p
 prodict_misc__cdc-pol.p
 prodict_misc__db-chgid.p
 prodict_misc__db-id-hst.p
@@ -420,7 +403,6 @@ prodict_user__usrtrax.p
 prodict_user__usruchg.p
 prodict_user__usrwdth.p
 prodict_user__usrpfed.p
-prodict_user_user-f.i
 prodict_user_usermenu.i
 prohelp__keybrd.p
 prores_a-field.p
@@ -439,7 +421,6 @@ prores_i-pick.p
 prores_i-zap.p
 prores_l-main.p
 prores_q-write.p
-prores_r-header.p
 prores_r-main.p
 prores_r-write.p
 prores_results.i
@@ -469,15 +450,12 @@ webutil__sdoinfo.p
 workshop__proprty.w
 darest_delete_tenants.p
 darest_get_tenants.p
-prodict_dump__dmpdefs.p
 prores_q-main.p
 adeedit_pcompile.i
-aderes_s-exp.p
 adeuib__abmbar.w
 adeuib__datasrc.w
 adeuib__newobject.w
 adeuib__rdqury.p
-adm2_support__wizdo.w
 adm2_support__wizhref.w
 auditing_ui__audeventmaintw.w
 protools__dblist.w
@@ -486,14 +464,11 @@ adeuib__undrect.p
 prodict__dictc.p
 workshop__gen4gl.p
 //010 issues -->
-aderes_y-run.p
 adeuib_usrlistl.i
-adm2_support__wizlog.w
 OpenEdge_DataAdmin_Support_TenantGroupTenantSet.cls
 OpenEdge_DataAdmin_Support_TenantTenantGroupSet.cls
 prodict_dump__lodsec.p
 prores_b-build.p
-protools__protgen.w
 webtools_edtscrpt.w
 webtools_helpsrch.w
 webtools_index.w
@@ -510,7 +485,6 @@ corelib_OpenEdge_Core_EncodingTypeEnum.cls
 //013 issues -->
 aderes_c-gen7.i
 aderes_l-write.p
-aderes_r-header.p
 aderes_s-read.p
 aderes_s-write.p
 aderes__arships.p
@@ -519,9 +493,7 @@ adeshar__qset.p
 adeweb_qbuild.i
 prodict_dump__lodasci.p
 prodict_dump__lodsylk.p
-prodict_gate_cmp_msg.i
 prores_c-star.p
-prores_s-field.p
 protools_widattrs.w
 workshop_qbuild.i
 workshop__secomm.w
@@ -530,3 +502,24 @@ workshop__secomm.w
 corelib_OpenEdge_Core_Assert.cls
 prodict_ora__ora_lkg.p
 //014 issues <--
+//015 issues -->
+adecomm_cbdown.i
+adecomm_lstdn.i
+adecomp__ppath.p
+adedict_FLD_lob-misc.i
+adeedit__dlgsbuf.p
+aderes_f-store.p
+aderes_u-print.p
+aderes__fbresiz.p
+adeuib__cr_palw.p
+adeweb__brwsmap.w
+adm2_support__wizdfld.w
+adm2_support__wizhtml.w
+adm2_support__wizmap.w
+corelib_OpenEdge_Core_DataTypeHelper.cls
+OpenEdge_DataAdmin_DataSource_AreaDataSource.cls
+OpenEdge_DataAdmin_DataSource_TenantDataSource.cls
+prodict_mss_key_fillin.i
+prores_f-browse.p
+prores_u-print.p
+//015 issues <--

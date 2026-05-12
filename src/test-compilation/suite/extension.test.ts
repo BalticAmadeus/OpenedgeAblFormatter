@@ -255,6 +255,18 @@ async function cloneAdeSourceCode(): Promise<void> {
         }
 
         console.log("✓ ADE-Sourcecode repository cloned successfully");
+
+        // Convert pbuild line endings to LF after clone
+        const pbuildScriptPath = path.join(adeSourceCodePath, "src", "adebuild", "pbuild");
+        if (fs.existsSync(pbuildScriptPath)) {
+            let content = fs.readFileSync(pbuildScriptPath, "utf8");
+            // Replace CRLF and CR with LF
+            content = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+            fs.writeFileSync(pbuildScriptPath, content, "utf8");
+            console.log("✓ Converted pbuild line endings to LF");
+        } else {
+            console.warn("⚠ pbuild script not found after clone for line ending fix");
+        }
     } catch (error) {
         console.error("Failed to clone ADE-Sourcecode repository:", error);
         throw error;

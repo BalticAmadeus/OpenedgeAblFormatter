@@ -3,7 +3,6 @@
 "AblFormatter.blockFormatting": true,
 "AblFormatter.temptableFormatting": true,
 "AblFormatter.temptableFormattingEndDotLocation": "Same",
-"abl.completion.upperCase": true
 } */
 DEFINE TEMP-TABLE foo NO-UNDO FIELD a AS CHARACTER FIELD b AS CHARACTER FIELD c AS CHARACTER INDEX x a ASC b DESC c.
 
