@@ -1,18 +1,58 @@
-import { AblParserHelper } from "../../parser/AblParserHelper";
 import { SyntaxNodeType } from "../../model/SyntaxNodeType";
-import { BaseCompoundStrategy } from "./BaseCompoundStrategy";
-import { AstNodeStrategy } from "./AstNodeStrategy";
-import { getSharedStrategies } from "./SharedStrategies";
+import { CodeBlock, IStrategy } from "./IStrategy";
+import { ParseResult } from "../../model/ParseResult";
+import { RangeHelper } from "./RangeHelper";
+import { StrategyParseBase } from "./StrategyParseBase";
+import { AblParserHelper } from "../../parser/AblParserHelper";
+import type Parser from "web-tree-sitter";
 
-export class ProcedureStrategy extends BaseCompoundStrategy {
+export class ProcedureStrategy extends StrategyParseBase implements IStrategy {
+    name = "ProcedureStrategy";
+
     constructor(parserHelper: AblParserHelper) {
-        super();
-        
-        this.subStrategies.push(
-            new AstNodeStrategy("ProcedureStrategy.procedure", parserHelper, SyntaxNodeType.ProcedureStatement, "procedure"),
-            new AstNodeStrategy("ProcedureStrategy.function", parserHelper, SyntaxNodeType.FunctionStatement, "function")
+        super(parserHelper);
+    }
+
+    generate(input: string, parseResult?: ParseResult): CodeBlock[] {
+        const resolvedParseResult = this.ensureParseResult(input, parseResult);
+        if (!resolvedParseResult) return [];
+
+        const ranges: CodeBlock[] = [];
+        this.collectProcedureRanges(resolvedParseResult.tree.rootNode, ranges, input);
+
+        return ranges;
+    }
+
+    private collectProcedureRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {
+        if (node.type === SyntaxNodeType.ProcedureStatement) {
+            this.addProcedureRanges(node, ranges, input);
+            return;
+        }
+
+        for (const child of node.children) {
+            this.collectProcedureRanges(child, ranges, input);
+            return;
+        }
+    }
+
+    private addProcedureRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {
+        const bodyNode = node.children.find(
+            (child) => child.type === SyntaxNodeType.Body
         );
 
-        this.subStrategies.push(...getSharedStrategies(parserHelper));
+        if (bodyNode) {
+            const { start: bodyStart, end: bodyEnd } = RangeHelper.getBodyBounds(bodyNode);
+
+            if (bodyEnd > bodyStart) {
+                ranges.push({ start: bodyStart, end: bodyEnd });
+            }
+
+            const procedureDefinitionText = RangeHelper.buildDefinitionText(input, node, bodyStart, bodyEnd);
+            if (procedureDefinitionText.trim().length > 0) {
+                ranges.push({ start: node.startIndex, end: node.startIndex, text: procedureDefinitionText });
+            }
+        } else if (node.endIndex > node.startIndex) {
+            ranges.push({ start: node.startIndex, end: node.endIndex });
+        }
     }
 }

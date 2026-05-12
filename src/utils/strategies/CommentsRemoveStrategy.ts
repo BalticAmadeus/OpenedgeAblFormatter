@@ -1,15 +1,13 @@
 import { IStrategy, CodeBlock } from "./IStrategy";
-import { AblParserHelper } from "../../parser/AblParserHelper";
-import { FileIdentifier } from "../../model/FileIdentifier";
 import { SyntaxNodeType } from "../../model/SyntaxNodeType";
 import { ParseResult } from "../../model/ParseResult";
+import { StrategyParseBase } from "./StrategyParseBase";
+import { AblParserHelper } from "../../parser/AblParserHelper";
 import type Parser from "web-tree-sitter";
 
-export class CommentsRemoveStrategy implements IStrategy {
-    private parserHelper: AblParserHelper;
-
+export class CommentsRemoveStrategy extends StrategyParseBase implements IStrategy {
     constructor(parserHelper: AblParserHelper) {
-        this.parserHelper = parserHelper;
+        super(parserHelper);
     }
 
     applicable(input: string, parseResult?: ParseResult): boolean {
@@ -20,7 +18,8 @@ export class CommentsRemoveStrategy implements IStrategy {
 
         // Deep check: parse and ensure there's an actual comment node 
         // (rather than '/*' being inside a string literal)
-        if (!parseResult) parseResult = this.parserHelper.parse(new FileIdentifier("temp.p", 1), input);
+        const resolvedParseResult = this.ensureParseResult(input, parseResult);
+        if (!resolvedParseResult) return false;
 
         let hasComment = false;
 
@@ -38,12 +37,13 @@ export class CommentsRemoveStrategy implements IStrategy {
             }
         }
 
-        checkCommentNode(parseResult.tree.rootNode);
+        checkCommentNode(resolvedParseResult.tree.rootNode);
         return hasComment;
     }
 
     generate(input: string, parseResult?: ParseResult): CodeBlock[] {
-        if (!parseResult) parseResult = this.parserHelper.parse(new FileIdentifier("temp.p", 1), input);
+        const resolvedParseResult = this.ensureParseResult(input, parseResult);
+        if (!resolvedParseResult) return [];
 
         // Collect start and end indices of all comment nodes
         const commentRanges: CodeBlock[] = [];
@@ -59,7 +59,7 @@ export class CommentsRemoveStrategy implements IStrategy {
             }
         }
 
-        collectCommentNodes(parseResult.tree.rootNode);
+        collectCommentNodes(resolvedParseResult.tree.rootNode);
 
         if (commentRanges.length === 0) {
             return [];

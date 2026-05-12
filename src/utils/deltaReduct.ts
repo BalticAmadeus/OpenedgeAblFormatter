@@ -5,9 +5,9 @@ import { FileIdentifier } from "../model/FileIdentifier";
 import { AblParserHelper } from "../parser/AblParserHelper";
 import { enableFormatterDecorators } from "../formatterFramework/enableFormatterDecorators";
 import { IStrategy } from "./strategies/IStrategy";
-import { ProcedureStrategy } from "./strategies/ProcedureStrategy";
 import { CommentsRemoveStrategy } from "./strategies/CommentsRemoveStrategy";
-import { ClassStrategy } from "./strategies/ClassStrategy";
+import { ParseResult } from "../model/ParseResult";
+import { BaseStrategy } from "./strategies/BaseStrategy";
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../");
 
@@ -48,7 +48,7 @@ export interface DeltaReductionResult {
 }
 
 export async function runDeltaReduction(
-    targetFile: string = "resources\\ade\\adedict\\TRIG\\_trigdlg.p",
+    targetFile: string = "src\\utils\\strategies\\strategyTester.p",
     options: DeltaReductionOptions = {}
 ): Promise<DeltaReductionResult | undefined> {
     const targetFilePath = path.isAbsolute(targetFile)
@@ -81,9 +81,7 @@ export async function runDeltaReduction(
             beforeText = beforeText.substring(0, b.start) + beforeText.substring(b.end);
         }
     }
-    const strategy = extName.toLowerCase() === ".cls"
-    ? new ClassStrategy(parserHelper)
-    : new ProcedureStrategy(parserHelper);
+    const strategy = new BaseStrategy(parserHelper);
 
     console.log(`Starting reduction on ${targetFile} (size: ${beforeText.length} chars)...`);
     
@@ -105,96 +103,64 @@ export async function runDeltaReduction(
 
     const initialParseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), beforeText);
     
-    // Collect all generated blocks from all strategies
-    const allTrackedBlocks: { start: number, end: number, strategyName: string, snippet?: string, id?: number }[] = [];
-    
-    let sub: IStrategy | undefined;
-    while ((sub = strategy.getNextSubStrategy()) !== undefined) {
-        if (sub.applicable(beforeText, initialParseResult)) {
-            const blocks = sub.generate(beforeText, initialParseResult);
-            const strategyName = sub.name || sub.constructor.name;
-            for (const b of blocks) {
-                allTrackedBlocks.push({ start: b.start, end: b.end, strategyName });
+    // Collect all generated blocks from strategies using recursive getNextStrategy
+    const allTrackedBlocks: { start: number, end: number, strategyName: string, snippet: string, id?: number }[] = [];
+
+    async function explore(
+        text: string,
+        parseResult: ParseResult | undefined,
+        baseOffset: number,
+        parentSpan: number
+    ): Promise<void> {
+        if (!parseResult) parseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), text);
+
+        const next = (strategy as any).getNextStrategy(text, parseResult) as IStrategy | undefined;
+        if (!next) return;
+
+        const blocks = next.generate(text, parseResult);
+
+        for (const b of blocks) {
+            const blockText = b.text ?? beforeText.substring(baseOffset + b.start, baseOffset + b.end);
+            const hasText = b.text !== undefined;
+            const globalStart = hasText ? baseOffset : baseOffset + b.start;
+            const globalEnd = hasText ? baseOffset + blockText.length : baseOffset + b.end;
+            const strategyName = next.name || next.constructor.name;
+            allTrackedBlocks.push({ start: globalStart, end: globalEnd, strategyName, snippet: blockText });
+
+            const span = blockText.length;
+            // Guard: only recurse into strictly smaller spans to avoid infinite loops
+            if (span <= 0 || span >= parentSpan) continue;
+
+            if (b.text !== undefined) {
+                continue;
             }
+
+            const childBaseOffset = b.text !== undefined ? baseOffset : baseOffset + b.start;
+            const childParseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), blockText);
+            await explore(blockText, childParseResult, childBaseOffset, span);
         }
     }
+    
+    // Calls the "explore" function that recursively dives into the strategy-generated blocks
+    await explore(beforeText, initialParseResult, 0, beforeText.length);
 
-    // Sort by 'start' index ascending. If starts are identical, sort 'end' descending (outer blocks first)
-    allTrackedBlocks.sort((a, b) => {
-        if (a.start === b.start) {
-            return b.end - a.end;
-        }
-        return a.start - b.start;
-    });
 
     let blockId = 1;
     for (const b of allTrackedBlocks) {
-        b.snippet = beforeText.substring(b.start, b.end);
         b.id = blockId;
         const safeName = b.strategyName.replace(/\./g, '_');
         fs.writeFileSync(path.join(blocksDir, `block_${blockId}_${safeName}${extName}`), b.snippet, "utf-8");
         blockId++;
     }
 
-    console.log(`\nTesting ${allTrackedBlocks.length} blocks for failures...`);
-    let skipUntil = -1;
     for (const b of allTrackedBlocks) {
-        if (b.start < skipUntil && b.end <= skipUntil) {
-            console.log(`Skipping testing Block ${b.id} (contained in passing block).`);
+        const isFailing = await shouldKeepAsFailing(b.snippet);
+        if (!isFailing) {
             continue;
         }
-
-        const snippet = b.snippet!;
+        const blockIdLabel = b.id ?? 0;
         const safeName = b.strategyName.replace(/\./g, '_');
-        
-        const isFailing = await shouldKeepAsFailing(snippet);
-
-        if (isFailing) {
-            console.log(`Block ${b.id} (${b.strategyName}) FAILED! Saving to failingBlocks...`);
-            fs.writeFileSync(path.join(failingBlocksDir, `failing_block_${b.id}_${safeName}${extName}`), snippet, "utf-8");
-        } else {
-            console.log(`Block ${b.id} (${b.strategyName}) PASSED. Skipping all its children.`);
-            skipUntil = Math.max(skipUntil, b.end);
-        }
-    }
-
-    // Extract and save untouched code
-    const mergedBlocks: { start: number, end: number }[] = [];
-    for (const b of allTrackedBlocks) {
-        if (mergedBlocks.length === 0) {
-            mergedBlocks.push({ start: b.start, end: b.end });
-        } else {
-            const last = mergedBlocks[mergedBlocks.length - 1];
-            if (b.start <= last.end) {
-                last.end = Math.max(last.end, b.end);
-            } else {
-                mergedBlocks.push({ start: b.start, end: b.end });
-            }
-        }
-    }
-
-    let untouchedCode = "";
-    let currentIndex = 0;
-    for (const mb of mergedBlocks) {
-        if (mb.start > currentIndex) {
-            const gap = beforeText.substring(currentIndex, mb.start).trim();
-            if (gap) {
-                untouchedCode += gap + "\n\n/* --- END OF UNTOUCHED BLOCK --- */\n\n";
-            }
-        }
-        currentIndex = Math.max(currentIndex, mb.end);
-    }
-    if (currentIndex < beforeText.length) {
-        const gap = beforeText.substring(currentIndex).trim();
-        if (gap) {
-            untouchedCode += gap;
-        }
-    }
-
-    if (untouchedCode.trim()) {
-        const untouchedPath = path.join(trackBlocksDir, `untouched_code${extName}`);
-        fs.writeFileSync(untouchedPath, untouchedCode, "utf-8");
-        console.log(`Untouched code saved to trackBlocks/untouched_code${extName}`);
+        fs.writeFileSync(path.join(failingBlocksDir, `failing_block_${blockIdLabel}_${safeName}${extName}`), b.snippet, "utf-8");
     }
 
     const failingBlocksCount = fs.existsSync(failingBlocksDir)
