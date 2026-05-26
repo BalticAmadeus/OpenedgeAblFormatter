@@ -9,6 +9,8 @@ import { MethodStrategy } from "./MethodStrategy";
 import { FunctionStrategy } from "./FunctionStrategy";
 import { ProcedureStrategy } from "./ProcedureStrategy";
 import { DoBlockStrategy } from "./DoBlockStrategy";
+import { IfStrategy } from "./IfStrategy";
+import { CaseStrategy } from "./CaseStrategy";
 
 export class BaseStrategy {
 
@@ -39,6 +41,10 @@ export class BaseStrategy {
                 return new FunctionStrategy(this.parserHelper);
             case SyntaxNodeType.DoBlock:
                 return new DoBlockStrategy(this.parserHelper);
+            case SyntaxNodeType.IfStatement:
+                return new IfStrategy(this.parserHelper);
+            case SyntaxNodeType.CaseStatement:
+                return new CaseStrategy(this.parserHelper);
             default:
                 return undefined;
         }

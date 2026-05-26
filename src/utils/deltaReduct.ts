@@ -88,14 +88,10 @@ export async function runDeltaReduction(
     // Setup track blocks output directory
     const trackBlocksRootDir = options.trackBlocksRootDir ?? path.join(extensionDevelopmentPath, "resources/failedTestsReducted/trackBlocks");
     const trackBlocksDir = path.join(trackBlocksRootDir, baseName);
-    const blocksDir = path.join(trackBlocksDir, "blocks");
     const failingBlocksDir = path.join(trackBlocksDir, "failingBlocks");
 
     if (!fs.existsSync(trackBlocksDir)) {
         fs.mkdirSync(trackBlocksDir, { recursive: true });
-    }
-    if (!fs.existsSync(blocksDir)) {
-        fs.mkdirSync(blocksDir, { recursive: true });
     }
     if (!fs.existsSync(failingBlocksDir)) {
         fs.mkdirSync(failingBlocksDir, { recursive: true });
@@ -103,21 +99,24 @@ export async function runDeltaReduction(
 
     const initialParseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), beforeText);
     
-    // Collect all generated blocks from strategies using recursive getNextStrategy
+    // Collect only failing-chain blocks
     const allTrackedBlocks: { start: number, end: number, strategyName: string, snippet: string, id?: number }[] = [];
+    const failingLeafBlocks: { start: number, end: number, strategyName: string, snippet: string, id?: number }[] = [];
 
     async function explore(
         text: string,
         parseResult: ParseResult | undefined,
         baseOffset: number,
         parentSpan: number
-    ): Promise<void> {
+    ): Promise<boolean> {
         if (!parseResult) parseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), text);
 
         const next = (strategy as any).getNextStrategy(text, parseResult) as IStrategy | undefined;
-        if (!next) return;
+        if (!next) return false;
 
         const blocks = next.generate(text, parseResult);
+
+        let hasAnyFailing = false;
 
         for (const b of blocks) {
             const blockText = b.text ?? beforeText.substring(baseOffset + b.start, baseOffset + b.end);
@@ -125,43 +124,50 @@ export async function runDeltaReduction(
             const globalStart = hasText ? baseOffset : baseOffset + b.start;
             const globalEnd = hasText ? baseOffset + blockText.length : baseOffset + b.end;
             const strategyName = next.name || next.constructor.name;
+            const isFailing = await shouldKeepAsFailing(blockText);
+
+            if (!isFailing) {
+                continue;
+            }
+
             allTrackedBlocks.push({ start: globalStart, end: globalEnd, strategyName, snippet: blockText });
+            hasAnyFailing = true;
 
             const span = blockText.length;
             // Guard: only recurse into strictly smaller spans to avoid infinite loops
-            if (span <= 0 || span >= parentSpan) continue;
+            if (span <= 0 || span >= parentSpan) {
+                failingLeafBlocks.push({ start: globalStart, end: globalEnd, strategyName, snippet: blockText });
+                continue;
+            }
 
             if (b.text !== undefined) {
+                failingLeafBlocks.push({ start: globalStart, end: globalEnd, strategyName, snippet: blockText });
                 continue;
             }
 
             const childBaseOffset = b.text !== undefined ? baseOffset : baseOffset + b.start;
             const childParseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), blockText);
-            await explore(blockText, childParseResult, childBaseOffset, span);
+            const hasFailingChild = await explore(blockText, childParseResult, childBaseOffset, span);
+            if (!hasFailingChild) {
+                failingLeafBlocks.push({ start: globalStart, end: globalEnd, strategyName, snippet: blockText });
+            }
         }
+
+        return hasAnyFailing;
     }
     
-    // Calls the "explore" function that recursively dives into the strategy-generated blocks
     await explore(beforeText, initialParseResult, 0, beforeText.length);
 
 
-    let blockId = 1;
-    for (const b of allTrackedBlocks) {
-        b.id = blockId;
-        const safeName = b.strategyName.replace(/\./g, '_');
-        fs.writeFileSync(path.join(blocksDir, `block_${blockId}_${safeName}${extName}`), b.snippet, "utf-8");
-        blockId++;
-    }
 
-    for (const b of allTrackedBlocks) {
-        const isFailing = await shouldKeepAsFailing(b.snippet);
-        if (!isFailing) {
-            continue;
-        }
-        const blockIdLabel = b.id ?? 0;
+    failingLeafBlocks.forEach((b, idx) => {
         const safeName = b.strategyName.replace(/\./g, '_');
-        fs.writeFileSync(path.join(failingBlocksDir, `failing_block_${blockIdLabel}_${safeName}${extName}`), b.snippet, "utf-8");
-    }
+        fs.writeFileSync(
+            path.join(failingBlocksDir, `failing_block_${idx + 1}_${safeName}${extName}`),
+            b.snippet,
+            "utf-8"
+        );
+    });
 
     const failingBlocksCount = fs.existsSync(failingBlocksDir)
         ? fs.readdirSync(failingBlocksDir).length

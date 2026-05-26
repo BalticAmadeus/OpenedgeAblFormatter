@@ -17,20 +17,11 @@ export class MethodStrategy extends StrategyParseBase implements IStrategy {
         const resolvedParseResult = this.ensureParseResult(input, parseResult);
         if (!resolvedParseResult) return [];
         const ranges: CodeBlock[] = [];
-        this.collectMethodRanges(resolvedParseResult.tree.rootNode, ranges, input);
+        const methodNode = resolvedParseResult.tree.rootNode.children[0];
+        if (methodNode) {
+            this.addMethodRanges(methodNode, ranges, input);
+        }
         return ranges;
-    }
-
-
-    private collectMethodRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {
-        if (node.type === SyntaxNodeType.MethodStatement) {
-            this.addMethodRanges(node, ranges, input);
-            return;
-        }
-
-        for (const child of node.children) {
-            this.collectMethodRanges(child, ranges, input);
-        }
     }
 
     private addMethodRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {

@@ -8,6 +8,5 @@ export interface CodeBlock {
 
 export interface IStrategy {
     name?: string;
-    //applicable(input: string, parseResult?: ParseResult): boolean;
     generate(input: string, parseResult?: ParseResult): CodeBlock[];
 }

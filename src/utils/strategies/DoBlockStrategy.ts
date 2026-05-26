@@ -18,19 +18,11 @@ export class DoBlockStrategy extends StrategyParseBase implements IStrategy {
         if (!resolvedParseResult) return [];
 
         const ranges: CodeBlock[] = [];
-        this.collectDoBlockRanges(resolvedParseResult.tree.rootNode, ranges, input);
+        const doBlockNode = resolvedParseResult.tree.rootNode.children[0];
+        if (doBlockNode) {
+            this.addDoBlockRanges(doBlockNode, ranges, input);
+        }
         return ranges;
-    }
-
-    private collectDoBlockRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {
-        if (node.type === SyntaxNodeType.DoBlock) {
-            this.addDoBlockRanges(node, ranges, input);
-            return;
-        }
-
-        for (const child of node.children) {
-            this.collectDoBlockRanges(child, ranges, input);
-        }
     }
 
     private addDoBlockRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {

@@ -18,21 +18,12 @@ export class ProcedureStrategy extends StrategyParseBase implements IStrategy {
         if (!resolvedParseResult) return [];
 
         const ranges: CodeBlock[] = [];
-        this.collectProcedureRanges(resolvedParseResult.tree.rootNode, ranges, input);
+        const procedureNode = resolvedParseResult.tree.rootNode.children[0];
+        if (procedureNode) {
+            this.addProcedureRanges(procedureNode, ranges, input);
+        }
 
         return ranges;
-    }
-
-    private collectProcedureRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {
-        if (node.type === SyntaxNodeType.ProcedureStatement) {
-            this.addProcedureRanges(node, ranges, input);
-            return;
-        }
-
-        for (const child of node.children) {
-            this.collectProcedureRanges(child, ranges, input);
-            return;
-        }
     }
 
     private addProcedureRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {

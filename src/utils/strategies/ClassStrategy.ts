@@ -18,21 +18,11 @@ export class ClassStrategy extends StrategyParseBase implements IStrategy {
         if (!resolvedParseResult) return [];
 
         const ranges: CodeBlock[] = [];
-
-        this.collectClassRanges(resolvedParseResult.tree.rootNode, ranges, input);
+        const classNode = resolvedParseResult.tree.rootNode.children[0];
+        if (classNode) {
+            this.addClassRanges(classNode, ranges, input);
+        }
         return ranges;
-    }
-
-    private collectClassRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {
-        if (node.type === SyntaxNodeType.ClassStatement) {
-            this.addClassRanges(node, ranges, input);
-            return;
-        }
-
-        for (const child of node.children) {
-            this.collectClassRanges(child, ranges, input);
-            return;
-        }
     }
 
     private addClassRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {

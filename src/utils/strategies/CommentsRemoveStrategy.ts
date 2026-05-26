@@ -11,13 +11,12 @@ export class CommentsRemoveStrategy extends StrategyParseBase implements IStrate
     }
 
     applicable(input: string, parseResult?: ParseResult): boolean {
-        // Quick string check before expensive parsing
-        if (!input.includes("/*")) {
+        // Quick  check before expensive parsing
+        if (!input.includes("/*") && !input.includes("//")) {
             return false;
         }
 
-        // Deep check: parse and ensure there's an actual comment node 
-        // (rather than '/*' being inside a string literal)
+        // Deep check: parsing
         const resolvedParseResult = this.ensureParseResult(input, parseResult);
         if (!resolvedParseResult) return false;
 
@@ -45,13 +44,11 @@ export class CommentsRemoveStrategy extends StrategyParseBase implements IStrate
         const resolvedParseResult = this.ensureParseResult(input, parseResult);
         if (!resolvedParseResult) return [];
 
-        // Collect start and end indices of all comment nodes
         const commentRanges: CodeBlock[] = [];
 
         function collectCommentNodes(node: Parser.SyntaxNode) {
             if (node.type === SyntaxNodeType.Comment) {
                 commentRanges.push({ start: node.startIndex, end: node.endIndex });
-                // We do not need to check children of a comment node
                 return;
             }
             for (const child of node.children) {
@@ -68,9 +65,6 @@ export class CommentsRemoveStrategy extends StrategyParseBase implements IStrate
         // Sort just in case, though tree traversal naturally tends to be ordered
         commentRanges.sort((a, b) => a.start - b.start);
 
-        // Optional: you can keep the logic to calculate expanded start/end if you want to include whitespace.
-        // For now, since refactoring asks just for the pairs, let's process the pairs to swallow whitespace
-        // as the CommentsRemoveStrategy specifically requires.
         const adjustedRanges: CodeBlock[] = [];
 
         for (const range of commentRanges) {

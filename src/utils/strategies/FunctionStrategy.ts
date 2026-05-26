@@ -17,20 +17,11 @@ export class FunctionStrategy extends StrategyParseBase implements IStrategy {
         const resolvedParseResult = this.ensureParseResult(input, parseResult);
         if (!resolvedParseResult) return [];
         const ranges: CodeBlock[] = [];
-        this.collectFunctionRanges(resolvedParseResult.tree.rootNode, ranges, input);
+        const functionNode = resolvedParseResult.tree.rootNode.children[0];
+        if (functionNode) {
+            this.addFunctionRanges(functionNode, ranges, input);
+        }
         return ranges;
-    }
-
-    private collectFunctionRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {
-        if (node.type === SyntaxNodeType.FunctionStatement) {
-            this.addFunctionRanges(node, ranges, input);
-            return;
-        }
-
-        for (const child of node.children) {
-            this.collectFunctionRanges(child, ranges, input);
-            return;;
-        }
     }
 
     private addFunctionRanges(node: Parser.SyntaxNode, ranges: CodeBlock[], input: string): void {
