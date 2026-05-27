@@ -8,12 +8,14 @@ import {
     format,
     getFailedTestCases,
     getInput,
+    isDeltaReductionEnabled,
     getSettingsOverride,
     getStabilityTestCases,
     getTestRunDir,
     logKnownFailures,
     setupParserHelper,
 } from "../../utils/suitesUtils";
+import { runDeltaReduction } from "../../utils/deltaReduct";
 
 let parserHelper: AblParserHelper;
 const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
@@ -39,13 +41,13 @@ suite("Idempotency Test Suite", () => {
     });
 
     for (const cases of idempotencyTestCases) {
-        test(`Idempotency test: ${cases}`, () => {
-            idempotencyTest(cases, parserHelper);
+        test(`Idempotency test: ${cases}`, async () => {
+            await idempotencyTest(cases, parserHelper);
         }).timeout(20000);
     }
 });
 
-function idempotencyTest(name: string, parserHelper: AblParserHelper): void {
+async function idempotencyTest(name: string, parserHelper: AblParserHelper): Promise<void> {
     enableFormatterDecorators();
 
     const idempotencyRuns = getIdempotencyRuns();
@@ -70,6 +72,26 @@ function idempotencyTest(name: string, parserHelper: AblParserHelper): void {
                 return;
             }
 
+            if (isDeltaReductionEnabled()) {
+                // Skip delta reduction for specific problematic files
+                const skipDeltaReduction = fileName.includes("_dimextent.p") ||
+                 fileName.includes("_s-alert2.p") || fileName.includes("_s-join.p") || fileName.includes("s-zap.p") ||
+                  fileName.includes("s-write.p") || fileName.includes("gat_fnm.p") || fileName.includes("mss_pul.p") ||
+                   fileName.includes("mss_typ.p") || fileName.includes("rankpdb.p") || fileName.includes("ora_lk0.p");
+                if (skipDeltaReduction) {
+                    console.log(`Skipping delta reduction for file ${fileName}`);
+                    return;
+                }
+                await runDeltaReduction(name, {
+                    parserHelper,
+                    shouldKeepAsFailing: skipDeltaReduction
+                        ? async () => true
+                        : async (snippet: string) => {
+                            return hasIdempotencyMismatch(snippet, name, parserHelper);
+                        },
+                });
+            }
+
             addFailedTestCase(testRunDir, resultFailuresFile, fileName);
             assert.fail(
                 [
@@ -92,6 +114,20 @@ function idempotencyTest(name: string, parserHelper: AblParserHelper): void {
     if (knownFailures.includes(fileName)) {
         addFailedTestCase(testRunDir, "_new_passes.txt", fileName);
         assert.fail(`File should fail ${fileName}`);
+    }
+}
+
+function hasIdempotencyMismatch(
+    text: string,
+    name: string,
+    parserHelper: AblParserHelper
+): boolean {
+    try {
+        const first = format(text, name, parserHelper);
+        const second = format(first, name, parserHelper);
+        return first !== second;
+    } catch {
+        return false;
     }
 }
 

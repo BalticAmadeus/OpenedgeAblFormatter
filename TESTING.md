@@ -30,6 +30,15 @@ Stability Testing monitors changes in formatter quality over time by validating 
 
 These tests require real-world code as input. The primary source is the __ADE__ repository, which contains approximately 4,700 OpenEdge files. Compilation testing uses only a subset of ADE, as not all files can be compiled easily.
 
+### Delta Reduction Testing
+
+Delta reduction for Stability tests is opt-in and can be enabled when running Symbol, AST, or Idempotency tests:
+
+1. npm scripts: `npm run test-symbol-delta`, `npm run test-ast-delta`, `npm run test-idempotency-delta`
+2. VS Code launch configs: `Symbol Tests (Delta Reduct)`, `AST Tests (Delta Reduct)`, `Idempotency Tests (Delta Reduct)`
+
+When enabled, failing mismatches trigger reduction of the failing input into smaller snippets for debugging.
+
 ## Metamorphic Testing
 
 Metamorphic Testing takes testing to the new dimension by adding additional test cases on top of existing ones. __Metamorphic Relation (MR)__ is a pair of functions which describe how the input and output of original test case has to be changed for test case to pass (or fail). E.g. in OpenEdge we know that by replacing all `EQ` keywords to `=` the code logic and structure will not change. So Metamorphic Testing allows us to apply this change to previously created test cases. Currently we added Metamorphic Testing to Functional and AST tests, so in total every MR is applied to more than a 5,000 files.

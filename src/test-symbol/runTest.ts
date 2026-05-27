@@ -11,11 +11,19 @@ async function main() {
         // The path to test runner
         // Passed to --extensionTestsPath
         const extensionTestsPath = path.resolve(__dirname, "./suite/index");
+        const isDeltaReduct = process.argv.includes("--delta-reduct");
+        const launchArgs = ["--disable-extensions"];
+
+        if (isDeltaReduct) {
+            launchArgs.push("--delta-reduct");
+            process.env.DELTA_REDUCT = "true";
+        }
 
         // Download VS Code, unzip it and run the integration test
         await runTests({
             extensionDevelopmentPath,
             extensionTestsPath: extensionTestsPath,
+            launchArgs,
             version: process.env.VSCODE_VERSION || "1.109.5", //TODO: change to 'stable'. this is workaround for the pipeline issue, probably at some point MS will fix it and we'll be able to switch back to the latest
         });
     } catch (err) {

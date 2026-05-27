@@ -8,15 +8,14 @@ import {
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
+    isDeltaReductionEnabled,
 } from "../../utils/suitesUtils";
 import { ISuiteConfig } from "../../utils/ISuiteConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { runDeltaReduction } from "../../utils/deltaReduct";
 
 let parserHelper: AblParserHelper;
-
-// Set to true to always run delta reduction for unexpected symbol mismatches.
-const isDeltaReductionEnabled = true;
+const deltaReductionEnabled = isDeltaReductionEnabled();
 
 suite("Symbol Stability Test Suite", () => {
     suiteSetup(async () => {
@@ -34,7 +33,7 @@ suite("Symbol Stability Test Suite", () => {
         );
         console.log(
             "Symbol delta reduction:",
-            isDeltaReductionEnabled ? "enabled" : "disabled"
+            deltaReductionEnabled ? "enabled" : "disabled"
         );
 
         // Log known failures count once at suite setup
@@ -67,11 +66,10 @@ async function symbolTest(name: string, parserHelper: AblParserHelper): Promise<
         processAfterText: (text: string) => countActualSymbols(text),
         compareResults: (before: number, after: number) => before !== after,
         onMismatchAsync: async (_before: number, _after: number, fileName: string) => {
-            if (!isDeltaReductionEnabled) {
+            if (!deltaReductionEnabled) {
                 return;
             }
 
-            console.log(`Running delta reduction for symbol mismatch: ${fileName}`);
             await runDeltaReduction(name, {
                 parserHelper,
                 shouldKeepAsFailing: async (snippet: string) => {

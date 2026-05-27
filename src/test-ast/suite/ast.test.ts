@@ -10,6 +10,7 @@ import {
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
+    isDeltaReductionEnabled,
 } from "../../utils/suitesUtils";
 import { TextTree } from "../../mtest/OriginalTestCase";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
@@ -28,7 +29,7 @@ import { runDeltaReduction } from "../../utils/deltaReduct";
 
 let parserHelper: AblParserHelper;
 let metamorphicEngine: MetamorphicEngine<DebugTestingEngineOutput> | undefined;
-const isDeltaReductionEnabled = true;
+const deltaReductionEnabled = isDeltaReductionEnabled();
 
 const isMetamorphicEnabled =
     process.argv.includes("--metamorphic") ||
@@ -69,7 +70,7 @@ suite("AST Stability Test Suite", () => {
         );
         console.log(
             "AST delta reduction:",
-            isDeltaReductionEnabled ? "enabled" : "disabled"
+            deltaReductionEnabled ? "enabled" : "disabled"
         );
 
         // Log known failures count once at suite setup
@@ -146,11 +147,15 @@ async function astTest(name: string, parserHelper: AblParserHelper): Promise<voi
             _after: TextTree | undefined,
             fileName: string
         ) => {
-            if (!isDeltaReductionEnabled) {
+            if (!deltaReductionEnabled) {
+                return;
+            }
+            // Skip delta reduction for s-zap.p
+            if (name.includes("s-zap.p") || name.includes("mss_pul.p")) {
+                console.log('Skipping delta reduction for s-zap.p');
                 return;
             }
 
-            console.log(`Running delta reduction for AST mismatch: ${fileName}`);
             await runDeltaReduction(name, {
                 parserHelper,
                 shouldKeepAsFailing: async (snippet: string) => {

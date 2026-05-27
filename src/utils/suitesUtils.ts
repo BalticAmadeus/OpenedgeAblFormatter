@@ -174,6 +174,21 @@ export function getSettingsOverride(forPreview?: boolean): string {
     );
 }
 
+function parseBooleanLike(value?: string): boolean {
+    if (!value) {
+        return false;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    return normalized === "1" || normalized === "true" || normalized === "yes";
+}
+
+export function isDeltaReductionEnabled(): boolean {
+    const hasCliFlag = process.argv.includes("--delta-reduct");
+    const envEnabled = parseBooleanLike(process.env.DELTA_REDUCT);
+    return hasCliFlag || envEnabled;
+}
+
 // Shared setup function
 export async function setupParserHelper(): Promise<AblParserHelper> {
     await Parser.init();
