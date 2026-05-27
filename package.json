@@ -17,6 +17,9 @@
     "onLanguage:abl"
   ],
   "main": "./out/extension.js",
+  "bin": {
+    "abl-format": "./out/cli/cli.js"
+  },
   "publisher": "BalticAmadeus",
   "contributes": {
     "commands": [
@@ -482,7 +485,10 @@
     "test-ast": "node ./out/test-ast/runTest.js",
     "test-ast-metamorphic": "node ./out/test-ast/runTest.js --metamorphic",
     "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js",
-    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade"
+    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
+    "build-cli": "esbuild ./src/cli/cli.ts --bundle --outfile=out/cli/cli.js --format=cjs --platform=node --alias:vscode=./src/cli/vscode-stub.js && npm run copy-wasm",
+    "build-cli-dev": "npm run build-cli -- --sourcemap",
+    "build-cli-prod": "npm run build-cli -- --minify"
   },
   "devDependencies": {
     "@electron/rebuild": "^0.0.0",
