@@ -8,16 +8,4 @@ export interface IParserHelper {
         text: string,
         previousTree?: Tree
     ): ParseResult;
-
-    parseAsync(
-        fileIdentifier: FileIdentifier,
-        text: string,
-        previousTree?: Tree
-    ): Promise<ParseResult>;
-
-    format(
-        fileIdentifier: FileIdentifier,
-        text: string,
-        options?: any
-    ): Promise<string>;
 }

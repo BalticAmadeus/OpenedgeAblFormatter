@@ -25,6 +25,7 @@ export enum SyntaxNodeType {
     FieldClause = "field_clause",
     FieldOption = "field_option",
     IndexClause = "index_clause",
+    IndexField = "index_field",
     InputOutputStatement = "input_output_statement",
     VariableDefinition = "variable_definition",
     ParameterDefinition = "parameter_definition",
@@ -39,6 +40,7 @@ export enum SyntaxNodeType {
     VariableAssignment = "variable_assignment",
     VariableTuning = "variable_tuning",
     Identifier = "identifier",
+    QualifiedName = "qualified_name",
     SourceCode = "source_code",
     Argument = "argument",
     Arguments = "arguments",
@@ -58,6 +60,8 @@ export enum SyntaxNodeType {
     BooleanLiteral = "boolean_literal",
     ElseIfStatement = "else_if_statement",
     ReturnStatement = "return_statement",
+    DeleteStatement = "delete_statement",
+    MessageStatement = "message_statement",
     ReleaseStatement = "release_statement",
     FunctionCallStatement = "function_call_statement",
     FunctionCallArgument = "function_call_argument",
@@ -71,6 +75,7 @@ export enum SyntaxNodeType {
     OnStatement = "on_statement",
     FormStatement = "form_statement",
     EnumStatement = "enum_statement",
+    UpdateStatement = "update_statement",
     EnumMember = "enum_member",
     EnumDefinition = "enum_definition",
     TypeTuning = "type_tuning",
@@ -109,6 +114,7 @@ export enum SyntaxNodeType {
     AssignmentOperator = "assignment_operator",
 
     // keywords
+    SkipKeyword = "SKIP",
     WhenKeyword = "WHEN",
     ByKeyword = "BY",
     ThenKeyword = "THEN",
@@ -148,6 +154,7 @@ export enum SyntaxNodeType {
     OutputKeyword = "OUTPUT",
     InputOutputKeyword = "INPUT-OUTPUT",
     ReturnKeyword = "RETURN",
+    MessageKeyword = "MESSAGE",
     ParameterKeyword = "PARAMETER",
     VariableKeyword = "VARIABLE",
     VarKeyword = "VAR",
@@ -162,10 +169,13 @@ export enum SyntaxNodeType {
 export const afterThenStatements = new MyFancySet<string>([
     SyntaxNodeType.ReturnStatement,
     SyntaxNodeType.AblStatement,
+    SyntaxNodeType.MessageStatement,
     SyntaxNodeType.FunctionCallStatement,
     SyntaxNodeType.AssignStatement,
     SyntaxNodeType.VariableAssignment,
     SyntaxNodeType.UndoStatement,
+    SyntaxNodeType.UpdateStatement,
+    SyntaxNodeType.DeleteStatement,
 ]);
 
 export const definitionKeywords = new MyFancySet<string>([

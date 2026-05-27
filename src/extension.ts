@@ -13,13 +13,33 @@ import { ReplaceEQ } from "./mtest/mrs/ReplaceEQ";
 import { ReplaceForEachToForLast } from "./mtest/mrs/ReplaceForEachToForLast";
 import { RemoveNoError } from "./mtest/mrs/RemoveNoError";
 import { BaseEngineOutput } from "./mtest/EngineParams";
+import { lt } from "semver";
+import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
+import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
+
+const WEBINAR_INFO_URL =
+    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions/682";
+const WEBINAR_DATE_LABEL = "April 30th";
 
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
     undefined //no excessive logging
 );
 
+// Add a type-safe global declaration for the extension context
+declare global {
+    var __ablFormatterExtensionContext: vscode.ExtensionContext | undefined;
+}
+
 export async function activate(context: vscode.ExtensionContext) {
     const debugManager = DebugManager.getInstance(context);
+    const showPromotionalNotifications = vscode.workspace
+        .getConfiguration("AblFormatter")
+        .get<boolean>("showPromotionalNotifications", true);
+
+    if (lt(vscode.version, "1.107.0")) {
+        debugManager.disableExtension();
+        return;
+    }
 
     await Parser.init().then(() => {});
 
@@ -39,10 +59,6 @@ export async function activate(context: vscode.ExtensionContext) {
         new RemoveNoError(),
     ];
     metamorphicTestingEngine.addMRs(metamorphicRelationsList);
-
-    debugManager.setParserHelper(parserHelper);
-    // Start the parser worker ONCE when the extension is enabled
-    await parserHelper.startWorker();
 
     vscode.window.onDidChangeActiveTextEditor(() => {
         if (debugManager) {
@@ -98,8 +114,39 @@ export async function activate(context: vscode.ExtensionContext) {
             });
         }
     );
-
     context.subscriptions.push(excludeCodeCommand);
+
+    const previewProvider = new FormatterPreviewProvider();
+    context.subscriptions.push(
+        vscode.workspace.registerTextDocumentContentProvider(
+            "abl-preview",
+            previewProvider
+        )
+    );
+
+    const openSettingsPreviewCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.openSettingsPreview",
+        () => {
+            FormatterPreviewPanel.createOrShow(
+                vscode.Uri.file(context.extensionPath),
+                parserHelper,
+                previewProvider
+            );
+        }
+    );
+    context.subscriptions.push(openSettingsPreviewCommand);
+
+    const previewCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.openFormatterPreview",
+        () => {
+            FormatterPreviewPanel.createOrShow(
+                vscode.Uri.file(context.extensionPath),
+                parserHelper,
+                previewProvider
+            );
+        }
+    );
+    context.subscriptions.push(previewCommand);
 
     setInterval(runPeriodicTask, 20_000);
 
@@ -108,12 +155,20 @@ export async function activate(context: vscode.ExtensionContext) {
         () => {
             vscode.env.openExternal(
                 vscode.Uri.parse(
-                    "https://github.com/BalticAmadeus/AblFormatter/issues/new"
+                    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/new?template=formatter-bug-report.md"
                 )
             );
         }
     );
     context.subscriptions.push(reportBugCommand);
+
+    const webinarInfoCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.openWebinarInfo",
+        () => {
+            vscode.env.openExternal(vscode.Uri.parse(WEBINAR_INFO_URL));
+        }
+    );
+    context.subscriptions.push(webinarInfoCommand);
 
     const bugStatusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
@@ -126,6 +181,104 @@ export async function activate(context: vscode.ExtensionContext) {
         "Report a bug or issue for OpenEdge ABL Formatter";
     bugStatusBarItem.show();
     context.subscriptions.push(bugStatusBarItem);
+
+    if (showPromotionalNotifications) {
+        const webinarStatusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Right,
+            98
+        );
+        webinarStatusBarItem.text = "$(megaphone) Webinar: Apr 30";
+        webinarStatusBarItem.command = "openedgeAblFormatter.openWebinarInfo";
+        webinarStatusBarItem.tooltip =
+            `Join our free OpenEdge ABL Formatter webinar on ${WEBINAR_DATE_LABEL}`;
+        webinarStatusBarItem.show();
+        context.subscriptions.push(webinarStatusBarItem);
+    }
+
+    // Pass context down to test suites via global or export
+    globalThis.__ablFormatterExtensionContext = context;
+
+    // Show setup prompt once when ABL file is opened for the first time after install
+    const SETUP_PROMPT_SHOWN_KEY = "openedgeAblFormatter.setupPromptShown";
+    if (!context.globalState.get(SETUP_PROMPT_SHOWN_KEY)) {
+        let promptShowing = false;
+        
+        const showSetupPrompt = async () => {
+            if (promptShowing) {
+                return;
+            }
+            promptShowing = true;
+            
+            const result = await vscode.window.showInformationMessage(
+                "Would you like to configure ABL Formatter settings?",
+                "Configure Settings",
+                "Don't Show Again"
+            );
+            
+            promptShowing = false;
+            
+            if (result === "Configure Settings") {
+                FormatterPreviewPanel.createOrShow(
+                    vscode.Uri.file(context.extensionPath),
+                    parserHelper,
+                    previewProvider
+                );
+                await context.globalState.update(SETUP_PROMPT_SHOWN_KEY, true);
+            } else if (result === "Don't Show Again") {
+                await context.globalState.update(SETUP_PROMPT_SHOWN_KEY, true);
+            }
+            // If dismissed (result undefined), don't mark as shown - it will appear again
+        };
+
+        // Check if an ABL file is already open
+        if (vscode.window.activeTextEditor?.document.languageId === Constants.ablId) {
+            showSetupPrompt();
+        }
+        
+        // Listen for ABL file opens (keep listening until user makes a choice)
+        const disposable = vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+            if (editor?.document.languageId === Constants.ablId) {
+                if (!context.globalState.get(SETUP_PROMPT_SHOWN_KEY)) {
+                    showSetupPrompt();
+                } else {
+                    disposable.dispose();
+                }
+            }
+        });
+        context.subscriptions.push(disposable);
+    }
+
+    // Show one-time promo popup for upcoming webinar.
+    const WEBINAR_PROMO_SHOWN_KEY =
+        "openedgeAblFormatter.webinarPromoApril302026Shown";
+    if (
+        showPromotionalNotifications &&
+        !context.globalState.get(WEBINAR_PROMO_SHOWN_KEY)
+    ) {
+        const result = await vscode.window.showInformationMessage(
+            `🚀 Friendly reminder – don’t miss out! Join our FREE webinar on ${WEBINAR_DATE_LABEL} and get a behind-the-scenes look at the OpenEdge ABL Formatter for VS Code.`,
+            {
+                detail: `Our developer Gustas will walk you through:
+• How the formatter was built
+• The challenges faced along the way
+• How it helps make your code cleaner and easier to work with
+• How to install and set it up
+
+🕒 14:00–15:00 (EET)
+📍 Online event
+👉 Sign up via the form to receive your access link before the webinar.
+✨ Attend live or get the recording – we’ll send it to everyone who registers.`
+            },
+            "Follow Webinar Updates",
+            "Dismiss"
+        );
+
+        if (result === "Follow Webinar Updates") {
+            await vscode.env.openExternal(vscode.Uri.parse(WEBINAR_INFO_URL));
+        }
+
+        await context.globalState.update(WEBINAR_PROMO_SHOWN_KEY, true);
+    }
 }
 
 function runPeriodicTask() {

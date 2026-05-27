@@ -15,6 +15,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
     private readonly settings: ArrayAccessSettings;
     private formattingArrayLiteral: boolean = false;
     private addSpaceBeforeLeftBracket: boolean = false;
+    private addSpaceBeforeIdentifier: boolean = false;
 
     public constructor(configurationManager: IConfigurationManager) {
         super(configurationManager);
@@ -49,11 +50,73 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
             ) {
                 this.addSpaceBeforeLeftBracket = true;
             }
+
+            if (node.previousSibling?.type === SyntaxNodeType.Identifier) {
+                this.addSpaceBeforeIdentifier = true;
+            } else {
+                this.addSpaceBeforeIdentifier = false;
+            }
         }
         const oldText = FormatterHelper.getCurrentText(node, fullText);
-        const text = this.collectString(node, fullText);
+
+        if (node.type === SyntaxNodeType.ArrayAccess) {
+            let isFirstStatement = this.isFirstInStatementChain(
+                node,
+                this.statementTypes
+            );
+            if (isFirstStatement === false) {
+                this.addSpaceBeforeIdentifier = true;
+            } else {
+                this.addSpaceBeforeIdentifier = false;
+            }
+        }
+
+        const text = this.addSpaceBeforeIdentifier
+            ? " " + this.collectString(node, fullText)
+            : this.collectString(node, fullText);
+
         return this.getCodeEdit(node, oldText, text, fullText);
     }
+
+    isFirstInStatementChain(
+        node: SyntaxNode,
+        statementTypes: string[]
+    ): boolean {
+        let current = node;
+        while (current.parent) {
+            const parent = current.parent;
+            const siblings = parent.children;
+            if (!siblings || siblings.length === 0) {
+                return true;
+            }
+            if (siblings[0].id !== current.id) {
+                return false;
+            }
+            if (statementTypes.includes(parent.type) || !parent.parent) {
+                for (const child of siblings) {
+                    if (
+                        child.type === SyntaxNodeType.Identifier ||
+                        child.type === SyntaxNodeType.ArrayAccess
+                    ) {
+                        return child.id === current.id;
+                    }
+                }
+                return false;
+            }
+            current = parent;
+        }
+        return true;
+    }
+
+    statementTypes = [
+        SyntaxNodeType.AblStatement,
+        SyntaxNodeType.ReturnStatement,
+        SyntaxNodeType.MessageStatement,
+        SyntaxNodeType.InputOutputStatement,
+        SyntaxNodeType.ReleaseStatement,
+        SyntaxNodeType.Assignment,
+        SyntaxNodeType.VariableAssignment,
+    ];
 
     private collectString(
         node: SyntaxNode,
@@ -68,8 +131,10 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
 
     private getString(node: SyntaxNode, fullText: Readonly<FullText>): string {
         let newString = "";
+
         if (node.type === SyntaxNodeType.LeftBracket) {
             newString = FormatterHelper.getCurrentText(node, fullText).trim();
+
             if (this.addSpaceBeforeLeftBracket) {
                 newString = " " + newString;
             }

@@ -13,5 +13,8 @@ DEFINE {&ACCESS} TEMP-TABLE ttNetworkStructure NO-UNDO {&REFERENCE-ONLY}
     FIELD NetworkSequence      AS INTEGER   FORMAT "->,>>>,>>9":U INITIAL "0":U LABEL "NetworkSequence"
     FIELD FunctionKey          AS CHARACTER FORMAT "x(36)":U LABEL "FunctionGuid"
     FIELD HasChild             AS LOGICAL   FORMAT "yes/no":U INITIAL "FALSE":U LABEL "HasChild"
-    INDEX NetworkKey AS UNIQUE PRIMARY NetworkKey ASCENDING
-    INDEX ParentNetworkKeySequence ParentNetworkKey ASCENDING NetworkSequence ASCENDING.
+    INDEX NetworkKey AS UNIQUE PRIMARY
+          NetworkKey       ASCENDING
+    INDEX ParentNetworkKeySequence
+          ParentNetworkKey ASCENDING
+          NetworkSequence  ASCENDING.

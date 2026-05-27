@@ -1,31 +1,67 @@
-import * as fs from "fs";
-import * as vscode from "vscode";
-import { join } from "path";
+import * as fs from "node:fs";
+import assert from "node:assert";
+import { join } from "node:path";
 import { Tree, SyntaxNode } from "web-tree-sitter";
 import { enableFormatterDecorators } from "../../formatterFramework/enableFormatterDecorators";
 import {
     setupParserHelper,
-    stabilityTestCases,
+    getStabilityTestCases,
     getTestRunDir,
     runGenericTest,
-    TestConfig,
     logKnownFailures,
 } from "../../utils/suitesUtils";
+import { TextTree } from "../../mtest/OriginalTestCase";
+import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
+import { DebugTestingEngineOutput } from "../../mtest/EngineParams";
+import { ISuiteConfig } from "../../utils/ISuiteConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
 import { FileIdentifier } from "../../model/FileIdentifier";
 import { ConfigurationManager } from "../../utils/ConfigurationManager";
+import { FormattingEngine } from "../../formatterFramework/FormattingEngine";
+import { DebugManagerMock } from "./DebugManagerMock";
+import { ReplaceEQ } from "../../mtest/mrs/ReplaceEQ";
+import { ReplaceForEachToForLast } from "../../mtest/mrs/ReplaceForEachToForLast";
+import { RemoveNoError } from "../../mtest/mrs/RemoveNoError";
+import { IdempotenceMR } from "../../mtest/mrs/Idempotence";
 
 let parserHelper: AblParserHelper;
+let metamorphicEngine: MetamorphicEngine<DebugTestingEngineOutput> | undefined;
+
+const isMetamorphicEnabled =
+    process.argv.includes("--metamorphic") ||
+    process.env.TEST_MODE === "metamorphic";
 
 suite("AST Stability Test Suite", () => {
     suiteSetup(async () => {
         console.log("AST Test Suite setup");
+
         const astTestRunDir = getTestRunDir("astTests");
         fs.mkdirSync(astTestRunDir, { recursive: true });
+
         parserHelper = await setupParserHelper();
+
+        if (isMetamorphicEnabled) {
+            metamorphicEngine = new MetamorphicEngine<DebugTestingEngineOutput>(
+                console
+            )
+                .addMR(new ReplaceEQ())
+                .addMR(new ReplaceForEachToForLast())
+                .addMR(new RemoveNoError())
+                .addMR(new IdempotenceMR(parserHelper));
+
+            metamorphicEngine.setFormattingEngine(
+                new FormattingEngine(
+                    parserHelper,
+                    new FileIdentifier("metamorphicEngine", 1),
+                    ConfigurationManager.getInstance(),
+                    new DebugManagerMock()
+                )
+            );
+        }
+
         console.log(
             "AST StabilityTests: ",
-            stabilityTestCases.length,
+            getStabilityTestCases().length,
             "test cases"
         );
 
@@ -33,123 +69,101 @@ suite("AST Stability Test Suite", () => {
         logKnownFailures("AST", "_ast_failures.txt");
     });
 
-    suiteTeardown(() => {
-        if (parserHelper) {
-            // Clean up parser resources if needed
-            parserHelper = null as any;
-        }
-        vscode.window.showInformationMessage("AST tests done!");
-    });
-
-    stabilityTestCases.forEach((cases) => {
-        test(`AST test: ${cases}`, async () => {
-            await astTest(cases, parserHelper);
+    for (const cases of getStabilityTestCases()) {
+        test(`AST test: ${cases}`, () => {
+            astTest(cases, parserHelper);
         }).timeout(20000);
+    }
+
+    suiteTeardown(() => {
+        if (metamorphicEngine === undefined) {
+            return;
+        }
+
+        const metamorphicTestCases = metamorphicEngine.getMatrix();
+
+        suite("Metamorphic Tests", () => {
+            metamorphicTestCases.forEach((cases) => {
+                test(`Metamorphic test: ${cases.fileName} ${cases.mrName}`, async () => {
+                    if (!metamorphicEngine) {
+                        throw new Error("metamorphicEngine is undefined");
+                    }
+                    const result = metamorphicEngine.runOne(
+                        cases.fileName,
+                        cases.mrName
+                    );
+
+                    assert.equal(
+                        result,
+                        undefined,
+                        `Metamorphic test failed: ${cases.fileName} (${cases.mrName}) - Output mismatch`
+                    );
+                }).timeout(10000);
+            });
+        });
     });
 });
 
-async function astTest(
-    name: string,
-    parserHelper: AblParserHelper
-): Promise<void> {
+function astTest(name: string, parserHelper: AblParserHelper): void {
     enableFormatterDecorators();
 
-    const config: TestConfig<{ tree: Tree | undefined; text: string }> = {
+    const config: ISuiteConfig<TextTree | undefined> = {
         testType: "ast",
         knownFailuresFile: "_ast_failures.txt",
         resultFailuresFile: "_ast_failures.txt",
-        processBeforeText: async (
-            text: string,
-            parserHelper: AblParserHelper
+        processBeforeText: (text: string) =>
+            generateTextTree(text, name, parserHelper),
+        processAfterText: (text: string) =>
+            generateTextTree(text, name, parserHelper),
+        compareResults: (
+            before: TextTree | undefined,
+            after: TextTree | undefined,
+            parserHelper?: AblParserHelper
         ) => {
-            const tree = await generateAst(text, parserHelper);
-            return { tree, text };
-        },
-        processAfterText: async (
-            text: string,
-            parserHelper: AblParserHelper
-        ) => {
-            const tree = await generateAst(text, parserHelper);
-            return { tree, text };
-        },
-        compareResults: async (
-            before: { tree: Tree | undefined; text: string },
-            after: { tree: Tree | undefined; text: string },
-            _parserHelper?: AblParserHelper
-        ) => {
-            if (!before.tree || !after.tree) {
+            if (!before || !after) {
                 return false;
             }
-            const options = ConfigurationManager.getInstance().getAll();
-
-            try {
-                const areEqual = await (_parserHelper || parserHelper).compare(
-                    before.text,
-                    after.text,
-                    { settings: options }
-                );
-                return !areEqual;
-            } catch (err) {
-                console.error("Worker compare failed:", err);
-                return true; // treat error as mismatch
-            }
+            return compareAst(before.tree, after.tree);
         },
         onMismatch: (
-            before: { tree: Tree | undefined; text: string },
-            after: { tree: Tree | undefined; text: string },
+            before: TextTree | undefined,
+            after: TextTree | undefined,
             fileName: string
         ) => {
-            if (
-                before &&
-                after &&
-                before.tree !== undefined &&
-                after.tree !== undefined
-            ) {
+            if (before && after) {
                 analyzeAstDifferences(before.tree, after.tree, fileName);
             }
         },
         cleanup: (
-            before: {
-                [x: string]: any;
-                tree: Tree | undefined;
-                text: string;
-            },
-            after: {
-                [x: string]: any;
-                tree: Tree | undefined;
-                text: string;
-            }
+            before: TextTree | undefined,
+            after: TextTree | undefined
         ) => {
-            if (
-                before &&
-                before.tree &&
-                typeof before.tree.delete === "function"
-            ) {
-                before.tree.delete();
-            }
-            if (
-                after &&
-                after.tree &&
-                typeof after.tree.delete === "function"
-            ) {
-                after.tree.delete();
-            }
+            before?.tree.delete();
+            after?.tree.delete();
         },
     };
 
-    await runGenericTest(name, parserHelper, config);
+    runGenericTest(name, parserHelper, config, metamorphicEngine);
 }
 
-async function generateAst(
+function generateTextTree(
     text: string,
+    name: string,
     parserHelper: AblParserHelper
-): Promise<Tree | undefined> {
-    const startParse = Date.now();
-    const result = await parserHelper.parseAsync(
-        new FileIdentifier("test", 1),
-        text
+): TextTree {
+    const tree = parserHelper.parse(new FileIdentifier(name, 1), text).tree;
+    return { text, tree };
+}
+
+function compareAst(ast1: Tree, ast2: Tree): boolean {
+    const configurationManager = ConfigurationManager.getInstance();
+    const formattingEngine = new FormattingEngine(
+        parserHelper,
+        new FileIdentifier("comparison", 1),
+        configurationManager,
+        new DebugManagerMock()
     );
-    return result.tree;
+    return !formattingEngine.isAstEqual(ast1, ast2);
 }
 
 function analyzeAstDifferences(
@@ -181,9 +195,11 @@ function analyzeAstDifferences(
         analysisContent +=
             "No differences found (this shouldn't happen if the test failed)\n";
     } else {
-        differences.forEach((diff: string, index: number) => {
+        let index = 0;
+        for (const diff of differences) {
             analysisContent += `${index + 1}. ${diff}\n`;
-        });
+            index++;
+        }
     }
 
     analysisContent += `\n${"=".repeat(50)}\n`;
@@ -217,8 +233,8 @@ function findAllDifferences(
     }
 
     if (node1.childCount === 0) {
-        const text1 = node1.text.replace(/\s+/g, " ").trim().toLowerCase();
-        const text2 = node2.text.replace(/\s+/g, " ").trim().toLowerCase();
+        const text1 = node1.text.replaceAll(/\s+/g, " ").trim().toLowerCase();
+        const text2 = node2.text.replaceAll(/\s+/g, " ").trim().toLowerCase();
         if (text1 !== text2) {
             differences.push(
                 `Path: ${currentPath} - Terminal text mismatch: "${text1}" vs "${text2}"\n

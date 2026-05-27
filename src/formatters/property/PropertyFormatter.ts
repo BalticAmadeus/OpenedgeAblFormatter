@@ -97,7 +97,9 @@ export class PropertyFormatter extends AFormatter implements IFormatter {
                 );
                 newString =
                     fullText.eolDelimiter +
-                    " ".repeat(this.startColumn + this.settings.tabSize()) +
+                    " ".repeat(
+                        Math.max(0, this.startColumn + this.settings.tabSize())
+                    ) +
                     statement;
                 break;
             case SyntaxNodeType.Error:

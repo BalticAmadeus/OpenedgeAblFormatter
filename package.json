@@ -2,13 +2,13 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.4.4",
+  "version": "0.5.4",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
   },
   "engines": {
-    "vscode": "^1.84.0"
+    "vscode": "^1.107.0"
   },
   "categories": [
     "Formatters"
@@ -20,25 +20,41 @@
   "publisher": "BalticAmadeus",
   "contributes": {
     "commands": [
-    {
-      "command": "openedgeAblFormatter.excludeCode",
-      "title": "Exclude from formatting",
-      "category": "OpenEdge ABL Formatter"
-    },
-    {
-      "command": "openedgeAblFormatter.reportBug",
-      "title": "Report Bug",
-      "category": "OpenEdge ABL Formatter"
-    }
-  ],
-  "menus": {
-    "editor/context": [
       {
         "command": "openedgeAblFormatter.excludeCode",
-        "group": "navigation"
+        "title": "Exclude from formatting",
+        "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.reportBug",
+        "title": "Report Bug",
+        "category": "OpenEdge ABL Formatter"
+      },
+      {
+        "command": "openedgeAblFormatter.openFormatterPreview",
+        "title": "Formatter Settings Preview",
+        "category": "OpenEdge ABL Formatter",
+        "icon": {
+          "light": "resources/Formatter_LOGO_32x32.png",
+          "dark": "resources/Formatter_LOGO_32x32.png"
+        }
       }
-    ]
-  },
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "openedgeAblFormatter.openFormatterPreview",
+          "when": "resourceExtname =~ /\\.(p|cls|i|w)$/i",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "openedgeAblFormatter.excludeCode",
+          "group": "navigation"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "abl",
@@ -58,7 +74,7 @@
     "walkthroughs": [
       {
         "id": "ablFormatter",
-        "title": "AblFormatter",
+        "title": "Abl Formatter",
         "description": "OpenEdge ABL Formatter is a OpenEdge (ABL) code formatter.",
         "steps": [
           {
@@ -86,17 +102,26 @@
               "image": "resources/walkthrough/DisableFormatterTelemetry.png",
               "altText": "Settings for disabling telemetry sent by OpenEdge ABL Formatter can be found in settings with @tag:telemetry tag"
             }
+          },
+          {
+            "id": "UpcomingWebinar",
+            "title": "OpenEdge ABL Formatter Webinar - April 30th",
+            "description": "Join our free April 30th webinar for a live demo, setup walkthrough, and Q&A.",
+            "media": {
+              "markdown": "resources/walkthrough/UpcomingWebinar.md"
+            }
           }
         ]
       }
     ],
     "configuration": {
-      "title": "AblFormatter",
+      "title": "Abl Formatter",
       "properties": {
         "AblFormatter.assignFormatting": {
           "order": 100,
           "type": "boolean",
           "default": "true",
+          "category": "Assign",
           "markdownDescription": "Enable/disable ASSIGN statement formatting."
         },
         "AblFormatter.assignFormattingAssignLocation": {
@@ -107,6 +132,7 @@
             "New",
             "Same"
           ],
+          "category": "Assign",
           "description": "Should assigns be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.assignFormattingAlignRightExpression": {
@@ -117,6 +143,7 @@
             "Yes",
             "No"
           ],
+          "category": "Assign",
           "description": "Should right expression be aligned by longest one?"
         },
         "AblFormatter.assignFormattingEndDotLocation": {
@@ -128,24 +155,28 @@
             "New aligned",
             "Same"
           ],
+          "category": "Assign",
           "description": "Should end dot be located on a new line or the same line as the ASSIGN keyword?"
         },
         "AblFormatter.findFormatting": {
           "order": 300,
           "type": "boolean",
           "default": "true",
+          "category": "Find",
           "description": "Enable FIND formatting"
         },
         "AblFormatter.forFormatting": {
           "order": 400,
           "type": "boolean",
           "default": "true",
+          "category": "For",
           "description": "Enable FOR formatting"
         },
         "AblFormatter.caseFormatting": {
           "order": 500,
           "type": "boolean",
           "default": "true",
+          "category": "Case",
           "description": "Enable CASE formatting"
         },
         "AblFormatter.caseFormattingThenLocation": {
@@ -156,6 +187,7 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should THEN clause be on a new line or the same line as the CASE keyword?"
         },
         "AblFormatter.caseFormattingDoLocation": {
@@ -166,6 +198,7 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should DO block be on a new line or the same line as the THEN keyword?"
         },
         "AblFormatter.caseFormattingStatementLocation": {
@@ -176,18 +209,21 @@
             "New",
             "Same"
           ],
+          "category": "Case",
           "description": "Should the first statement in a WHEN block be on a new line or the same line?"
         },
         "AblFormatter.blockFormatting": {
           "order": 600,
           "type": "boolean",
           "default": "true",
+          "category": "Block",
           "description": "Enable block formatting"
         },
         "AblFormatter.ifFormatting": {
           "order": 700,
           "type": "boolean",
           "default": "true",
+          "category": "If Statement",
           "description": "Enable IF formatting"
         },
         "AblFormatter.ifFormattingThenLocation": {
@@ -198,6 +234,7 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should THEN clause be on a new line or the same line as the IF keyword?"
         },
         "AblFormatter.ifFormattingDoLocation": {
@@ -208,6 +245,7 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should DO block be on a new line or the same line as the THEN keyword?"
         },
         "AblFormatter.ifFormattingStatementLocation": {
@@ -218,36 +256,65 @@
             "New",
             "Same"
           ],
+          "category": "If Statement",
           "description": "Should the first statement in an IF block be on a new line or the same line?"
         },
         "AblFormatter.temptableFormatting": {
           "order": 800,
           "type": "boolean",
           "default": "true",
+          "category": "Temp Table",
           "description": "Enable TEMP-TABLE formatting"
+        },
+        "AblFormatter.temptableFormattingEndDotLocation": {
+          "order": 801,
+          "type": "string",
+          "default": "Same",
+          "enum": [
+            "New",
+            "Same"
+          ],
+          "category": "Temp Table",
+          "description": "Should end dot be located on a new line or the same line as the last TEMP-TABLE line?"
         },
         "AblFormatter.usingFormatting": {
           "order": 900,
           "type": "boolean",
           "default": "true",
+          "category": "Using",
           "description": "Enable USING formatting"
+        },
+        "AblFormatter.usingFormattingFromPropath": {
+          "order": 901,
+          "type": "string",
+          "default": "DoNothing",
+          "enum": [
+            "DoNothing",
+            "Add",
+            "Remove"
+          ],
+          "category": "Using",
+          "description": "Should 'from propath' be added or removed in USING statements automatically?"
         },
         "AblFormatter.bodyFormatting": {
           "order": 1000,
           "type": "boolean",
           "default": "true",
+          "category": "Body",
           "description": "Enable BODY formatting"
         },
         "AblFormatter.propertyFormatting": {
           "order": 1100,
           "type": "boolean",
           "default": "true",
-          "description": "Enable property formatting"
+          "category": "Property",
+          "description": "Enable PROPERTY formatting"
         },
         "AblFormatter.ifFunctionFormatting": {
           "order": 1200,
           "type": "boolean",
           "default": "true",
+          "category": "If Function",
           "description": "Enable IF FUNCTION formatting"
         },
         "AblFormatter.ifFunctionFormattingAddParentheses": {
@@ -258,6 +325,7 @@
             "Yes",
             "No"
           ],
+          "category": "If Function",
           "description": "Add parentheses around the expression?"
         },
         "AblFormatter.ifFunctionFormattingElseLocation": {
@@ -268,12 +336,14 @@
             "New",
             "Same"
           ],
+          "category": "If Function",
           "description": "Should ELSE clause be on a new line or the same line as the IF FUNCTION keyword?"
         },
         "AblFormatter.enumFormatting": {
           "order": 1300,
           "type": "boolean",
           "default": "true",
+          "category": "Enum",
           "description": "Enable ENUM formatting"
         },
         "AblFormatter.enumFormattingEndDotLocation": {
@@ -283,24 +353,29 @@
           "enum": [
             "New",
             "Same"
-          ]
+          ],
+          "category": "Enum",
+          "description": "Should end dot be located on a new line?"
         },
         "AblFormatter.variableDefinitionFormatting": {
           "order": 1400,
           "type": "boolean",
           "default": "true",
+          "category": "Variable",
           "description": "Enable DEFINE VARIABLE formatting"
         },
         "AblFormatter.procedureParameterFormatting": {
           "order": 1500,
           "type": "boolean",
           "default": "true",
+          "category": "Procedure Parameter",
           "description": "Enable PROCEDURE PARAMETER formatting"
         },
         "AblFormatter.functionParameterFormatting": {
           "order": 1600,
           "type": "boolean",
           "default": "true",
+          "category": "Function Parameter",
           "description": "Enable FUNCTION PARAMETER formatting"
         },
         "AblFormatter.functionParameterFormattingAlignParameterTypes": {
@@ -311,12 +386,14 @@
             "Yes",
             "No"
           ],
+          "category": "Function Parameter",
           "description": "Align parameter types?"
         },
         "AblFormatter.arrayAccessFormatting": {
           "order": 1700,
           "type": "boolean",
           "default": "true",
+          "category": "Array Access",
           "description": "Enable ARRAY ACCESS formatting"
         },
         "AblFormatter.arrayAccessFormattingAddSpaceAfterComma": {
@@ -327,12 +404,14 @@
             "Yes",
             "No"
           ],
+          "category": "Array Access",
           "description": "Add space after comma?"
         },
         "AblFormatter.expressionFormatting": {
           "order": 1800,
           "type": "boolean",
           "default": "true",
+          "category": "Expression",
           "description": "Enable EXPRESSION formatting"
         },
         "AblFormatter.expressionFormattingLogicalLocation": {
@@ -343,6 +422,7 @@
             "New",
             "Same"
           ],
+          "category": "Expression",
           "description": "Should logical operators be on a new line or the same line as the expression?"
         },
                 "AblFormatter.formFormatting": {
@@ -375,12 +455,7 @@
           "order": 1900,
           "type": "boolean",
           "default": "true",
-          "description": "Enable STATEMENT formatting"
-        },
-        "AblFormatter.variableAssignmentFormatting": {
-          "order": 2000,
-          "type": "boolean",
-          "default": "true",
+          "category": "Statement",
           "description": "Enable STATEMENT formatting"
         },
         "AblFormatter.showTreeInfoOnHover": {
@@ -388,6 +463,13 @@
           "type": "boolean",
           "default": "false",
           "description": "Enable table view with tree info on hover"
+        },
+        "AblFormatter.showPromotionalNotifications": {
+          "order": 1950,
+          "type": "boolean",
+          "default": true,
+          "category": "General",
+          "description": "Enable webinar and marketing announcements."
         },
         "Telemetry.ablFormatterTelemetry": {
           "order": 10200,
@@ -401,16 +483,14 @@
         }
       }
     }
-    
-  },  
+  },
   "scripts": {
     "inject-telemetry-key": "replace-in-file \"__TELEMETRY_KEY__\"  \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" ./out/extension.js",
     "reset-telemetry-key": "replace-in-file \"InstrumentationKey=5ee68587-b91d-41b6-ba02-4c65e5348310;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=b19474b9-14c6-4c39-b5ba-0c843036cbb0\" \"__TELEMETRY_KEY__\" ./out/extension.js",
     "copy-wasm": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out",
-    "copy-wasm-parser": "copyfiles -u 2 ./node_modules/web-tree-sitter/*.wasm out/parser",
     "package": "npx vsce package && npm run reset-telemetry-key",
     "delete-out": "rimraf out",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && esbuild ./src/parser/ParserWorker.ts --bundle --outfile=out/parser/ParserWorker.js --format=cjs --platform=node && npm run copy-wasm && npm run copy-wasm-parser && npm run inject-telemetry-key",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node && npm run copy-wasm && npm run inject-telemetry-key",
     "build": "npm run esbuild",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
@@ -424,35 +504,39 @@
     "copy-test-settings": "copyfiles -u 2 ./resources/samples/.vscode/* .test_dir/samples/",
     "test": "node ./out/test/runTest.js",
     "test-w-metamorphic": "node ./out/test/runTest.js --metamorphic",
-    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade",
     "test-symbol": "node ./out/test-symbol/runTest.js",
     "test-ast": "node ./out/test-ast/runTest.js",
-    "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js"
+    "test-ast-metamorphic": "node ./out/test-ast/runTest.js --metamorphic",
+    "test-compilation": "npm run compile && node ./out/test-compilation/runTest.js",
+    "get-ade-test": "git clone https://github.com/progress/ADE.git resources/ade"
   },
   "devDependencies": {
-    "@electron/rebuild": "^3.3.1",
+    "@electron/rebuild": "^0.0.0",
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.10",
     "@types/node": "18.x",
+    "@types/semver": "^7.7.1",
     "@types/vscode": "^1.84.0",
-    "@typescript-eslint/eslint-plugin": "^6.9.0",
-    "@typescript-eslint/parser": "^6.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.3.2",
+    "@vscode/vsce": "^2.25.0",
     "chai": "^4.3.11",
     "copyfiles": "^2.4.1",
     "esbuild": "^0.25.2",
     "eslint": "^8.52.0",
     "glob": "^11.0.1",
-    "mocha": "^10.8.2",
+    "mocha": "^11.3.0",
     "replace-in-file": "^8.3.0",
     "rimraf": "^5.0.5",
-    "ts-node": "^10.9.2",
+    "semver": "^7.7.4",
     "typescript": "^5.2.2",
-    "vscode-extension-tester": "^8.13.0"
+    "vscode-extension-tester": "^8.0.2"
   },
   "dependencies": {
-    "@vscode/extension-telemetry": "^0.9.8",
+    "@microsoft/applicationinsights-common": "^3.4.1",
+    "@vscode/extension-telemetry": "^1.5.1",
+    "serialize-javascript": "^7.0.5",
     "web-tree-sitter": "^0.20.8"
   }
 }

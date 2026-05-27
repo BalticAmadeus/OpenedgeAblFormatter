@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.assignFormatting": true,
-    "abl.completion.upperCase": true,
     "AblFormatter.assignFormattingEndDotLocation": "New"}*/
 FUNCTION GET_STUFF RETURNS Progress.Json.ObjectModel.JsonObject (cParam1 AS CHARACTER):
     DEFINE VARIABLE jsonTableRow AS INT NO-UNDO.

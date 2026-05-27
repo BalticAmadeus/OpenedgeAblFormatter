@@ -1,8 +1,7 @@
 /* formatterSettingsOverride */
 /* {
 "AblFormatter.blockFormatting": true,
-"AblFormatter.temptableFormatting": true,
-"abl.completion.upperCase": true
+"AblFormatter.temptableFormatting": true
 } */
 DEFINE TEMP-TABLE foo NO-UNDO
     FIELD a AS CHARACTER

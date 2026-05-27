@@ -1,10 +1,15 @@
-issuesGithub_153
-issuesGithub_163_1
-issuesGithub_163_2
-issuesGithub_163_3
-issuesGithub_163_4
+defineVariable_14-dataset
+defineVariable_15-event
+enum_1-formatting-false
+expression_12-not-complex
+for_13-outer-join
+issuesGithub_153 - fixed
+issuesGithub_163_1 - fixed
+issuesGithub_163_2 - fixed
+issuesGithub_163_3 - fixed
+issuesGithub_163_4 - fixed
 issuesGithub_196_1
-issuesGithub_196_2
+issuesGithub_196_2 - fixed
 issuesGithub_226 - fixed
 issuesGithub_291 - fixed
 issuesGithub_338 - fixed
@@ -40,9 +45,9 @@ issuesGithub_506 - fixed
 issuesGithub_507
 issuesGithub_508 - fixed
 issuesGithub_509 - fixed
-issuesGithub_510
+issuesGithub_510 - fixed
 issuesGithub_511 - fixed
-issuesGithub_512
+issuesGithub_512 - fixed
 issuesGithub_513
 issuesGithub_514
 issuesGithub_522 - fixed
@@ -62,7 +67,14 @@ issuesGithub_532 - fixed
 issuesGithub_533 - fixed
 issuesGithub_535 - fixed
 issuesGithub_538 - fixed
-issuesGithub_544
-issuesGithub_556
+issuesGithub_544 - fixed
+issuesGithub_556 - fixed
 issuesGithub_557
 issuesGithub_558
+statement_20accumulate
+statement_22ambiguous
+statement_25run
+statement_32-can-find
+statement_33-cast
+statement_35-class-types
+temptable_20-before-table

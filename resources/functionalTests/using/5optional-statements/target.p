@@ -1,9 +1,8 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.usingFormatting": true,
-      "abl.completion.upperCase": true}*/
+/*  { "AblFormatter.usingFormatting": true}*/
 
 USING A.
-USING C FROM ASSEMBLY.
-USING E FROM PROPATH.
+USING CA FROM ASSEMBLY.
+USING E  FROM PROPATH.
 USING a.
-USING b FROM ASSEMBLY.
+USING b  FROM ASSEMBLY.

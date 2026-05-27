@@ -5,4 +5,11 @@ export class TempTableSettings extends ASettings {
     public temptableFormatting() {
         return !!this.configurationManager.get("temptableFormatting");
     }
+
+    public endDotLocationNew() {
+        return !!(
+            this.configurationManager.get("temptableFormattingEndDotLocation") ===
+            "New"
+        );
+    }
 }

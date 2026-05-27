@@ -23,7 +23,10 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         if (
             node.type === SyntaxNodeType.AblStatement ||
             node.type === SyntaxNodeType.ReturnStatement ||
+            node.type === SyntaxNodeType.UpdateStatement ||
+            node.type === SyntaxNodeType.MessageStatement ||
             node.type === SyntaxNodeType.InputOutputStatement ||
+            node.type === SyntaxNodeType.DeleteStatement ||
             node.type === SyntaxNodeType.ReleaseStatement
         ) {
             return true;

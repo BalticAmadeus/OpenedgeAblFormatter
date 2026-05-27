@@ -28,6 +28,10 @@ export class FormatterFactory {
         formatterName: string,
         configurationManager: IConfigurationManager
     ): boolean {
+        // VariableAssignment formatter is automatically enabled with Statement formatting
+        if (formatterName === "variableAssignmentFormatting") {
+            return !!configurationManager.get("statementFormatting");
+        }
         if (configurationManager.get(formatterName)!) {
             return true;
         }

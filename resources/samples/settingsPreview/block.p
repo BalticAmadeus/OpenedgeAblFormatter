@@ -1,0 +1,5 @@
+/* DO Blocks */
+DO TRANSACTION:
+DO TRANSACTION: 
+    a /= 3.
+END. END.

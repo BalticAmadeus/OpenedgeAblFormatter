@@ -1,5 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.procedureParamaterFormatting": true} */
+/*  { "AblFormatter.procedureParameterFormatting": true} */
 
 define INPUT        PARAMETER cipTitle       AS CHARACTER NO-UNDO.
 define INPUT-OUTPUT PARAMETER iiopFontNumber AS INTEGER   NO-UNDO.
