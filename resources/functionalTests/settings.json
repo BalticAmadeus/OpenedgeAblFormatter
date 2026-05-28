@@ -26,6 +26,8 @@
     "variableDefinitionFormatting": true,
     "procedureParameterFormatting": true,
     "functionParameterFormatting": true,
+    "functionParameterSeparateLineFormatting": "No",
+    "functionParameterSeparateLineParenthesisLocation": "Opening same line, closing same line",
     "functionParameterFormattingAlignParameterTypes": "Yes",
     "arrayAccessFormatting": true,
     "arrayAccessFormattingAddSpaceAfterComma": "Yes",

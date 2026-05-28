@@ -378,8 +378,32 @@
           "category": "Function Parameter",
           "description": "Enable FUNCTION PARAMETER formatting"
         },
-        "AblFormatter.functionParameterFormattingAlignParameterTypes": {
+        "AblFormatter.functionParameterSeparateLineFormatting": {
           "order": 1601,
+          "type": "string",
+          "default": "No",
+          "enum": [
+            "Yes",
+            "No"
+          ],
+          "category": "Function Parameter",
+          "description": "Place each parameter on a separate line?"
+        },
+        "AblFormatter.functionParameterSeparateLineParenthesisLocation": {
+          "order": 1602,
+          "type": "string",
+          "default": "Opening same line, closing same line",
+          "enum": [
+            "Opening same line, closing same line",
+            "Opening new line, closing same line",
+            "Opening new line, closing new line",
+            "Opening same line, closing new line"
+          ],
+          "category": "Function Parameter",
+          "markdownDescription": "Control opening/closing parenthesis line placement. Note: this setting is applied only when 'Function Parameter Separate Line Formatting' is set to 'Yes'."
+        },
+        "AblFormatter.functionParameterFormattingAlignParameterTypes": {
+          "order": 1603,
           "type": "string",
           "default": "Yes",
           "enum": [

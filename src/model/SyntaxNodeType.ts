@@ -209,6 +209,9 @@ export const parentheses = new MyFancySet<string>([
     SyntaxNodeType.RightParenthesis,
 ]);
 
+export const leftParenthesis = SyntaxNodeType.LeftParenthesis;
+export const rightParenthesis = SyntaxNodeType.RightParenthesis;
+
 export const logicalKeywords = new MyFancySet<string>([
     SyntaxNodeType.AndKeyword,
     SyntaxNodeType.OrKeyword,

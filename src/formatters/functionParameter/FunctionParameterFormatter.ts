@@ -7,8 +7,9 @@ import { AFormatter } from "../AFormatter";
 import {
     dataStructureKeywords,
     definitionKeywords,
+    leftParenthesis,
     parameterTypes,
-    parentheses,
+    rightParenthesis,
     SyntaxNodeType,
 } from "../../model/SyntaxNodeType";
 import { FunctionParameterSettings } from "./FunctionParameterSettings";
@@ -96,8 +97,10 @@ export class FunctionParameterFormatter
 
     private getStructure(node: SyntaxNode, fullText: Readonly<FullText>): void {
         switch (node.type) {
-            case SyntaxNodeType.LeftParenthesis:
-                this.alignParameters = node.startPosition.column + 1;
+            case leftParenthesis:
+                this.alignParameters = this.shouldUseContinuationIndent()
+                    ? this.getContinuationIndent(node, fullText) + 1
+                    : node.startPosition.column + 1;
                 break;
             case SyntaxNodeType.FunctionParameter:
                 node.children.forEach((child) => {
@@ -135,11 +138,45 @@ export class FunctionParameterFormatter
     private getString(node: SyntaxNode, fullText: Readonly<FullText>): string {
         let newString = "";
         switch (node.type) {
-            case parentheses.hasFancy(node.type, ""):
-                newString = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+            case leftParenthesis:
+                if (!this.settings.separateLineFormatting()) {
+                    newString = FormatterHelper.getCurrentText(
+                        node,
+                        fullText
+                    ).trim();
+                    break;
+                }
+
+                if (this.settings.separateLineParenthesisOnNewLine()) {
+                    newString =
+                        fullText.eolDelimiter +
+                        " ".repeat(
+                            Math.max(
+                                0,
+                                this.alignParameters > 0
+                                    ? this.alignParameters - 1
+                                    : this.getContinuationIndent(
+                                          node,
+                                          fullText
+                                      )
+                            )
+                        ) +
+                        "(";
+                } else {
+                    newString =
+                        "(" +
+                        fullText.eolDelimiter +
+                        " ".repeat(Math.max(0, this.alignParameters));
+                }
+                break;
+            case rightParenthesis:
+                newString = this.settings.separateLineFormatting() &&
+                    this.settings.separateLineClosingParenthesisOnNewLine()
+                    ?
+                      fullText.eolDelimiter +
+                      " ".repeat(Math.max(0, this.getClosingParenthesisIndent())) +
+                      ")"
+                    : FormatterHelper.getCurrentText(node, fullText).trim();
                 break;
             case SyntaxNodeType.FunctionParameter:
                 newString = this.collectParameterString(node, fullText);
@@ -315,5 +352,30 @@ export class FunctionParameterFormatter
         this.alignParameterType = 0;
         this.alignParameterMode = 0;
         this.alignParameters = 0;
+    }
+
+    private getContinuationIndent(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): number {
+        const lines = fullText.text.split(/\r\n|\n/);
+        const sourceLine = lines[node.startPosition.row] ?? "";
+        const leadingWhitespace = sourceLine.match(/^[\t ]*/)?.[0] ?? "";
+        const tabSize = Number(this.settings.tabSize()) || 4;
+        const baseIndent = leadingWhitespace.split("").reduce((sum, char) => {
+            return sum + (char === "\t" ? tabSize : 1);
+        }, 0);
+
+        return baseIndent + tabSize;
+    }
+
+    private shouldUseContinuationIndent(): boolean {
+        return this.settings.separateLineFormatting();
+    }
+
+    private getClosingParenthesisIndent(): number {
+        return this.settings.separateLineParenthesisOnNewLine()
+            ? Math.max(0, this.alignParameters - 1)
+            : Math.max(0, this.alignParameters);
     }
 }
