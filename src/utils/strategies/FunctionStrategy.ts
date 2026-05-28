@@ -15,7 +15,7 @@ export class FunctionStrategy extends StrategyParseBase implements IStrategy {
 
     generate(input: string, parseResult?: ParseResult): CodeBlock[] {
         const resolvedParseResult = this.ensureParseResult(input, parseResult);
-        if (!resolvedParseResult) return [];
+        if (!resolvedParseResult) {return [];}
         const ranges: CodeBlock[] = [];
         const functionNode = resolvedParseResult.tree.rootNode.children[0];
         if (functionNode) {

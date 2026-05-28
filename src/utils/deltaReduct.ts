@@ -109,10 +109,10 @@ export async function runDeltaReduction(
         baseOffset: number,
         parentSpan: number
     ): Promise<boolean> {
-        if (!parseResult) parseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), text);
+        if (!parseResult) {parseResult = parserHelper.parse(new FileIdentifier("temp.p", 1), text);}
 
         const next = (strategy as any).getNextStrategy(text, parseResult) as IStrategy | undefined;
-        if (!next) return false;
+        if (!next) {return false;}
 
         const blocks = next.generate(text, parseResult);
 

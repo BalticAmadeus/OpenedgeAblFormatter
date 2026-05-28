@@ -18,12 +18,12 @@ export class CommentsRemoveStrategy extends StrategyParseBase implements IStrate
 
         // Deep check: parsing
         const resolvedParseResult = this.ensureParseResult(input, parseResult);
-        if (!resolvedParseResult) return false;
+        if (!resolvedParseResult) {return false;}
 
         let hasComment = false;
 
         function checkCommentNode(node: Parser.SyntaxNode) {
-            if (hasComment) return;
+            if (hasComment) {return;}
 
             if (node.type === SyntaxNodeType.Comment) {
                 hasComment = true;
@@ -32,7 +32,7 @@ export class CommentsRemoveStrategy extends StrategyParseBase implements IStrate
 
             for (const child of node.children) {
                 checkCommentNode(child);
-                if (hasComment) return;
+                if (hasComment) {return;}
             }
         }
 
@@ -42,7 +42,7 @@ export class CommentsRemoveStrategy extends StrategyParseBase implements IStrate
 
     generate(input: string, parseResult?: ParseResult): CodeBlock[] {
         const resolvedParseResult = this.ensureParseResult(input, parseResult);
-        if (!resolvedParseResult) return [];
+        if (!resolvedParseResult) {return [];}
 
         const commentRanges: CodeBlock[] = [];
 

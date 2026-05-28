@@ -14,7 +14,7 @@ export class CaseStrategy extends StrategyParseBase implements IStrategy {
 
     generate(input: string, parseResult?: ParseResult): CodeBlock[] {
         const resolvedParseResult = this.ensureParseResult(input, parseResult);
-        if (!resolvedParseResult) return [];
+        if (!resolvedParseResult) {return [];}
 
         const caseNode = resolvedParseResult.tree.rootNode.children[0];
         if (!caseNode || caseNode.type !== SyntaxNodeType.CaseStatement) {

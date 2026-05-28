@@ -21,7 +21,7 @@ export class BaseStrategy {
             parseResult = this.parserHelper.parse(new FileIdentifier("temp.p", 1), input);
         }
 
-        if (!parseResult) return undefined;
+        if (!parseResult) {return undefined;}
 
         const rootNode = parseResult.tree.rootNode;
         if (rootNode.children.length > 1) {
