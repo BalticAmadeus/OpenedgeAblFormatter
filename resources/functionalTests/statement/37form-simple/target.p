@@ -1,4 +1,5 @@
-FORM
-    Customer.Name
-    Customer.Address
-    WITH FRAME f1.
+/* formatterSettingsOverride */
+/*  {
+}*/
+
+FORM Customer.Name Customer.Address WITH FRAME f1.

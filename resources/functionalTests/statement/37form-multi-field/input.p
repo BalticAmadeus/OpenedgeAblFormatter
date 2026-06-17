@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
 /*  {
-    "formFormattingEndDotLocation": "Same"
 }*/
 
 FORM HEADER
