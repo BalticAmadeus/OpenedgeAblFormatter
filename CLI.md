@@ -73,6 +73,14 @@ abl-format myfile.p --verbose
 
 Show diagnostic information during formatting.
 
+### CLI Telemetry
+
+```bash
+ABL_FORMATTER_TELEMETRY=1 ABL_FORMATTER_TELEMETRY_KEY=... abl-format myfile.p --telemetry
+```
+
+CLI telemetry is opt-in and best-effort. If no key is provided, the formatter runs normally and does not send telemetry.
+
 ## Configuration File Format
 
 Create a `.ablformatter.json` file in your project root:
@@ -173,6 +181,9 @@ Make sure you've run `npm run build-cli` first to bundle the WASM files.
 
 - `ABL_FORMATTER_QUIET` - Suppress diagnostic logs
 - `ABL_FORMATTER_VERBOSE` - Show detailed logs
+- `ABL_FORMATTER_TELEMETRY` - Set to `1` or `true` to opt into CLI telemetry
+- `ABL_FORMATTER_TELEMETRY_KEY` - Telemetry instrumentation key or connection string
+- `ABL_FORMATTER_TELEMETRY_CONNECTION` - Alternate telemetry connection string environment variable
 
 ## Performance
 
@@ -186,7 +197,7 @@ The CLI formatter is optimized for single-file operations. For batch processing 
 
 - The CLI supports the same formatting rules as the VS Code extension
 - File-level formatting overrides (comments in ABL source) are not supported in CLI mode
-- Telemetry is disabled in CLI mode
+- Telemetry is opt-in in CLI mode
 
 ## Building from Source
 
