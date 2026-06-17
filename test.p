@@ -1,3 +1,0 @@
-
-DEFINE VARIABLE Compiler_Messages AS CHARACTER  /* Hold compiler messages. */
-  VIEW-AS EDITOR SIZE 75 BY  8 SCROLLBAR-V PFCOLOR 0 FONT 5.
