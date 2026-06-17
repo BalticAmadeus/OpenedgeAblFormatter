@@ -429,6 +429,7 @@
           "order": 2100,
           "type": "boolean",
           "default": "true",
+          "category": "Form",
           "description": "Enable FORM statement formatting"
         },
         "AblFormatter.formFormattingStartOnNewLine": {
@@ -439,6 +440,7 @@
             "Yes",
             "No"
           ],
+          "category": "Form",
           "description": "Should FORM items start on a new line after FORM keyword?"
         },
         "AblFormatter.formFormattingEndDotLocation": {
@@ -449,6 +451,7 @@
             "New",
             "Same"
           ],
+          "category": "Form",
           "description": "Should the ending period be on a new line or same line as last item?"
         },
         "AblFormatter.statementFormatting": {
