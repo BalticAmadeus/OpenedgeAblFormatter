@@ -131,7 +131,6 @@ adeuib__showlbl.p
 adeuib__smoupg.w
 adeuib__tempdb.w
 adeuib__ttmaint.w
-adeuib__ttyss.i
 adeuib__ttysx.p
 adeuib__tview.w
 adeuib__uibmain.p
@@ -283,7 +282,6 @@ netlib_OpenEdge_Web_WebResponseWriter.cls
 OpenEdge_DataAdmin_Binding_AreaContext.cls
 OpenEdge_DataAdmin_Binding_AuthenticationSystemContext.cls
 OpenEdge_DataAdmin_Binding_AuthTagContext.cls
-OpenEdge_DataAdmin_Binding_CdcFieldPolicyContext.cls
 OpenEdge_DataAdmin_Binding_CdcTablePolicyContext.cls
 OpenEdge_DataAdmin_Binding_DatabaseOptionContext.cls
 OpenEdge_DataAdmin_Binding_ExtentContext.cls
@@ -292,7 +290,6 @@ OpenEdge_DataAdmin_Binding_IndexFieldContext.cls
 OpenEdge_DataAdmin_Binding_LocalIndexContext.cls
 OpenEdge_DataAdmin_Binding_PartitionContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyContext.cls
-OpenEdge_DataAdmin_Binding_PartitionPolicyDetailContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyFieldContext.cls
 
 OpenEdge_DataAdmin_Binding_RoleContext.cls
@@ -326,12 +323,11 @@ OpenEdge_DataAdmin_Util_dbconnectionrole_status.p
 prodict__dctexec.p
 prodict__dctexen.p
 prodict__dctgues.p
-prodict__dctlrec.p
+prodict__dictc.p
 prodict_aud__aud-pol.p
 prodict_dump__dmpincr.p
 prodict_dump__dmpsddl.p
 prodict_dump__dmpsec.p
-prodict_dump__dmputil.p
 prodict_dump__lod_dbs.p
 prodict_dump__loddbff.p
 prodict_dump__lodsddl.p
@@ -406,7 +402,6 @@ prores_d-main.p
 prores_i-pick.p
 prores_i-zap.p
 prores_l-main.p
-prores_q-write.p
 prores_r-main.p
 prores_r-write.p
 prores_results.i
@@ -502,11 +497,14 @@ prores_f-browse.p
 prores_u-print.p
 //015 issues <--
 //016 issues -->
-adecomm__assign-wid.w
-aderes__arships.p
+adeuib__tempdbpref.w
+prores_a-form.p
+prores_a-info.p
+prores_a-print.p
+prores_i-dir.p
+prores_s-format.p
+aderes__gotopag.p
 adeuib__undbrow.p
-adeuib__undrect.p
-prodict__dictc.p
 webtools_index.w
 webtools_oscommnd.w
 webtools_session.w
