@@ -19,6 +19,7 @@ import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 
 import { EOL } from "./model/EOL";
 import { FileIdentifier } from "./model/FileIdentifier";
+import { FormattingEngine } from "./formatterFramework/FormattingEngine";
 
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
     undefined, //no excessive logging
@@ -165,14 +166,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
             const document = editor.document;
             const configManager = ConfigurationManager.getInstance();
-            const allSettings = configManager.getAll();
-            allSettings.eol = new EOL(document.eol);
 
             try {
-                const formattedText = await parserHelper.format(
+                const codeFormatter = new FormattingEngine(
+                    parserHelper,
                     new FileIdentifier(document.fileName, document.version),
+                    configManager,
+                    debugManager,
+                    metamorphicTestingEngine,
+                );
+
+                const formattedText = codeFormatter.formatText(
                     document.getText(selection),
-                    allSettings,
+                    new EOL(document.eol),
                 );
 
                 await editor.edit((editBuilder) => {
