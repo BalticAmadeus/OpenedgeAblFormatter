@@ -17,9 +17,11 @@ import { lt } from "semver";
 import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 
+import { EOL } from "./model/EOL";
+import { FileIdentifier } from "./model/FileIdentifier";
 
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
-    undefined //no excessive logging
+    undefined, //no excessive logging
 );
 
 // Add a type-safe global declaration for the extension context
@@ -47,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const parserHelper = new AblParserHelper(
         context.extensionPath,
-        debugManager
+        debugManager,
     );
 
     const metamorphicRelationsList = [
@@ -65,17 +67,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const formatter = new AblFormatterProvider(
         parserHelper,
-        metamorphicTestingEngine
+        metamorphicTestingEngine,
     );
 
     vscode.languages.registerDocumentRangeFormattingEditProvider(
         Constants.ablId,
-        formatter
+        formatter,
     );
 
     vscode.languages.registerDocumentFormattingEditProvider(
         Constants.ablId,
-        formatter
+        formatter,
     );
 
     const hoverProvider = new AblDebugHoverProvider(parserHelper);
@@ -94,7 +96,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             if (selection.isEmpty) {
                 vscode.window.showInformationMessage(
-                    "Please select a block of code to exclude."
+                    "Please select a block of code to exclude.",
                 );
                 return;
             }
@@ -109,7 +111,7 @@ export async function activate(context: vscode.ExtensionContext) {
             await editor.edit((editBuilder) => {
                 editBuilder.replace(selection, newText);
             });
-        }
+        },
     );
     context.subscriptions.push(excludeCodeCommand);
 
@@ -144,6 +146,49 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(previewCommand);
+    const formatSelectedCodeCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.formatSelectedCode",
+        async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                return;
+            }
+
+            const selection = editor.selection;
+
+            if (selection.isEmpty) {
+                vscode.window.showInformationMessage(
+                    "Please select a block of code to format.",
+                );
+                return;
+            }
+
+            const document = editor.document;
+            const configManager = ConfigurationManager.getInstance();
+            const allSettings = configManager.getAll();
+            allSettings.eol = new EOL(document.eol);
+
+            try {
+                const formattedText = await parserHelper.format(
+                    new FileIdentifier(document.fileName, document.version),
+                    document.getText(selection),
+                    allSettings,
+                );
+
+                await editor.edit((editBuilder) => {
+                    editBuilder.replace(selection, formattedText);
+                });
+            } catch (error) {
+                vscode.window.showErrorMessage(
+                    `ABL Formatter: Failed to format selection - ${
+                        error instanceof Error ? error.message : String(error)
+                    }`,
+                );
+            }
+        },
+    );
+
+    context.subscriptions.push(formatSelectedCodeCommand);
 
     setInterval(runPeriodicTask, 20_000);
 
@@ -155,14 +200,14 @@ export async function activate(context: vscode.ExtensionContext) {
                     "https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/new?template=formatter-bug-report.md"
                 )
             );
-        }
+        },
     );
     context.subscriptions.push(reportBugCommand);
 
 
     const bugStatusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
-        99
+        99,
     );
 
     bugStatusBarItem.text = "$(bug) ABL Formatter: Report Bug";
@@ -244,7 +289,7 @@ function runPeriodicTask() {
             "Num of test cases",
             resultList.length,
             ". Pass rate %",
-            ((resultList.length - numOfFails) / resultList.length) * 100
+            ((resultList.length - numOfFails) / resultList.length) * 100,
         );
     } else {
         console.log("Nothing to test");
