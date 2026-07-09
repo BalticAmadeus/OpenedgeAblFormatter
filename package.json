@@ -41,7 +41,7 @@
       },
       {
         "command": "openedgeAblFormatter.formatSelectedCode",
-        "title": "Format selected code",
+        "title": "Format Selection",
         "category": "OpenEdge ABL Formatter"
      }
     ],
