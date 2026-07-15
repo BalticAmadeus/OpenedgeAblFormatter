@@ -14,6 +14,8 @@ import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
 
 @RegisterFormatter
 export class CaseFormatter extends AFormatter implements IFormatter {
+    private static readonly anyEolRegex = /\r\n|\n|\r/;
+
     private startColumn = 0;
     private caseBodyValue = "";
 
@@ -165,7 +167,7 @@ export class CaseFormatter extends AFormatter implements IFormatter {
                 prevSibling.endIndex,
                 node.startIndex
             );
-            if (!between.includes("\n")) {
+            if (!CaseFormatter.anyEolRegex.test(between)) {
                 isInline = true;
             }
         }
@@ -174,14 +176,13 @@ export class CaseFormatter extends AFormatter implements IFormatter {
             return " " + commentText.trim();
         } else {
             const commentStart = node.startIndex;
-            const lineStart =
-                fullText.text.lastIndexOf("\n", commentStart - 1) + 1;
+            const lineStart = this.findLineStart(fullText.text, commentStart);
             const indentMatch = fullText.text
                 .substring(lineStart, commentStart)
                 .match(/^\s*/);
             const baseIndent = indentMatch ? indentMatch[0] : "";
 
-            const lines = commentText.split(fullText.eolDelimiter);
+            const lines = commentText.split(CaseFormatter.anyEolRegex);
             let result = "";
             lines.forEach((line) => {
                 let outLine = line;
@@ -204,8 +205,17 @@ export class CaseFormatter extends AFormatter implements IFormatter {
                 prevSibling.endIndex,
                 node.startIndex
             );
-            return between.includes("\n");
+            return CaseFormatter.anyEolRegex.test(between);
         }
         return false;
+    }
+
+    private findLineStart(text: string, index: number): number {
+        const slice = text.substring(0, index);
+        const lastCr = slice.lastIndexOf("\r");
+        const lastLf = slice.lastIndexOf("\n");
+        const lastLineBreak = Math.max(lastCr, lastLf);
+
+        return lastLineBreak === -1 ? 0 : lastLineBreak + 1;
     }
 }

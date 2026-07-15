@@ -67,7 +67,6 @@ aderes_c-for.r
 aderes_c-header.r
 aderes_e-type.r
 aderes_e-write.r
-aderes_e-write.r
 aderes_f-fixup.r
 aderes_f-format.r
 aderes_f-motion.r
@@ -92,7 +91,6 @@ aderes_p-type.r
 aderes_r-header.r
 aderes_r-label.r
 aderes_r-layout.r
-aderes_r-level.r
 aderes_r-page.r
 aderes_r-short.r
 aderes_r-write.r
@@ -102,10 +100,8 @@ aderes_s-info.r
 aderes_s-join.r
 aderes_s-level.r
 aderes_s-write.r
-aderes_s-write.r
 aderes_s-zap.r
 aderes_u-logo.r
-aderes_u-print.r
 aderes_u-print.r
 aderes_y-format.r
 aderes_y-output.r
@@ -190,7 +186,6 @@ adeuib__rszwind.r
 adeuib__sanitiz.r
 adeuib__selcolr.r
 adeuib__selevnt.r
-adeuib__selkey.r
 adeuib__selkey.r
 adeuib__seltrg.r
 adeuib__setdesignwin.r
@@ -1242,9 +1237,7 @@ prores_c-file.r
 prores_c-flag.r
 prores_c-print.r
 prores_c-star.r
-prores_c-star.r
 prores_c-vector.r
-prores_d-main.r
 prores_d-main.r
 prores_f-browse.r
 prores_f-guess.r
@@ -1254,7 +1247,6 @@ prores_i-pick.r
 prores_i-zap.r
 prores_l-edit.r
 prores_l-guess.r
-prores_l-main.r
 prores_l-main.r
 prores_l-match.r
 prores_l-verify.r
@@ -1280,7 +1272,6 @@ prores_u-dump.r
 prores_u-option.r
 prores_u-pick.r
 prores_u-print.r
-prores_u-dump.r
 protools__asinfo.r
 protools__colorch.r
 protools__custmi2.r
