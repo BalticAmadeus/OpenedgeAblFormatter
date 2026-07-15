@@ -38,7 +38,12 @@
           "light": "resources/Formatter_LOGO_32x32.png",
           "dark": "resources/Formatter_LOGO_32x32.png"
         }
-      }
+      },
+      {
+        "command": "openedgeAblFormatter.formatSelectedCode",
+        "title": "Format Selection",
+        "category": "OpenEdge ABL Formatter"
+     }
     ],
     "menus": {
       "editor/title": [
