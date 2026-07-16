@@ -42,7 +42,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     parse(
         node: Readonly<SyntaxNode>,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectIfStructure(node, fullText);
 
@@ -50,7 +50,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             node,
             FormatterHelper.getCurrentText(node, fullText),
             this.ifBodyValue,
-            fullText
+            fullText,
         );
     }
 
@@ -61,20 +61,26 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     private getCaseBodyBranchBlock(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let resultString = "";
 
         node.children.forEach((child, index) => {
             if (child.type === "comment") {
-                const commentText = FormatterHelper.getCurrentText(child, fullText);
+                const commentText = FormatterHelper.getCurrentText(
+                    child,
+                    fullText,
+                );
 
                 // Check if this comment is inline with the previous node
                 let isInline = false;
                 if (index > 0) {
                     const prev = node.children[index - 1];
                     if (prev) {
-                        const between = fullText.text.substring(prev.endIndex, child.startIndex);
+                        const between = fullText.text.substring(
+                            prev.endIndex,
+                            child.startIndex,
+                        );
                         if (!between.includes("\n")) {
                             isInline = true;
                         }
@@ -86,23 +92,30 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 } else {
                     // Get the original indentation from the first line of the comment in the source
                     const commentStart = child.startIndex;
-                    const lineStart = fullText.text.lastIndexOf('\n', commentStart - 1) + 1;
-                    const indentMatch = fullText.text.substring(lineStart, commentStart).match(/^\s*/);
+                    const lineStart =
+                        fullText.text.lastIndexOf("\n", commentStart - 1) + 1;
+                    const indentMatch = fullText.text
+                        .substring(lineStart, commentStart)
+                        .match(/^\s*/);
                     const baseIndent = indentMatch ? indentMatch[0] : "";
 
                     const lines = commentText.split(fullText.eolDelimiter);
                     lines.forEach((line, idx) => {
                         // Only add baseIndent if the line does not already start with it (or is empty)
                         let outLine = line;
-                        if (line.trim().length > 0 && !line.startsWith(baseIndent)) {
+                        if (
+                            line.trim().length > 0 &&
+                            !line.startsWith(baseIndent)
+                        ) {
                             outLine = baseIndent + line.trimStart();
                         }
-                        resultString += fullText.eolDelimiter + outLine.trimEnd();
+                        resultString +=
+                            fullText.eolDelimiter + outLine.trimEnd();
                     });
                 }
             } else {
                 resultString = resultString.concat(
-                    this.getIfExpressionString(child, fullText)
+                    this.getIfExpressionString(child, fullText),
                 );
             }
         });
@@ -112,7 +125,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     private getIfExpressionString(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let newString = "";
 
@@ -143,7 +156,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                           fullText,
                           this.startColumn +
                               this.settings.tabSize() -
-                              node.startPosition.column
+                              node.startPosition.column,
                       ).trim()
                     : " " +
                       FormatterHelper.getCurrentTextMultilineAdjust(
@@ -151,13 +164,13 @@ export class IfFormatter extends AFormatter implements IFormatter {
                           fullText,
                           this.startColumn +
                               this.settings.tabSize() -
-                              node.startPosition.column
+                              node.startPosition.column,
                       ).trim();
                 break;
             case SyntaxNodeType.ElseIfStatement:
                 newString = node.children
                     .map((child) =>
-                        this.getElseIfStatementPart(child, fullText)
+                        this.getElseIfStatementPart(child, fullText),
                     )
                     .join("");
 
@@ -173,7 +186,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
@@ -214,9 +227,21 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
                       " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.getCurrentText(node, fullText).trim()
+                      FormatterHelper.getCurrentTextMultilineAdjust(
+                          node,
+                          fullText,
+                          this.startColumn +
+                              this.settings.tabSize() -
+                              node.startPosition.column,
+                      ).trim()
                     : " " +
-                      FormatterHelper.getCurrentText(node, fullText).trim();
+                      FormatterHelper.getCurrentTextMultilineAdjust(
+                          node,
+                          fullText,
+                          this.startColumn +
+                              this.settings.tabSize() -
+                              node.startPosition.column,
+                      ).trim();
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -224,7 +249,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
@@ -235,7 +260,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     private getElseIfStatementPart(
         node: SyntaxNode,
-        fullText: FullText
+        fullText: FullText,
     ): string {
         let newString = "";
 
@@ -255,13 +280,34 @@ export class IfFormatter extends AFormatter implements IFormatter {
                       FormatterHelper.getCurrentText(node, fullText).trim();
                 newString = newString.trimEnd();
                 break;
+            case afterThenStatements.hasFancy(node.type, ""):
+                newString = this.settings.newLineBeforeStatement()
+                    ? fullText.eolDelimiter +
+                      " ".repeat(this.startColumn) +
+                      " ".repeat(this.settings.tabSize()) +
+                      FormatterHelper.getCurrentTextMultilineAdjust(
+                          node,
+                          fullText,
+                          this.startColumn +
+                              this.settings.tabSize() -
+                              node.startPosition.column,
+                      ).trim()
+                    : " " +
+                      FormatterHelper.getCurrentTextMultilineAdjust(
+                          node,
+                          fullText,
+                          this.startColumn +
+                              this.settings.tabSize() -
+                              node.startPosition.column,
+                      ).trim();
+                break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
                 newString = text.length === 0 ? "" : " " + text;
                 break;
