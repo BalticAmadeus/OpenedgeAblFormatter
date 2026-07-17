@@ -300,7 +300,10 @@ export class IfFormatter extends AFormatter implements IFormatter {
             return " " + commentText.trim();
         } else {
             const commentStart = node.startIndex;
-            const lineStart = this.findLineStart(fullText.text, commentStart);
+            const lineStart = FormatterHelper.findLineStart(
+                fullText.text,
+                commentStart
+            );
             const indentMatch = fullText.text
                 .substring(lineStart, commentStart)
                 .match(/^\s*/);
@@ -335,15 +338,6 @@ export class IfFormatter extends AFormatter implements IFormatter {
             return IfFormatter.anyEolRegex.test(between);
         }
         return false;
-    }
-
-    private findLineStart(text: string, index: number): number {
-        const slice = text.substring(0, index);
-        const lastCr = slice.lastIndexOf("\r");
-        const lastLf = slice.lastIndexOf("\n");
-        const lastLineBreak = Math.max(lastCr, lastLf);
-
-        return lastLineBreak === -1 ? 0 : lastLineBreak + 1;
     }
 
     private getStartColumn(node: SyntaxNode): number {
