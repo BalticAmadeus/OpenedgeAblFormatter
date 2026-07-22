@@ -8,7 +8,8 @@
 | **1.1 Functional → GitHub Issues** | Track known GitHub issues             | Extension Tests               | `functionalTests/issuesGithub` | `functionalTests/_failures.txt`       | Commit          |
 | **2.1 Stability → Symbol**         | Preserve non-whitespace symbols       | Symbol Tests                  | `ade`                          | `stabilityTests/_symbol_failures.txt` | Commit, Nightly |
 | **2.2 Stability → AST**            | Preserve AST structure                | AST Tests                     | `ade`                          | `stabilityTests/_ast_failures.txt`    | Commit, Nightly |
-| **2.3 Stability → Compilation**    | Ensure code compiles after formatting | Compilation Tests             | `ade-sosourceCode`             | `compilationTests/_failures.txt`      | No CI           |
+| **2.3 Stability → Idempotency**     | Reformatting stays stable over N runs | Idempotency Tests             | `ade`                          | `stabilityTests/_idempotency_failures.txt` | Commit, Nightly |
+| **2.4 Stability → Compilation**    | Ensure code compiles after formatting | Compilation Tests             | `ade-sosourceCode`             | `compilationTests/_failures.txt`      | No CI           |
 | **3.1 Metamorphic → Functional**   | Apply MRs to Functional Tests         | Extension Tests (Metamorphic) | `functionalTests`              | No (skips failing tests)              | No CI           |
 | **3.2 Metamorphic → AST**          | Apply MRs to AST Tests                | AST Tests (Metamorphic)       | `ade`                          | No (skips failing tests)              | No CI           |
 
@@ -24,9 +25,19 @@ The goal of Functional Testing is to cover as many formatter features as possibl
 Stability Testing monitors changes in formatter quality over time by validating its core invariants. It focuses on the following properties:
  1. __Symbol__ - Ensures the formatter only modifies whitespace (spaces, tabs, newlines) and does not change the count of non-whitespace symbols.
  2. __AST__ - Ensures the abstract syntax tree (AST) structure remains unchanged after formatting.
- 3. __Compilation__ - Ensures that code known to compile before formatting still compiles afterward.
+ 3. __Idempotency__ - Ensures repeated formatting passes produce the same output after the first run.
+ 4. __Compilation__ - Ensures that code known to compile before formatting still compiles afterward.
 
 These tests require real-world code as input. The primary source is the __ADE__ repository, which contains approximately 4,700 OpenEdge files. Compilation testing uses only a subset of ADE, as not all files can be compiled easily.
+
+### Delta Reduction Testing
+
+Delta reduction for Stability tests is opt-in and can be enabled when running Symbol, AST, or Idempotency tests:
+
+1. npm scripts: `npm run test-symbol-delta`, `npm run test-ast-delta`, `npm run test-idempotency-delta`
+2. VS Code launch configs: `Symbol Tests (Delta Reduct)`, `AST Tests (Delta Reduct)`, `Idempotency Tests (Delta Reduct)`
+
+When enabled, failing mismatches trigger reduction of the failing input into smaller snippets for debugging.
 
 ## Metamorphic Testing
 
@@ -42,9 +53,9 @@ You can replace ADE repository files with your own OpenEdge code to run Stabilit
 
 1. Set up the development environment ([It is simple, see instruction here](https://github.com/BalticAmadeus/OpenedgeAblFormatter/blob/develop/CONTRIBUTING.md)).
 2. Checkout or copy your code into `resources/ade` directory.
-3. Clear `resources/stabilityTests/_symbol_failures.txt` and `resources/stabilityTests/_ast_failures.txt` exclude files as they contain code files for ADE repository.
-4. Run `Symbol Tests` and `AST Tests` scripts
-5. After completion, any detected failures will be written to `resources/stabilityTests/_ast_failures.txt` and `resources/stabilityTests/_ast_failures.txt` respectively.
+3. Clear `resources/stabilityTests/_symbol_failures.txt`, `resources/stabilityTests/_ast_failures.txt`, and `resources/stabilityTests/_idempotency_failures.txt` exclude files as they contain code files for ADE repository.
+4. Run `Symbol Tests`, `AST Tests`, and `Idempotency Tests` scripts
+5. After completion, any detected failures will be written to `resources/stabilityTests/_symbol_failures.txt`, `resources/stabilityTests/_ast_failures.txt`, and `resources/stabilityTests/_idempotency_failures.txt` respectively.
 
 ### Usage Scenarios
 
