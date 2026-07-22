@@ -14,6 +14,8 @@ import { FormatterHelper } from "../../formatterFramework/FormatterHelper";
 
 @RegisterFormatter
 export class IfFormatter extends AFormatter implements IFormatter {
+    private static readonly anyEolRegex = /\r\n|\n|\r/;
+
     private startColumn = 0;
     private ifBodyValue = "";
 
@@ -130,6 +132,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
+            case SyntaxNodeType.Comment:
+                newString = this.formatComment(node, fullText);
+                break;
             case SyntaxNodeType.ThenKeyword:
                 newString = this.settings.newLineBeforeThen()
                     ? fullText.eolDelimiter +
@@ -188,7 +193,22 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText,
                 ).trim();
-                newString = text.length === 0 ? "" : " " + text;
+                if (text.length === 0) {
+                    newString = "";
+                } else if (this.isAfterStandaloneComment(node, fullText)) {
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(
+                        startPos,
+                        node.endIndex,
+                    );
+                } else {
+                    newString = " " + text;
+                }
                 break;
         }
 
@@ -199,6 +219,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
+            case SyntaxNodeType.Comment:
+                newString = this.formatComment(node, fullText);
+                break;
             case SyntaxNodeType.ThenKeyword:
                 newString = this.settings.newLineBeforeThen()
                     ? fullText.eolDelimiter +
@@ -251,7 +274,22 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText,
                 ).trim();
-                newString = text.length === 0 ? "" : " " + text;
+                if (text.length === 0) {
+                    newString = "";
+                } else if (this.isAfterStandaloneComment(node, fullText)) {
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(
+                        startPos,
+                        node.endIndex,
+                    );
+                } else {
+                    newString = " " + text;
+                }
                 break;
         }
 
@@ -265,6 +303,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
         let newString = "";
 
         switch (node.type) {
+            case SyntaxNodeType.Comment:
+                newString = this.formatComment(node, fullText);
+                break;
             case SyntaxNodeType.ElseKeyword:
                 newString =
                     fullText.eolDelimiter +
@@ -309,11 +350,82 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     node,
                     fullText,
                 ).trim();
-                newString = text.length === 0 ? "" : " " + text;
+                if (text.length === 0) {
+                    newString = "";
+                } else if (this.isAfterStandaloneComment(node, fullText)) {
+                    // Preserve the whitespace between comment and this node,
+                    // plus the original node text, to maintain positions for nested formatters
+                    const prevSibling = node.previousSibling;
+                    const startPos = prevSibling
+                        ? prevSibling.endIndex
+                        : node.startIndex;
+                    newString = fullText.text.substring(
+                        startPos,
+                        node.endIndex,
+                    );
+                } else {
+                    newString = " " + text;
+                }
                 break;
         }
 
         return newString;
+    }
+
+    private formatComment(node: SyntaxNode, fullText: FullText): string {
+        const commentText = FormatterHelper.getCurrentText(node, fullText);
+
+        let isInline = false;
+        const prevSibling = node.previousSibling;
+        if (prevSibling) {
+            const between = fullText.text.substring(
+                prevSibling.endIndex,
+                node.startIndex,
+            );
+            if (!IfFormatter.anyEolRegex.test(between)) {
+                isInline = true;
+            }
+        }
+
+        if (isInline) {
+            return " " + commentText.trim();
+        } else {
+            const commentStart = node.startIndex;
+            const lineStart = FormatterHelper.findLineStart(
+                fullText.text,
+                commentStart,
+            );
+            const indentMatch = fullText.text
+                .substring(lineStart, commentStart)
+                .match(/^\s*/);
+            const baseIndent = indentMatch ? indentMatch[0] : "";
+
+            const lines = commentText.split(IfFormatter.anyEolRegex);
+            let result = "";
+            lines.forEach((line) => {
+                let outLine = line;
+                if (line.trim().length > 0 && !line.startsWith(baseIndent)) {
+                    outLine = baseIndent + line.trimStart();
+                }
+                result += fullText.eolDelimiter + outLine.trimEnd();
+            });
+            return result;
+        }
+    }
+
+    private isAfterStandaloneComment(
+        node: SyntaxNode,
+        fullText: FullText,
+    ): boolean {
+        const prevSibling = node.previousSibling;
+        if (prevSibling && prevSibling.type === SyntaxNodeType.Comment) {
+            const between = fullText.text.substring(
+                prevSibling.endIndex,
+                node.startIndex,
+            );
+            return IfFormatter.anyEolRegex.test(between);
+        }
+        return false;
     }
 
     private getStartColumn(node: SyntaxNode): number {
