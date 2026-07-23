@@ -6,7 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 0.5.5 (2026-07-23)
 
-- Added Format Selection command
+- Added **Format Selection** command — thanks for the contribution @simondrum! 🎉
 - Added FORM statement formatting
 - Fixed single-line comments issues in IF and CASE statements
 - Cleaned up webinar-related information
