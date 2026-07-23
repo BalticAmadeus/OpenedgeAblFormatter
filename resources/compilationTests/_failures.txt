@@ -1,6 +1,5 @@
 ablunit_ABLUnitCore.r
 adecomm__getdbs.r
-
 adecomm__resolvepath.r
 adecomm__wincolr.r
 adecomm_dirsrch.r
@@ -92,7 +91,6 @@ aderes_p-type.r
 aderes_r-header.r
 aderes_r-label.r
 aderes_r-layout.r
-aderes_r-level.r
 aderes_r-page.r
 aderes_r-short.r
 aderes_r-write.r
@@ -1296,9 +1294,9 @@ protools_dappsrv_cl.r
 protools_vappsrv.r
 protools_vjmssrv.r
 protools_widattrs.r
+rmc_rmcutil.r
 rmc__ascompile.r
 rmc__wscompile.r
-rmc_rmcutil.r
 serveradmin_OpenEdge_ApplicationServer_Util_convert_spring_properties.r
 web_objects_stateaware.r
 web_support_printval.r
