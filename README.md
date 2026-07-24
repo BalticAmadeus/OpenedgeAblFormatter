@@ -40,6 +40,26 @@ At the moment we implemented formatting logic for these language features:
 Download the extension from VSCode Marketplace and install on your machine.
 There are no additional dependencies needed to launch this extension.
 
+## Command-Line Interface (CLI)
+
+You can also use the formatter from the command line without VS Code:
+
+```bash
+# Format and output to stdout
+node out/cli/cli.js myfile.p
+
+# Format in place
+node out/cli/cli.js myfile.p --write
+
+# Check if file needs formatting (exit 0 if ok, 1 if needs formatting)
+node out/cli/cli.js myfile.p --check
+
+# Use custom config
+node out/cli/cli.js myfile.p --config .ablformatter.json
+```
+
+See [CLI.md](./CLI.md) for complete CLI documentation and CI/CD integration examples.
+
 ## Configuration and Setup
 
 We implemented extensive settings configuration to allow users to easily tailor the experience to their needs. This might not be the case in the future. You can access the settings via VS Code settings or clicking ABL Formatter icon at the far right of an ABL files editor title bar. You can also access settings UI via the **Command Palette** (Ctrl+Shift+P) by typing "Formatter Settings Preview"
