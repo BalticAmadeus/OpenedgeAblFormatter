@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.temptableFormatting": true,
-      "abl.completion.upperCase": true}*/
+/*  { "AblFormatter.temptableFormatting": true}*/
 
 DEFINE temp-table ttCustomer no-undo
     field custNum   as integer

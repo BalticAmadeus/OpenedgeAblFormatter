@@ -2,7 +2,7 @@
   "name": "openedge-abl-formatter",
   "displayName": "OpenEdge ABL Formatter",
   "description": "Progress OpenEdge (ABL) code formatter",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "icon": "resources/Formatter_LOGO.png",
   "repository": {
     "url": "https://github.com/BalticAmadeus/OpenedgeAblFormatter"
@@ -41,7 +41,12 @@
           "light": "resources/Formatter_LOGO_32x32.png",
           "dark": "resources/Formatter_LOGO_32x32.png"
         }
-      }
+      },
+      {
+        "command": "openedgeAblFormatter.formatSelectedCode",
+        "title": "Format Selection",
+        "category": "OpenEdge ABL Formatter"
+     }
     ],
     "menus": {
       "editor/title": [
@@ -104,14 +109,6 @@
             "media": {
               "image": "resources/walkthrough/DisableFormatterTelemetry.png",
               "altText": "Settings for disabling telemetry sent by OpenEdge ABL Formatter can be found in settings with @tag:telemetry tag"
-            }
-          },
-          {
-            "id": "UpcomingWebinar",
-            "title": "OpenEdge ABL Formatter Webinar - April 30th",
-            "description": "Join our free April 30th webinar for a live demo, setup walkthrough, and Q&A.",
-            "media": {
-              "markdown": "resources/walkthrough/UpcomingWebinar.md"
             }
           }
         ]
