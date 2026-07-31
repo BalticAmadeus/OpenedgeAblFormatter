@@ -107,21 +107,23 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
                       " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.getCurrentTextMultilineAdjust(
-                          node,
-                          fullText,
-                          this.startColumn +
-                              this.settings.tabSize() -
-                              node.startPosition.column
-                      ).trim()
+                      FormatterHelper.alignIndentation(
+                          FormatterHelper.getCurrentText(
+                              node,
+                              fullText
+                          ).trim(),
+                          this.startColumn + this.settings.tabSize(),
+                          fullText.eolDelimiter
+                      )
                     : " " +
-                      FormatterHelper.getCurrentTextMultilineAdjust(
-                          node,
-                          fullText,
-                          this.startColumn +
-                              this.settings.tabSize() -
-                              node.startPosition.column
-                      ).trim();
+                      FormatterHelper.alignIndentation(
+                          FormatterHelper.getCurrentText(
+                              node,
+                              fullText
+                          ).trim(),
+                          this.startColumn + this.settings.tabSize(),
+                          fullText.eolDelimiter
+                      );
                 break;
             case SyntaxNodeType.ElseIfStatement:
                 newString = node.children
@@ -198,9 +200,23 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     ? fullText.eolDelimiter +
                       " ".repeat(this.startColumn) +
                       " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.getCurrentText(node, fullText).trim()
+                      FormatterHelper.alignIndentation(
+                          FormatterHelper.getCurrentText(
+                              node,
+                              fullText
+                          ).trim(),
+                          this.startColumn + this.settings.tabSize(),
+                          fullText.eolDelimiter
+                      )
                     : " " +
-                      FormatterHelper.getCurrentText(node, fullText).trim();
+                      FormatterHelper.alignIndentation(
+                          FormatterHelper.getCurrentText(
+                              node,
+                              fullText
+                          ).trim(),
+                          this.startColumn + this.settings.tabSize(),
+                          fullText.eolDelimiter
+                      );
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
