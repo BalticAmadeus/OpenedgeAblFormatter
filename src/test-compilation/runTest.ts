@@ -11,12 +11,15 @@ async function main() {
         // Passed to --extensionTestsPath
         const extensionTestsPath = path.resolve(__dirname, "./suite/index");
 
-        // Download VS Code, unzip it and run the integration test
+        // Pin VS Code version from env to avoid downloading latest, which can break
+        // macOS arm64 by resolving to an Electron path that doesn't exist at the expected location.
+        const vscodeVersion = process.env.VSCODE_VERSION || "1.109.5";
         console.log("Running Compilation Tests...");
+        console.log(`VS Code version: ${vscodeVersion}`);
         console.log(`Extension Development Path: ${extensionDevelopmentPath}`);
         console.log(`Extension Tests Path: ${extensionTestsPath}`);
 
-        await runTests({ extensionDevelopmentPath, extensionTestsPath });
+        await runTests({ extensionDevelopmentPath, extensionTestsPath, version: vscodeVersion });
         console.log("✓ All compilation tests completed successfully");
     } catch (err) {
         console.error("❌ Failed to run compilation tests:", err);
