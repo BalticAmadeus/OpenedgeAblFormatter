@@ -44,7 +44,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     parse(
         node: Readonly<SyntaxNode>,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): CodeEdit | CodeEdit[] | undefined {
         this.collectIfStructure(node, fullText);
 
@@ -52,7 +52,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             node,
             FormatterHelper.getCurrentText(node, fullText),
             this.ifBodyValue,
-            fullText
+            fullText,
         );
     }
 
@@ -63,14 +63,63 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     private getCaseBodyBranchBlock(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let resultString = "";
 
-        node.children.forEach((child) => {
-            resultString = resultString.concat(
-                this.getIfExpressionString(child, fullText)
-            );
+        node.children.forEach((child, index) => {
+            if (child.type === "comment") {
+                const commentText = FormatterHelper.getCurrentText(
+                    child,
+                    fullText,
+                );
+
+                // Check if this comment is inline with the previous node
+                let isInline = false;
+                if (index > 0) {
+                    const prev = node.children[index - 1];
+                    if (prev) {
+                        const between = fullText.text.substring(
+                            prev.endIndex,
+                            child.startIndex,
+                        );
+                        if (!between.includes("\n")) {
+                            isInline = true;
+                        }
+                    }
+                }
+
+                if (isInline) {
+                    resultString += " " + commentText.trim();
+                } else {
+                    // Get the original indentation from the first line of the comment in the source
+                    const commentStart = child.startIndex;
+                    const lineStart =
+                        fullText.text.lastIndexOf("\n", commentStart - 1) + 1;
+                    const indentMatch = fullText.text
+                        .substring(lineStart, commentStart)
+                        .match(/^\s*/);
+                    const baseIndent = indentMatch ? indentMatch[0] : "";
+
+                    const lines = commentText.split(fullText.eolDelimiter);
+                    lines.forEach((line, idx) => {
+                        // Only add baseIndent if the line does not already start with it (or is empty)
+                        let outLine = line;
+                        if (
+                            line.trim().length > 0 &&
+                            !line.startsWith(baseIndent)
+                        ) {
+                            outLine = baseIndent + line.trimStart();
+                        }
+                        resultString +=
+                            fullText.eolDelimiter + outLine.trimEnd();
+                    });
+                }
+            } else {
+                resultString = resultString.concat(
+                    this.getIfExpressionString(child, fullText),
+                );
+            }
         });
 
         return resultString.trim();
@@ -78,7 +127,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     private getIfExpressionString(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let newString = "";
 
@@ -110,25 +159,25 @@ export class IfFormatter extends AFormatter implements IFormatter {
                       FormatterHelper.alignIndentation(
                           FormatterHelper.getCurrentText(
                               node,
-                              fullText
+                              fullText,
                           ).trim(),
                           this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter
+                          fullText.eolDelimiter,
                       )
                     : " " +
                       FormatterHelper.alignIndentation(
                           FormatterHelper.getCurrentText(
                               node,
-                              fullText
+                              fullText,
                           ).trim(),
                           this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter
+                          fullText.eolDelimiter,
                       );
                 break;
             case SyntaxNodeType.ElseIfStatement:
                 newString = node.children
                     .map((child) =>
-                        this.getElseIfStatementPart(child, fullText)
+                        this.getElseIfStatementPart(child, fullText),
                     )
                     .join("");
 
@@ -144,7 +193,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
                 if (text.length === 0) {
                     newString = "";
@@ -155,7 +204,10 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     const startPos = prevSibling
                         ? prevSibling.endIndex
                         : node.startIndex;
-                    newString = fullText.text.substring(startPos, node.endIndex);
+                    newString = fullText.text.substring(
+                        startPos,
+                        node.endIndex,
+                    );
                 } else {
                     newString = " " + text;
                 }
@@ -203,19 +255,19 @@ export class IfFormatter extends AFormatter implements IFormatter {
                       FormatterHelper.alignIndentation(
                           FormatterHelper.getCurrentText(
                               node,
-                              fullText
+                              fullText,
                           ).trim(),
                           this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter
+                          fullText.eolDelimiter,
                       )
                     : " " +
                       FormatterHelper.alignIndentation(
                           FormatterHelper.getCurrentText(
                               node,
-                              fullText
+                              fullText,
                           ).trim(),
                           this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter
+                          fullText.eolDelimiter,
                       );
                 break;
             case SyntaxNodeType.Error:
@@ -224,7 +276,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
                 if (text.length === 0) {
                     newString = "";
@@ -235,7 +287,10 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     const startPos = prevSibling
                         ? prevSibling.endIndex
                         : node.startIndex;
-                    newString = fullText.text.substring(startPos, node.endIndex);
+                    newString = fullText.text.substring(
+                        startPos,
+                        node.endIndex,
+                    );
                 } else {
                     newString = " " + text;
                 }
@@ -247,7 +302,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     private getElseIfStatementPart(
         node: SyntaxNode,
-        fullText: FullText
+        fullText: FullText,
     ): string {
         let newString = "";
 
@@ -270,13 +325,36 @@ export class IfFormatter extends AFormatter implements IFormatter {
                       FormatterHelper.getCurrentText(node, fullText).trim();
                 newString = newString.trimEnd();
                 break;
+            case afterThenStatements.hasFancy(node.type, ""):
+                newString = this.settings.newLineBeforeStatement()
+                    ? fullText.eolDelimiter +
+                      " ".repeat(this.startColumn) +
+                      " ".repeat(this.settings.tabSize()) +
+                      FormatterHelper.alignIndentation(
+                          FormatterHelper.getCurrentText(
+                              node,
+                              fullText,
+                          ).trim(),
+                          this.startColumn + this.settings.tabSize(),
+                          fullText.eolDelimiter,
+                      )
+                    : " " +
+                      FormatterHelper.alignIndentation(
+                          FormatterHelper.getCurrentText(
+                              node,
+                              fullText,
+                          ).trim(),
+                          this.startColumn + this.settings.tabSize(),
+                          fullText.eolDelimiter,
+                      );
+                break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
             default:
                 const text = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
                 if (text.length === 0) {
                     newString = "";
@@ -287,7 +365,10 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     const startPos = prevSibling
                         ? prevSibling.endIndex
                         : node.startIndex;
-                    newString = fullText.text.substring(startPos, node.endIndex);
+                    newString = fullText.text.substring(
+                        startPos,
+                        node.endIndex,
+                    );
                 } else {
                     newString = " " + text;
                 }
@@ -305,7 +386,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
         if (prevSibling) {
             const between = fullText.text.substring(
                 prevSibling.endIndex,
-                node.startIndex
+                node.startIndex,
             );
             if (!IfFormatter.anyEolRegex.test(between)) {
                 isInline = true;
@@ -318,7 +399,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             const commentStart = node.startIndex;
             const lineStart = FormatterHelper.findLineStart(
                 fullText.text,
-                commentStart
+                commentStart,
             );
             const indentMatch = fullText.text
                 .substring(lineStart, commentStart)
@@ -340,16 +421,13 @@ export class IfFormatter extends AFormatter implements IFormatter {
 
     private isAfterStandaloneComment(
         node: SyntaxNode,
-        fullText: FullText
+        fullText: FullText,
     ): boolean {
         const prevSibling = node.previousSibling;
-        if (
-            prevSibling &&
-            prevSibling.type === SyntaxNodeType.Comment
-        ) {
+        if (prevSibling && prevSibling.type === SyntaxNodeType.Comment) {
             const between = fullText.text.substring(
                 prevSibling.endIndex,
-                node.startIndex
+                node.startIndex,
             );
             return IfFormatter.anyEolRegex.test(between);
         }
