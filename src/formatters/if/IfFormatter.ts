@@ -152,25 +152,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                       FormatterHelper.getCurrentText(node, fullText).trim();
                 break;
             case afterThenStatements.hasFancy(node.type, ""):
-                newString = this.settings.newLineBeforeStatement()
-                    ? fullText.eolDelimiter +
-                      " ".repeat(this.startColumn) +
-                      " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.getCurrentTextMultilineAdjust(
-                          node,
-                          fullText,
-                          this.startColumn +
-                              this.settings.tabSize() -
-                              node.startPosition.column,
-                      ).trim()
-                    : " " +
-                      FormatterHelper.getCurrentTextMultilineAdjust(
-                          node,
-                          fullText,
-                          this.startColumn +
-                              this.settings.tabSize() -
-                              node.startPosition.column,
-                      ).trim();
+                newString = this.formatAfterThenStatement(node, fullText);
                 break;
             case SyntaxNodeType.ElseIfStatement:
                 newString = node.children
@@ -246,25 +228,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 newString = newString.trimEnd();
                 break;
             case afterThenStatements.hasFancy(node.type, ""):
-                newString = this.settings.newLineBeforeStatement()
-                    ? fullText.eolDelimiter +
-                      " ".repeat(this.startColumn) +
-                      " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.getCurrentTextMultilineAdjust(
-                          node,
-                          fullText,
-                          this.startColumn +
-                              this.settings.tabSize() -
-                              node.startPosition.column,
-                      ).trim()
-                    : " " +
-                      FormatterHelper.getCurrentTextMultilineAdjust(
-                          node,
-                          fullText,
-                          this.startColumn +
-                              this.settings.tabSize() -
-                              node.startPosition.column,
-                      ).trim();
+                newString = this.formatAfterThenStatement(node, fullText);
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -322,25 +286,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 newString = newString.trimEnd();
                 break;
             case afterThenStatements.hasFancy(node.type, ""):
-                newString = this.settings.newLineBeforeStatement()
-                    ? fullText.eolDelimiter +
-                      " ".repeat(this.startColumn) +
-                      " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.getCurrentTextMultilineAdjust(
-                          node,
-                          fullText,
-                          this.startColumn +
-                              this.settings.tabSize() -
-                              node.startPosition.column,
-                      ).trim()
-                    : " " +
-                      FormatterHelper.getCurrentTextMultilineAdjust(
-                          node,
-                          fullText,
-                          this.startColumn +
-                              this.settings.tabSize() -
-                              node.startPosition.column,
-                      ).trim();
+                newString = this.formatAfterThenStatement(node, fullText);
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -426,6 +372,42 @@ export class IfFormatter extends AFormatter implements IFormatter {
             return IfFormatter.anyEolRegex.test(between);
         }
         return false;
+    }
+
+    private formatAfterThenStatement(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>,
+    ): string {
+        const newLineBeforeStatement = this.settings.newLineBeforeStatement();
+        const assignFormattingEnabled =
+            this.configurationManager.get("assignFormatting") === true;
+        const preserveAssignContinuationIndent =
+            !newLineBeforeStatement &&
+            node.type === SyntaxNodeType.AssignStatement &&
+            this.configurationManager.get("assignFormattingAssignLocation") ===
+                "Same" &&
+            !assignFormattingEnabled;
+
+        const statementIndent = this.startColumn + this.settings.tabSize();
+        const inlineStatementPrefix =
+            !newLineBeforeStatement &&
+            this.settings.newLineBeforeThen()
+                ? 1
+                : 0;
+        const targetStatementColumn = statementIndent + inlineStatementPrefix;
+        const moveDelta = preserveAssignContinuationIndent
+            ? 0
+            : targetStatementColumn - node.startPosition.column;
+
+        const adjustedText = FormatterHelper.getCurrentTextMultilineAdjust(
+            node,
+            fullText,
+            moveDelta,
+        ).trim();
+
+        return newLineBeforeStatement
+            ? fullText.eolDelimiter + " ".repeat(statementIndent) + adjustedText
+            : " " + adjustedText;
     }
 
     private getStartColumn(node: SyntaxNode): number {
