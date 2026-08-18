@@ -162,12 +162,34 @@
           "category": "Find",
           "description": "Enable FIND formatting"
         },
+        "AblFormatter.findFormattingWhereLocation": {
+          "order": 301,
+          "type": "string",
+          "default": "Same",
+          "enum": [
+            "New",
+            "Same"
+          ],
+          "category": "Find",
+          "description": "Should WHERE keyword be on a new line or the same line as the table name?"
+        },
         "AblFormatter.forFormatting": {
           "order": 400,
           "type": "boolean",
           "default": "true",
           "category": "For",
           "description": "Enable FOR formatting"
+        },
+        "AblFormatter.forFormattingWhereLocation": {
+          "order": 401,
+          "type": "string",
+          "default": "Same",
+          "enum": [
+            "New",
+            "Same"
+          ],
+          "category": "For",
+          "description": "Should WHERE keyword be on a new line or the same line as the table name?"
         },
         "AblFormatter.caseFormatting": {
           "order": 500,

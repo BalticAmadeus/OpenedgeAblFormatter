@@ -5,4 +5,9 @@ export class FindSettings extends ASettings {
     public findFormatting() {
         return this.configurationManager.get("findFormatting") ? true : false;
     }
+
+    public whereLocation(): "New" | "Same" {
+        const value = this.configurationManager.get("findFormattingWhereLocation");
+        return value === "New" ? "New" : "Same";
+    }
 }
