@@ -386,10 +386,21 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 ? this.getCurrentContinuationIndent(node, fullText)
                 : 0;
 
+        const assignStartsOnNewLine =
+            node.type === SyntaxNodeType.AssignStatement &&
+            this.configurationManager.get("assignFormattingAssignLocation") ===
+                "New";
+
         const moveDelta =
-            !newLineBeforeStatement && node.type === SyntaxNodeType.AssignStatement
-                                ? this.getAssignContinuationTargetColumn(node, fullText) -
-                  currentContinuationIndent
+            node.type === SyntaxNodeType.AssignStatement
+                ? (assignStartsOnNewLine
+                      ? statementIndent
+                      : !newLineBeforeStatement
+                        ? this.getAssignContinuationTargetColumn(
+                              node,
+                              fullText,
+                          )
+                        : node.startPosition.column) - currentContinuationIndent
                 : statementIndent - node.startPosition.column;
 
         const adjustedText = FormatterHelper.getCurrentTextMultilineAdjust(
@@ -431,8 +442,6 @@ export class IfFormatter extends AFormatter implements IFormatter {
         node: SyntaxNode,
         fullText: Readonly<FullText>,
     ): number {
-        // When THEN is placed on its own line, ASSIGN always starts a fresh
-        // line at this.startColumn, regardless of the original source layout.
         if (this.settings.newLineBeforeThen()) {
             return (
                 this.startColumn +
