@@ -5,17 +5,9 @@
 "AblFormatter.assignFormattingAssignLocation": "Same",
 "AblFormatter.assignFormattingAlignRightExpression": "No",
 "AblFormatter.assignFormattingEndDotLocation": "New aligned",
-"AblFormatter.ifFormattingThenLocation": "New",
+"AblFormatter.ifFormattingThenLocation": "Same",
 "AblFormatter.ifFormattingStatementLocation": "Same"}*/
 
-if marilla = "strict"
-then assign anne = "mischievous"
-            matthew = "kind"
-            .
-else if marilla = "softened"
-then assign anne = "beloved"
-            matthew = "proud"
-            .
-else assign anne = ?
-            matthew = ?
-            .
+if cond = true then assign var1 = "a" var2 = "b".
+else if cond = false then assign var3 = "c" var4 = "d".
+else assign var5 = "e" var6 = "f".

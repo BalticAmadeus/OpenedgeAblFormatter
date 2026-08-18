@@ -379,25 +379,18 @@ export class IfFormatter extends AFormatter implements IFormatter {
         fullText: Readonly<FullText>,
     ): string {
         const newLineBeforeStatement = this.settings.newLineBeforeStatement();
-        const assignFormattingEnabled =
-            this.configurationManager.get("assignFormatting") === true;
-        const preserveAssignContinuationIndent =
-            !newLineBeforeStatement &&
-            node.type === SyntaxNodeType.AssignStatement &&
-            this.configurationManager.get("assignFormattingAssignLocation") ===
-                "Same" &&
-            !assignFormattingEnabled;
-
         const statementIndent = this.startColumn + this.settings.tabSize();
-        const inlineStatementPrefix =
-            !newLineBeforeStatement &&
-            this.settings.newLineBeforeThen()
-                ? 1
+
+        const currentContinuationIndent =
+            node.type === SyntaxNodeType.AssignStatement
+                ? this.getCurrentContinuationIndent(node, fullText)
                 : 0;
-        const targetStatementColumn = statementIndent + inlineStatementPrefix;
-        const moveDelta = preserveAssignContinuationIndent
-            ? 0
-            : targetStatementColumn - node.startPosition.column;
+
+        const moveDelta =
+            !newLineBeforeStatement && node.type === SyntaxNodeType.AssignStatement
+                                ? this.getAssignContinuationTargetColumn(node, fullText) -
+                  currentContinuationIndent
+                : statementIndent - node.startPosition.column;
 
         const adjustedText = FormatterHelper.getCurrentTextMultilineAdjust(
             node,
@@ -408,6 +401,92 @@ export class IfFormatter extends AFormatter implements IFormatter {
         return newLineBeforeStatement
             ? fullText.eolDelimiter + " ".repeat(statementIndent) + adjustedText
             : " " + adjustedText;
+    }
+
+    private getCurrentContinuationIndent(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>,
+    ): number {
+        const text = FormatterHelper.getCurrentText(node, fullText);
+        const eolIndex = text.search(IfFormatter.anyEolRegex);
+
+        if (eolIndex === -1) {
+            return 0;
+        }
+
+        const continuationText = text.slice(eolIndex);
+        const firstContinuationLine = continuationText.split(
+            IfFormatter.anyEolRegex,
+        )[1];
+
+        if (firstContinuationLine === undefined) {
+            return 0;
+        }
+
+        const match = firstContinuationLine.match(/^\s*/);
+        return match ? match[0].length : 0;
+    }
+
+    private getAssignContinuationTargetColumn(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>,
+    ): number {
+        // When THEN is placed on its own line, ASSIGN always starts a fresh
+        // line at this.startColumn, regardless of the original source layout.
+        if (this.settings.newLineBeforeThen()) {
+            return (
+                this.startColumn +
+                SyntaxNodeType.ThenKeyword.length +
+                1 +
+                SyntaxNodeType.AssignKeyword.length +
+                1
+            );
+        }
+
+        const branchStartIndex = this.getBranchStartIndexForAssign(node);
+
+        const fallbackTarget =
+            node.startPosition.column + SyntaxNodeType.AssignKeyword.length + 1;
+
+        if (branchStartIndex === null) {
+            return fallbackTarget;
+        }
+
+        const prefix = fullText.text.substring(branchStartIndex, node.startIndex);
+        const normalizedPrefix = prefix
+            .replace(IfFormatter.anyEolRegex, " ")
+            .replace(/\s+/g, " ")
+            .trimStart()
+            .trimEnd();
+
+        return normalizedPrefix.length + 2 + SyntaxNodeType.AssignKeyword.length;
+    }
+
+    private getBranchStartIndexForAssign(node: SyntaxNode): number | null {
+        const parent = node.parent;
+
+        if (parent === null) {
+            return null;
+        }
+
+        if (parent.type === SyntaxNodeType.IfStatement) {
+            return parent.startIndex;
+        }
+
+        if (parent.type === SyntaxNodeType.ElseStatement) {
+            let sibling = node.previousSibling;
+
+            while (sibling) {
+                if (sibling.type === SyntaxNodeType.ElseKeyword) {
+                    return sibling.startIndex;
+                }
+                sibling = sibling.previousSibling;
+            }
+
+            return parent.startIndex;
+        }
+
+        return this.getBranchStartIndexForAssign(parent);
     }
 
     private getStartColumn(node: SyntaxNode): number {

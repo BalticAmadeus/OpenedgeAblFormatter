@@ -3,7 +3,8 @@
 "AblFormatter.blockFormatting": true,
 "AblFormatter.assignFormatting": true,
 "AblFormatter.assignFormattingAssignLocation": "Same",
-"AblFormatter.assignFormattingEndDotLocation": "Same",
+"AblFormatter.assignFormattingAlignRightExpression": "No",
+"AblFormatter.assignFormattingEndDotLocation": "New aligned",
 "AblFormatter.ifFormattingThenLocation": "New",
 "AblFormatter.ifFormattingStatementLocation": "Same"}*/
 
