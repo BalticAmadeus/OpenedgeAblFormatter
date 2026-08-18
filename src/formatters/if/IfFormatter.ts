@@ -392,15 +392,13 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 "New";
 
         const moveDelta =
-            node.type === SyntaxNodeType.AssignStatement
+            !newLineBeforeStatement && node.type === SyntaxNodeType.AssignStatement
                 ? (assignStartsOnNewLine
                       ? statementIndent
-                      : !newLineBeforeStatement
-                        ? this.getAssignContinuationTargetColumn(
-                              node,
-                              fullText,
-                          )
-                        : node.startPosition.column) - currentContinuationIndent
+                      : this.getAssignContinuationTargetColumn(
+                            node,
+                            fullText,
+                        )) - currentContinuationIndent
                 : statementIndent - node.startPosition.column;
 
         const adjustedText = FormatterHelper.getCurrentTextMultilineAdjust(
