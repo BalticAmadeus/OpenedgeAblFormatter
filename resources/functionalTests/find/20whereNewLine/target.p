@@ -1,5 +1,6 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.findFormatting": true, "AblFormatter.findFormattingWhereLocation": "New"}*/
+/*  { "AblFormatter.findFormatting": true, 
+      "AblFormatter.findFormattingWhereLocation": "New"}*/
 
-FIND FIRST DBTable
-     WHERE DBTable.Field = "value" NO-LOCK.
+FIND FIRST Metaphor
+           WHERE Metaphor.Imagery = "vivid" NO-LOCK.
