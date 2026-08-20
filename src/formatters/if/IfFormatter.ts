@@ -466,7 +466,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
             .trimStart()
             .trimEnd();
 
-        return normalizedPrefix.length + 2 + SyntaxNodeType.AssignKeyword.length;
+        // The first space precedes ASSIGN; the second separates ASSIGN from its first variable.
+        const assignColumn = normalizedPrefix.length + 1;
+        return assignColumn + SyntaxNodeType.AssignKeyword.length + 1;
     }
 
     private getBranchStartIndexForAssign(node: SyntaxNode): number | null {
