@@ -70,12 +70,15 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
                     parentPrevSiblingType === SyntaxNodeType.LeftParenthesis) ||
                 parentType === SyntaxNodeType.QualifiedName;
 
-            if (!isCallArgumentContext) {
-                const isFirstStatement = this.isFirstInStatementChain(
-                    node,
-                    this.statementTypes
-                );
-                this.addSpaceBeforeIdentifier = isFirstStatement === false;
+            // Regular array access like `a[3]`, `message a[3]`, or `matrix[row,col]`
+            // must never insert a leading space before the identifier/array expression.
+            // The only case that should suppress the bracket spacing is when the array
+            // access is part of a qualified/call argument expression, e.g.
+            // `system.Main:List[{&system}]` inside a method call.
+            this.addSpaceBeforeIdentifier = false;
+
+            if (isCallArgumentContext) {
+                this.addSpaceBeforeIdentifier = false;
             }
         }
 
