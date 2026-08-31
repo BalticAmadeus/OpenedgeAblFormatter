@@ -41,10 +41,22 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
+        this.formattingArrayLiteral = false;
+        this.addSpaceBeforeLeftBracket = false;
+        this.addSpaceBeforeIdentifier = false;
+
         if (node.type === SyntaxNodeType.ArrayLiteral) {
             this.formattingArrayLiteral = true;
 
+            const isIndexedExpression =
+                node.parent?.type === SyntaxNodeType.ArrayAccess;
+            const isArgumentContext =
+                node.parent?.type === SyntaxNodeType.Argument ||
+                node.parent?.type === SyntaxNodeType.Arguments;
+
             if (
+                !isIndexedExpression &&
+                !isArgumentContext &&
                 node.previousSibling?.type !== SyntaxNodeType.Identifier &&
                 node.previousNamedSibling?.type !== SyntaxNodeType.TypeTuning
             ) {
@@ -53,21 +65,23 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
 
             if (node.previousSibling?.type === SyntaxNodeType.Identifier) {
                 this.addSpaceBeforeIdentifier = true;
-            } else {
-                this.addSpaceBeforeIdentifier = false;
             }
         }
         const oldText = FormatterHelper.getCurrentText(node, fullText);
 
         if (node.type === SyntaxNodeType.ArrayAccess) {
-            let isFirstStatement = this.isFirstInStatementChain(
+            const isInArgumentContext =
+                node.parent?.type === SyntaxNodeType.Argument ||
+                node.parent?.type === SyntaxNodeType.Arguments;
+            const isFirstStatement = this.isFirstInStatementChain(
                 node,
                 this.statementTypes
             );
-            if (isFirstStatement === false) {
-                this.addSpaceBeforeIdentifier = true;
-            } else {
+
+            if (isInArgumentContext) {
                 this.addSpaceBeforeIdentifier = false;
+            } else if (isFirstStatement === false) {
+                this.addSpaceBeforeIdentifier = true;
             }
         }
 
