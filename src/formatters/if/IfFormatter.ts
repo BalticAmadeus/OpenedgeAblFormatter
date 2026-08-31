@@ -46,6 +46,8 @@ export class IfFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>,
     ): CodeEdit | CodeEdit[] | undefined {
+        this.startColumn = 0;
+        this.ifBodyValue = "";
         this.collectIfStructure(node, fullText);
 
         return this.getCodeEdit(

@@ -48,11 +48,18 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         if (node.type === SyntaxNodeType.ArrayLiteral) {
             this.formattingArrayLiteral = true;
 
-            const previousIsIdentifier =
-                node.previousSibling?.type === SyntaxNodeType.Identifier ||
-                node.previousNamedSibling?.type === SyntaxNodeType.TypeTuning;
+            const isIndexedExpression =
+                node.parent?.type === SyntaxNodeType.ArrayAccess;
+            const isArgumentContext =
+                node.parent?.type === SyntaxNodeType.Argument ||
+                node.parent?.type === SyntaxNodeType.Arguments;
 
-            if (!previousIsIdentifier) {
+            if (
+                !isIndexedExpression &&
+                !isArgumentContext &&
+                node.previousSibling?.type !== SyntaxNodeType.Identifier &&
+                node.previousNamedSibling?.type !== SyntaxNodeType.TypeTuning
+            ) {
                 this.addSpaceBeforeLeftBracket = true;
             }
 
@@ -63,8 +70,19 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
 
         if (node.type === SyntaxNodeType.ArrayAccess) {
-            this.addSpaceBeforeIdentifier = false;
-            this.addSpaceBeforeLeftBracket = false;
+            const isInArgumentContext =
+                node.parent?.type === SyntaxNodeType.Argument ||
+                node.parent?.type === SyntaxNodeType.Arguments;
+            const isFirstStatement = this.isFirstInStatementChain(
+                node,
+                this.statementTypes
+            );
+
+            if (isInArgumentContext) {
+                this.addSpaceBeforeIdentifier = false;
+            } else if (isFirstStatement === false) {
+                this.addSpaceBeforeIdentifier = true;
+            }
         }
 
         const text = this.addSpaceBeforeIdentifier
