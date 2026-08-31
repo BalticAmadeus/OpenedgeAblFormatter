@@ -9,6 +9,8 @@ import {
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
+    validateAdeTestCases,
+    generateAdeSetupErrorMessage,
 } from "../../utils/suitesUtils";
 import { TextTree } from "../../mtest/OriginalTestCase";
 import { MetamorphicEngine } from "../../mtest/MetamorphicEngine";
@@ -59,20 +61,25 @@ suite("AST Stability Test Suite", () => {
             );
         }
 
-        console.log(
-            "AST StabilityTests: ",
-            getStabilityTestCases().length,
-            "test cases"
-        );
+        const testCases = getStabilityTestCases();
+        console.log("AST StabilityTests: ", testCases.length, "test cases");
+
+        validateAdeTestCases("AST", testCases);
 
         // Log known failures count once at suite setup
         logKnownFailures("AST", "_ast_failures.txt");
     });
 
-    for (const cases of getStabilityTestCases()) {
-        test(`AST test: ${cases}`, () => {
-            astTest(cases, parserHelper);
-        }).timeout(20000);
+    if (getStabilityTestCases().length === 0) {
+        test("AST Test Suite - Setup Required", () => {
+            throw new Error(generateAdeSetupErrorMessage("AST"));
+        });
+    } else {
+        for (const cases of getStabilityTestCases()) {
+            test(`AST test: ${cases}`, () => {
+                astTest(cases, parserHelper);
+            }).timeout(20000);
+        }
     }
 
     suiteTeardown(() => {
