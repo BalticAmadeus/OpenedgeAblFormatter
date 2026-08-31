@@ -41,6 +41,10 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
+        this.formattingArrayLiteral = false;
+        this.addSpaceBeforeLeftBracket = false;
+        this.addSpaceBeforeIdentifier = false;
+
         if (node.type === SyntaxNodeType.ArrayLiteral) {
             this.formattingArrayLiteral = true;
 
@@ -53,21 +57,24 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
 
             if (node.previousSibling?.type === SyntaxNodeType.Identifier) {
                 this.addSpaceBeforeIdentifier = true;
-            } else {
-                this.addSpaceBeforeIdentifier = false;
             }
         }
         const oldText = FormatterHelper.getCurrentText(node, fullText);
 
         if (node.type === SyntaxNodeType.ArrayAccess) {
-            let isFirstStatement = this.isFirstInStatementChain(
-                node,
-                this.statementTypes
-            );
-            if (isFirstStatement === false) {
-                this.addSpaceBeforeIdentifier = true;
-            } else {
-                this.addSpaceBeforeIdentifier = false;
+            const parentType = node.parent?.type;
+            const isQualifiedOrArgumentContext =
+                parentType === SyntaxNodeType.QualifiedName ||
+                parentType === SyntaxNodeType.Argument ||
+                parentType === SyntaxNodeType.Arguments ||
+                parentType === SyntaxNodeType.FunctionCallArgument;
+
+            if (!isQualifiedOrArgumentContext) {
+                const isFirstStatement = this.isFirstInStatementChain(
+                    node,
+                    this.statementTypes
+                );
+                this.addSpaceBeforeIdentifier = isFirstStatement === false;
             }
         }
 

@@ -152,27 +152,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                       FormatterHelper.getCurrentText(node, fullText).trim();
                 break;
             case afterThenStatements.hasFancy(node.type, ""):
-                newString = this.settings.newLineBeforeStatement()
-                    ? fullText.eolDelimiter +
-                      " ".repeat(this.startColumn) +
-                      " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.alignIndentation(
-                          FormatterHelper.getCurrentText(
-                              node,
-                              fullText,
-                          ).trim(),
-                          this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter,
-                      )
-                    : " " +
-                      FormatterHelper.alignIndentation(
-                          FormatterHelper.getCurrentText(
-                              node,
-                              fullText,
-                          ).trim(),
-                          this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter,
-                      );
+                newString = this.formatAfterThenStatement(node, fullText);
                 break;
             case SyntaxNodeType.ElseIfStatement:
                 newString = node.children
@@ -248,27 +228,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 newString = newString.trimEnd();
                 break;
             case afterThenStatements.hasFancy(node.type, ""):
-                newString = this.settings.newLineBeforeStatement()
-                    ? fullText.eolDelimiter +
-                      " ".repeat(this.startColumn) +
-                      " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.alignIndentation(
-                          FormatterHelper.getCurrentText(
-                              node,
-                              fullText,
-                          ).trim(),
-                          this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter,
-                      )
-                    : " " +
-                      FormatterHelper.alignIndentation(
-                          FormatterHelper.getCurrentText(
-                              node,
-                              fullText,
-                          ).trim(),
-                          this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter,
-                      );
+                newString = this.formatAfterThenStatement(node, fullText);
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -281,8 +241,6 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 if (text.length === 0) {
                     newString = "";
                 } else if (this.isAfterStandaloneComment(node, fullText)) {
-                    // Preserve the whitespace between comment and this node,
-                    // plus the original node text, to maintain positions for nested formatters
                     const prevSibling = node.previousSibling;
                     const startPos = prevSibling
                         ? prevSibling.endIndex
@@ -326,27 +284,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 newString = newString.trimEnd();
                 break;
             case afterThenStatements.hasFancy(node.type, ""):
-                newString = this.settings.newLineBeforeStatement()
-                    ? fullText.eolDelimiter +
-                      " ".repeat(this.startColumn) +
-                      " ".repeat(this.settings.tabSize()) +
-                      FormatterHelper.alignIndentation(
-                          FormatterHelper.getCurrentText(
-                              node,
-                              fullText,
-                          ).trim(),
-                          this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter,
-                      )
-                    : " " +
-                      FormatterHelper.alignIndentation(
-                          FormatterHelper.getCurrentText(
-                              node,
-                              fullText,
-                          ).trim(),
-                          this.startColumn + this.settings.tabSize(),
-                          fullText.eolDelimiter,
-                      );
+                newString = this.formatAfterThenStatement(node, fullText);
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -359,8 +297,6 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 if (text.length === 0) {
                     newString = "";
                 } else if (this.isAfterStandaloneComment(node, fullText)) {
-                    // Preserve the whitespace between comment and this node,
-                    // plus the original node text, to maintain positions for nested formatters
                     const prevSibling = node.previousSibling;
                     const startPos = prevSibling
                         ? prevSibling.endIndex
@@ -432,6 +368,132 @@ export class IfFormatter extends AFormatter implements IFormatter {
             return IfFormatter.anyEolRegex.test(between);
         }
         return false;
+    }
+
+    private formatAfterThenStatement(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>,
+    ): string {
+        const newLineBeforeStatement = this.settings.newLineBeforeStatement();
+        const statementIndent = this.startColumn + this.settings.tabSize();
+
+        const currentContinuationIndent =
+            node.type === SyntaxNodeType.AssignStatement
+                ? this.getCurrentContinuationIndent(node, fullText)
+                : 0;
+
+        const assignStartsOnNewLine =
+            node.type === SyntaxNodeType.AssignStatement &&
+            this.configurationManager.get("assignFormattingAssignLocation") ===
+                "New";
+
+        const rawMoveDelta =
+            !newLineBeforeStatement && node.type === SyntaxNodeType.AssignStatement
+                ? (assignStartsOnNewLine
+                      ? statementIndent
+                      : this.getAssignContinuationTargetColumn(
+                            node,
+                            fullText,
+                        )) - currentContinuationIndent
+                : statementIndent - node.startPosition.column;
+
+        const moveDelta = Math.max(0, rawMoveDelta);
+
+        const adjustedText = FormatterHelper.getCurrentTextMultilineAdjust(
+            node,
+            fullText,
+            moveDelta,
+        ).trim();
+
+        return newLineBeforeStatement
+            ? fullText.eolDelimiter + " ".repeat(statementIndent) + adjustedText
+            : " " + adjustedText;
+    }
+
+    private getCurrentContinuationIndent(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>,
+    ): number {
+        const text = FormatterHelper.getCurrentText(node, fullText);
+        const eolIndex = text.search(IfFormatter.anyEolRegex);
+
+        if (eolIndex === -1) {
+            return 0;
+        }
+
+        const continuationText = text.slice(eolIndex);
+        const firstContinuationLine = continuationText.split(
+            IfFormatter.anyEolRegex,
+        )[1];
+
+        if (firstContinuationLine === undefined) {
+            return 0;
+        }
+
+        const match = firstContinuationLine.match(/^\s*/);
+        return match ? match[0].length : 0;
+    }
+
+    private getAssignContinuationTargetColumn(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>,
+    ): number {
+        if (this.settings.newLineBeforeThen()) {
+            return (
+                this.startColumn +
+                SyntaxNodeType.ThenKeyword.length +
+                1 +
+                SyntaxNodeType.AssignKeyword.length +
+                1
+            );
+        }
+
+        const branchStartIndex = this.getBranchStartIndexForAssign(node);
+
+        const fallbackTarget =
+            node.startPosition.column + SyntaxNodeType.AssignKeyword.length + 1;
+
+        if (branchStartIndex === null) {
+            return fallbackTarget;
+        }
+
+        const prefix = fullText.text.substring(branchStartIndex, node.startIndex);
+        const normalizedPrefix = prefix
+            .replace(IfFormatter.anyEolRegex, " ")
+            .replace(/\s+/g, " ")
+            .trimStart()
+            .trimEnd();
+
+        // The first space precedes ASSIGN; the second separates ASSIGN from its first variable.
+        const assignColumn = normalizedPrefix.length + 1;
+        return assignColumn + SyntaxNodeType.AssignKeyword.length + 1;
+    }
+
+    private getBranchStartIndexForAssign(node: SyntaxNode): number | null {
+        const parent = node.parent;
+
+        if (parent === null) {
+            return null;
+        }
+
+        if (parent.type === SyntaxNodeType.IfStatement) {
+            return parent.startIndex;
+        }
+
+        if (parent.type === SyntaxNodeType.ElseStatement) {
+            let sibling = node.previousSibling;
+
+            while (sibling) {
+                if (sibling.type === SyntaxNodeType.ElseKeyword) {
+                    return sibling.startIndex;
+                }
+                sibling = sibling.previousSibling;
+            }
+
+            return parent.startIndex;
+        }
+
+        return this.getBranchStartIndexForAssign(parent);
     }
 
     private getStartColumn(node: SyntaxNode): number {
