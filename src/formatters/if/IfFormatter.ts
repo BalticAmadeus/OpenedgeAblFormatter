@@ -397,7 +397,9 @@ export class IfFormatter extends AFormatter implements IFormatter {
                         )) - currentContinuationIndent
                 : statementIndent - node.startPosition.column;
 
-        const moveDelta = Math.max(0, rawMoveDelta);
+        // Prevent continuation indentation from drifting further right on
+        // repeated format passes when the computed delta is negative.
+        const moveDelta = rawMoveDelta > 0 ? rawMoveDelta : 0;
 
         const adjustedText = FormatterHelper.getCurrentTextMultilineAdjust(
             node,

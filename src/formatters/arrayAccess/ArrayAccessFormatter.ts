@@ -48,10 +48,11 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         if (node.type === SyntaxNodeType.ArrayLiteral) {
             this.formattingArrayLiteral = true;
 
-            if (
-                node.previousSibling?.type !== SyntaxNodeType.Identifier &&
-                node.previousNamedSibling?.type !== SyntaxNodeType.TypeTuning
-            ) {
+            const previousIsIdentifier =
+                node.previousSibling?.type === SyntaxNodeType.Identifier ||
+                node.previousNamedSibling?.type === SyntaxNodeType.TypeTuning;
+
+            if (!previousIsIdentifier) {
                 this.addSpaceBeforeLeftBracket = true;
             }
 
@@ -63,6 +64,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
 
         if (node.type === SyntaxNodeType.ArrayAccess) {
             this.addSpaceBeforeIdentifier = false;
+            this.addSpaceBeforeLeftBracket = false;
         }
 
         const text = this.addSpaceBeforeIdentifier
