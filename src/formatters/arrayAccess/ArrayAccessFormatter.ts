@@ -62,24 +62,7 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         const oldText = FormatterHelper.getCurrentText(node, fullText);
 
         if (node.type === SyntaxNodeType.ArrayAccess) {
-            const parentType = node.parent?.type;
-            const parentPrevSiblingType = node.parent?.previousSibling?.type;
-            const isCallArgumentContext =
-                parentType === SyntaxNodeType.FunctionCallArgument ||
-                (parentType === SyntaxNodeType.Argument &&
-                    parentPrevSiblingType === SyntaxNodeType.LeftParenthesis) ||
-                parentType === SyntaxNodeType.QualifiedName;
-
-            // Regular array access like `a[3]`, `message a[3]`, or `matrix[row,col]`
-            // must never insert a leading space before the identifier/array expression.
-            // The only case that should suppress the bracket spacing is when the array
-            // access is part of a qualified/call argument expression, e.g.
-            // `system.Main:List[{&system}]` inside a method call.
             this.addSpaceBeforeIdentifier = false;
-
-            if (isCallArgumentContext) {
-                this.addSpaceBeforeIdentifier = false;
-            }
         }
 
         const text = this.addSpaceBeforeIdentifier
