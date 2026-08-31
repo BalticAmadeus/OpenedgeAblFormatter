@@ -37,12 +37,12 @@ export function getStabilityTestCases(): string[] {
     return getFilesWithExtensions(stabilityTestDir, extensionsToFind);
 }
 
-export function runGenericTest<TResult>(
+export async function runGenericTest<TResult>(
     name: string,
     parserHelper: AblParserHelper,
     config: ISuiteConfig<TResult>,
     metamorphicEngine?: MetamorphicEngine<any>
-): void {
+): Promise<boolean> {
     ConfigurationManager.getInstance();
 
     const beforeText = getSettingsOverride(true) + getInput(name);
@@ -51,11 +51,11 @@ export function runGenericTest<TResult>(
     const afterResult = config.processAfterText(afterText, parserHelper);
 
     if (beforeResult === null || afterResult === null) {
-        return;
+        return false;
     }
-    
+
     if (beforeResult === undefined || afterResult === undefined) {
-        return;
+        return false;
     }
 
     const nameWithRelativePath = name.startsWith(stabilityTestDir)
@@ -75,10 +75,11 @@ export function runGenericTest<TResult>(
     if (hasMismatch) {
         if (knownFailures.includes(fileName)) {
             console.log("Known issue");
-            return;
+            return false;
         }
 
         config.onMismatch?.(beforeResult, afterResult, fileName);
+        await config.onMismatchAsync?.(beforeResult, afterResult, fileName);
 
         addFailedTestCase(
             currentTestRunDir,
@@ -96,7 +97,7 @@ export function runGenericTest<TResult>(
         );
 
         fs.mkdirSync(currentTestRunDir, { recursive: true });
-
+        
         fs.writeFileSync(beforeFilePath, beforeText);
         fs.writeFileSync(afterFilePath, afterText);
 
@@ -127,6 +128,7 @@ export function runGenericTest<TResult>(
     }
 
     config.cleanup?.(beforeResult, afterResult);
+    return !hasMismatch;
 }
 
 export const testRunTimestamp = new Date()
@@ -170,6 +172,21 @@ export function getSettingsOverride(forPreview?: boolean): string {
         ) +
         "*/\n"
     );
+}
+
+function parseBooleanLike(value?: string): boolean {
+    if (!value) {
+        return false;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    return normalized === "1" || normalized === "true" || normalized === "yes";
+}
+
+export function isDeltaReductionEnabled(): boolean {
+    const hasCliFlag = process.argv.includes("--delta-reduct");
+    const envEnabled = parseBooleanLike(process.env.DELTA_REDUCT);
+    return hasCliFlag || envEnabled;
 }
 
 // Shared setup function

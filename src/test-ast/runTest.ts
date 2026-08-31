@@ -10,6 +10,7 @@ async function main() {
 
         // Check for `--metamorphic` flag
         const isMetamorphic = process.argv.includes("--metamorphic");
+        const isDeltaReduct = process.argv.includes("--delta-reduct");
 
         // Optional: Pass this flag to your extension via env var or launchArgs
         const launchArgs = ["--disable-extensions"];
@@ -18,6 +19,11 @@ async function main() {
             console.log("DEBUG");
             launchArgs.push("--metamorphic");
             process.env.TEST_MODE = "metamorphic";
+        }
+
+        if (isDeltaReduct) {
+            launchArgs.push("--delta-reduct");
+            process.env.DELTA_REDUCT = "true";
         }
 
         // The path to test runner

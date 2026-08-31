@@ -17,9 +17,14 @@ async function main() {
         const extensionDevelopmentPath = path.resolve(__dirname, "../../");
         const extensionTestsPath = path.resolve(__dirname, "./suite/index");
         const idempotencyRuns = getIdempotencyRuns();
+        const isDeltaReduct = process.argv.includes("--delta-reduct");
         const launchArgs = ["--disable-extensions"];
 
         launchArgs.push(`--idempotency-runs=${idempotencyRuns}`);
+        if (isDeltaReduct) {
+            launchArgs.push("--delta-reduct");
+            process.env.DELTA_REDUCT = "true";
+        }
         process.env.TEST_MODE = "idempotency";
         process.env.IDEMPOTENCY_RUNS = String(idempotencyRuns);
 
