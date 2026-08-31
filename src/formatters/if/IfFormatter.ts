@@ -241,8 +241,6 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 if (text.length === 0) {
                     newString = "";
                 } else if (this.isAfterStandaloneComment(node, fullText)) {
-                    // Preserve the whitespace between comment and this node,
-                    // plus the original node text, to maintain positions for nested formatters
                     const prevSibling = node.previousSibling;
                     const startPos = prevSibling
                         ? prevSibling.endIndex
@@ -299,8 +297,6 @@ export class IfFormatter extends AFormatter implements IFormatter {
                 if (text.length === 0) {
                     newString = "";
                 } else if (this.isAfterStandaloneComment(node, fullText)) {
-                    // Preserve the whitespace between comment and this node,
-                    // plus the original node text, to maintain positions for nested formatters
                     const prevSibling = node.previousSibling;
                     const startPos = prevSibling
                         ? prevSibling.endIndex
@@ -391,7 +387,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             this.configurationManager.get("assignFormattingAssignLocation") ===
                 "New";
 
-        const moveDelta =
+        const rawMoveDelta =
             !newLineBeforeStatement && node.type === SyntaxNodeType.AssignStatement
                 ? (assignStartsOnNewLine
                       ? statementIndent
@@ -400,6 +396,10 @@ export class IfFormatter extends AFormatter implements IFormatter {
                             fullText,
                         )) - currentContinuationIndent
                 : statementIndent - node.startPosition.column;
+
+        // Prevent continuation indentation from drifting further right on
+        // repeated format passes when the computed delta is negative.
+        const moveDelta = rawMoveDelta > 0 ? rawMoveDelta : 0;
 
         const adjustedText = FormatterHelper.getCurrentTextMultilineAdjust(
             node,

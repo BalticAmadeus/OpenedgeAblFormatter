@@ -41,34 +41,30 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
+        this.formattingArrayLiteral = false;
+        this.addSpaceBeforeLeftBracket = false;
+        this.addSpaceBeforeIdentifier = false;
+
         if (node.type === SyntaxNodeType.ArrayLiteral) {
             this.formattingArrayLiteral = true;
 
-            if (
-                node.previousSibling?.type !== SyntaxNodeType.Identifier &&
-                node.previousNamedSibling?.type !== SyntaxNodeType.TypeTuning
-            ) {
+            const previousIsIdentifier =
+                node.previousSibling?.type === SyntaxNodeType.Identifier ||
+                node.previousNamedSibling?.type === SyntaxNodeType.TypeTuning;
+
+            if (!previousIsIdentifier) {
                 this.addSpaceBeforeLeftBracket = true;
             }
 
             if (node.previousSibling?.type === SyntaxNodeType.Identifier) {
                 this.addSpaceBeforeIdentifier = true;
-            } else {
-                this.addSpaceBeforeIdentifier = false;
             }
         }
         const oldText = FormatterHelper.getCurrentText(node, fullText);
 
         if (node.type === SyntaxNodeType.ArrayAccess) {
-            let isFirstStatement = this.isFirstInStatementChain(
-                node,
-                this.statementTypes
-            );
-            if (isFirstStatement === false) {
-                this.addSpaceBeforeIdentifier = true;
-            } else {
-                this.addSpaceBeforeIdentifier = false;
-            }
+            this.addSpaceBeforeIdentifier = false;
+            this.addSpaceBeforeLeftBracket = false;
         }
 
         const text = this.addSpaceBeforeIdentifier
