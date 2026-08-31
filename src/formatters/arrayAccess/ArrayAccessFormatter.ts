@@ -63,13 +63,14 @@ export class ArrayAccessFormatter extends AFormatter implements IFormatter {
 
         if (node.type === SyntaxNodeType.ArrayAccess) {
             const parentType = node.parent?.type;
-            const isQualifiedOrArgumentContext =
-                parentType === SyntaxNodeType.QualifiedName ||
-                parentType === SyntaxNodeType.Argument ||
-                parentType === SyntaxNodeType.Arguments ||
-                parentType === SyntaxNodeType.FunctionCallArgument;
+            const parentPrevSiblingType = node.parent?.previousSibling?.type;
+            const isCallArgumentContext =
+                parentType === SyntaxNodeType.FunctionCallArgument ||
+                (parentType === SyntaxNodeType.Argument &&
+                    parentPrevSiblingType === SyntaxNodeType.LeftParenthesis) ||
+                parentType === SyntaxNodeType.QualifiedName;
 
-            if (!isQualifiedOrArgumentContext) {
+            if (!isCallArgumentContext) {
                 const isFirstStatement = this.isFirstInStatementChain(
                     node,
                     this.statementTypes
