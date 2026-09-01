@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.usingFormatting": true,
-      "abl.completion.upperCase": false}*/
+/*  { "AblFormatter.usingFormatting": true}*/
 
 using Alpha.*.
 using Alpha.Beta.*             from propath. 

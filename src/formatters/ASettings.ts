@@ -8,8 +8,4 @@ export abstract class ASettings {
     public tabSize() {
         return this.configurationManager.getTabSize();
     }
-
-    public casing() {
-        return this.configurationManager.getCasing();
-    }
 }

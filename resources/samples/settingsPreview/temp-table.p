@@ -1,0 +1,6 @@
+/* TEMP-TABLE definition*/
+DEFINE TEMP-TABLE ttInfo
+      FIELD id AS INTEGER SERIALIZE-NAME "id"
+      FIELD text AS CHARACTER SERIALIZE-NAME "Text"
+      FIELD price AS DECIMAL SERIALIZE-NAME "Price"
+      INDEX id.

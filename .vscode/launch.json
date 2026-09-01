@@ -118,6 +118,25 @@
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
+		{
+			"name": "Idempotency Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-idempotency/suite/index",
+				"--disable-extensions",
+				"--idempotency-runs=2"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-idempotency/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"TEST_MODE": "idempotency",
+				"IDEMPOTENCY_RUNS": "2"
+			}
+		},
 	],
 	"folders": [
 		{

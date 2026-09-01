@@ -1,8 +1,7 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.usingFormatting": true,
-      "abl.completion.upperCase": false}*/
+/*  { "AblFormatter.usingFormatting": true}*/
 
+USING C.
 using A.
 using B.
-using C.
 using D.

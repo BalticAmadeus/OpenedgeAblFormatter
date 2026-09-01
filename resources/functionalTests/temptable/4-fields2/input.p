@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.temptableFormatting": true,
-      "abl.completion.upperCase": true}*/
+/*  { "AblFormatter.temptableFormatting": true}*/
 
 DEFINE TEMP-TABLE saSys NO-UNDO RCODE-INFORMATION
       FIELD    dType    AS    CHARACTER    LABEL    "Domain Type"    FORMAT    "x(25)"

@@ -59,7 +59,11 @@ export class FindFormatter extends AFormatter implements IFormatter {
         let alignColumn = 0;
 
         node.children.forEach((child) => {
-            if (child.type === SyntaxNodeType.Identifier) {
+            // Record phrase can be an identifier (Customer) or a qualified_name (sourcedb._File)
+            if (
+                child.type === SyntaxNodeType.Identifier ||
+                child.type === SyntaxNodeType.QualifiedName
+            ) {
                 alignColumn = this.startColumn + resultString.length;
             }
             resultString = resultString.concat(
@@ -125,7 +129,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
                         " ",
                         FormatterHelper.getCurrentText(child, fullText).trim(),
                         fullText.eolDelimiter,
-                        " ".repeat(alignColumn)
+                        " ".repeat(Math.max(0, alignColumn))
                     );
                     break;
                 case SyntaxNodeType.Error:

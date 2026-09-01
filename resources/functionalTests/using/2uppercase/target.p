@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.usingFormatting": true,
-      "abl.completion.upperCase": true}*/
+/*  { "AblFormatter.usingFormatting": true}*/
 
 USING aa.
 USING ad.

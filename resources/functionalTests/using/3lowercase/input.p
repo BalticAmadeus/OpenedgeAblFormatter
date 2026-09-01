@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.usingFormatting": true,
-      "abl.completion.upperCase": false}*/
+/*  { "AblFormatter.usingFormatting": true}*/
 
 using as.
 //define variable a as integer no-undo.

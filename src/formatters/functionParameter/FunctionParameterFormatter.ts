@@ -148,7 +148,7 @@ export class FunctionParameterFormatter
                 newString =
                     FormatterHelper.getCurrentText(node, fullText).trim() +
                     fullText.eolDelimiter +
-                    " ".repeat(this.alignParameters);
+                    " ".repeat(Math.max(0, this.alignParameters));
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -211,9 +211,12 @@ export class FunctionParameterFormatter
                 if (this.typeTuningInCurrentParameter) {
                     newString = newString.concat(
                         " ".repeat(
-                            this.settings.alignTypes()
-                                ? this.alignParameterMode - text.length + 1
-                                : 1
+                            Math.max(
+                                0,
+                                this.settings.alignTypes()
+                                    ? this.alignParameterMode - text.length + 1
+                                    : 1
+                            )
                         )
                     );
                 }
@@ -240,7 +243,8 @@ export class FunctionParameterFormatter
 
                 if (needsModePadding) {
                     newString =
-                        " ".repeat(this.alignParameterMode + 1) + newString;
+                        " ".repeat(Math.max(0, this.alignParameterMode + 1)) +
+                        newString;
                 }
 
                 break;
@@ -256,7 +260,9 @@ export class FunctionParameterFormatter
                 newString =
                     " " +
                     text +
-                    " ".repeat(this.alignParameterType - text.length);
+                    " ".repeat(
+                        Math.max(0, this.alignParameterType - text.length)
+                    );
                 break;
             }
             case SyntaxNodeType.Error:

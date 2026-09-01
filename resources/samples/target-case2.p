@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.caseFormatting": true,
-    "abl.completion.upperCase": true}*/
+/*  { "AblFormatter.caseFormatting": true}*/
 DEFINE VARIABLE pay-stat AS INTEGER NO-UNDO INITIAL 1.
 
 CASE pay-stat:

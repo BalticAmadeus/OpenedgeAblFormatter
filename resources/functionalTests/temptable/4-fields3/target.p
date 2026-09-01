@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.temptableFormatting": true,
-      "abl.completion.upperCase": true}*/
+/*  { "AblFormatter.temptableFormatting": true}*/
 
 DEFINE TEMP-TABLE tAction NO-UNDO
     FIELD Name      AS CHAR
@@ -13,4 +12,6 @@ DEFINE TEMP-TABLE tAction NO-UNDO
     FIELD Link      AS CHAR
     FIELD Menu      AS LOG
     FIELD Tool      AS LOG
-    INDEX Sort AS PRIMARY sort1 sort2.
+    INDEX Sort AS PRIMARY
+          sort1
+          sort2.

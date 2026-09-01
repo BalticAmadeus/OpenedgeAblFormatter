@@ -1,8 +1,7 @@
 /* formatterSettingsOverride */
 /*  {"AblFormatter.assignFormatting": true,
 "AblFormatter.blockFormatting": true,
-"AblFormatter.ifFormatting": true,
-"abl.completion.upperCase": true}*/
+"AblFormatter.ifFormatting": true}*/
 
 CLASS r-CustObj FINAL:
 

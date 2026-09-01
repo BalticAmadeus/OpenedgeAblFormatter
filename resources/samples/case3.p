@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "AblFormatter.caseFormatting": true,
-    "abl.completion.upperCase": false}*/
+/*  { "AblFormatter.caseFormatting": true}*/
 define variable test as character no-undo.
 
 do while true:

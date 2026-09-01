@@ -1,22 +1,16 @@
 import { AblParserHelper } from "../parser/AblParserHelper";
 
-export interface ISuiteConfig<TResult extends { tree: any; text: string }> {
+export interface ISuiteConfig<TResult> {
     testType: string;
     knownFailuresFile: string;
     resultFailuresFile: string;
-    processBeforeText: (
-        text: string,
-        parserHelper: AblParserHelper
-    ) => Promise<TResult>;
-    processAfterText: (
-        text: string,
-        parserHelper: AblParserHelper
-    ) => Promise<TResult>;
+    processBeforeText: (text: string) => TResult;
+    processAfterText: (text: string, parserHelper: AblParserHelper) => TResult;
     compareResults: (
         before: TResult,
         after: TResult,
         parserHelper?: AblParserHelper
-    ) => Promise<boolean>;
+    ) => boolean;
     onMismatch?: (before: TResult, after: TResult, fileName: string) => void;
     cleanup?: (before: TResult, after: TResult) => void;
 }

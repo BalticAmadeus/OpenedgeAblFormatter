@@ -2,7 +2,6 @@
 /* {
 "AblFormatter.blockFormatting": true,
 "AblFormatter.assignFormatting": true,
-"abl.completion.upperCase": false
 } */
 def var a as integer no-undo init 1.
 

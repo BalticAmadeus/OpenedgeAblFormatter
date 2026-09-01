@@ -13,7 +13,6 @@ import { MetamorphicEngine } from "../mtest/MetamorphicEngine";
 import { BaseEngineOutput } from "../mtest/EngineParams";
 import { bodyBlockKeywords, SyntaxNodeType } from "../model/SyntaxNodeType";
 import { ExcludeAnnotationType } from "../model/ExcludeAnnotationType";
-import { FormattingEngineMock } from "./FormattingEngineMock";
 
 export class FormattingEngine {
     private numOfCodeEdits: number = 0;
@@ -30,7 +29,8 @@ export class FormattingEngine {
     public formatText(
         fulfullTextString: string,
         eol: EOL,
-        metemorphicEngineIsEnabled: boolean = false
+        metemorphicEngineIsEnabled: boolean = false,
+        isPreview?: boolean
     ): string {
         const fullText: FullText = {
             text: fulfullTextString,
@@ -42,18 +42,23 @@ export class FormattingEngine {
             fullText.text
         );
 
-        this.settingsOverride(parseResult);
+        // Only apply settings override if not preview
+        if (!isPreview) {
+            this.settingsOverride(parseResult);
+        }
+
         const formatters = FormatterFactory.getFormatterInstances(
             this.configurationManager
         );
 
         this.iterateTree(parseResult.tree, fullText, formatters);
 
-        const newTree = this.parserHelper.parse(
+        const newTreeResult = this.parserHelper.parse(
             this.fileIdentifier,
             fullText.text,
             parseResult.tree
-        ).tree;
+        );
+        const newTree = newTreeResult.tree;
 
         this.iterateTreeFormatBlocks(newTree, fullText, formatters);
 
@@ -64,7 +69,12 @@ export class FormattingEngine {
             this.metamorphicTestingEngine !== undefined
         ) {
             this.metamorphicTestingEngine.setFormattingEngine(
-                new FormattingEngineMock(this.parserHelper)
+                new FormattingEngine(
+                    this.parserHelper,
+                    this.fileIdentifier,
+                    this.configurationManager,
+                    this.debugManager
+                )
             );
 
             const parseResult2 = this.parserHelper.parse(
@@ -78,7 +88,14 @@ export class FormattingEngine {
                 { text: fulfullTextString, tree: parseResult.tree },
                 { text: fullText.text, tree: parseResult2.tree }
             );
+
+            // Delete parseResult2.tree after use
+            parseResult2.tree.delete();
         }
+
+        // Always delete trees after use to prevent WASM memory leaks
+        parseResult.tree.delete();
+        newTree.delete();
 
         return fullText.text;
     }

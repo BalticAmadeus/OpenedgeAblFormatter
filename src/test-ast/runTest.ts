@@ -29,7 +29,7 @@ async function main() {
             extensionDevelopmentPath,
             extensionTestsPath: extensionTestsPath,
             launchArgs,
-            version: process.env.VSCODE_VERSION || "1.97.2", //TODO: change to 'stable'. this is workaround for the pipeline issue, probably at some point MS will fix it and we'll be able to switch back to the latest
+            version: process.env.VSCODE_VERSION || "1.109.5", //TODO: change to 'stable'. this is workaround for the pipeline issue, probably at some point MS will fix it and we'll be able to switch back to the latest
         });
     } catch (err) {
         console.error("Failed to run AST tests", err);

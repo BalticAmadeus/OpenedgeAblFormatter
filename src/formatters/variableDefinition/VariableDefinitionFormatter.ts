@@ -169,26 +169,28 @@ export class VariableDefinitionFormatter
                     fullText
                 ).trimEnd();
                 break;
-            case SyntaxNodeType.TypeTuning:
+            case SyntaxNodeType.TypeTuning: {
                 const typeTuningText = this.collectTypeTuningString(
                     node,
                     fullText
                 );
-                newString =
-                    typeTuningText +
-                    " ".repeat(
-                        this.alignVariableTuning - typeTuningText.length
-                    );
+                const spaceCount = Math.max(
+                    0,
+                    this.alignVariableTuning - typeTuningText.length
+                );
+                newString = typeTuningText + " ".repeat(spaceCount);
                 break;
+            }
             case SyntaxNodeType.AccessTuning: {
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
                 ).trim();
-                newString =
-                    " " +
-                    text +
-                    " ".repeat(this.alignVariableKeyword - text.length);
+                const spaceCount = Math.max(
+                    0,
+                    this.alignVariableKeyword - text.length
+                );
+                newString = " " + text + " ".repeat(Math.max(0, spaceCount));
                 this.hasAccessTuning = true;
                 break;
             }
@@ -199,30 +201,31 @@ export class VariableDefinitionFormatter
                 ).trim();
                 const shouldAlign =
                     !this.hasAccessTuning && this.alignVariableKeyword !== 0;
-                let spacesCount = 1;
+                let spaceCount = 1;
 
                 if (shouldAlign) {
                     if (
                         this.hasStaticWithoutAccess ||
                         this.hasScopeTuningWithoutAccess
                     ) {
-                        spacesCount = 1;
+                        spaceCount = 1;
                     } else {
-                        spacesCount = 2 + this.alignVariableKeyword;
+                        spaceCount = 2 + this.alignVariableKeyword;
                         this.hasAccessTuning = true;
                     }
                 }
-                newString = " ".repeat(spacesCount) + text;
+                newString = " ".repeat(Math.max(0, spaceCount)) + text;
                 break;
             }
-            case SyntaxNodeType.Identifier:
+            case SyntaxNodeType.Identifier: {
                 const text = FormatterHelper.getCurrentText(
                     node,
                     fullText
                 ).trim();
-                newString =
-                    " " + text + " ".repeat(this.alignType - text.length);
+                const spaceCount = Math.max(0, this.alignType - text.length);
+                newString = " " + text + " ".repeat(spaceCount);
                 break;
+            }
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -260,7 +263,7 @@ export class VariableDefinitionFormatter
                     ? 1
                     : this.alignVariableKeyword + 2; // Compensate two trimmed whitespaces
                 const trailingSpaces = needsTrailingPadding
-                    ? this.alignScopeGroup - scopeGroupText.length
+                    ? Math.max(0, this.alignScopeGroup - scopeGroupText.length)
                     : 0;
 
                 newString =
@@ -271,7 +274,7 @@ export class VariableDefinitionFormatter
             }
             case SyntaxNodeType.VariableTuning:
                 let variableTuningText = "";
-                let spacesCount = 0;
+                let spaceCount = 0;
                 const noUndoKeyword = node.children.find(
                     (child) => child.type === SyntaxNodeType.NoUndoKeyword
                 );
@@ -285,7 +288,7 @@ export class VariableDefinitionFormatter
                         fullText
                     );
                     if (previousExtent && node.previousSibling) {
-                        spacesCount =
+                        spaceCount =
                             this.alignExtent -
                             FormatterHelper.getCurrentText(
                                 node.previousSibling,
@@ -293,9 +296,11 @@ export class VariableDefinitionFormatter
                             ).trim().length -
                             1;
                     } else {
-                        spacesCount = this.alignExtent;
+                        spaceCount = Math.max(0, this.alignExtent);
                     }
-                    newString = " ".repeat(spacesCount) + variableTuningText;
+                    newString =
+                        " ".repeat(Math.max(0, spaceCount)) +
+                        variableTuningText;
                     break;
                 }
             default: {

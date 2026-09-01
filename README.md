@@ -42,7 +42,7 @@ There are no additional dependencies needed to launch this extension.
 
 ## Configuration and Setup
 
-We implemented extensive settings configuration to allow users to easly tailor the experience to their needs. This might not be the case in the future.
+We implemented extensive settings configuration to allow users to easily tailor the experience to their needs. This might not be the case in the future. You can access the settings via VS Code settings or clicking ABL Formatter icon at the far right of an ABL files editor title bar. You can also access settings UI via the **Command Palette** (Ctrl+Shift+P) by typing "Formatter Settings Preview"
 
 ### Settings
 
@@ -64,7 +64,9 @@ We implemented extensive settings configuration to allow users to easly tailor t
 | if formatting do location                           | string  | Same        | New, Same              | Should DO block be on a new line or the same line as the THEN keyword                   |
 | if formatting statement location                    | string  | Same        | New, Same              | Should the first statement in an IF block be on a new line or the same line             |
 | temptable formatting                                | boolean | true        | true,false             | Enable TEMP-TABLE formatting                                                            |
+| temptable formatting end dot location               | string  | Same        | New, Same              | Should end dot be located on a new line or the same line as the last TEMP-TABLE line    |
 | using formatting                                    | boolean | true        | true,false             | Enable USING formatting                                                                 |
+| using formatting from propath                       | string  | DoNothing   | DoNothing, add, remove | Should 'from propath' be added or removed in USING statements automatically             |
 | body formatting                                     | boolean | true        | true,false             | Enable BODY formatting                                                                  |
 | property formatting                                 | boolean | true        | true,false             | Enable property formatting                                                              |
 | if function formatting                              | boolean | true        | true,false             | Enable IF FUNCTION formatting                                                           |
@@ -96,7 +98,7 @@ Also, you can enable or disable formatting on save:
 "editor.formatOnSave": true
 ```
 
-Alowed file extensions:
+Allowed file extensions:
 
 -   **.p**
 -   **.cls**
@@ -113,8 +115,7 @@ Example:
 /* formatterSettingsOverride */
 /* {
 "AblFormatter.blockFormatting": true,
-"AblFormatter.assignFormatting": true,
-"abl.completion.upperCase": false
+"AblFormatter.assignFormatting": true
 } */
 def var a as integer no-undo init 1.
 
@@ -156,6 +157,6 @@ If you wish to contribute, see our guidelines [here](CONTRIBUTING.md).
 
 This project is licensed under the APACHE 2.0 License - see the LICENSE file for details.
 
-## Sponsored by [Baltic Amadeus](https://www.ba.lt/en)
+## Sponsored by [Baltic Amadeus](https://www.baltic-amadeus.com)
 
-[![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.ba.lt/en)
+[![BA](https://raw.githubusercontent.com/BalticAmadeus/ProBro/main/resources/images/Balticmadeus_RGB-01.jpg)](https://www.baltic-amadeus.com)

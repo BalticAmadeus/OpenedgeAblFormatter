@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
-/*  { "abl.completion.upperCase": true, 
-"AblFormatter.caseFormatting": true,
+/*  { "AblFormatter.caseFormatting": true,
 "AblFormatter.caseFormattingThenLocation": "Same",
 "AblFormatter.caseFormattingDoLocation": "Same",
 "AblFormatter.caseFormattingStatementLocation": "Same",

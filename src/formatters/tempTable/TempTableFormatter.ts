@@ -16,6 +16,8 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     private alignType = 0;
     private hasFieldOptions = false;
     private alignFieldOptions = 0;
+    private maxIndexFieldNameLen = 0;
+    private indexKeywordLength = 0;
     private startColumn = 0;
     private temptableValueColumn = 0;
     private temptableBodyValue = "";
@@ -26,10 +28,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     }
 
     match(node: Readonly<SyntaxNode>): boolean {
-        if (node.type === SyntaxNodeType.TemptableDefinition) {
-            return true;
-        }
-        return false;
+        return node.type === SyntaxNodeType.TemptableDefinition;
     }
 
     compare(node1: Readonly<SyntaxNode>, node2: Readonly<SyntaxNode>): boolean {
@@ -38,8 +37,10 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     parse(
         node: Readonly<SyntaxNode>,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): CodeEdit | CodeEdit[] | undefined {
+        /* Reset since the same formatter instance is reused for multiple temp-tables */
+        this.resetAlignmentState();
         this.hasFieldOptions = false;
         this.collectTemptableStructure(node, fullText);
         const text = FormatterHelper.getCurrentText(node, fullText);
@@ -50,7 +51,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
     private collectTemptableString(node: SyntaxNode, fullText: FullText) {
         this.startColumn = FormatterHelper.getActualStatementIndentation(
             node,
-            fullText
+            fullText,
         );
         this.temptableValueColumn = this.startColumn + this.settings.tabSize();
         this.temptableBodyValue = this.getTemptableBlock(node, fullText);
@@ -70,7 +71,10 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
         for (const child of children) {
             if (child.type === "comment") {
-                const commentText = FormatterHelper.getCurrentText(child, fullText);
+                const commentText = FormatterHelper.getCurrentText(
+                    child,
+                    fullText
+                );
 
                 // Check if comment contains newlines (block comment on own line)
                 if (commentText.includes("\n") || commentText.includes("\r")) {
@@ -81,7 +85,10 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                         const trimmedLine = line.trim();
 
                         // Skip empty lines at the beginning
-                        if (trimmedLine.length === 0 && !foundFirstCommentLine) {
+                        if (
+                            trimmedLine.length === 0 &&
+                            !foundFirstCommentLine
+                        ) {
                             continue;
                         }
 
@@ -105,19 +112,33 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 // Format the non-comment child
                 resultString += this.getTemptableExpressionString(
                     child,
-                    fullText.eolDelimiter.concat(" ".repeat(this.temptableValueColumn)),
+                    fullText.eolDelimiter.concat(
+                        " ".repeat(Math.max(0, this.temptableValueColumn))
+                    ),
                     fullText
                 );
             }
         }
 
-        resultString += ".";
+        resultString += this.getFormattedEndDot(
+            fullText.eolDelimiter.concat(
+                " ".repeat(Math.max(0, this.startColumn))
+            )
+        );
         return resultString;
+    }
+
+    private getFormattedEndDot(separator: string): string {
+        if (this.settings.endDotLocationNew()) {
+            return separator + ".";
+        } else {
+            return ".";
+        }
     }
 
     private collectTemptableStructure(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): void {
         node.children.forEach((child) => {
             this.getTemptableStructure(child, fullText);
@@ -131,6 +152,11 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                     this.getFieldStructure(child, fullText);
                 });
                 break;
+            case SyntaxNodeType.IndexClause:
+                node.children.forEach((child) => {
+                    this.getIndexStructure(child, fullText);
+                });
+                break;
         }
     }
 
@@ -139,13 +165,15 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.Identifier:
                 this.alignType = Math.max(
                     this.alignType,
-                    FormatterHelper.getCurrentText(node, fullText).trim().length
+                    FormatterHelper.getCurrentText(node, fullText).trim()
+                        .length,
                 );
                 break;
             case SyntaxNodeType.TypeTuning:
                 this.alignFieldOptions = Math.max(
                     this.alignFieldOptions,
-                    FormatterHelper.getCurrentText(node, fullText).trim().length
+                    FormatterHelper.getCurrentText(node, fullText).trim()
+                        .length,
                 );
                 break;
             case SyntaxNodeType.FieldOption:
@@ -154,9 +182,31 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         }
     }
 
+    private getIndexStructure(node: SyntaxNode, fullText: FullText): void {
+        switch (node.type) {
+            case SyntaxNodeType.IndexField:
+                node.children.forEach((child) => {
+                    this.getIndexFieldStructure(child, fullText);
+                });
+                break;
+        }
+    }
+
+    private getIndexFieldStructure(node: SyntaxNode, fullText: FullText): void {
+        switch (node.type) {
+            case SyntaxNodeType.Identifier:
+                this.maxIndexFieldNameLen = Math.max(
+                    this.maxIndexFieldNameLen,
+                    FormatterHelper.getCurrentText(node, fullText).trim()
+                        .length,
+                );
+                break;
+        }
+    }
+
     private collectFieldString(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let newString = "";
         node.children.forEach((child) => {
@@ -167,7 +217,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     private getFieldString(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let newString = "";
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
@@ -175,7 +225,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.FieldKeyword:
                 newString = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
                 break;
             case SyntaxNodeType.TypeTuning:
@@ -183,12 +233,16 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 if (this.hasFieldOptions) {
                     newString =
                         newString +
-                        " ".repeat(this.alignFieldOptions - text.length);
+                        " ".repeat(
+                            Math.max(0, this.alignFieldOptions - text.length)
+                        );
                 }
                 break;
             case SyntaxNodeType.Identifier:
                 newString =
-                    " " + text + " ".repeat(this.alignType - text.length);
+                    " " +
+                    text +
+                    " ".repeat(Math.max(0, this.alignType - text.length));
                 break;
 
             case SyntaxNodeType.Error:
@@ -203,12 +257,12 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     private collectTypeTuningString(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let resultString = "";
         node.children.forEach((child) => {
             resultString = resultString.concat(
-                this.getTypeTuningString(child, fullText)
+                this.getTypeTuningString(child, fullText),
             );
         });
         return resultString;
@@ -216,7 +270,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
 
     private getTypeTuningString(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
     ): string {
         let newString = "";
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
@@ -231,10 +285,32 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         return newString;
     }
 
+    private getIndexFieldString(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>,
+    ): string {
+        let newString = "";
+        const text = FormatterHelper.getCurrentText(node, fullText).trim();
+
+        switch (node.type) {
+            case SyntaxNodeType.Identifier:
+                newString =
+                    text + " ".repeat(this.maxIndexFieldNameLen - text.length);
+                break;
+            case SyntaxNodeType.Error:
+                newString = FormatterHelper.getCurrentText(node, fullText);
+                break;
+            default:
+                newString = text.length === 0 ? "" : " " + text;
+                break;
+        }
+        return newString;
+    }
+
     private getTemptableExpressionString(
         node: SyntaxNode,
         separator: string,
-        fullText: FullText
+        fullText: FullText,
     ): string {
         let newString = "";
 
@@ -251,19 +327,34 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                         this.getTemptableExpressionString(
                             child,
                             fullText.eolDelimiter.concat(
-                                " ".repeat(this.temptableValueColumn)
+                                " ".repeat(
+                                    Math.max(0, this.temptableValueColumn)
+                                )
                             ),
-                            fullText
-                        )
+                            fullText,
+                        ),
                     );
                 });
 
                 newString = separator + newString;
                 break;
+            case SyntaxNodeType.IndexField:
+                newString =
+                    fullText.eolDelimiter +
+                    " ".repeat(
+                        this.temptableValueColumn + this.indexKeywordLength + 1,
+                    );
+                node.children.forEach((child) => {
+                    newString = newString.concat(
+                        this.getIndexFieldString(child, fullText),
+                    );
+                });
+                break;
             case SyntaxNodeType.LikeKeyword:
                 if (
-                    node.parent!.type.trim() === SyntaxNodeType.FieldClause ||
-                    node.parent!.type.trim() === SyntaxNodeType.IndexClause
+                    node.parent &&
+                    (node.parent.type === SyntaxNodeType.FieldClause ||
+                        node.parent.type === SyntaxNodeType.IndexClause)
                 ) {
                     newString =
                         " " +
@@ -278,8 +369,9 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.IndexKeyword:
                 newString = FormatterHelper.getCurrentText(
                     node,
-                    fullText
+                    fullText,
                 ).trim();
+                this.indexKeywordLength = newString.length;
                 break;
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
@@ -290,5 +382,16 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 break;
         }
         return newString;
+    }
+
+    private resetAlignmentState(): void {
+        this.alignType = 0;
+        this.alignFieldOptions = 0;
+        this.maxIndexFieldNameLen = 0;
+        this.indexKeywordLength = 0;
+        this.startColumn = 0;
+        this.temptableValueColumn = 0;
+        this.temptableBodyValue = "";
+        this.hasFieldOptions = false;
     }
 }

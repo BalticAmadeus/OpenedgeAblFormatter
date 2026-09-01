@@ -1,6 +1,5 @@
 /* formatterSettingsOverride */
 /*  { "AblFormatter.assignFormatting": true,
-    "abl.completion.upperCase": true,
     "AblFormatter.assignFormattingEndDotLocation": "New"}*/
 FUNCTION GET_STUFF RETURNS integer (cParam1 AS CHARACTER):
     DEFINE VARIABLE firstNumber  AS INT NO-UNDO.
