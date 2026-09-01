@@ -1,0 +1,14 @@
+DEFINE VARIABLE Replace_Filters AS LOGICAL EXTENT 2
+  INITIAL ["FALSE","TRUE"]
+  LABEL "Match &Case":L15,
+        "&Wrap at End":L15
+  VIEW-AS TOGGLE-BOX NO-UNDO.
+
+DEFINE VARIABLE Search_Filters AS LOGICAL EXTENT 2
+  INITIAL ["FALSE"]
+  LABEL "Search A&ll Sections":L25,
+        "Unknown Feature":L25
+  VIEW-AS TOGGLE-BOX NO-UNDO.
+
+DEFINE BUTTON btn_Find_OK LABEL "OK"
+    {&STDPH_OKBTN} AUTO-GO.
