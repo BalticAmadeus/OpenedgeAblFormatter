@@ -182,12 +182,20 @@ export class ForFormatter extends AFormatter implements IFormatter {
         node.children.forEach((child) => {
             switch (child.type) {
                 case SyntaxNodeType.WhereKeyword:
-                    resultString = resultString.concat(
-                        " ",
-                        FormatterHelper.getCurrentText(child, fullText).trim(),
-                        fullText.eolDelimiter,
-                        " ".repeat(Math.max(0, alignColumn))
-                    );
+                    if (this.settings.whereLocation() === "New") {
+                        resultString = resultString.concat(
+                            fullText.eolDelimiter,
+                            " ".repeat(Math.max(0, alignColumn)),
+                            FormatterHelper.getCurrentText(child, fullText).trim()
+                        );
+                    } else {
+                        resultString = resultString.concat(
+                            " ",
+                            FormatterHelper.getCurrentText(child, fullText).trim(),
+                            fullText.eolDelimiter,
+                            " ".repeat(Math.max(0, alignColumn))
+                        );
+                    }
                     break;
                 default:
                     const text = FormatterHelper.getCurrentText(
