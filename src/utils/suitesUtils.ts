@@ -288,3 +288,39 @@ export function addFailedTestCase(
     // Append the failed test case to the file with a newline
     fs.appendFileSync(failedFilePath, failedCase + "\n", "utf8");
 }
+
+/**
+ * Validates that test cases are available and logs a warning if not.
+ * This is a common check for all ADE-dependent test suites.
+ * 
+ * @param testType - Name of the test type (e.g., "Symbol", "AST", "Idempotency")
+ * @param testCases - Array of test cases from getStabilityTestCases()
+ * @returns true if test cases are available, false otherwise
+ */
+export function validateAdeTestCases(testType: string, testCases: string[]): boolean {
+    if (testCases.length === 0) {
+        console.warn(
+            `\n⚠️  WARNING: No test cases found for ${testType} tests!\n` +
+            "This usually means the 'resources/ade' directory is missing or empty.\n" +
+            "To set up ${testType} tests, run:\n" +
+            "  npm run get-ade-test\n" +
+            "This will clone the Progress ADE repository containing test files.\n"
+        );
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Generates a fallback test that explains ADE setup requirement.
+ * Use this when test cases are empty to provide helpful guidance.
+ * 
+ * @param testType - Name of the test type (e.g., "Symbol", "AST", "Idempotency")
+ * @returns Error message for the fallback test
+ */
+export function generateAdeSetupErrorMessage(testType: string): string {
+    return (
+        `No test cases found! Please run: npm run get-ade-test\n` +
+        `This will clone the Progress ADE repository with test files needed for ${testType} testing.`
+    );
+}

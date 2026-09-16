@@ -7,6 +7,8 @@ import {
     getTestRunDir,
     runGenericTest,
     logKnownFailures,
+    validateAdeTestCases,
+    generateAdeSetupErrorMessage,
 } from "../../utils/suitesUtils";
 import { ISuiteConfig } from "../../utils/ISuiteConfig";
 import { AblParserHelper } from "../../parser/AblParserHelper";
@@ -22,11 +24,10 @@ suite("Symbol Stability Test Suite", () => {
 
         parserHelper = await setupParserHelper();
 
-        console.log(
-            "Symbol StabilityTests: ",
-            getStabilityTestCases().length,
-            "test cases"
-        );
+        const testCases = getStabilityTestCases();
+        console.log("Symbol StabilityTests: ", testCases.length, "test cases");
+
+        validateAdeTestCases("Symbol", testCases);
 
         // Log known failures count once at suite setup
         logKnownFailures("Symbol", "_symbol_failures.txt");
@@ -40,10 +41,18 @@ suite("Symbol Stability Test Suite", () => {
         vscode.window.showInformationMessage("Symbol tests done!");
     });
 
-    for (const cases of getStabilityTestCases()) {
-        test(`Symbol test: ${cases}`, () => {
-            symbolTest(cases, parserHelper);
-        }).timeout(20000);
+    const testCases = getStabilityTestCases();
+
+    if (testCases.length === 0) {
+        test("Symbol Test Suite - Setup Required", () => {
+            throw new Error(generateAdeSetupErrorMessage("Symbol"));
+        });
+    } else {
+        for (const cases of testCases) {
+            test(`Symbol test: ${cases}`, () => {
+                symbolTest(cases, parserHelper);
+            }).timeout(20000);
+        }
     }
 });
 

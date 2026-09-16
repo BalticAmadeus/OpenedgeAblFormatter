@@ -32,7 +32,15 @@ async function main() {
             version: process.env.VSCODE_VERSION || "1.109.5", //TODO: change to 'stable'. this is workaround for the pipeline issue, probably at some point MS will fix it and we'll be able to switch back to the latest
         });
     } catch (err) {
-        console.error("Failed to run AST tests", err);
+        console.error("\n❌ Failed to run AST tests");
+        console.error(err);
+        console.error(
+            "\n💡 TIP: If tests show '0 passing', AST test data may be missing.",
+        );
+        console.error("   Run: npm run get-ade-test");
+        console.error(
+            "   This clones the Progress ADE repository with test files.\n",
+        );
         process.exit(1);
     }
 }
