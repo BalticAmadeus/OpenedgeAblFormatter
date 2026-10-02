@@ -373,6 +373,16 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 ).trim();
                 this.indexKeywordLength = newString.length;
                 break;
+            case SyntaxNodeType.Include: {
+                // The include node can swallow the statement's end dot (e.g. "{file.i}."),
+                // strip it here since the formatted end dot is appended separately.
+                let text = FormatterHelper.getCurrentText(node, fullText).trim();
+                if (text.endsWith(".")) {
+                    text = text.slice(0, -1).trimEnd();
+                }
+                newString = " " + text;
+                break;
+            }
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;

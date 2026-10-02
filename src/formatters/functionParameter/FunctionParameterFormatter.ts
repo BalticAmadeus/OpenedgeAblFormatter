@@ -97,7 +97,9 @@ export class FunctionParameterFormatter
     private getStructure(node: SyntaxNode, fullText: Readonly<FullText>): void {
         switch (node.type) {
             case SyntaxNodeType.LeftParenthesis:
-                this.alignParameters = node.startPosition.column + 1;
+                this.alignParameters =
+                    node.startPosition.column +
+                    this.getParenthesesText(node, fullText).length;
                 break;
             case SyntaxNodeType.FunctionParameter:
                 node.children.forEach((child) => {
@@ -136,10 +138,7 @@ export class FunctionParameterFormatter
         let newString = "";
         switch (node.type) {
             case parentheses.hasFancy(node.type, ""):
-                newString = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
+                newString = this.getParenthesesText(node, fullText);
                 break;
             case SyntaxNodeType.FunctionParameter:
                 newString = this.collectParameterString(node, fullText);
@@ -163,6 +162,22 @@ export class FunctionParameterFormatter
             }
         }
         return newString;
+    }
+
+    private getParenthesesText(
+        node: SyntaxNode,
+        fullText: Readonly<FullText>
+    ): string {
+        const rawText = FormatterHelper.getCurrentText(node, fullText);
+        const trimmedText = rawText.trim();
+        // Function return types require one space before the parameter list.
+        const isFunctionParameters =
+            node.parent?.parent?.type === SyntaxNodeType.FunctionStatement;
+        return node.type === SyntaxNodeType.LeftParenthesis &&
+            isFunctionParameters &&
+            /^\s/.test(rawText)
+            ? " " + trimmedText
+            : trimmedText;
     }
 
     private collectParameterString(
