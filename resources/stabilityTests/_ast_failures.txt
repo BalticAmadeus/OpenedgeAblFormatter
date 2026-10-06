@@ -115,7 +115,6 @@ adeuib__oeidepref.p
 adeuib__ppuscal.w
 adeuib__prpsdo.p
 adeuib__prpsmar.p
-adeuib__rdbrow.p
 adeuib__rdcomb.p
 adeuib__rdfill.p
 adeuib__rdfram.i
@@ -322,7 +321,6 @@ OpenEdge_DataAdmin_Util_dbconnectionrole_status.p
 prodict__dctexec.p
 prodict__dctexen.p
 prodict__dctgues.p
-prodict__dictc.p
 prodict_aud__aud-pol.p
 prodict_dump__dmpincr.p
 prodict_dump__dmpsddl.p
@@ -497,18 +495,22 @@ prores_u-print.p
 //015 issues <--
 //016 issues -->
 adecomm__assign-wid.w
-aderes__arships.p
 adeuib__tempdbpref.w
-adeuib__undrect.p
 prores_a-form.p
 prores_a-info.p
 prores_a-print.p
 prores_i-dir.p
 prores_s-format.p
-aderes__gotopag.p
-adeuib__undbrow.p
-webtools_index.w
-webtools_oscommnd.w
-webtools_session.w
-workshop__seedit.w
 //016 issues <--
+//017 issues -->
+adecomm_ebrowse.i
+aderes__aint.p
+aderes__sdrefat.i
+adm2_folder.w
+auditing_adm2_aud_folder.w
+OpenEdge_DataAdmin_DataSource_FieldChildDataSource.cls
+prodict_dump__load_df.p
+prodict_gui__guipfed.p
+prodict_user__usrinf2.p
+webtools_util__putfile.w
+//017 issues <--
