@@ -79,7 +79,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
         }
 
         const parentIndentation = FormatterHelper.getActualStatementIndentation(
-            this.getParentIndentationSourceNode(parent),
+            this.getParentIndentationSourceNode(parent, fullText),
             fullText
         );
 
@@ -438,30 +438,67 @@ export class BlockFormater extends AFormatter implements IFormatter {
     }
 
     //refactor
-    private getParentIndentationSourceNode(node: SyntaxNode): SyntaxNode {
-        if (
-            node.type === SyntaxNodeType.DoBlock &&
-            node.parent?.type === SyntaxNodeType.IfStatement
-        ) {
-            return node.parent;
-        } else if (
-            node.type === SyntaxNodeType.DoBlock &&
-            (node.parent?.type === SyntaxNodeType.CaseWhenBranch ||
-                node.parent?.type === SyntaxNodeType.CaseOtherwiseBranch)
-        ) {
-            return node.parent;
-        } else if (
-            node.type === SyntaxNodeType.DoBlock &&
-            (node.parent?.type === SyntaxNodeType.ElseIfStatement ||
-                node.parent?.type === SyntaxNodeType.ElseStatement)
-        ) {
-            if (node.parent.parent === null) {
-                return node.parent;
-            }
-
-            return node.parent.parent;
+    private getParentIndentationSourceNode(
+        node: SyntaxNode,
+        fullText: FullText
+    ): SyntaxNode {
+        if (node.type !== SyntaxNodeType.DoBlock) {
+            return node;
         }
-        return node;
+
+        const parentType = node.parent?.type;
+        const isNestedUnderBranchKeyword =
+            parentType === SyntaxNodeType.IfStatement ||
+            parentType === SyntaxNodeType.CaseWhenBranch ||
+            parentType === SyntaxNodeType.CaseOtherwiseBranch ||
+            parentType === SyntaxNodeType.ElseIfStatement ||
+            parentType === SyntaxNodeType.ElseStatement;
+
+        if (!isNestedUnderBranchKeyword) {
+            return node;
+        }
+
+        // Anchoring to the enclosing if/case/else's own indentation only
+        // makes sense when "do:" sits inline right after then/else on the
+        // same line - if "do:" is on its own line, that's the real anchor.
+        const prevSibling = node.previousSibling;
+        const isInlineWithPrevious =
+            prevSibling !== null &&
+            !this.hasEolBetween(fullText, prevSibling.endIndex, node);
+
+        if (!isInlineWithPrevious) {
+            return node;
+        }
+
+        if (
+            parentType === SyntaxNodeType.ElseIfStatement ||
+            parentType === SyntaxNodeType.ElseStatement
+        ) {
+            return node.parent!.parent ?? node.parent!;
+        }
+
+        return node.parent!;
+    }
+
+    // The grammar can attach a token's leading whitespace/newline to the
+    // token's own span instead of leaving it as a gap between siblings, so
+    // the real separator has to be looked for inside the node's own text
+    // too, not just between fromIndex and node.startIndex.
+    private hasEolBetween(
+        fullText: FullText,
+        fromIndex: number,
+        node: SyntaxNode
+    ): boolean {
+        const rawNodeText = fullText.text.substring(
+            node.startIndex,
+            node.endIndex
+        );
+        const leadingWhitespaceLength =
+            rawNodeText.length - rawNodeText.trimStart().length;
+        const contentStart = node.startIndex + leadingWhitespaceLength;
+
+        const between = fullText.text.substring(fromIndex, contentStart);
+        return /\r\n|\n|\r/.test(between);
     }
 
     private matchEndPattern(str: string): boolean {
