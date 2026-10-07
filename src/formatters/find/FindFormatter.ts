@@ -134,7 +134,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
                     break;
                 case SyntaxNodeType.Error:
                     resultString = resultString.concat(
-                        FormatterHelper.getCurrentText(node, fullText)
+                        FormatterHelper.getCurrentText(child, fullText)
                     );
                     break;
                 default:

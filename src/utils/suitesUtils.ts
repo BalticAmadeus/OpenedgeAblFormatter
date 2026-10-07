@@ -271,7 +271,10 @@ export function getFailedTestCases(filePath: string, file: string): string[] {
 
     // Read the file and split lines into an array
     const data = fs.readFileSync(failedFilePath, "utf8");
-    const failures = data.split("\n").filter((line) => line.trim() !== "");
+    const failures = data
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line !== "");
 
     return failures;
 }
