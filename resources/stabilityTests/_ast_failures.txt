@@ -41,7 +41,6 @@ adecomm__trigrpt.p
 adecomm__viewasd.w
 adecomm__winmenu.w
 adecomm__y-logic.p
-adecomm_cbcdropx.i
 adecomm__qinit.p
 adecomm_toolmenu.i
 adecomm_toolrun.i
@@ -67,7 +66,6 @@ adedict_TRIG__trigdlg.p
 adeedit_pmenus.i
 adeedit_psystem.i
 aderes__adeploy.p
-aderes__alabel.p
 aderes__atalias.p
 aderes_aderes.p
 aderes_b-write.p
@@ -88,7 +86,6 @@ aderes_y-format.p
 aderes_y-page.p
 aderesc__read.p
 aderesc__ttyconv.p
-adeshar__filname.p
 adeshar__gendefs.p
 adeshar__mnutb.i
 adeshar__mupdatm.p
@@ -105,7 +102,6 @@ adeuib__cr_pal.p
 adeuib__datasrc.w
 adeuib__drwradi.p
 adeuib__fclasnewbasic.w
-adeuib__genpro2.i
 adeuib__inscal8.w
 adeuib__inscall.w
 adeuib__newfunc.w
@@ -231,7 +227,6 @@ corelib_OpenEdge_Logging_Writer_LogManagerWriter.cls
 daschema_cdc.i
 daschema_cdctablepolicy.i
 daschema_partition.i
-netlib_OpenEdge_Mobile_TelerikPushNotificationMessageBuilder.cls
 netlib_OpenEdge_Net_FileTypeRegistry.cls
 netlib_OpenEdge_Net_FormEncoder.cls
 netlib_OpenEdge_Net_HTTP_Cookie.cls
@@ -278,25 +273,13 @@ netlib_OpenEdge_Web_DataObject_Writer_MappingFileServiceWriter.cls
 netlib_OpenEdge_Web_DataObject_Writer_ObjectValueWriter.cls
 netlib_OpenEdge_Web_WebRequest.cls
 netlib_OpenEdge_Web_WebResponseWriter.cls
-OpenEdge_DataAdmin_Binding_AreaContext.cls
-OpenEdge_DataAdmin_Binding_AuthenticationSystemContext.cls
-OpenEdge_DataAdmin_Binding_AuthTagContext.cls
 OpenEdge_DataAdmin_Binding_CdcTablePolicyContext.cls
-OpenEdge_DataAdmin_Binding_DatabaseOptionContext.cls
 OpenEdge_DataAdmin_Binding_ExtentContext.cls
-OpenEdge_DataAdmin_Binding_GrantedRoleContext.cls
-OpenEdge_DataAdmin_Binding_IndexFieldContext.cls
-OpenEdge_DataAdmin_Binding_LocalIndexContext.cls
 OpenEdge_DataAdmin_Binding_PartitionContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyContext.cls
-OpenEdge_DataAdmin_Binding_PartitionPolicyFieldContext.cls
-
-OpenEdge_DataAdmin_Binding_RoleContext.cls
-OpenEdge_DataAdmin_Binding_SequenceContext.cls
 OpenEdge_DataAdmin_Binding_SequenceValueContext.cls
 OpenEdge_DataAdmin_Binding_TenantContext.cls
 OpenEdge_DataAdmin_Binding_TenantGroupContext.cls
-OpenEdge_DataAdmin_Binding_TenantGroupMemberContext.cls
 OpenEdge_DataAdmin_Binding_UserContext.cls
 OpenEdge_DataAdmin_CdcFieldPolicySet.cls
 OpenEdge_DataAdmin_CdcTablePolicySet.cls
@@ -310,7 +293,6 @@ OpenEdge_DataAdmin_DataSource_RoleDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserFieldPermissionDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserTablePermissionDataSource.cls
-OpenEdge_DataAdmin_PartitionPolicy.cls
 OpenEdge_DataAdmin_PartitionPolicyDetailSet.cls
 OpenEdge_DataAdmin_PartitionPolicySet.cls
 OpenEdge_DataAdmin_ServerCommand_TableDataCommand.cls
@@ -318,8 +300,6 @@ OpenEdge_DataAdmin_TenantGroupSet.cls
 OpenEdge_DataAdmin_TenantSet.cls
 OpenEdge_DataAdmin_Util_dbCanMigrate.p
 OpenEdge_DataAdmin_Util_dbconnectionrole_status.p
-prodict__dctexec.p
-prodict__dctexen.p
 prodict__dctgues.p
 prodict_aud__aud-pol.p
 prodict_dump__dmpincr.p
@@ -385,7 +365,6 @@ prodict_user__usrpfed.p
 prodict_user_usermenu.i
 prohelp__keybrd.p
 prores_a-field.p
-prores_a-join.p
 prores_b-again.p
 prores_c-cache1.i
 prores_c-edit.i
@@ -397,12 +376,10 @@ prores_c-print.p
 prores_c-vector.p
 prores_d-main.p
 prores_i-pick.p
-prores_i-zap.p
 prores_l-main.p
 prores_r-main.p
 prores_r-write.p
 prores_results.i
-prores_s-ask.p
 prores_s-quoter.p
 prores_u-browse.i
 protools__colorch.w
@@ -479,7 +456,6 @@ adecomp__ppath.p
 adedict_FLD_lob-misc.i
 adeedit__dlgsbuf.p
 aderes_f-store.p
-aderes_u-print.p
 aderes__fbresiz.p
 adeuib__cr_palw.p
 adeweb__brwsmap.w
@@ -491,11 +467,9 @@ OpenEdge_DataAdmin_DataSource_AreaDataSource.cls
 OpenEdge_DataAdmin_DataSource_TenantDataSource.cls
 prodict_mss_key_fillin.i
 prores_f-browse.p
-prores_u-print.p
 //015 issues <--
 //016 issues -->
 adecomm__assign-wid.w
-adeuib__tempdbpref.w
 prores_a-form.p
 prores_a-info.p
 prores_a-print.p
@@ -505,7 +479,6 @@ prores_s-format.p
 //017 issues -->
 adecomm_ebrowse.i
 aderes__aint.p
-aderes__sdrefat.i
 adm2_folder.w
 auditing_adm2_aud_folder.w
 OpenEdge_DataAdmin_DataSource_FieldChildDataSource.cls
@@ -513,4 +486,12 @@ prodict_dump__load_df.p
 prodict_gui__guipfed.p
 prodict_user__usrinf2.p
 webtools_util__putfile.w
+adecomm__dlgmnua.p
+aderes_af-rship.i
+aderes__gotopag.p
+adeuib__attr-ed.w
+OpenEdge_DataAdmin_Binding_QueryContext.cls
+prodict_user__usrauto.p
+prores_c-file.p
+prores_s-field.p
 //017 issues <--

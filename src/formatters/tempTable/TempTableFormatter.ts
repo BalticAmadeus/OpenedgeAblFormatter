@@ -376,13 +376,11 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
             case SyntaxNodeType.Include: {
                 // The include node can swallow the statement's end dot (e.g. "{file.i}."),
                 // strip it here since the formatted end dot is appended separately.
-                const rawText = FormatterHelper.getCurrentText(node, fullText);
-                let text = rawText.trim();
+                let text = FormatterHelper.getCurrentText(node, fullText).trim();
                 if (text.endsWith(".")) {
                     text = text.slice(0, -1).trimEnd();
                 }
-                const startsOnNewLine = /^[ \t]*[\r\n]/.test(rawText);
-                newString = (startsOnNewLine ? separator : " ") + text;
+                newString = " " + text;
                 break;
             }
             case SyntaxNodeType.Error:
