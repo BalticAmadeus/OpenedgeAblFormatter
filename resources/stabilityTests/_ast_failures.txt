@@ -476,14 +476,7 @@ prores_i-dir.p
 prores_s-format.p
 //016 issues <--
 //017 issues -->
-adecomm_ebrowse.i
-aderes__aint.p
-adm2_folder.w
-auditing_adm2_aud_folder.w
 OpenEdge_DataAdmin_DataSource_FieldChildDataSource.cls
-prodict_gui__guipfed.p
-prodict_user__usrinf2.p
-webtools_util__putfile.w
 adecomm__dlgmnua.p
 aderes_af-rship.i
 aderes__gotopag.p
@@ -492,4 +485,9 @@ OpenEdge_DataAdmin_Binding_QueryContext.cls
 prodict_user__usrauto.p
 prores_c-file.p
 prores_s-field.p
+prodict__dictc.p
+adeuib__undrect.p
+adeuib__undbrow.p
+adeuib__rdbrow.p
+aderes__arships.p
 //017 issues <--
