@@ -83,56 +83,20 @@ export class VariableDefinitionFormatter
         node: SyntaxNode,
         fullText: Readonly<FullText>
     ): string {
-        const children = node.children;
-        const lastChild = children[children.length - 1];
-        // A trailing comment can end up attached to the statement when a preceding
-        // include directive swallows the statement's end dot; format it separately
-        // instead of letting it merge onto the statement's line.
-        const hasTrailingComment = lastChild?.type === SyntaxNodeType.Comment;
-        const coreChildren = hasTrailingComment ? children.slice(0, -1) : children;
-
         let resultString = "";
-        coreChildren.forEach((child) => {
+        node.children.forEach((child) => {
             resultString = resultString.concat(
                 this.getExpressionString(child, fullText)
             );
         });
 
         // Fix for issue #448
-        const lastCoreNode = coreChildren[coreChildren.length - 1];
-        if (lastCoreNode.type === SyntaxNodeType.TypeTuning) {
+        const lastNode = node.children[node.children.length - 1];
+        if (lastNode.type === SyntaxNodeType.TypeTuning) {
             resultString = resultString.trimEnd();
         }
         resultString += ".";
-
-        if (hasTrailingComment) {
-            resultString += this.getTrailingCommentString(lastChild, fullText);
-        }
         return resultString;
-    }
-
-    private getTrailingCommentString(
-        node: SyntaxNode,
-        fullText: Readonly<FullText>
-    ): string {
-        const commentText = FormatterHelper.getCurrentText(node, fullText);
-        if (!commentText.includes("\n") && !commentText.includes("\r")) {
-            return " " + commentText.trim();
-        }
-
-        let result = "";
-        let foundFirstCommentLine = false;
-        for (const line of commentText.split(fullText.eolDelimiter)) {
-            const trimmedLine = line.trim();
-            if (trimmedLine.length === 0 && !foundFirstCommentLine) {
-                continue;
-            }
-            if (trimmedLine.length > 0) {
-                foundFirstCommentLine = true;
-                result += fullText.eolDelimiter + line;
-            }
-        }
-        return result;
     }
 
     private collectDefineStructure(
@@ -339,24 +303,6 @@ export class VariableDefinitionFormatter
                         variableTuningText;
                     break;
                 }
-
-                // An EXTENT clause can embed an include directive that swallows the
-                // statement's end dot (e.g. "EXTENT { file.i }."); strip it here since
-                // the formatter appends its own end dot separately.
-                let variableTuningRawText = FormatterHelper.getCurrentText(
-                    node,
-                    fullText
-                ).trim();
-                if (variableTuningRawText.endsWith(".")) {
-                    variableTuningRawText = variableTuningRawText
-                        .slice(0, -1)
-                        .trimEnd();
-                }
-                newString =
-                    variableTuningRawText.length === 0
-                        ? ""
-                        : " " + variableTuningRawText;
-                break;
             default: {
                 const text = FormatterHelper.getCurrentText(
                     node,

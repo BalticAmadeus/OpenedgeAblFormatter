@@ -95,7 +95,6 @@ export enum SyntaxNodeType {
     FunctionParameter = "function_parameter",
     ArgumentMode = "argument_mode",
     ScopeTuning = "scope_tuning",
-    Include = "include",
     // arithmetic operators
     Add = "+",
     Subtract = "-",

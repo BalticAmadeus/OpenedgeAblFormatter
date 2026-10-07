@@ -307,7 +307,6 @@ prodict_dump__dmpsddl.p
 prodict_dump__dmpsec.p
 prodict_dump__lod_dbs.p
 prodict_dump__loddbff.p
-prodict_dump__lodsddl.p
 prodict_dump__lodv5df.p
 prodict_dump_d.p
 prodict_dump_inc.p
@@ -482,7 +481,6 @@ aderes__aint.p
 adm2_folder.w
 auditing_adm2_aud_folder.w
 OpenEdge_DataAdmin_DataSource_FieldChildDataSource.cls
-prodict_dump__load_df.p
 prodict_gui__guipfed.p
 prodict_user__usrinf2.p
 webtools_util__putfile.w
