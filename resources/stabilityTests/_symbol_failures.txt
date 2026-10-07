@@ -22,7 +22,6 @@ prodict_dump__lodsec.p
 prodict_gui__guiuchg.p
 prodict_misc_osappend.p
 //010 issues <--
-adecomm__auddat.p
 wrappers_login.i
 adecomm__selindx.p
 adecomm__viewas.p

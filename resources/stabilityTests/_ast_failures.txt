@@ -477,19 +477,13 @@ prores_a-print.p
 prores_i-dir.p
 prores_s-format.p
 //016 issues <--
-adecomm_ebrowse.i
-aderes__sdrefat.i
-adm2_folder.w
-auditing_adm2_aud_folder.w
 prodict_user__usrauto.p
-webtools_util__putfile.w
 OpenEdge_DataAdmin_DataSource_FieldDataSource.cls
 OpenEdge_DataAdmin_Util_dbconnectionrole_status.p
 adecomm__auddat.p
 adecomm__pweditor.i
 adedict_menutrig.i
 adeedit_pcompile.i
-aderes__aint.p
 aderesc__read.p
 adeshar__mlmgr.p
 adeuib__acontp.w
@@ -512,3 +506,14 @@ protools__widgetidassign.p
 webutil__weblist.w
 workshop__gen4gl.p
 workshop__proprty.w
+OpenEdge_DataAdmin_Entity.cls
+aderes__arships.p
+aderes__gotopag.p
+adeuib__rdbrow.p
+adeuib__undbrow.p
+adeuib__undrect.p
+prodict__dictc.p
+webtools_index.w
+webtools_oscommnd.w
+webtools_session.w
+workshop__seedit.w
