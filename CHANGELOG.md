@@ -4,6 +4,15 @@ All notable changes to the "OpenEdge ABL Formatter" extension will be documented
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.5.5 (2026-07-23)
+
+- Added **Format Selection** command — thanks for the contribution @simondrum! 🎉
+- Added FORM statement formatting
+- Fixed single-line comments issues in IF and CASE statements
+- Cleaned up webinar-related information
+- Removed deprecated `abl.completion.upperCase` usage from tests
+- Other Improvements [See all](https://github.com/BalticAmadeus/OpenedgeAblFormatter/milestone/23?closed=1)
+
 ## 0.5.4 (2026-04-24)
 
 - Improved Method Call formatting
