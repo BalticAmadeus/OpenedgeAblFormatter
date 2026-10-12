@@ -56,7 +56,6 @@ adedict__objsel.p
 adedict__openwin.p
 adedict_brwtrig.i
 adedict_edittrig.i
-adedict_FLD__fldgate.p
 adedict_FLD__newfld.p
 adedict_FLD_fdprop.i
 adedict_menutrig.i
@@ -490,4 +489,6 @@ adeuib__undrect.p
 adeuib__undbrow.p
 adeuib__rdbrow.p
 aderes__arships.p
+adeuib__rdbutt.p
+adeuib__rdtogg.p
 //017 issues <--
