@@ -150,6 +150,7 @@ export class FunctionParameterFormatter
                     fullText.eolDelimiter +
                     " ".repeat(Math.max(0, this.alignParameters));
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -265,6 +266,7 @@ export class FunctionParameterFormatter
                     );
                 break;
             }
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -300,6 +302,7 @@ export class FunctionParameterFormatter
         let newString = "";
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
         switch (node.type) {
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;

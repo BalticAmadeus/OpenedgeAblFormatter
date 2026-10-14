@@ -175,6 +175,7 @@ export class ProcedureParameterFormatter
                     );
                 break;
             }
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -210,6 +211,7 @@ export class ProcedureParameterFormatter
         let newString = "";
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
         switch (node.type) {
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;

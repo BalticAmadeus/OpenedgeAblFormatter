@@ -157,6 +157,7 @@ export class ForFormatter extends AFormatter implements IFormatter {
                     alignColumn
                 );
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;

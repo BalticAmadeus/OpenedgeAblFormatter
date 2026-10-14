@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 OpenEdge ABL Formatter is a VS Code extension that formats Progress OpenEdge ABL code using tree-sitter for AST parsing. Published on the VS Code Marketplace by Baltic Amadeus.
 
+## ⚠️ Before touching formatter code
+
+Read [AGENTS.md](AGENTS.md) first — especially the parser-first triage rule. This extension has no lexer of its own; if a bug turns out to be a wrong AST from the vendored tree-sitter grammar, the fix belongs upstream, not as a workaround in `src/formatters/`.
+
 ## Commands
 
 **Build:**

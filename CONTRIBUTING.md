@@ -6,6 +6,10 @@ If you wish to contribute to the extension, please read this guide to understand
 
 If you want to register an issue, use [Formatter bug template](https://github.com/BalticAmadeus/AblFormatter/issues/new/choose).
 
+## Is this a parser bug?
+
+The formatter has no lexer of its own — it formats the AST produced by the vendored tree-sitter grammar (`resources/tree-sitter-abl.wasm`). Before fixing a formatting bug, inspect the AST (`npm run inspect-abl -- --file your-snippet.p`); a wrong AST is a parser bug, not a formatter one — see [AGENTS.md](AGENTS.md) for the full triage guide and [Using a new .wasm file for the extension](#using-a-new-wasm-file-for-the-extension) for the rebuild steps.
+
 ## How to contribute
 
 1. Fork this repository.

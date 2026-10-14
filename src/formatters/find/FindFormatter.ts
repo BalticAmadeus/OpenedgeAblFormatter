@@ -100,6 +100,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
                     fullText.eolDelimiter
                 );
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -132,6 +133,7 @@ export class FindFormatter extends AFormatter implements IFormatter {
                         " ".repeat(Math.max(0, alignColumn))
                     );
                     break;
+                // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
                 case SyntaxNodeType.Error:
                     resultString = resultString.concat(
                         FormatterHelper.getCurrentText(node, fullText)

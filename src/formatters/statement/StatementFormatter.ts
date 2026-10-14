@@ -79,6 +79,7 @@ export class StatementFormatter extends AFormatter implements IFormatter {
         let resultString = "";
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
         switch (node.type) {
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 if (text.toUpperCase() === "ERROR") {
                     resultString = " " + text;

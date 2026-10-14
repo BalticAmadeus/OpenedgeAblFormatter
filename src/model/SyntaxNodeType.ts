@@ -1,6 +1,20 @@
 import { MyFancySet } from "../utils/MyFancySet";
 
 export enum SyntaxNodeType {
+    /**
+     * Two unrelated things produce a node typed "ERROR" — don't conflate them:
+     *
+     * 1. The ABL keyword `ERROR` (`RETURN ERROR.`) — not a parse failure, format
+     *    it normally. See the `node.text.trim() !== "ERROR"` guard in
+     *    AblParserHelper.getNodesWithErrors().
+     * 2. A real parse failure on valid ABL — that is a grammar bug.
+     *
+     * For case 2 the only sanctioned behaviour is verbatim passthrough via
+     * FormatterHelper.getCurrentText(), as every `case SyntaxNodeType.Error:` in
+     * src/formatters/ does. Never inspect the node's content to infer what it
+     * meant and rebuild formatting from it; fix the grammar upstream instead.
+     * See "Top rule: parser-first triage" in AGENTS.md.
+     */
     Error = "ERROR",
 
     AvailableExpression = "available_expression",

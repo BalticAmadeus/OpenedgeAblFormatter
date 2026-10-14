@@ -151,6 +151,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                     longestLeft
                 );
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 assignString = FormatterHelper.getCurrentText(node, fullText);
                 break;

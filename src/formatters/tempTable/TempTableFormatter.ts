@@ -245,6 +245,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                     " ".repeat(Math.max(0, this.alignType - text.length));
                 break;
 
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -275,6 +276,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
         let newString = "";
         const text = FormatterHelper.getCurrentText(node, fullText).trim();
         switch (node.type) {
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -297,6 +299,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 newString =
                     text + " ".repeat(this.maxIndexFieldNameLen - text.length);
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -373,6 +376,7 @@ export class TempTableFormatter extends AFormatter implements IFormatter {
                 ).trim();
                 this.indexKeywordLength = newString.length;
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;

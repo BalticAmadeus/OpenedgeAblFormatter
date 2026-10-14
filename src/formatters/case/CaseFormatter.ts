@@ -130,6 +130,7 @@ export class CaseFormatter extends AFormatter implements IFormatter {
                               node.startPosition.column
                       ).trim();
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;

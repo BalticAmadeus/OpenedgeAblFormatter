@@ -167,6 +167,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
                     .map((child) => this.getElseStatementPart(child, fullText))
                     .join("");
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -230,6 +231,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             case afterThenStatements.hasFancy(node.type, ""):
                 newString = this.formatAfterThenStatement(node, fullText);
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
@@ -288,6 +290,7 @@ export class IfFormatter extends AFormatter implements IFormatter {
             case afterThenStatements.hasFancy(node.type, ""):
                 newString = this.formatAfterThenStatement(node, fullText);
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;

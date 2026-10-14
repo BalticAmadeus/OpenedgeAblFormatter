@@ -125,6 +125,7 @@ export class IfFunctionFormatter extends AFormatter implements IFormatter {
                     : " " +
                       FormatterHelper.getCurrentText(node, fullText).trim();
                 break;
+            // Parse failure: passthrough only — never rebuild from it. See AGENTS.md.
             case SyntaxNodeType.Error:
                 newString = FormatterHelper.getCurrentText(node, fullText);
                 break;
