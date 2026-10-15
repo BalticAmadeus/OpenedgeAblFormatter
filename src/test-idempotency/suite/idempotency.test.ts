@@ -13,6 +13,8 @@ import {
     getTestRunDir,
     logKnownFailures,
     setupParserHelper,
+    validateAdeTestCases,
+    generateAdeSetupErrorMessage,
 } from "../../utils/suitesUtils";
 
 let parserHelper: AblParserHelper;
@@ -35,13 +37,21 @@ suite("Idempotency Test Suite", () => {
             "test cases",
         );
 
+        validateAdeTestCases("Idempotency", idempotencyTestCases);
+
         logKnownFailures("Idempotency", resultFailuresFile);
     });
 
-    for (const cases of idempotencyTestCases) {
-        test(`Idempotency test: ${cases}`, () => {
-            idempotencyTest(cases, parserHelper);
-        }).timeout(20000);
+    if (idempotencyTestCases.length === 0) {
+        test("Idempotency Test Suite - Setup Required", () => {
+            throw new Error(generateAdeSetupErrorMessage("Idempotency"));
+        });
+    } else {
+        for (const cases of idempotencyTestCases) {
+            test(`Idempotency test: ${cases}`, () => {
+                idempotencyTest(cases, parserHelper);
+            }).timeout(20000);
+        }
     }
 });
 
