@@ -467,6 +467,7 @@
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "inspect-abl": "node ./scripts/inspect-abl.js",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "prep-ui-test": "npm run delete-out && npm run compile && extest setup-tests -s ./.test_dir -e ./.ext_dir -c 1.85.1 -t stable",
