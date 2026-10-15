@@ -44,6 +44,14 @@ jobs:
               run: npm test
               if: runner.os != 'Linux'
 
+            - name: Run CLI Regression Tests
+              run: xvfb-run -a npm run test-cli-regression
+              if: runner.os == 'Linux'
+
+            - name: Run CLI Regression Tests (Non-Linux)
+              run: npm run test-cli-regression
+              if: runner.os != 'Linux'
+
     symbol-test:
         needs: test # Runs only if 'test' job is successful
         env:

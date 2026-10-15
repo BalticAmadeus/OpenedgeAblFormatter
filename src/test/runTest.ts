@@ -11,6 +11,11 @@ async function main() {
         // Check for `--metamorphic` flag
         const isMetamorphic = process.argv.includes("--metamorphic");
 
+        const grepIndex = process.argv.indexOf("--grep");
+        if (grepIndex !== -1 && process.argv[grepIndex + 1]) {
+            process.env.TEST_GREP = process.argv[grepIndex + 1];
+        }
+
         // Optional: Pass this flag to your extension via env var or launchArgs
         const launchArgs = ["--disable-extensions"];
 

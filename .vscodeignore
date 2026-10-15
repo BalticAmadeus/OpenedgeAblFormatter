@@ -20,3 +20,4 @@ resources/stabilityTests/**
 resources/testResults/**
 resources/compilationTests/**
 resources/ade-sourceCode/**
+resources/cliExamples/**
