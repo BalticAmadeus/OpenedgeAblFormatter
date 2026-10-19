@@ -36,6 +36,7 @@ export enum SyntaxNodeType {
     WhereClause = "where_clause",
     UndoStatement = "undo_statement",
     AssignStatement = "assign_statement",
+    NoError = "no_error",
     Assignment = "assignment",
     VariableAssignment = "variable_assignment",
     VariableTuning = "variable_tuning",
