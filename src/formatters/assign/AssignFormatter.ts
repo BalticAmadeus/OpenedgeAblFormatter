@@ -66,12 +66,23 @@ export class AssignFormatter extends AFormatter implements IFormatter {
             }
         }
 
-        for (const child of children) {
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
             if (child.type === "comment") {
                 const commentText = FormatterHelper.getCurrentText(child, fullText);
-
-                // Check if comment contains newlines (block comment on own line)
-                if (commentText.includes("\n") || commentText.includes("\r")) {
+                const nextChild = children[i + 1];
+                if (
+                    commentText.trimStart().startsWith("//") &&
+                    nextChild?.type === SyntaxNodeType.NoError
+                ) {
+                    resultString += commentText;
+                    resultString +=
+                        fullText.eolDelimiter +
+                        " ".repeat(this.startColumn) +
+                        FormatterHelper.getCurrentText(nextChild, fullText).trim();
+                    i++;
+                } else if (commentText.includes("\n") || commentText.includes("\r")) {
+                    // Check if comment contains newlines (block comment on own line)
                     const lines = commentText.split(fullText.eolDelimiter);
                     let foundFirstCommentLine = false;
 
@@ -96,7 +107,10 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                         }
                     }
 
-                } else {
+                } else if (
+                    !commentText.trimStart().startsWith("//") ||
+                    nextChild?.type !== SyntaxNodeType.NoError
+                ) {
                     resultString += commentText;
                 }
             } else {
