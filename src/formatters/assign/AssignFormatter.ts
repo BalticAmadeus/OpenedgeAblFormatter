@@ -69,8 +69,9 @@ export class AssignFormatter extends AFormatter implements IFormatter {
         for (const child of children) {
             if (child.type === "comment") {
                 const commentText = FormatterHelper.getCurrentText(child, fullText);
+
+                // Check if comment contains newlines (block comment on own line)
                 if (commentText.includes("\n") || commentText.includes("\r")) {
-                    // Check if comment contains newlines (block comment on own line)
                     const lines = commentText.split(fullText.eolDelimiter);
                     let foundFirstCommentLine = false;
 
