@@ -151,6 +151,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                     longestLeft
                 );
                 break;
+            case SyntaxNodeType.NoError:
             case SyntaxNodeType.Error:
                 assignString = FormatterHelper.getCurrentText(node, fullText);
                 break;
