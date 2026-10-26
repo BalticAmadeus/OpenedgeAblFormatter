@@ -66,22 +66,10 @@ export class AssignFormatter extends AFormatter implements IFormatter {
             }
         }
 
-        for (let i = 0; i < children.length; i++) {
-            const child = children[i];
+        for (const child of children) {
             if (child.type === "comment") {
                 const commentText = FormatterHelper.getCurrentText(child, fullText);
-                const nextChild = children[i + 1];
-                if (
-                    commentText.trimStart().startsWith("//") &&
-                    nextChild?.type === SyntaxNodeType.NoError
-                ) {
-                    resultString += commentText;
-                    resultString +=
-                        fullText.eolDelimiter +
-                        " ".repeat(this.startColumn) +
-                        FormatterHelper.getCurrentText(nextChild, fullText).trim();
-                    i++;
-                } else if (commentText.includes("\n") || commentText.includes("\r")) {
+                if (commentText.includes("\n") || commentText.includes("\r")) {
                     // Check if comment contains newlines (block comment on own line)
                     const lines = commentText.split(fullText.eolDelimiter);
                     let foundFirstCommentLine = false;
@@ -107,10 +95,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                         }
                     }
 
-                } else if (
-                    !commentText.trimStart().startsWith("//") ||
-                    nextChild?.type !== SyntaxNodeType.NoError
-                ) {
+                } else {
                     resultString += commentText;
                 }
             } else {
@@ -165,6 +150,7 @@ export class AssignFormatter extends AFormatter implements IFormatter {
                     longestLeft
                 );
                 break;
+            case SyntaxNodeType.NoError:
             case SyntaxNodeType.Error:
                 assignString = FormatterHelper.getCurrentText(node, fullText);
                 break;
