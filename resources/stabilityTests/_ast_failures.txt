@@ -351,7 +351,6 @@ prodict_user_usermenu.i
 prohelp__keybrd.p
 prores_a-field.p
 prores_c-cache1.i
-prores_c-edit.i
 prores_c-print.p
 prores_c-vector.p
 prores_d-main.p
@@ -454,7 +453,6 @@ aderes_af-rship.i
 aderes__gotopag.p
 adeuib__attr-ed.w
 OpenEdge_DataAdmin_Binding_QueryContext.cls
-prores_c-file.p
 adeuib__rdbrow.p
 aderes__arships.p
 adeuib__rdbutt.p
@@ -462,6 +460,9 @@ adeuib__rdtogg.p
 //017 issues <--
 //010 issues -->
 adecomm_rptvar.i
+adeuib__undbrow.p
+adeuib__undrect.p
 adeweb__webfile.w
 adm2_support__wizetbl.w
+prodict__dictc.p
 //017 issues <--
