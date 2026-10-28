@@ -12,5 +12,10 @@ export interface ISuiteConfig<TResult> {
         parserHelper?: AblParserHelper
     ) => boolean;
     onMismatch?: (before: TResult, after: TResult, fileName: string) => void;
+    onMismatchAsync?: (
+        before: TResult,
+        after: TResult,
+        fileName: string
+    ) => Promise<void>;
     cleanup?: (before: TResult, after: TResult) => void;
 }

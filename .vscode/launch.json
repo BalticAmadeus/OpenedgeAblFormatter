@@ -76,6 +76,24 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
+			"name": "Symbol Tests (Delta Reduct)",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-symbol/suite/index",
+				"${workspaceFolder}/resources/stabilityTests",
+				"--delta-reduct"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-symbol/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"DELTA_REDUCT": "true"
+			}
+		},
+		{
 			"name": "AST Tests",
 			"type": "extensionHost",
 			"request": "launch",
@@ -88,6 +106,24 @@
 				"${workspaceFolder}/out/test-ast/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "AST Tests (Delta Reduct)",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-ast/suite/index",
+				"${workspaceFolder}/resources/stabilityTests",
+				"--delta-reduct"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-ast/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"DELTA_REDUCT": "true"
+			}
 		},
 		{
 			"name": "AST Tests (Metamorphic)",
@@ -103,6 +139,36 @@
 			"preLaunchTask": "${defaultBuildTask}",
 			"env": {
 				"TEST_MODE": "metamorphic"
+			}
+		},
+		{
+			"name": "Idempotency Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-idempotency/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-idempotency/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "Idempotency Tests (Delta Reduct)",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test-idempotency/suite/index",
+				"--delta-reduct"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test-idempotency/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"DELTA_REDUCT": "true"
 			}
 		},
 		{
