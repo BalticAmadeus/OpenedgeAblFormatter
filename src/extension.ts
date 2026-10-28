@@ -17,12 +17,12 @@ import { lt } from "semver";
 import { FormatterPreviewPanel } from "./providers/FormatterPreviewPanel";
 import { FormatterPreviewProvider } from "./providers/FormatterPreviewProvider";
 
-const WEBINAR_INFO_URL =
-    "https://github.com/BalticAmadeus/OpenedgeAblFormatter/discussions/682";
-const WEBINAR_DATE_LABEL = "April 30th";
+import { EOL } from "./model/EOL";
+import { FileIdentifier } from "./model/FileIdentifier";
+import { FormattingEngine } from "./formatterFramework/FormattingEngine";
 
 const metamorphicTestingEngine = new MetamorphicEngine<BaseEngineOutput>(
-    undefined //no excessive logging
+    undefined, //no excessive logging
 );
 
 // Add a type-safe global declaration for the extension context
@@ -50,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const parserHelper = new AblParserHelper(
         context.extensionPath,
-        debugManager
+        debugManager,
     );
 
     const metamorphicRelationsList = [
@@ -68,17 +68,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const formatter = new AblFormatterProvider(
         parserHelper,
-        metamorphicTestingEngine
+        metamorphicTestingEngine,
     );
 
     vscode.languages.registerDocumentRangeFormattingEditProvider(
         Constants.ablId,
-        formatter
+        formatter,
     );
 
     vscode.languages.registerDocumentFormattingEditProvider(
         Constants.ablId,
-        formatter
+        formatter,
     );
 
     const hoverProvider = new AblDebugHoverProvider(parserHelper);
@@ -97,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             if (selection.isEmpty) {
                 vscode.window.showInformationMessage(
-                    "Please select a block of code to exclude."
+                    "Please select a block of code to exclude.",
                 );
                 return;
             }
@@ -112,7 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
             await editor.edit((editBuilder) => {
                 editBuilder.replace(selection, newText);
             });
-        }
+        },
     );
     context.subscriptions.push(excludeCodeCommand);
 
@@ -147,6 +147,54 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(previewCommand);
+    const formatSelectedCodeCommand = vscode.commands.registerCommand(
+        "openedgeAblFormatter.formatSelectedCode",
+        async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                return;
+            }
+
+            const selection = editor.selection;
+
+            if (selection.isEmpty) {
+                vscode.window.showInformationMessage(
+                    "Please select a block of code to format.",
+                );
+                return;
+            }
+
+            const document = editor.document;
+            const configManager = ConfigurationManager.getInstance();
+
+            try {
+                const codeFormatter = new FormattingEngine(
+                    parserHelper,
+                    new FileIdentifier(document.fileName, document.version),
+                    configManager,
+                    debugManager,
+                    metamorphicTestingEngine,
+                );
+
+                const formattedText = codeFormatter.formatText(
+                    document.getText(selection),
+                    new EOL(document.eol),
+                );
+
+                await editor.edit((editBuilder) => {
+                    editBuilder.replace(selection, formattedText);
+                });
+            } catch (error) {
+                vscode.window.showErrorMessage(
+                    `ABL Formatter: Failed to format selection - ${
+                        error instanceof Error ? error.message : String(error)
+                    }`,
+                );
+            }
+        },
+    );
+
+    context.subscriptions.push(formatSelectedCodeCommand);
 
     setInterval(runPeriodicTask, 20_000);
 
@@ -158,21 +206,14 @@ export async function activate(context: vscode.ExtensionContext) {
                     "https://github.com/BalticAmadeus/OpenedgeAblFormatter/issues/new?template=formatter-bug-report.md"
                 )
             );
-        }
+        },
     );
     context.subscriptions.push(reportBugCommand);
 
-    const webinarInfoCommand = vscode.commands.registerCommand(
-        "openedgeAblFormatter.openWebinarInfo",
-        () => {
-            vscode.env.openExternal(vscode.Uri.parse(WEBINAR_INFO_URL));
-        }
-    );
-    context.subscriptions.push(webinarInfoCommand);
 
     const bugStatusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
-        99
+        99,
     );
 
     bugStatusBarItem.text = "$(bug) ABL Formatter: Report Bug";
@@ -182,18 +223,6 @@ export async function activate(context: vscode.ExtensionContext) {
     bugStatusBarItem.show();
     context.subscriptions.push(bugStatusBarItem);
 
-    if (showPromotionalNotifications) {
-        const webinarStatusBarItem = vscode.window.createStatusBarItem(
-            vscode.StatusBarAlignment.Right,
-            98
-        );
-        webinarStatusBarItem.text = "$(megaphone) Webinar: Apr 30";
-        webinarStatusBarItem.command = "openedgeAblFormatter.openWebinarInfo";
-        webinarStatusBarItem.tooltip =
-            `Join our free OpenEdge ABL Formatter webinar on ${WEBINAR_DATE_LABEL}`;
-        webinarStatusBarItem.show();
-        context.subscriptions.push(webinarStatusBarItem);
-    }
 
     // Pass context down to test suites via global or export
     globalThis.__ablFormatterExtensionContext = context;
@@ -248,37 +277,6 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(disposable);
     }
 
-    // Show one-time promo popup for upcoming webinar.
-    const WEBINAR_PROMO_SHOWN_KEY =
-        "openedgeAblFormatter.webinarPromoApril302026Shown";
-    if (
-        showPromotionalNotifications &&
-        !context.globalState.get(WEBINAR_PROMO_SHOWN_KEY)
-    ) {
-        const result = await vscode.window.showInformationMessage(
-            `🚀 Friendly reminder – don’t miss out! Join our FREE webinar on ${WEBINAR_DATE_LABEL} and get a behind-the-scenes look at the OpenEdge ABL Formatter for VS Code.`,
-            {
-                detail: `Our developer Gustas will walk you through:
-• How the formatter was built
-• The challenges faced along the way
-• How it helps make your code cleaner and easier to work with
-• How to install and set it up
-
-🕒 14:00–15:00 (EET)
-📍 Online event
-👉 Sign up via the form to receive your access link before the webinar.
-✨ Attend live or get the recording – we’ll send it to everyone who registers.`
-            },
-            "Follow Webinar Updates",
-            "Dismiss"
-        );
-
-        if (result === "Follow Webinar Updates") {
-            await vscode.env.openExternal(vscode.Uri.parse(WEBINAR_INFO_URL));
-        }
-
-        await context.globalState.update(WEBINAR_PROMO_SHOWN_KEY, true);
-    }
 }
 
 function runPeriodicTask() {
@@ -297,7 +295,7 @@ function runPeriodicTask() {
             "Num of test cases",
             resultList.length,
             ". Pass rate %",
-            ((resultList.length - numOfFails) / resultList.length) * 100
+            ((resultList.length - numOfFails) / resultList.length) * 100,
         );
     } else {
         console.log("Nothing to test");

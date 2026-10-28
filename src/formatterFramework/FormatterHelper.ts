@@ -95,6 +95,15 @@ export class FormatterHelper {
         return text.substring(firstColonIndex + 1);
     }
 
+    public static findLineStart(text: string, index: number): number {
+        const slice = text.substring(0, index);
+        const lastCr = slice.lastIndexOf("\r");
+        const lastLf = slice.lastIndexOf("\n");
+        const lastLineBreak = Math.max(lastCr, lastLf);
+
+        return lastLineBreak === -1 ? 0 : lastLineBreak + 1;
+    }
+
     public static getCurrentTextMultilineAdjust(
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>,

@@ -95,6 +95,35 @@ User triggers format
 
 **Test fixtures**: Functional tests use `.abl` input/output pairs in `resources/functionalTests/<FormatterName>/`. Add a new subfolder + file pair to test a formatter.
 
+## Test Writing Goals
+
+Every new functional test serves one of two purposes — and ideally both at once:
+
+### 1. Expose formatter bugs (tests that fail)
+Write tests where the **target reflects the correct desired output** even when the formatter does not yet produce it. A failing test is a bug report baked into the suite.
+
+Common bug patterns found so far:
+- **Unrecognised statement types**: `RUN`, `ACCUMULATE` (full word) are not in `StatementFormatter`'s match list — spaces are left unchanged.
+- **Inner-node spaces not normalised**: `StatementFormatter.collectStatement()` calls `getCurrentText(child).trim()` which only strips leading/trailing whitespace from a child AST node. Spaces *inside* a single child node (e.g. `AMBIGUOUS   Customer`, `CAN-FIND(FIRST   Customer   WHERE ...)`, `CAST(a,   B)`) are preserved unchanged.
+- **Unhandled definition variants**: `DEFINE DATASET` and `DEFINE EVENT` are not handled by `VariableDefinitionFormatter`; `PARAMETER TABLE FOR` is not handled by `ProcedureParameterFormatter`.
+- **Partial token normalisation**: `BEFORE-TABLE   value` and `OUTER-JOIN` clauses retain extra spaces because their sub-tokens are a single child node.
+- **Indentation calculation bugs**: `NOT (expr AND\n...)` aligns to the wrong column; deeply nested `do transaction: repeat:` blocks are over-indented.
+
+### 2. Cover the basics (tests that pass)
+Write at least one passing test per ABL construct so regressions are caught immediately. A passing test confirms the formatter handles that path correctly today.
+
+### Checklist when adding tests for a new construct
+- [ ] **Basic case** — single-line with extra spaces between all top-level tokens → normalised to single spaces (confirms the node type is matched).
+- [ ] **Inner-expression spaces** — extra spaces *inside* function arguments, expression sub-nodes, or keyword pairs → should be normalised (often exposes the inner-node bug).
+- [ ] **Disabled / no-op** — formatter setting disabled, input == target, confirms nothing changes.
+- [ ] **Multiline / complex** — real-world multi-token form to catch indentation and line-break behaviour.
+
+### How to verify a test exposes a real bug
+Run `npm test` after adding the test. Compare the result file in `resources/testResults/functionalTests/` against the target:
+- If the result file shows the *input* unchanged → the node type is not matched by any formatter.
+- If the result file shows *partial* normalisation → a child node's internal spaces are not processed.
+- If the result file shows *wrong indentation* → indentation calculation is off.
+
 **Telemetry**: Reports formatter setting usage to Azure Application Insights via `@vscode/extension-telemetry`. Can be disabled by the user.
 
 ## Configuration

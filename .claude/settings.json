@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build *)",
+      "Bash(npm run lint *)",
+      "Bash(npm run compile *)",
+      "Bash(npm run watch *)",
+      "Bash(npm test *)",
+      "Bash(npx mocha *)",
+      "Bash(mkdir -p *)"
+    ]
+  }
+}

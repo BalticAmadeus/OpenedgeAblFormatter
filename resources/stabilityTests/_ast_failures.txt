@@ -3,9 +3,7 @@ ablunit_OpenEdge_ABLUnit_Model_TestCase.cls
 ablunit_OpenEdge_ABLUnit_Model_TestClass.cls
 ablunit_OpenEdge_ABLUnit_Model_TestProcedure.cls
 ablunit_OpenEdge_ABLUnit_Runner_ABLRunner.cls
-ablunit_OpenEdge_ABLUnit_Writer_ResultsXmlWriter.cls
 adecomm__altbufrpt.p
-adecomm__assign-wid.w
 adecomm__auddfilt.p
 adecomm__chosobj.w
 adecomm__dblist.p
@@ -43,7 +41,6 @@ adecomm__trigrpt.p
 adecomm__viewasd.w
 adecomm__winmenu.w
 adecomm__y-logic.p
-adecomm_cbcdropx.i
 adecomm__qinit.p
 adecomm_toolmenu.i
 adecomm_toolrun.i
@@ -59,7 +56,6 @@ adedict__objsel.p
 adedict__openwin.p
 adedict_brwtrig.i
 adedict_edittrig.i
-adedict_FLD__fldgate.p
 adedict_FLD__newfld.p
 adedict_FLD_fdprop.i
 adedict_menutrig.i
@@ -69,7 +65,6 @@ adedict_TRIG__trigdlg.p
 adeedit_pmenus.i
 adeedit_psystem.i
 aderes__adeploy.p
-aderes__alabel.p
 aderes__atalias.p
 aderes_aderes.p
 aderes_b-write.p
@@ -90,7 +85,6 @@ aderes_y-format.p
 aderes_y-page.p
 aderesc__read.p
 aderesc__ttyconv.p
-adeshar__filname.p
 adeshar__gendefs.p
 adeshar__mnutb.i
 adeshar__mupdatm.p
@@ -107,7 +101,6 @@ adeuib__cr_pal.p
 adeuib__datasrc.w
 adeuib__drwradi.p
 adeuib__fclasnewbasic.w
-adeuib__genpro2.i
 adeuib__inscal8.w
 adeuib__inscall.w
 adeuib__newfunc.w
@@ -117,7 +110,6 @@ adeuib__oeidepref.p
 adeuib__ppuscal.w
 adeuib__prpsdo.p
 adeuib__prpsmar.p
-adeuib__rdbrow.p
 adeuib__rdcomb.p
 adeuib__rdfill.p
 adeuib__rdfram.i
@@ -133,18 +125,15 @@ adeuib__showlbl.p
 adeuib__smoupg.w
 adeuib__tempdb.w
 adeuib__ttmaint.w
-adeuib__ttyss.i
 adeuib__ttysx.p
 adeuib__tview.w
 adeuib__uibmain.p
-adeuib__undbrow.p
 adeuib__undbutt.p
 adeuib__undcomb.p
 adeuib__undcont.p
 adeuib__unddv.p
 adeuib__undfill.p
 adeuib__undqry.p
-adeuib__undrect.p
 adeuib__undsdo.p
 adeuib__undsele.p
 adeuib__undtext.p
@@ -203,7 +192,6 @@ businesscomponents_OpenEdge_BusinessLogic_BusinessEntity.cls
 businesscomponents_OpenEdge_BusinessLogic_Filter_AblFilterParser.cls
 businesscomponents_OpenEdge_BusinessLogic_Filter_JfpFilterParser.cls
 businesscomponents_OpenEdge_BusinessLogic_Query_QueryBuilder.cls
-businesscomponents_OpenEdge_BusinessLogic_QueryOperatorHelper.cls
 corelib_OpenEdge_Core_Assertion_assertisunknown.i
 corelib_OpenEdge_Core_Assertion_assertnotunknown.i
 corelib_OpenEdge_Core_ByteBucket.cls
@@ -213,31 +201,24 @@ corelib_OpenEdge_Core_Collections_MapBackedCollection.cls
 corelib_OpenEdge_Core_Collections_ObjectEqualityComparer.cls
 corelib_OpenEdge_Core_Collections_StringKeyedMap.cls
 corelib_OpenEdge_Core_Collections_StringStringMap.cls
-corelib_OpenEdge_Core_DateHolder.cls
-corelib_OpenEdge_Core_DateTimeHolder.cls
-corelib_OpenEdge_Core_DateTimeTzHolder.cls
 corelib_OpenEdge_Core_EncodedString.cls
 corelib_OpenEdge_Core_EncodingTypeEnum.cls
 corelib_OpenEdge_Core_File.cls
 corelib_OpenEdge_Core_FileInfo.cls
 corelib_OpenEdge_Core_Json_JsonConverter.cls
 corelib_OpenEdge_Core_Json_JsonSerializer.cls
-corelib_OpenEdge_Core_LogicalValue.cls
 corelib_OpenEdge_Core_Memptr.cls
 corelib_OpenEdge_Core_SemanticVersion.cls
-corelib_OpenEdge_Core_TimeStamp.cls
 corelib_OpenEdge_Core_Util_BuilderRegistry.cls
 corelib_OpenEdge_Core_Util_ConfigBuilder.cls
 corelib_OpenEdge_Core_Util_LeakCheck.cls
 corelib_OpenEdge_Core_Util_MathUtil.cls
 corelib_OpenEdge_Core_Util_TokenResolver.cls
 corelib_OpenEdge_Core_Util_UTF8Encoder.cls
-corelib_OpenEdge_Core_WidgetHandle.cls
 corelib_OpenEdge_Logging_ConfigFileLoggerBuilder.cls
 corelib_OpenEdge_Logging_Filter_LogFilterBuilder.cls
 corelib_OpenEdge_Logging_Format_AnonymizedTokenFormat.cls
 corelib_OpenEdge_Logging_Format_MDCTokenFormat.cls
-corelib_OpenEdge_Logging_Format_TokenContextFormat.cls
 corelib_OpenEdge_Logging_JsonConfigLoggerBuilder.cls
 corelib_OpenEdge_Logging_Logger.cls
 corelib_OpenEdge_Logging_LoggerBuilder.cls
@@ -245,10 +226,8 @@ corelib_OpenEdge_Logging_Writer_LogManagerWriter.cls
 daschema_cdc.i
 daschema_cdctablepolicy.i
 daschema_partition.i
-netlib_OpenEdge_Mobile_TelerikPushNotificationMessageBuilder.cls
 netlib_OpenEdge_Net_FileTypeRegistry.cls
 netlib_OpenEdge_Net_FormEncoder.cls
-netlib_OpenEdge_Net_HTTP_ContentTypeHeader.cls
 netlib_OpenEdge_Net_HTTP_Cookie.cls
 netlib_OpenEdge_Net_HTTP_Filter_Payload_ClientSocketResponseWriter.cls
 netlib_OpenEdge_Net_HTTP_Filter_Payload_JsonEntityWriter.cls
@@ -293,27 +272,13 @@ netlib_OpenEdge_Web_DataObject_Writer_MappingFileServiceWriter.cls
 netlib_OpenEdge_Web_DataObject_Writer_ObjectValueWriter.cls
 netlib_OpenEdge_Web_WebRequest.cls
 netlib_OpenEdge_Web_WebResponseWriter.cls
-OpenEdge_DataAdmin_Binding_AreaContext.cls
-OpenEdge_DataAdmin_Binding_AuthenticationSystemContext.cls
-OpenEdge_DataAdmin_Binding_AuthTagContext.cls
-OpenEdge_DataAdmin_Binding_CdcFieldPolicyContext.cls
 OpenEdge_DataAdmin_Binding_CdcTablePolicyContext.cls
-OpenEdge_DataAdmin_Binding_DatabaseOptionContext.cls
 OpenEdge_DataAdmin_Binding_ExtentContext.cls
-OpenEdge_DataAdmin_Binding_GrantedRoleContext.cls
-OpenEdge_DataAdmin_Binding_IndexFieldContext.cls
-OpenEdge_DataAdmin_Binding_LocalIndexContext.cls
 OpenEdge_DataAdmin_Binding_PartitionContext.cls
 OpenEdge_DataAdmin_Binding_PartitionPolicyContext.cls
-OpenEdge_DataAdmin_Binding_PartitionPolicyDetailContext.cls
-OpenEdge_DataAdmin_Binding_PartitionPolicyFieldContext.cls
-
-OpenEdge_DataAdmin_Binding_RoleContext.cls
-OpenEdge_DataAdmin_Binding_SequenceContext.cls
 OpenEdge_DataAdmin_Binding_SequenceValueContext.cls
 OpenEdge_DataAdmin_Binding_TenantContext.cls
 OpenEdge_DataAdmin_Binding_TenantGroupContext.cls
-OpenEdge_DataAdmin_Binding_TenantGroupMemberContext.cls
 OpenEdge_DataAdmin_Binding_UserContext.cls
 OpenEdge_DataAdmin_CdcFieldPolicySet.cls
 OpenEdge_DataAdmin_CdcTablePolicySet.cls
@@ -321,14 +286,12 @@ OpenEdge_DataAdmin_DataAccess_DataAccess.cls
 OpenEdge_DataAdmin_DataAdminCollection.cls
 OpenEdge_DataAdmin_DataSource_AuthTagDataSource.cls
 OpenEdge_DataAdmin_DataSource_DatabaseOptionDataSource.cls
-OpenEdge_DataAdmin_DataSource_FieldChildDataSource.cls
 OpenEdge_DataAdmin_DataSource_FieldDataSource.cls
 OpenEdge_DataAdmin_DataSource_GrantedRoleDataSource.cls
 OpenEdge_DataAdmin_DataSource_RoleDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserFieldPermissionDataSource.cls
 OpenEdge_DataAdmin_DataSource_UserTablePermissionDataSource.cls
-OpenEdge_DataAdmin_PartitionPolicy.cls
 OpenEdge_DataAdmin_PartitionPolicyDetailSet.cls
 OpenEdge_DataAdmin_PartitionPolicySet.cls
 OpenEdge_DataAdmin_ServerCommand_TableDataCommand.cls
@@ -336,19 +299,13 @@ OpenEdge_DataAdmin_TenantGroupSet.cls
 OpenEdge_DataAdmin_TenantSet.cls
 OpenEdge_DataAdmin_Util_dbCanMigrate.p
 OpenEdge_DataAdmin_Util_dbconnectionrole_status.p
-prodict__dctexec.p
-prodict__dctexen.p
 prodict__dctgues.p
-prodict__dctlrec.p
-prodict__dictc.p
 prodict_aud__aud-pol.p
 prodict_dump__dmpincr.p
 prodict_dump__dmpsddl.p
 prodict_dump__dmpsec.p
-prodict_dump__dmputil.p
 prodict_dump__lod_dbs.p
 prodict_dump__loddbff.p
-prodict_dump__lodsddl.p
 prodict_dump__lodv5df.p
 prodict_dump_d.p
 prodict_dump_inc.p
@@ -406,7 +363,6 @@ prodict_user__usrpfed.p
 prodict_user_usermenu.i
 prohelp__keybrd.p
 prores_a-field.p
-prores_a-join.p
 prores_b-again.p
 prores_c-cache1.i
 prores_c-edit.i
@@ -418,13 +374,10 @@ prores_c-print.p
 prores_c-vector.p
 prores_d-main.p
 prores_i-pick.p
-prores_i-zap.p
 prores_l-main.p
-prores_q-write.p
 prores_r-main.p
 prores_r-write.p
 prores_results.i
-prores_s-ask.p
 prores_s-quoter.p
 prores_u-browse.i
 protools__colorch.w
@@ -459,9 +412,6 @@ adeuib__rdqury.p
 adm2_support__wizhref.w
 auditing_ui__audeventmaintw.w
 protools__dblist.w
-adeuib__rdbrow.p
-adeuib__undrect.p
-prodict__dictc.p
 workshop__gen4gl.p
 //010 issues -->
 adeuib_usrlistl.i
@@ -471,10 +421,6 @@ prodict_dump__lodsec.p
 prores_b-build.p
 webtools_edtscrpt.w
 webtools_helpsrch.w
-webtools_index.w
-webtools_oscommnd.w
-webtools_session.w
-workshop__seedit.w
 //010 issues <--
 adeuib__accsect.p
 adeuib__advprop.w
@@ -487,7 +433,6 @@ aderes_c-gen7.i
 aderes_l-write.p
 aderes_s-read.p
 aderes_s-write.p
-aderes__arships.p
 adeshar_qbuild.i
 adeshar__qset.p
 adeweb_qbuild.i
@@ -509,7 +454,6 @@ adecomp__ppath.p
 adedict_FLD_lob-misc.i
 adeedit__dlgsbuf.p
 aderes_f-store.p
-aderes_u-print.p
 aderes__fbresiz.p
 adeuib__cr_palw.p
 adeweb__brwsmap.w
@@ -521,5 +465,30 @@ OpenEdge_DataAdmin_DataSource_AreaDataSource.cls
 OpenEdge_DataAdmin_DataSource_TenantDataSource.cls
 prodict_mss_key_fillin.i
 prores_f-browse.p
-prores_u-print.p
 //015 issues <--
+//016 issues -->
+adecomm__assign-wid.w
+prores_a-form.p
+prores_a-info.p
+prores_a-print.p
+prores_i-dir.p
+prores_s-format.p
+//016 issues <--
+//017 issues -->
+OpenEdge_DataAdmin_DataSource_FieldChildDataSource.cls
+adecomm__dlgmnua.p
+aderes_af-rship.i
+aderes__gotopag.p
+adeuib__attr-ed.w
+OpenEdge_DataAdmin_Binding_QueryContext.cls
+prodict_user__usrauto.p
+prores_c-file.p
+prores_s-field.p
+prodict__dictc.p
+adeuib__undrect.p
+adeuib__undbrow.p
+adeuib__rdbrow.p
+aderes__arships.p
+adeuib__rdbutt.p
+adeuib__rdtogg.p
+//017 issues <--
