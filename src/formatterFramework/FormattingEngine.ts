@@ -334,6 +334,10 @@ export class FormattingEngine {
         fullText: FullText,
         formatters: IFormatter[]
     ): CodeEdit | CodeEdit[] | undefined {
+        if (node.hasError() && node.text.includes("*/")) {
+            return undefined;
+        }
+
         let result: CodeEdit | CodeEdit[] | undefined;
 
         formatters.some((formatter) => {

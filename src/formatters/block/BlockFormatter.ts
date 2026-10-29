@@ -30,6 +30,13 @@ export class BlockFormater extends AFormatter implements IFormatter {
             return false;
         }
 
+        if (
+            parent.type === SyntaxNodeType.EnumStatement &&
+            !this.configurationManager.get("enumFormatting")
+        ) {
+            return false;
+        }
+
         // Guard: do not match if parent is also a 'body' node (prevents recursion on synthetic/intermediate nodes)
         if (parent.type === "body") {
             return false;
@@ -53,6 +60,14 @@ export class BlockFormater extends AFormatter implements IFormatter {
         if (parent === null) {
             return undefined;
         }
+
+        const enumDefinitions =
+            parent.type === SyntaxNodeType.EnumStatement
+                ? node.children.filter(
+                      (child) =>
+                          child.type === SyntaxNodeType.EnumDefinition
+                  )
+                : [];
 
         let formattingOnStatement = false;
         let sibling = parent.previousNamedSibling;
@@ -157,7 +172,7 @@ export class BlockFormater extends AFormatter implements IFormatter {
                     // and it looks like a statement (starts with a keyword like define, return, etc.)
                     // and it's NOT a true one-liner (doesn't have "end" on the same line)
                     const startsWithStatement =
-                        /^(define|def|defi|var|return|if|for|do|assign|create|find|message)/i.test(
+                        /^(define|defi|def|var|return|if|for|do|assign|create|find|message)\b/i.test(
                             bodyPart
                         );
                     const hasEndOnSameLine = /\bend\b/i.test(bodyPart);
@@ -177,18 +192,19 @@ export class BlockFormater extends AFormatter implements IFormatter {
 
                         // Update blockStatementsStartRows
                         if (blockStatementsStartRows.length > 0) {
-                            const firstBlockStatementRow =
-                                blockStatementsStartRows[0];
-                            blockStatementsStartRows.unshift(
-                                firstBlockStatementRow - 1
-                            );
                             blockStatementsStartRows =
                                 blockStatementsStartRows.map(
-                                    (currentRow, index) =>
-                                        index === 0
-                                            ? currentRow
-                                            : currentRow + 1
+                                    (currentRow) =>
+                                        currentRow >=
+                                        parent.startPosition.row +
+                                            deltaBetweenStartAndColon
+                                            ? currentRow + 1
+                                            : currentRow
                                 );
+                            blockStatementsStartRows.unshift(
+                                parent.startPosition.row +
+                                    deltaBetweenStartAndColon
+                            );
                         }
                     }
                 }
@@ -203,6 +219,10 @@ export class BlockFormater extends AFormatter implements IFormatter {
         if (codeLines.length <= 1) {
             const text = FormatterHelper.getCurrentText(node, fullText);
             return this.getCodeEdit(node, text, text, fullText);
+        }
+
+        if (parent.type === SyntaxNodeType.EnumStatement) {
+            codeLines[0] = codeLines[0].trimEnd();
         }
 
         const firstLine = codeLines[0];
@@ -282,6 +302,25 @@ export class BlockFormater extends AFormatter implements IFormatter {
                 )
             ) {
                 return;
+            }
+
+            const enumDefinition = enumDefinitions.find((definition) => {
+                const startRow = definition.startPosition.row;
+                const endRow = definition.endPosition.row;
+                return lineNumber >= startRow && lineNumber <= endRow;
+            });
+            if (enumDefinition) {
+                const startRow = enumDefinition.startPosition.row;
+                if (lineNumber !== startRow) {
+                    lineChangeDelta = 0;
+                    return;
+                }
+            }
+            if (
+                enumDefinitions.length > 0 &&
+                lineNumber > enumDefinitions[0].endPosition.row
+            ) {
+                lineChangeDelta = 0;
             }
 
             // adjust delta
