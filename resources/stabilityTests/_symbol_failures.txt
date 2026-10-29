@@ -4,10 +4,6 @@ adecomm__pweditor.i
 adeshar__mchgi.i
 protools__scrcap.w
 adexml__xmlview.w
-//0047 issues -->
-adm2_logic.i
-auditing_src_adm2_logic.i
-//0047 issues <--
 //0049 issues (reduced functionality) -->
 adeuib__tview.w
 //0049 issues (reduced functionality) <--
@@ -26,16 +22,12 @@ prodict_gui__guiuchg.p
 adecomm__auddat.p
 auditing_include__xmlsec.i
 wrappers_login.i
-adecomm__selindx.p
 adecomm__viewas.p
 adecomm_browqury.i
 adedict_TRIG__trigdlg.p
-adedict_uivar.i
 adeshar_qurydefs.i
 adeuib__edtgrid.p
 adeuib__prvw4gl.p
-adm2_dataextcols.p
-auditing_adm2_aud_dataextcols.p
 prodict_dump__lod_fil.p
 prodict_mss_key_constraint.i
 prodict_mss_key_foreign.i
@@ -51,6 +43,3 @@ prodict_dump__lodsec.p
 //015 issues -->
 prodict_user__usrquot.p
 //015 issues <--
-//016 issues -->
-prodict_user__usrscon.p
-//016 issues <--

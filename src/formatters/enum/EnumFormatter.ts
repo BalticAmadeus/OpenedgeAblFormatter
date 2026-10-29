@@ -32,25 +32,32 @@ export class EnumFormatter extends AFormatter implements IFormatter {
         node: Readonly<SyntaxNode>,
         fullText: Readonly<FullText>
     ): CodeEdit | CodeEdit[] | undefined {
-        const oldText = FormatterHelper.getCurrentText(node, fullText);
+        const enumStatement = node.parent?.parent;
+        const parentIndentation = enumStatement
+            ? FormatterHelper.getActualStatementIndentation(
+                  enumStatement,
+                  fullText
+              )
+            : 0;
+        const baseIndent = " ".repeat(
+            parentIndentation + this.configurationManager.getTabSize()
+        );
+        this.alignColumn = 0;
 
-        const newText = this.collectEnumStructure(node, fullText);
-        return this.getCodeEdit(node, oldText, newText, fullText);
+        const oldText = FormatterHelper.getCurrentText(node, fullText);
+        const enumText = this.collectEnumStructure(node, fullText, baseIndent);
+        return this.getCodeEdit(node, oldText, enumText, fullText);
     }
 
     private collectEnumStructure(
         node: SyntaxNode,
-        fullText: Readonly<FullText>
+        fullText: Readonly<FullText>,
+        baseIndent: string
     ): string {
         let foundFirstMember = false;
         let resultString = "";
         let defineEnumLineLength = 0;
         let hasCommentAfterEnum = false;
-
-        // Get base indentation from old text
-        const oldText = FormatterHelper.getCurrentText(node, fullText);
-        const defineKeywordMatch = oldText.match(/\n(\s*)define/i);
-        const baseIndent = defineKeywordMatch ? defineKeywordMatch[1] : "    ";
 
         node.children.forEach((child, index) => {
             if (child.type === "comment") {
@@ -166,9 +173,10 @@ export class EnumFormatter extends AFormatter implements IFormatter {
 
         switch (node.type) {
             case SyntaxNodeType.DefineKeyword:
-                newString =
-                    fullText.eolDelimiter +
-                    FormatterHelper.getCurrentText(node, fullText).trim();
+                newString = FormatterHelper.getCurrentText(
+                    node,
+                    fullText
+                ).trim();
                 break;
             case SyntaxNodeType.EnumMember:
                 newString = foundFirstMember
